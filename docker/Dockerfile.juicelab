@@ -1,5 +1,6 @@
-# JuiceLab Juice Shop image (modified clone with phase B mini-endpoint,
-# Angular plugin juicelab-overlay, and private pedagogical packs).
+# JuiceLab Juice Shop image. Self-contained build : clones OWASP Juice Shop
+# at a pinned commit inside the builder stage, layers the JuiceLab overlay
+# on top, applies the core patch, and produces a slim runtime image.
 #
 # Build context : repository root (one level above this file).
 #
@@ -13,19 +14,51 @@
 #   JUICELAB_COHORT_ID           cohort label
 #   JUICELAB_INSTANCE_LABEL      uniquely identifies this container in the
 #                                dashboard (e.g. td-amelie, td-bobby)
+#
+# Build-time args (override with --build-arg) :
+#   JUICE_SHOP_REPO    Upstream OWASP Juice Shop URL (default : juice-shop/juice-shop)
+#   JUICE_SHOP_COMMIT  Pinned commit hash the JuiceLab patch was generated against
+#                      (default : 3b178fd, the upstream commit "Add update
+#                      mechanism back for legacy website"). Bump together with
+#                      a regenerated patches/juicelab-core.patch when rebasing.
 
 FROM node:24-bullseye AS builder
 WORKDIR /build
 
-# Copy the full juice-shop source from the repository
-COPY juice-shop/ /build/juice-shop/
+# git is required for the clone + apply --3way step. ca-certificates is
+# needed for the HTTPS clone.
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install root deps (this triggers the frontend build via the postinstall
-# pipeline declared in juice-shop/package.json)
+ARG JUICE_SHOP_REPO=https://github.com/juice-shop/juice-shop.git
+ARG JUICE_SHOP_COMMIT=3b178fd
+
+# Clone the pinned upstream tree. We do not use --depth 1 because git
+# apply --3way needs blob ancestry to resolve context drift.
+RUN git clone "${JUICE_SHOP_REPO}" /build/juice-shop && \
+    cd /build/juice-shop && \
+    git checkout "${JUICE_SHOP_COMMIT}"
+
+# Layer the JuiceLab overlay (new files only — every file here is owned
+# by JuiceLab and never appears upstream). Docker COPY merges directories
+# recursively, so juice-shop/data/ gains a juicelab-private/ subdirectory,
+# juice-shop/frontend/src/app/ gains a juicelab-overlay/ subdirectory, etc.
+COPY overlay/. /build/juice-shop/
+
+# Apply the patch that wires the overlay into the Juice Shop core files
+# (server.ts route registration, navbar button, score-board card, i18n
+# keys, config flag, ftp acquisitions). The patch is generated against
+# the pinned commit above ; a different JUICE_SHOP_COMMIT may require a
+# regenerated patch.
+COPY patches/juicelab-core.patch /build/juicelab-core.patch
+RUN cd /build/juice-shop && \
+    git apply --3way /build/juicelab-core.patch && \
+    rm -f /build/juicelab-core.patch
+
+# Install root deps (triggers the frontend build via the postinstall pipeline
+# declared in juice-shop/package.json) and compile the TypeScript backend.
 WORKDIR /build/juice-shop
 RUN npm install --unsafe-perm 2>&1 | tail -20
-
-# Compile the TypeScript backend
 RUN npm run build:server
 
 # Drop dev-only artefacts after build to slim the runtime image

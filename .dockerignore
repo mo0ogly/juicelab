@@ -1,0 +1,57 @@
+# Build context lives at the parent juice/ root. Everything below is
+# excluded from the docker build context so a fresh `docker compose up
+# --build` from a clean clone does not transfer 1.2+ GB of upstream
+# Juice Shop sources or node_modules to the daemon.
+#
+# This file is read by docker, not by git. See .gitignore for VCS rules.
+
+# Upstream OWASP Juice Shop clone (1.2 GB). The Dockerfile clones it
+# inside the builder stage instead.
+juice-shop/
+
+# Build artefacts
+**/node_modules
+**/dist
+**/.angular
+**/.cache
+**/build
+
+# Git internals
+**/.git
+.git/
+
+# Python runtime
+**/__pycache__
+**/.pytest_cache
+dashboard/data/
+dashboard/.venv/
+
+# Dashboard SQLite runtime
+docker/data/
+
+# Editor / OS
+**/.DS_Store
+**/Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+.logs/
+
+# Secrets (.env stays out, .env.example is committed)
+.env
+.env.*
+!.env.example
+
+# Claude Code internal state
+.claude/output/
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+
+# Documentation source that does not need to be in the image
+*.md
+docs/
+!docker/README.md
+!overlay/README.md

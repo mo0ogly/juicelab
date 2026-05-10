@@ -31,28 +31,42 @@ The container build downloads ~ 700 MB on the first run (npm install). The cache
 
 The goal here is to validate that the build chain + dashboard + overlay all wire up correctly.
 
-### 1.1 Get the code
+### 1.1 Two installation paths
+
+JuiceLab ships in **two installable forms** :
+
+| Path | What it gives you | Best for |
+|---|---|---|
+| **1.1.a — 100 % Docker** | `git clone` + `docker compose up --build`. The Dockerfile clones OWASP Juice Shop at a pinned commit, applies the overlay, applies the patch, builds the slim image. No host-side merge. | Teachers running the smoke test or a TD ; CI environments. |
+| **1.1.b — Native dev** | `git clone` of both `juicelab` and `juice-shop`, then `scripts/apply-overlay.sh` merges them on disk. You then run `npm start` and `python app.py` directly. | Contributors who edit overlay files and want hot-reload. |
+
+#### 1.1.a — 100 % Docker (recommended for first install)
 
 ```bash
 git clone https://github.com/mo0ogly/juicelab.git
 cd juicelab
 ```
 
-JuiceLab is the *overlay*. The OWASP Juice Shop sources live in their own repository. This repo ships an installer that copies the new files and applies the patches in a single command :
+Skip directly to **§ 1.2** below. The `docker compose up --build` in § 1.3 handles the upstream clone, overlay copy and patch application inside the builder stage. Nothing else needs to be on disk.
+
+> **What the Dockerfile does internally** : in the `builder` stage, `Dockerfile.juicelab` clones <https://github.com/juice-shop/juice-shop.git> at the pinned commit `3b178fd` (overridable via `--build-arg JUICE_SHOP_COMMIT=…`), copies every file under `overlay/` into the cloned tree, then runs `git apply --3way patches/juicelab-core.patch` to wire the JuiceLab additions into the Juice Shop core. The runtime stage only contains the merged, built tree — no git, no overlay/, no patches/.
+
+#### 1.1.b — Native dev (overlay editing on host)
 
 ```bash
-# clone Juice Shop next to the JuiceLab overlay
-git clone https://github.com/juice-shop/juice-shop.git ../juice-shop
+git clone https://github.com/mo0ogly/juicelab.git
+git clone https://github.com/juice-shop/juice-shop.git
+cd juicelab
 
-# apply the overlay (copies new files from overlay/ + applies patches/juicelab-core.patch)
+# apply the overlay on top of the vanilla Juice Shop clone
 ./scripts/apply-overlay.sh ../juice-shop          # Linux / macOS / WSL / Git Bash
 # OR
 .\scripts\apply-overlay.ps1 -JuiceShopDir ..\juice-shop   # Windows PowerShell 7+
 ```
 
-The installer is idempotent. Re-running it after upstream Juice Shop has been updated keeps your local overlay aligned with the patch (any conflict is reported by `git apply --check` and surfaced as a `.rej` file you resolve by hand).
+The installer is idempotent. Re-running it after upstream Juice Shop has been updated keeps your local overlay aligned with the patch (conflicts surface as `.rej` files you resolve by hand). Read [`overlay/README.md`](./overlay/README.md) for the layout.
 
-> **What the script does.** `scripts/apply-overlay.sh` copies every file under `overlay/` into the Juice Shop tree (the new Angular overlay, the Express route, the YAML packs, the assets), then runs `git apply --3way patches/juicelab-core.patch` to wire the JuiceLab additions into the existing Juice Shop core files (server route registration, navbar button, score-board card, i18n keys, config flag, FTP acquisitions data). Read [`overlay/README.md`](./overlay/README.md) for the full layout.
+For native dev, continue with § 4 below (boot Juice Shop + dashboard without Docker).
 
 ### 1.2 Configure secrets
 
