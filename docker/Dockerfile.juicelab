@@ -1,0 +1,61 @@
+# JuiceLab Juice Shop image (modified clone with phase B mini-endpoint,
+# Angular plugin juicelab-overlay, and private pedagogical packs).
+#
+# Build context : repository root (one level above this file).
+#
+#   docker build -f docker/Dockerfile.juicelab -t juicelab:latest .
+#
+# Runtime env vars (set via docker-compose):
+#   TEACHER_ADMIN_TOKEN          long secret enabling /api/juicelab/admin/state
+#   JUICELAB_DASHBOARD_URL       baked into config.json at deploy time via
+#                                docker-compose (overrides the file already
+#                                shipped in the image)
+#   JUICELAB_COHORT_ID           cohort label
+#   JUICELAB_INSTANCE_LABEL      uniquely identifies this container in the
+#                                dashboard (e.g. td-amelie, td-bobby)
+
+FROM node:24-bullseye AS builder
+WORKDIR /build
+
+# Copy the full juice-shop source from the repository
+COPY juice-shop/ /build/juice-shop/
+
+# Install root deps (this triggers the frontend build via the postinstall
+# pipeline declared in juice-shop/package.json)
+WORKDIR /build/juice-shop
+RUN npm install --unsafe-perm 2>&1 | tail -20
+
+# Compile the TypeScript backend
+RUN npm run build:server
+
+# Drop dev-only artefacts after build to slim the runtime image
+RUN rm -rf frontend/.angular frontend/node_modules .git tests cypress \
+           frontend/cypress
+
+# ---------- Runtime stage ----------
+FROM node:24-bullseye-slim AS runtime
+ENV NODE_ENV=production \
+    PORT=3000
+
+# tini reaps zombie children when running under docker / docker-compose
+RUN apt-get update && apt-get install -y --no-install-recommends tini && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /juice-shop
+COPY --from=builder /build/juice-shop /juice-shop
+
+# Make sure the private pedagogical packs are owned by the unprivileged user
+RUN useradd -m -u 1001 juicelab && \
+    chown -R juicelab:juicelab /juice-shop && \
+    chmod -R o-rwx /juice-shop/data/juicelab-private
+
+USER juicelab
+
+EXPOSE 3000
+
+# Use tini as PID 1, then run the entrypoint that resolves config from env
+COPY --chown=juicelab:juicelab docker/entrypoint.sh /usr/local/bin/juicelab-entrypoint.sh
+RUN chmod +x /usr/local/bin/juicelab-entrypoint.sh
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/juicelab-entrypoint.sh"]
+CMD ["node", "build/app.js"]

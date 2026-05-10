@@ -1,0 +1,105 @@
+# JuiceLab docker-compose - flat single-instance (smoke test).
+#
+# Spawns ONE dashboard + ONE Juice Shop instance for testing the build
+# end-to-end before scaling up to a cohort.
+#
+# Usage:
+#   1. cp docker/.env.example docker/.env  (et editer les secrets)
+#   2. cd docker
+#   3. docker compose --env-file .env up -d --build
+#   4. ouvrir http://127.0.0.1:3000/#/juicelab (eleve)
+#      ouvrir http://127.0.0.1:5000/dashboard?cohort=<COHORT> (prof, header X-Teacher-Token)
+#
+# Pour une cohorte de N eleves : utiliser provision.py qui genere un fichier
+# docker-compose.cohort.yml avec un service juicelab-NN par eleve, chacun
+# expose sur un port distinct.
+
+name: juicelab
+
+services:
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard
+    image: juicelab-dashboard:latest
+    container_name: juicelab-dashboard
+    environment:
+      DASHBOARD_TEACHER_TOKEN: "${DASHBOARD_TEACHER_TOKEN:?must be set in .env}"
+      DASHBOARD_PORT: "5000"
+      DASHBOARD_DB: "/app/data/dashboard.sqlite"
+      DASHBOARD_CORS_ORIGINS: "${DASHBOARD_CORS_ORIGINS:-http://127.0.0.1:3000,http://localhost:3000}"
+      DASHBOARD_LOG_LEVEL: "${DASHBOARD_LOG_LEVEL:-INFO}"
+      # CTFd integration (Mode C, opt-in). Empty values keep Mode A active.
+      CTFD_URL: "${CTFD_URL:-}"
+      CTFD_ADMIN_TOKEN: "${CTFD_ADMIN_TOKEN:-}"
+      CTFD_PENALTY_FORMULA: "${CTFD_PENALTY_FORMULA:-mirror_juicelab}"
+      CTFD_TEAM_MODE: "${CTFD_TEAM_MODE:-team}"
+    volumes:
+      - dashboard_data:/app/data
+    ports:
+      - "${DASHBOARD_PORT:-5000}:5000"
+    networks: [juicelab_net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=2); sys.exit(0)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  juicelab-demo:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.juicelab
+    image: juicelab:latest
+    container_name: juicelab-demo
+    environment:
+      TEACHER_ADMIN_TOKEN: "${TEACHER_ADMIN_TOKEN:?must be set in .env}"
+      JUICELAB_DASHBOARD_URL: "http://${DASHBOARD_PUBLIC_HOST:-127.0.0.1}:${DASHBOARD_PORT:-5000}"
+      JUICELAB_COHORT_ID: "${JUICELAB_COHORT_ID:?must be set in .env (no default — pick a cohort id like M2-IA-2026)}"
+      JUICELAB_INSTANCE_LABEL: "demo"
+      JUICELAB_DEFAULT_LANGUAGE: "${JUICELAB_DEFAULT_LANGUAGE:-fr}"
+    ports:
+      - "${JUICELAB_DEMO_PORT:-3000}:3000"
+    networks: [juicelab_net]
+    depends_on:
+      dashboard:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # CTFd central — service optionnel pour Mode C (competition compétition).
+  # Décommenter le bloc ci-dessous pour heberger CTFd en local (sur la
+  # machine du prof, par exemple). Apres `docker compose up`, ouvrir
+  # http://127.0.0.1:8000 pour le setup admin (creer admin user, importer
+  # le .csv genere par juice-shop-ctf-cli, generer un access token via
+  # Admin > Settings > Access Tokens). Mettre ensuite l'URL et le token
+  # dans le .env (CTFD_URL et CTFD_ADMIN_TOKEN) puis `docker compose
+  # restart dashboard` pour activer le push.
+  #
+  # ctfd:
+  #   image: ctfd/ctfd:3.7.5
+  #   container_name: juicelab-ctfd
+  #   ports:
+  #     - "${CTFD_PORT:-8000}:8000"
+  #   environment:
+  #     SECRET_KEY: "${CTFD_SECRET_KEY:?must be set in .env when ctfd is enabled}"
+  #     UPLOAD_FOLDER: "/var/uploads"
+  #     LOG_FOLDER: "/var/log/CTFd"
+  #     WORKERS: "1"
+  #   volumes:
+  #     - ctfd_uploads:/var/uploads
+  #     - ctfd_logs:/var/log/CTFd
+  #   networks: [juicelab_net]
+  #   restart: unless-stopped
+
+networks:
+  juicelab_net:
+    driver: bridge
+
+volumes:
+  dashboard_data:
+    driver: local
+  # ctfd_uploads:
+  #   driver: local
+  # ctfd_logs:
+  #   driver: local

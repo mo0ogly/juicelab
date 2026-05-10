@@ -1,0 +1,32 @@
+# JuiceLab teacher dashboard image (Flask + SQLite).
+#
+# Build context : repository root (one level above this file).
+#
+#   docker build -f docker/Dockerfile.dashboard -t juicelab-dashboard:latest .
+
+FROM python:3.11-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DASHBOARD_PORT=5000
+
+RUN apt-get update && apt-get install -y --no-install-recommends tini && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY dashboard/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY dashboard/ /app/
+
+# /app/data is the SQLite mount point. docker-compose volumes onto it so
+# the DB survives container restarts.
+RUN useradd -m -u 1001 dash && \
+    mkdir -p /app/data && \
+    chown -R dash:dash /app
+
+USER dash
+
+EXPOSE 5000
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["python", "app.py"]

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>JuiceLab dashboard - {{ summary.cohort_id }}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 24px; color: #1f2937; }
+    h1 { margin: 0 0 4px; }
+    .top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .meta { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+    .meta strong { color: #1f2937; }
+    .meta .auto-tag {
+      display: inline-block; padding: 1px 8px; margin-left: 8px;
+      border-radius: 999px; font-size: 11px; background: #d1fae5; color: #065f46;
+    }
+    .meta .auto-tag.off { background: #fee2e2; color: #991b1b; }
+    .logout {
+      font-size: 13px; padding: 6px 14px; border-radius: 6px;
+      background: #f3f4f6; color: #1f2937; text-decoration: none; border: 1px solid #e5e7eb;
+    }
+    .logout:hover { background: #e5e7eb; }
+    table { border-collapse: collapse; min-width: 100%; font-size: 13px; }
+    th, td { border: 1px solid #e5e7eb; padding: 6px 10px; text-align: left; vertical-align: top; }
+    th { background: #f3f4f6; position: sticky; top: 0; }
+    th.sticky-col, td.sticky-col { position: sticky; left: 0; background: #fff; z-index: 1; min-width: 220px; }
+    th.sticky-col { background: #f3f4f6; z-index: 2; }
+    th.score-col, td.score-col { text-align: center; min-width: 90px; }
+    th.score-col { background: #ecfeff; }
+    .cell { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .pill { padding: 2px 8px; border-radius: 999px; font-size: 11px; line-height: 1.6; white-space: nowrap; }
+    .pill.hints { background: #fef3c7; color: #92400e; }
+    .pill.journal { background: #dbeafe; color: #1e40af; cursor: pointer; }
+    .pill.journal:hover { background: #bfdbfe; }
+    .pill.quiz { background: #d1fae5; color: #065f46; }
+    .pill.solved { background: #c7d2fe; color: #3730a3; font-weight: 600; }
+    .pill.flag { background: #fae8ff; color: #6b21a8; font-weight: 600; }
+    .pill.empty { color: #9ca3af; background: transparent; border: 1px dashed #e5e7eb; }
+    .score-total {
+      font-weight: 700; font-size: 14px; color: #0e7490;
+    }
+    .score-na { color: #9ca3af; font-style: italic; font-size: 12px; }
+    .nochallenge { color: #9ca3af; font-style: italic; }
+    .legend { font-size: 12px; color: #6b7280; margin-top: 16px; }
+    .scroll { overflow-x: auto; max-width: 100%; }
+
+    /* Modal for journal detail */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.55); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      width: min(720px, 92vw); max-height: 80vh; overflow-y: auto;
+      background: #fff; border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.25);
+    }
+    .modal-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;
+    }
+    .modal-head h3 { margin: 0; font-size: 16px; }
+    .modal-close {
+      background: transparent; border: 0; font-size: 22px; cursor: pointer;
+      color: #6b7280; padding: 0 4px;
+    }
+    .modal-body { font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+    .modal-meta { font-size: 12px; color: #6b7280; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <h1>JuiceLab dashboard</h1>
+    <a class="logout" href="/logout">Se deconnecter</a>
+  </div>
+  <div class="meta">
+    Cohorte <strong id="cohort-id">{{ summary.cohort_id }}</strong>
+    | Eleves : <strong id="students-count">{{ summary.students | length }}</strong>
+    | Challenges actifs : <strong id="challenges-count">{{ summary.challenges | length }}</strong>
+    | Events total : <strong id="events-count">{{ summary.events_total }}</strong>
+    | Auto-refresh <span id="auto-tag" class="auto-tag">5 s</span>
+    <span id="last-refresh" style="margin-left:8px"></span>
+  </div>
+
+  {% if not summary.students %}
+    <p class="nochallenge" id="empty-msg">
+      Aucun event recu pour cette cohorte. Verifie que le plugin est configure avec dashboard_url et cohort_id.
+    </p>
+  {% endif %}
+
+  <div class="scroll" id="matrix-wrap" style="{% if not summary.students %}display:none{% endif %}">
+    <table>
+      <thead>
+        <tr id="head-row">
+          <th class="sticky-col">Eleve</th>
+          {% for challenge in summary.challenges %}
+            <th>{{ challenge }}</th>
+          {% endfor %}
+          <th class="score-col">Score total</th>
+        </tr>
+      </thead>
+      <tbody id="body-rows">
+        {% for student in summary.students %}
+        <tr data-student="{{ student }}">
+          <td class="sticky-col">{{ student }}</td>
+          {% for challenge in summary.challenges %}
+            {% set slot = summary.matrix[student].get(challenge) %}
+            <td data-cell="{{ challenge }}">
+              {% if slot %}
+                <div class="cell">
+                  {% if slot.solved %}
+                    <span class="pill solved">solved</span>
+                  {% endif %}
+                  <span class="pill hints">hints {{ slot.hints }}/5</span>
+                  {% if slot.journal %}
+                    <span class="pill journal" data-key="{{ challenge }}" data-student="{{ student }}">journal</span>
+                  {% endif %}
+                  {% if slot.quiz_score is not none %}
+                    <span class="pill quiz">quiz {{ slot.quiz_score }}/100</span>
+                  {% endif %}
+                  {% if slot.flag_verified %}
+                    <span class="pill flag">flag +10</span>
+                  {% endif %}
+                </div>
+              {% else %}
+                <span class="pill empty">-</span>
+              {% endif %}
+            </td>
+          {% endfor %}
+          {% set total = summary.totals.get(student, {}) %}
+          <td class="score-col">
+            {% if total.avg_score is not none %}
+              <span class="score-total">{{ total.avg_score }}/100</span>
+            {% else %}
+              <span class="score-na">- (quiz manquants)</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="legend">
+    Pills :
+    <span class="pill solved">solved</span> = challenge resolu Juice Shop ;
+    <span class="pill hints">hints N/5</span> = indices reveles ;
+    <span class="pill journal">journal</span> = clic pour lire le texte ;
+    <span class="pill quiz">quiz X/100</span> = score quiz ;
+    <span class="pill flag">flag +10</span> = flag CTF verifie (bonus 10 pts plafonne 100).
+  </div>
+
+  <!-- Modal pour le detail d'un journal -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modal-title">Journal</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">Chargement...</div>
+      <div class="modal-meta" id="modal-meta"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const COHORT = {{ summary.cohort_id | tojson }};
+      const REFRESH_MS = 5000;
+      const refreshTag = document.getElementById('last-refresh');
+      const autoTag = document.getElementById('auto-tag');
+
+      function pillsHtml(slot, challenge, student) {
+        if (!slot) return '<span class="pill empty">-</span>';
+        const parts = ['<div class="cell">'];
+        if (slot.solved)
+          parts.push('<span class="pill solved">solved</span>');
+        parts.push('<span class="pill hints">hints ' + (slot.hints || 0) + '/5</span>');
+        if (slot.journal)
+          parts.push(
+            '<span class="pill journal" data-key="' + challenge +
+            '" data-student="' + student + '">journal</span>'
+          );
+        if (slot.quiz_score !== null && slot.quiz_score !== undefined)
+          parts.push('<span class="pill quiz">quiz ' + slot.quiz_score + '/100</span>');
+        if (slot.flag_verified)
+          parts.push('<span class="pill flag">flag +10</span>');
+        parts.push('</div>');
+        return parts.join('');
+      }
+
+      function totalCellHtml(total) {
+        if (total && total.avg_score !== null && total.avg_score !== undefined) {
+          return '<span class="score-total">' + total.avg_score + '/100</span>';
+        }
+        return '<span class="score-na">- (quiz manquants)</span>';
+      }
+
+      function renderMatrix(summary) {
+        document.getElementById('students-count').textContent = summary.students.length;
+        document.getElementById('challenges-count').textContent = summary.challenges.length;
+        document.getElementById('events-count').textContent = summary.events_total;
+
+        const wrap = document.getElementById('matrix-wrap');
+        const empty = document.getElementById('empty-msg');
+        if (!summary.students.length) {
+          if (wrap) wrap.style.display = 'none';
+          if (empty) empty.style.display = '';
+          return;
+        }
+        if (empty) empty.style.display = 'none';
+        if (wrap) wrap.style.display = '';
+
+        const headRow = document.getElementById('head-row');
+        let headHtml = '<th class="sticky-col">Eleve</th>';
+        for (const ch of summary.challenges) {
+          headHtml += '<th>' + ch + '</th>';
+        }
+        headHtml += '<th class="score-col">Score total</th>';
+        headRow.innerHTML = headHtml;
+
+        const body = document.getElementById('body-rows');
+        let bodyHtml = '';
+        for (const student of summary.students) {
+          bodyHtml += '<tr data-student="' + student + '">';
+          bodyHtml += '<td class="sticky-col">' + student + '</td>';
+          for (const ch of summary.challenges) {
+            const slot = (summary.matrix[student] || {})[ch];
+            bodyHtml += '<td data-cell="' + ch + '">' + pillsHtml(slot, ch, student) + '</td>';
+          }
+          bodyHtml += '<td class="score-col">' + totalCellHtml((summary.totals || {})[student]) + '</td>';
+          bodyHtml += '</tr>';
+        }
+        body.innerHTML = bodyHtml;
+        bindJournalPills();
+      }
+
+      function bindJournalPills() {
+        const pills = document.querySelectorAll('.pill.journal');
+        pills.forEach(p => {
+          p.addEventListener('click', () => {
+            const key = p.getAttribute('data-key');
+            const student = p.getAttribute('data-student');
+            openJournalModal(key, student);
+          });
+        });
+      }
+
+      function openJournalModal(challengeKey, studentToken) {
+        const backdrop = document.getElementById('modal-backdrop');
+        const title = document.getElementById('modal-title');
+        const body = document.getElementById('modal-body');
+        const meta = document.getElementById('modal-meta');
+        title.textContent = 'Journal - ' + challengeKey + ' - ' + studentToken;
+        body.textContent = 'Chargement...';
+        meta.textContent = '';
+        backdrop.classList.add('open');
+
+        fetch('/api/journal-text?student_token=' + encodeURIComponent(studentToken)
+              + '&cohort=' + encodeURIComponent(COHORT)
+              + '&key=' + encodeURIComponent(challengeKey), { credentials: 'include' })
+          .then(r => r.json().then(d => ({ ok: r.ok, status: r.status, data: d })))
+          .then(({ ok, status, data }) => {
+            if (!ok) {
+              body.textContent = 'Erreur HTTP ' + status + ' : ' + (data.error || 'inconnue');
+              return;
+            }
+            body.textContent = data.text || '_(journal vide)_';
+            const parts = [];
+            if (data.last_ts) parts.push('Saisi le ' + data.last_ts);
+            if (data.word_count !== undefined && data.word_count !== null) parts.push(data.word_count + ' mots');
+            meta.textContent = parts.join(' - ');
+          })
+          .catch(err => {
+            body.textContent = 'Erreur reseau : ' + err.message;
+          });
+      }
+
+      window.closeModal = function () {
+        document.getElementById('modal-backdrop').classList.remove('open');
+      };
+      document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+        if (e.target.id === 'modal-backdrop') window.closeModal();
+      });
+
+      function tick() {
+        fetch('/api/cohort?cohort=' + encodeURIComponent(COHORT), { credentials: 'include' })
+          .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          })
+          .then(summary => {
+            renderMatrix(summary);
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            refreshTag.textContent = '(MAJ ' + hh + ':' + mm + ':' + ss + ')';
+            autoTag.classList.remove('off');
+          })
+          .catch(err => {
+            refreshTag.textContent = '(MAJ KO : ' + err.message + ')';
+            autoTag.classList.add('off');
+          });
+      }
+
+      bindJournalPills();
+      setInterval(tick, REFRESH_MS);
+    })();
+  </script>
+</body>
+</html>

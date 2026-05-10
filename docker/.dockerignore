@@ -1,0 +1,17 @@
+**/node_modules
+**/dist
+**/.angular
+**/.git
+**/.cache
+**/.pytest_cache
+**/__pycache__
+juice-shop/cypress
+juice-shop/tests
+juice-shop/build
+dashboard/data
+dashboard/.venv
+docker/data
+*.log
+.env
+.env.*
+!.env.example

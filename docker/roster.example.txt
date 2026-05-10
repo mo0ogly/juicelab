@@ -1,0 +1,10 @@
+# JuiceLab roster example
+# Un handle par ligne, alphanumerique + tirets, max 30 chars.
+# Les commentaires (#) et les lignes vides sont ignores.
+# provision.py mappe chaque handle a un port distinct (port-base + index).
+
+amelie
+bobby
+chloe
+dimitri
+elise
