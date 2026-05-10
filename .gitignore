@@ -38,3 +38,6 @@ juice-shop/
 # OS
 .DS_Store
 Thumbs.db
+
+# Reference docs (large PDFs)
+docs/*.pdf
