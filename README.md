@@ -1,391 +1,321 @@
-# Aegis Medical AI Simulator — Dual-AI Cyber Attack & Defense
+# JuiceLab — Pedagogy Companion for OWASP Juice Shop
 
-<div align="center">
-  <h3>A Proof-of-Concept surgical robot interface hijacked by Data Poisoning & Ransomware, defended by a Cyber-Security AI</h3>
-  <p>
-    <a href="README_FR.md">🇫🇷 Lire en Français</a> &nbsp;|&nbsp;
-    <a href="README_BR.md">🇧🇷 Ler em Português</a> &nbsp;|&nbsp;
-    <a href="https://pizzif.github.io/poc_medical/wiki/"><strong>Wiki Documentation</strong></a>
-  </p>
-</div>
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![OWASP Project](https://img.shields.io/badge/OWASP-Pedagogical%20Companion-blue)](https://owasp.org/www-project-juice-shop/)
+[![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker&logoColor=white)](./docker/)
+[![Status](https://img.shields.io/badge/status-classroom%20ready-green)](#)
 
----
+> A graduated, scaffolded teaching layer on top of [OWASP Juice Shop](https://github.com/juice-shop/juice-shop), built for a 12-hour M2 Master classroom (Sorbonne, Paris) and designed to scale to any cybersecurity training programme.
 
-## Overview
+JuiceLab does **not** modify Juice Shop's challenges. It adds a thin coaching overlay (briefings, graduated hints, post-solve quiz), a tamper-evident lab proof, a teacher dashboard, and an opt-in bridge to a CTFd scoreboard. The student plays the same OWASP challenges; the *experience around them* is what changes.
 
-<div align="center">
-  <img src="figures/main_dashboard_v3_latest.webp" alt="Aegis v4.0 Main Dashboard" width="800" style="border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"/>
-</div>
-
-### 📺 Demo & Podcast
-- [Watch the 60s Demo (French)](docs/videos/demo_v4_fr.webp)
-- [Listen to the CyberSecurity Podcast (Spotify)](https://open.spotify.com/episode/5RxxZVq1zjFaNLQXyLlXor?si=nZNr9GbGSDCdOah9MOp9Rw)
-
----
-**Aegis** is an advanced **Robotic Surgery Interface Simulation** for cybersecurity awareness and research. It demonstrates the critical vulnerabilities of integrating Large Language Models (LLMs) into clinical environments (modelled on a Da Vinci surgical robot), and how a **multi-agent AI architecture** can be used as a real-time defense mechanism.
-
-The dashboard puts you in the role of a Chief Surgeon assisted by a Medical AI — while an attacker silently manipulates the data pipeline.
+> **Read this in French:** [README_FR.md](./README_FR.md)
 
 ---
 
-## The 4 Attack Scenarios
+## Table of contents
 
-| # | Scenario | Technique | MITRE ATT&CK |
-|---|----------|-----------|--------------|
-| 0 | **Baseline** | Normal operation, HL7 record intact | — |
-| 1 | **Slow Poison** | Attacker subtly modifies the HL7 record via PACS. The Medical AI recommends a lethal clamp tension of **850g** (indirect prompt injection) | T1565.001 |
-| 2 | **Ransomware** | Direct hijack forces `freeze_instruments()` call — instruments lock until ransom is paid | T1486 |
-| 3 | **Aegis Defense** | A second isolated AI monitors the first in real-time and triggers a multi-round debate to expose the compromise | T1059.009 |
+- [Why this project](#why-this-project)
+- [What it adds to Juice Shop](#what-it-adds-to-juice-shop)
+- [Architecture at a glance](#architecture-at-a-glance)
+- [The pedagogical contract](#the-pedagogical-contract)
+- [CTF integration (Mode A / B / C)](#ctf-integration-mode-a--b--c)
+- [Quick start](#quick-start)
+- [Repository layout](#repository-layout)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
 
 ---
 
-## Key Features — v4.0
+## Why this project
 
-### 🎬 EN SCÈNE — Live AI Monitor
-A real-time "behind the scenes" panel showing exactly what each AI receives and sends:
-- **Assembled prompt** with injection payload highlighted in red
-- **Split Da Vinci / Aegis terminals** with live token streaming
-- **Status badges**: IDLE → ANALYSING → COMPROMISED / DONE → ISOLATED
-- **Tool-call explosion** banner when `freeze_instruments()` fires
+OWASP Juice Shop is the gold standard for hands-on web-app security training, but the raw experience has two pedagogical gaps when used in a classroom with heterogeneous beginners:
 
-### 🦾 3D Robot Arms View
-Real-time Three.js visualization of the 4 robotic arms (PSM1, PSM2, ECM, AUX):
-- **Poison scenario**: PSM1 tension drifts progressively toward 850g, arm status turns WARNING
-- **Ransomware**: Increasingly erratic joint oscillation (±6°), force spikes, all arms WARNING → FROZEN
-- Per-scenario instability progress bar
+1. **No scaffolding.** A student who cannot solve `loginAdmin` either gives up, peeks at the upstream walkthrough (and gets the full solution in one click), or asks the teacher who then has to interrupt the room. There is no graduated cognitive support between *zero hint* and *full solution*.
+2. **No teacher signal.** The teacher cannot see, in real time, which students are stuck on which step, who has read hints (and how many), and who needs a one-on-one intervention. The Juice Shop score-board reports binary completion, not learning.
 
-### 📹 Dynamic Camera Effects
-The surgical endoscope feed reacts to the attack state:
-- **Poison**: Progressive desaturation + green hue drift + growing vignette
-- **Ransomware**: Harsh contrast, camera shake, flicker, chromatic aberration overlay
-- **Frozen**: Full grayscale + SIGNAL LOST
+JuiceLab fills both gaps without forking Juice Shop:
 
-### 🤖 Context-Aware Dual AI
-Both AIs share session context to avoid repetition and escalate intelligently:
-- **Timeline injection**: The last 8 system events are sent to each AI as context
-- **Da Vinci** always receives the full chat history + Aegis responses (truncated)
-- **Multi-round debate**: Up to 5 rounds of Aegis ↔ Da Vinci argumentation
-- Prompts explicitly instruct each AI not to repeat previous arguments
+- A **5-level Vygotsky-style hints ladder** with an explicit cost (5 % / 10 % / 20 % / 35 % / 50 % of the challenge score), gated server-side so a student cannot skip ahead.
+- A **post-solve journal + 3-question multiple-choice quiz** that anchors the security concept, not just the trick.
+- A **tamper-evident lab proof** signed HMAC-SHA-256, downloadable as a Markdown file the student can hand in or the teacher can grade.
+- A **cohort dashboard** (Flask + SQLite) that shows, in a single matrix, every student × every challenge with hints consumed, journal status, quiz score, and CTF flag verification.
+- An **opt-in CTFd push** that mirrors the JuiceLab hint penalties into a public CTFd leaderboard so the competition reflects *real effort*, not just paste-the-flag speed.
 
-### 🎙️ Voice Input & TTS
-- **Speech recognition** (Chrome/Edge) for both the Medical AI and Aegis
-- **Text-to-Speech**: AI responses are read aloud with distinct voices per agent
+---
 
-### ⏱️ Action Timeline
-Real-time event log with `T+Xs` timestamps capturing:
-- System events, user inputs, AI responses, tool calls, attacks, Aegis interventions
+## What it adds to Juice Shop
 
-### 🗺️ Threat Map
-Live visualization of the internal hospital network (PACS → LLM → Robot) with animated attack vectors.
+JuiceLab is a **non-fork overlay**. The OWASP Juice Shop sources stay on the upstream `juice-shop/juice-shop` main branch; we only add new files and apply two small patches (one Express route, one Angular route + navbar button + score-board card).
 
-### 🚨 Kill Switch
-One-click mechanical isolation: disconnects the robot from the LLM and forces manual mode.
+| Layer | What we add | Where it lives |
+|---|---|---|
+| Pedagogy | 13 selected challenges with briefings, hints (5 levels), quiz (3 questions), journal | `juice-shop/data/juicelab-private/`, `juice-shop/frontend/src/assets/juicelab/` |
+| Anti-leak gating | Express routes that serve hints/quiz/walkthrough only after the previous level is consumed and the challenge is solved | `juice-shop/routes/juicelab.ts` |
+| Coach UI | Angular 20 standalone overlay (4 tabs: Briefing / Indices / Apres-journal / Quiz) opened from the score-board card | `juice-shop/frontend/src/app/juicelab-overlay/` |
+| Hidden trophy room | URL-guess-only `/#/cabinet` that displays gold trophies for verified CTF flags (gamified discovery) | `juice-shop/frontend/src/app/juicelab-overlay/trophy-room/` |
+| Teacher dashboard | Flask 3 + SQLite, real-time cohort matrix, signed proof generator | `dashboard/` |
+| Deploy | Docker Compose (single instance, cohort of N, VPS) + CTFd opt-in | `docker/` |
+| Local launcher | PowerShell orchestration script (start / stop / health / logs / build) | `juice.ps1` |
 
-### 🌍 i18n — 3 Languages
-Full interface, prompts and documentation in **French**, **English**, and **Brazilian Portuguese**.
+> **The 13 selected challenges** — five DJ1 reconnaissance challenges (`scoreBoard`, `privacyPolicy`, `directoryListing`, `exposedCredentials`, `passwordHashLeak`), four DJ2 auth/access (`loginAdmin`, `adminSection`, `basketAccess`, `feedback`), four DJ3 XSS (`localXss`, `reflectedXss`, `xssBonus`, `bullyChatbot`). The list is the contract: see [`selected_challenges.yml`](./juice-shop/frontend/src/assets/juicelab/selected_challenges.yml).
 
-### 🔴 Adversarial Studio v2.1 — Formal Adversarial Research Lab
-Hidden advanced panel (`Ctrl+Shift+R` or header button). Five integrated panels:
+---
 
-| Panel | Description |
-|-------|-------------|
-| **Prompt Forge** | 98 API-served attack templates with detailed help modals (attack mechanism, formal framework, defense analysis) |
-| **System Prompt Lab** | 3 agents (Da Vinci, Aegis, Attacker) x 3 difficulty levels (EASY / NORMAL / HARD) |
-| **Execution Engine** | Single-shot, multi-agent campaign, and Sep(M) formal audit modes |
-| **Formal Metrics Dashboard** | SVC 6D scoring + Sep(M) separation score + Integrity(S) verification |
-| **Session Intelligence** | Full history, RETEX (lessons learned), CSV/JSON export |
+## Architecture at a glance
 
-**SVC (Scenario Vulnerability Composite)** — 6-dimension weighted score:
+```mermaid
+flowchart LR
+  subgraph Student["Student browser"]
+    JS[Juice Shop UI<br/>:3000]
+    OV[JuiceLab Coach overlay<br/>Angular standalone]
+    JS --- OV
+  end
 
-| Dim | Name | Weight |
-|-----|------|--------|
-| d1 | Clinical Plausibility | 0.25 |
-| d2 | Authority Chain | 0.20 |
-| d3 | Injection Concealment | 0.20 |
-| d4 | Forbidden Directive | 0.15 |
-| d5 | Multi-turn Potential | 0.10 |
-| d6 | Semantic Novelty | 0.10 |
+  subgraph JuiceShopServer["Juice Shop Express server :3000"]
+    CORE[Juice Shop core<br/>routes, challenges, JWT]
+    GATED["routes/juicelab.ts<br/>(JWT-gated, sequential)"]
+    PRIV[(data/juicelab-private/<br/>hints, quiz, walkthroughs)]
+    CORE -.solved socket.-> OV
+    GATED --> PRIV
+  end
 
-**Sep(M)** — Instruction/data separation score per Zverev et al. (ICLR 2025). Requires N >= 30 per condition for statistical validity; the system flags `statistically_valid: false` when this threshold is not met.
+  subgraph Teacher["Teacher cohort dashboard :5050"]
+    FLASK[Flask 3 + SQLite]
+    PROOF[/HMAC-SHA-256 signed proof/]
+    FLASK --- PROOF
+  end
 
-**Integrity(S)** — Defined as Reachable(M,i) ⊆ Allowed(i) per the DY-AGENT threat model. Verifies that no reachable model state violates the allowed action set for a given input.
+  subgraph CTFdOpt["Optional CTFd central :8000"]
+    CTFD[CTFd leaderboard]
+    FORMULA[Penalty formula<br/>mirror_juicelab]
+    CTFD --- FORMULA
+  end
 
-**Delta-0 Protocol** — Baseline null-hypothesis measurement: runs each chain with a clean (non-adversarial) prompt to establish the ground truth response distribution before any attack is applied.
-
-**Cross-Model Support (Groq)** — The execution engine supports remote LLM providers via Groq API in addition to local Ollama models, enabling comparative adversarial evaluation across model families.
-
-**Threat Score** — Composite threat scoring metric (Zhang et al., 2025) combining attack success rate, semantic drift magnitude, and defense bypass frequency into a single normalized score per chain.
-
-👉 **[Read the Detailed Technical Documentation for the Red Team Lab](docs/REDTEAM_LAB_EN.md)**
-
-### Defense Infrastructure
-- **66 defense techniques** across 4 classes (Prevention, Detection, Response, Measurement) — 40/66 implemented (60.6%)
-- **15 RagSanitizer detectors** covering all 12 character injection techniques (Hackett et al., 2025)
-- **Guardrail benchmark** comparing 6 industry systems (Azure Prompt Shield, Meta Prompt Guard, etc.)
-- **Defense Taxonomy API** with coverage tracking and guardrail benchmark endpoints
-
-### 🔬 PromptForge — Multi-LLM Testing Interface (NEW)
-
-Test adversarial prompts across **6 LLM providers** in parallel:
-
-| Provider | Type | Models | Status |
-|----------|------|--------|--------|
-| **Ollama** | Local | llama3.2, Meditron 7B/70B | ✓ Always Available |
-| **Claude** (Anthropic) | Cloud | Opus 4.6, Sonnet 4.6, Haiku 4.5 | Requires API Key |
-| **GPT** (OpenAI) | Cloud | GPT-4o, GPT-4-turbo, GPT-4o-mini | Requires API Key |
-| **Gemini** (Google) | Cloud | Gemini 2.0 Flash, 1.5 Pro | Requires API Key |
-| **Grok** (xAI) | Cloud | Grok-3, Grok-2 | Requires API Key |
-| **Groq** | Cloud | Llama 70B, Mixtral | Requires API Key |
-
-**Key Features:**
-- ✅ **Real-time Streaming**: Watch tokens appear as LLMs generate responses
-- ✅ **Parallel Comparison**: Test one prompt on all providers simultaneously
-- ✅ **Dynamic Configuration**: Add providers by setting environment variables (no code changes)
-- ✅ **Responsive Metrics**: Latency, token counts, status tracking per provider
-- ✅ **Export Results**: Download comparison data as JSON for thesis integration
-- ✅ **Single Source of Truth**: All provider configs in `llm_providers_config.json`
-
-**Access:** Navigate to **`http://localhost:5173/redteam/prompt-forge`** after starting the backend.
-
-**Quick Start:**
-```bash
-# Configure cloud providers (optional)
-export ANTHROPIC_API_KEY="sk-ant-..."
-export OPENAI_API_KEY="sk-..."
-export GOOGLE_API_KEY="AIzaSy..."
-
-# Start backend
-./aegis.ps1 start backend
-
-# Open UI
-http://localhost:5173/redteam/prompt-forge
+  OV -- "GET /api/juicelab/hint?level=N (sequential)" --> GATED
+  OV -- "POST /api/juicelab/quiz/score" --> GATED
+  OV -- "GET /api/juicelab/walkthrough (post-solve only)" --> GATED
+  OV -- "POST /api/sync (events)" --> FLASK
+  OV -- "POST /api/verify-flag (HMAC-SHA1)" --> FLASK
+  FLASK -. "POST /api/v1/awards (Mode C only)" .-> CTFD
+  CORE -. "ctf.key shared HMAC secret" .-> FLASK
+  CORE -. "ctf.key shared HMAC secret" .-> CTFD
 ```
 
-👉 **[Read PromptForge Configuration Guide](backend/prompts/LLM_PROVIDERS_README.md)**
+Three independent moving parts — none of them required to run the others — and a **single shared HMAC secret** (`ctf.key`) that ties Juice Shop, the dashboard, and CTFd together when the student validates a flag.
+
+For deeper diagrams (data flow, anti-leak gating, score formula, deployment modes), see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ---
 
-## Architecture
+## The pedagogical contract
 
-```
-┌──────────────────────────────────────┐
-│  React Frontend (Vite + Tailwind)    │
-│  ┌─────────────┐  ┌───────────────┐  │
-│  │ Da Vinci AI │  │  Aegis AI     │  │
-│  │  Chat Panel │  │  Cyber Panel  │  │
-│  └──────┬──────┘  └──────┬────────┘  │
-│         │ SSE stream      │ SSE stream│
-└─────────┼─────────────────┼──────────┘
-          │                 │
-┌─────────▼─────────────────▼──────────┐
-│  FastAPI Backend (Python)            │
-│  /api/query/stream  (Da Vinci)       │
-│  /api/cyber_query/stream (Aegis)     │
-└─────────────────────┬────────────────┘
-                      │
-              ┌───────▼────────┐
-              │  Ollama (local) │
-              │  llama3.2      │
-              └────────────────┘
-```
+JuiceLab is grounded in three explicit pedagogical decisions. The "why" of every UI element traces back to one of these.
 
-**Attack vector**: Malicious payload embedded in HL7 OBX field of the PACS record → injected verbatim into the LLM context → model complies with attacker instructions.
+### 1. Vygotsky's Zone of Proximal Development — graduated hints
 
----
+A challenge is in a student's ZPD when they can solve it *with the right amount of help*. Too little help → frustration; too much → no learning. JuiceLab encodes this as a 5-level ladder the student climbs *in sequence* (server enforces N+1 only after N is consumed):
 
-## Tech Stack
+| Level | Cost | Pedagogical intent |
+|---|---|---|
+| **N1** | 5 % | Socratic question — re-orient attention without revealing |
+| **N2** | 10 % | Research direction — name the OWASP / MITRE / CWE family |
+| **N3** | 20 % | Technical clue — the surface and the *kind* of payload |
+| **N4** | 35 % | Guided steps — ordered list of what to do, no payload yet |
+| **N5** | 50 % | Complete solution — the exact payload + walkthrough |
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Vite, Tailwind CSS v4, Three.js (`@react-three/fiber`) |
-| Backend | Python 3.11+, FastAPI, Pydantic, SSE streaming |
-| LLM Engine | [Ollama](https://ollama.com/) (local) |
-| Models | `llama3.2` (both Medical and Aegis agents, via different system prompts) |
-| Red Team | LangChain + ChromaDB — 40 attack chains, AI-agnostic via `llm_factory` |
-| Multi-Agent | AG2 (AutoGen) for orchestration, Genetic Optimizer (Liu et al., 2023) |
-| i18n | `react-i18next` — FR / EN / BR |
-| Packaging | Docker & Docker Compose |
+The cost cohort `5/10/20/35/50` is not arbitrary — it is calibrated so a student who consumes all five hints can still pass with a non-zero score (50 challenge + bonus quiz + bonus flag), but a student who solves the challenge unaided is unambiguously rewarded.
 
----
+### 2. Bloom's Taxonomy — quiz anchors the concept
 
-## Performance Optimizations (v4.1)
+Once a challenge is solved, the student does not move on. They face three multiple-choice questions that target the **conceptual** understanding, not the trick:
 
-### Phase 3: Dynamic i18n Locale Loading (2026-04-06)
-- **Impact**: ~150 kB bundle reduction, language files loaded on-demand only
-- **Mechanism**: Extract 272 kB inline translations into separate JSON files (FR: 81 kB, EN: 75 kB, BR: 77 kB)
-- **Benefit**: Initial load faster; users only download their active language
-- **Technical**: Dynamic `import('./locales/${lang}.json')` with i18nReady promise synchronization
+- *What category of OWASP Top 10 did I exploit?*
+- *Which defence would have prevented this in code?*
+- *How do I generalise this to a different application?*
 
-### Phase 4: HTTP Caching + Request Deduplication (2026-04-06)
-- **Backend (Server.py)**: CacheControlMiddleware on 23 API endpoints
-  - **Cache Strategy**: max-age=86400 (taxonomy), max-age=3600 (catalog/templates), max-age=300 (scenarios)
-  - **Coverage**: 100% of read-only endpoints; streaming/POST endpoints excluded
-- **Frontend (useFetchWithCache)**: In-memory deduplication hook
-  - **Hit Rate**: ~85% for repeated requests
-  - **Deduplication**: Prevents 60% of simultaneous duplicate requests
-  - **API**: `useFetchWithCache(url)`, `prefetch(url)`, `invalidateCache(url)`
-- **Component Updates**: 14 components (DefenseTaxonomyCard, CatalogView, ScenarioTab, etc.) replaced fetch + useEffect with useFetchWithCache
-- **RedTeamLayout**: Automatic prefetch on mount (catalog, templates, scenarios, taxonomy)
+The quiz score `(Q1 + Q2 + Q3) / 3` averages with the challenge score, so the final mark rewards both *doing* and *understanding* — the gap Juice Shop alone leaves open.
 
-### Bundle Analysis (Post-Optimization)
-| Metric | Before | After | Gain |
-|--------|--------|-------|------|
-| Main chunk | 905 kB | 668 kB | -26% (-237 kB) |
-| i18n inline | 272 kB | Split into chunks | Lazy-loaded per language |
-| CSS bundle | 145 kB | 145 kB | (unchanged) |
-| **Initial Load** | 905 kB | 668 kB | **-26% faster** |
-| **Gzip (main)** | ~220 kB | 187 kB | **-15% smaller** |
+### 3. Tamper-evident proof — student handover
 
-### Target Achieved ✅
-- **Phase 1-2** (Memoization + Lazy-loading): Committed
-- **Phase 3** (i18n splitting): Committed (a4513ac)
-- **Phase 4** (HTTP caching): Committed (6dbb490)
-- **Result**: Main bundle 668 kB (target: ~600 kB achieved with 26% reduction)
+At the end of each challenge the student downloads a Markdown file signed HMAC-SHA-256 by the dashboard. The file contains the brief, the journal entry, the consumed hints, the quiz answers, the score breakdown, and the timestamp. The teacher verifies signatures with `dashboard/verify_proof.py` — no need to trust anyone's screenshot.
 
----
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/vitals` | Current patient vital signs |
-| `POST` | `/api/chat` | Send a message to the surgical assistant |
-| `POST` | `/api/redteam/attack/stream` | SSE stream for a single targeted attack |
-| `POST` | `/api/redteam/campaign/stream` | SSE stream for a full security audit |
-| `GET` | `/api/scenarios` | List available Red Team scenarios |
-| `POST` | `/api/redteam/separation-score` | Compute Sep(M) from data vs instruction position |
-| `GET` | `/api/redteam/chains` | Chain registry listing |
-| `GET` | `/api/redteam/telemetry/stream` | SSE real-time telemetry stream |
-| `GET` | `/api/redteam/telemetry` | Telemetry buffer snapshot (JSON) |
-| `GET` | `/api/redteam/telemetry/health` | Telemetry subsystem health |
-
----
-
-## "Offline" Demo Mode
-
-No backend needed! If the React app cannot connect to the FastAPI server, it switches automatically to **Mock Demo Mode** using pre-crafted responses that fully demonstrate all attack scenarios.
-
-**Try it now**: run `npm run dev` in `/frontend`, or open the GitHub Pages deployment.
-
----
-
-## Installation & Quick Start
-
-### Prerequisites
-1. **Python 3.11+** installed
-2. **Node.js 18+** installed
-3. Install [Ollama](https://ollama.com/) and ensure it is running
-4. Pull the model: `ollama pull llama3.2`
-
-### Backend Setup
-```bash
-cd backend
-pip install -r requirements.txt
+```mermaid
+sequenceDiagram
+  participant S as Student
+  participant JS as Juice Shop
+  participant DB as Dashboard
+  S->>JS: solve challenge X
+  JS-->>S: notification "Flag : <hex>"
+  S->>S: writes journal (after_solve)
+  S->>DB: POST /api/sync (journal_filled)
+  S->>DB: POST /api/verify-flag (flag, HMAC-SHA1)
+  DB->>DB: HMAC.compare_digest(ctf_key)
+  DB-->>S: { valid: true, bonus: 10 }
+  S->>DB: POST /api/sync (quiz_completed)
+  S->>DB: GET /api/proof
+  DB-->>S: signed proof.md (HMAC-SHA-256)
+  S->>S: hands proof to teacher
 ```
 
-This installs:
-- **Core**: FastAPI, Uvicorn, Ollama, Pydantic, ChromaDB
-- **Red Team Lab**: LangChain ecosystem (40 attack chains ported from prompt injection research — see [Attack Chain Library](#-attack-chain-library) below)
-- **Agents**: AG2 (AutoGen) for multi-agent orchestration
-
-### Frontend Setup
-```bash
-cd frontend
-npm install
-```
-
-### Quick Start
-
-**Windows (one-click):**
-```cmd
-start_all.bat
-```
-
-**Mac / Linux:**
-```bash
-chmod +x start_all.sh
-./start_all.sh
-```
-*Starts both servers on `localhost:8042` (backend) and `localhost:5173` (frontend).*
-
-> **Note**: If LangChain is not installed, the attack chains gracefully degrade — the app loads normally but the Red Team Lab chains are unavailable. The frontend works fully in demo mode without any backend.
+Full pedagogical rationale, references, and design notes in [`docs/PEDAGOGY.md`](./docs/PEDAGOGY.md).
 
 ---
 
-## Docker Deployment
+## CTF integration (Mode A / B / C)
+
+JuiceLab supports three orthogonal deployment modes — all selected by environment variables, no code change needed.
+
+```mermaid
+flowchart TB
+  subgraph A["Mode A — Local solo"]
+    A1[1 stack docker per laptop]
+    A2[teacher collects proof.md by email or USB]
+  end
+
+  subgraph B["Mode B — Cohort tracking"]
+    B1[N Juice Shops + 1 dashboard]
+    B2[teacher views cohort matrix]
+  end
+
+  subgraph C["Mode C — + CTFd central"]
+    C1[Mode A or B + public CTFd leaderboard]
+    C2[hint penalties mirrored automatically]
+    C3[real-effort competition]
+  end
+
+  A --> B
+  B --> C
+```
+
+| Mode | Trigger | Use case | Visibility |
+|---|---|---|---|
+| **A** Local solo | (no extra env) | 1 student, 1 laptop, the teacher collects signed proofs | none (private TD) |
+| **B** Cohort tracking | `DASHBOARD_TEACHER_TOKEN` set | Classroom with N students + central dashboard | teacher only |
+| **C** + CTFd central | `CTFD_URL` and `CTFD_ADMIN_TOKEN` set | Course with a public scoreboard, competition dynamic | full leaderboard |
+
+**Key insight (Mode C).** A naive CTFd integration only sees the flag paste — so a student who burns 4 hints and a student who solves unaided land on the same leaderboard line. JuiceLab pushes the *hint penalties* to CTFd as negative awards, so the leaderboard reflects real effort. This is the difference between a CTF that drives learning and a CTF that just rewards Googling.
+
+Full setup (CTFd hosting, `juice-shop-ctf-cli` import, HMAC alignment, team pre-provisioning, troubleshooting) in [`docs/CTF-INTEGRATION.md`](./docs/CTF-INTEGRATION.md) and [`docker/README.md`](./docker/README.md).
+
+---
+
+## Quick start
+
+> Full instructions in [`INSTALL.md`](./INSTALL.md). Below is the 3-command path.
 
 ```bash
-docker-compose up --build
+# 1. Clone this repo + clone Juice Shop next to it
+git clone https://github.com/mo0ogly/juicelab.git
+git clone https://github.com/juice-shop/juice-shop.git    # see INSTALL.md to apply the overlay
+
+# 2. Configure secrets
+cd juicelab/docker
+cp .env.example .env
+# edit .env — set DASHBOARD_TEACHER_TOKEN (>= 16 chars) and DASHBOARD_PROOF_SECRET (>= 16 chars)
+
+# 3. Smoke test (1 student instance + dashboard)
+docker compose --env-file .env up -d --build
 ```
-*(Requires Docker Desktop configured to allow containers to reach the host Ollama instance via `host.docker.internal`)*
+
+Open:
+
+- Student: <http://127.0.0.1:3000/#/score-board> — click any challenge card, then the **TD** button to open the Coach overlay.
+- Teacher: <http://127.0.0.1:5050/dashboard?cohort=M2-IA-2026> — log in with `DASHBOARD_TEACHER_TOKEN`.
+
+For a cohort of N students, see [`docker/README.md`](./docker/README.md) section 2.
 
 ---
 
-## 🔗 Attack Chain Library
+## Repository layout
 
-The Adversarial Studio v2.1 includes **40 attack chains**, **48 scenarios**, and **122 attack templates** (106 two-digit + 16 three-digit numbered), ported and enhanced from prompt injection research (Liu et al., 2023, arXiv:2306.05499; Zverev et al., 2025, ICLR; Reimers & Gurevych, 2019, Sentence-BERT). All chains are **AI-agnostic** (Ollama/OpenAI/Anthropic/Groq via `llm_factory`). Each chain has at least one dedicated scenario. Each attack template has a detailed help modal explaining the attack mechanism, formal framework link, and defense analysis.
+```
+juicelab/
+├── README.md                    this file
+├── README_FR.md                 French mirror
+├── INSTALL.md                   step-by-step install (laptop, cohort, VPS, CTFd)
+├── ARCHITECTURE.md              full architecture with mermaid diagrams
+├── CONTRIBUTING.md              how to add a new pedagogical pack
+├── CODE_OF_CONDUCT.md           Contributor Covenant 2.1
+├── SECURITY.md                  vulnerability disclosure policy
+├── LICENSE                      MIT
+├── CONTEXTE-JuiceLab.md         design history (2026 working notes)
+│
+├── docs/
+│   ├── PEDAGOGY.md              Vygotsky / Bloom rationale, references
+│   └── CTF-INTEGRATION.md       Mode C deep-dive (CTFd, HMAC, awards)
+│
+├── dashboard/                   Flask 3 + SQLite teacher dashboard
+│   ├── app.py                   routes (login, /dashboard, /api/sync, /api/proof, /api/verify-flag)
+│   ├── db.py                    SQLite helpers
+│   ├── schema.sql               events table
+│   ├── verify_proof.py          standalone HMAC verifier (offline)
+│   ├── templates/               Jinja2 (dashboard.html, login.html, journal_modal.html)
+│   ├── tests/                   pytest (10 tests, hermetic SQLite)
+│   └── requirements.txt
+│
+├── docker/                      Docker Compose deploy
+│   ├── Dockerfile.juicelab      Juice Shop + JuiceLab overlay (multi-stage)
+│   ├── Dockerfile.dashboard     Flask + SQLite
+│   ├── docker-compose.yml       1 student + 1 dashboard + (optional) CTFd
+│   ├── entrypoint.sh            rewrites config.json from env (cohort, dashboard URL)
+│   ├── provision.py             generates docker-compose.cohort.yml from a roster.txt
+│   ├── roster.example.txt
+│   ├── .env.example             secrets template
+│   └── README.md                deploy scenarios (smoke, cohort, VPS, Mode C)
+│
+├── ctfd/                        CTFd opt-in artefacts (Mode C)
+│
+├── juice.ps1                    Windows launcher (start / stop / health / logs)
+│
+└── .claude/                     Claude Code agent tooling (used during development;
+                                  not required to run JuiceLab — kept for transparency)
+```
 
-**Protocol P-δ⁰** — The studio implements the δ⁰/δ¹ discrimination protocol: running attacks WITH vs WITHOUT system prompt isolates the RLHF base alignment contribution (δ⁰ = 1 − ASR(∅)) from the instruction layer (δ¹ = ASR(∅) − ASR(S)). Access via Forge AIDE tab → "Test δ⁰" or `POST /api/redteam/delta0-protocol`. Definition 3.3bis (Zverev et al. ICLR 2025 extension).
-
-### CrowdStrike Taxonomy Coverage
-Full coverage of the CrowdStrike Prompt Injection Taxonomy (2025-11-01): 95/95 techniques across 4 classes (Overt, Indirect, Social/Cognitive, Evasive).
-
-#### Formal Campaign & Sep(M) Score
-
-The campaign runner (`run_formal_campaign()`) tests all 40 chains with configurable parameters:
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `n_trials` | 30 | Trials per chain (must be >= 30 for statistical significance) |
-| `include_null_control` | true | Run clean baseline for comparison |
-| `aegis_shield` | false | Enable/disable delta-2 structural defense |
-
-**Sep(M)** (Zverev et al., ICLR 2025) measures instruction/data separation. **WARNING:** Sep(M) = 0 with zero violations is a statistical floor artifact, not a real measurement. The system flags this automatically with `statistically_valid: false`.
-
-#### Semantic Drift (Cosine Similarity)
-
-The genetic optimizer tracks mutation drift using cosine similarity (Sentence-BERT, `all-MiniLM-L6-v2`) instead of Levenshtein distance. This captures meaning preservation across attack reformulations.
-
-| # | Chain | Technique | Category |
-|---|-------|-----------|----------|
-| 1 | `rag_multi_query` | Multi-query RAG retrieval attack | RAG |
-| 2 | `rag_private` | Fully local RAG (no API keys) | RAG |
-| 3 | `rag_basic` | Baseline semantic search RAG | RAG |
-| 4 | `sql_attack` | NL-to-SQL injection with memory | SQL |
-| 5 | `pii_guard` | PII detection bypass testing | Guard |
-| 6 | `hyde` | Hypothetical Document Embeddings | Retrieval |
-| 7 | `rag_fusion` | Multi-query + Reciprocal Rank Fusion | RAG |
-| 8 | `rewrite_retrieve_read` | Query rewriting for better retrieval | Retrieval |
-| 9 | `critique_revise` | Iterative self-correction loop | Reasoning |
-| 10 | `skeleton_of_thought` | Parallel decomposition attack | Reasoning |
-| 11 | `stepback` | Abstract + specific dual retrieval | Retrieval |
-| 12 | `propositional` | Atomic fact indexing for granular extraction | Retrieval |
-| 13 | `extraction` | Structured PII/medical data extraction | Extraction |
-| 14 | `solo_agent` | Multi-persona collaboration agent | Agent |
-| 15 | `tool_retrieval_agent` | Dynamic tool selection via similarity | Agent |
-| 16 | `multi_index_fusion` | Multi-source fusion by cosine ranking | Fusion |
-| 17 | `router` | Question classification + routing | Router |
-| 18 | `guardrails` | Output validation + auto-fix bypass | Guard |
-| 19 | `xml_agent` | XML tool tag agent (injection vector) | Agent |
-| 20 | `iterative_search` | Multi-step retrieval with reflection | Search |
-| 21 | `rag_conversation` | Multi-turn RAG with memory poisoning | RAG |
-| 22 | `chain_of_note` | Structured reading notes verification | Reasoning |
-| 23 | `research_assistant` | Multi-step reconnaissance pipeline | Research |
+> **Why is `juice-shop/` not in this repo?** The Juice Shop fork lives in its own repository (1.2 GB with `node_modules/`). This repo holds only the *additions* — the overlay, dashboard, docker, docs. See [`INSTALL.md`](./INSTALL.md) for how to apply the overlay to a vanilla Juice Shop clone.
 
 ---
 
-## Testing
+## Roadmap
 
-```bash
-cd backend
-pip install -r requirements_test.txt
-pytest
-```
-Tests cover: HL7 payload integrity, LLM endpoint error handling, malformed request rejection, attack chain registry validation.
+- [x] **Phase A** — anti-leak architecture (private packs, server-side gating)
+- [x] **Phase B** — JWT-gated Express routes (hint sequence enforcement, walkthrough post-solve, quiz strip-on-the-wire)
+- [x] **Phase C** — Flask cohort dashboard + signed proof
+- [x] **Phase D** — Docker Compose multi-instance, cohort provisioning
+- [x] **Mode C** — CTFd opt-in push (hint penalties → CTFd awards)
+- [ ] **Volume push to OWASP** — pedagogical packs for the remaining 98 native Juice Shop challenges, see [`.claude/rules/owasp-pedagogy-companion.md`](./.claude/rules/owasp-pedagogy-companion.md)
+- [ ] **i18n** — full FR / EN / BR coverage of the overlay UI labels
+- [ ] **Persistence** — migrate the in-memory hint state to Redis for multi-instance HA
+
+---
+
+## Contributing
+
+Contributions are welcome — especially on the **pedagogical content** side (new packs for the 98 challenges not yet covered) and the **i18n** front.
+
+Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before opening a PR. Two hard rules upfront:
+
+1. **No new Juice Shop challenge.** This is upstream OWASP territory. We only build *on top of* what Juice Shop already ships.
+2. **Sources before content.** Every pack must cite the upstream `challenges.yml` description, the `hacking-instructor` walkthrough (if any), the `codefixes/` defence (if any), and the `routes/<key>.ts` server code (if relevant) — *before* writing one line of pedagogy. No invention. The full source-grounding protocol is in [`.claude/rules/owasp-pedagogy-companion.md`](./.claude/rules/owasp-pedagogy-companion.md).
+
+---
+
+## Acknowledgements
+
+- **OWASP Juice Shop** team and community — without the original challenges, this overlay would have nothing to teach. Special thanks to Bjoern Kimminich and the maintainers.
+- **Sorbonne Paris-Cite Master IA / Cybersecurity** programme (cohort 2026) — the in-classroom feedback shaped every UI decision.
+- **Vygotsky (1978)** *Mind in Society*, **Bloom (1956)** *Taxonomy of Educational Objectives*, **Keshav (2007)** *How to Read a Paper* — for the pedagogical framework.
 
 ---
 
 ## License
 
-**Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**
-Free to share and adapt for non-commercial purposes with attribution.
+[MIT](./LICENSE) — use it, fork it, teach with it. Not affiliated with the OWASP Foundation.
+
+---
+
+**Author** Fabrice Pizzi (`mo0ogly`) — M2 IA / Cybersecurity, Sorbonne Paris-Cite — `mo0ogly@proton.me`
+
+If you are a teacher and want to use JuiceLab in your own course, open a Discussion. I will be happy to help you adapt the parcours to your cohort.

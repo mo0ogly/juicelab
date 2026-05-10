@@ -1,0 +1,94 @@
+# Security Policy
+
+## Scope
+
+JuiceLab is a **deliberately vulnerable educational platform**. The OWASP Juice Shop core under it ships intentional vulnerabilities for students to exploit — those are out of scope. What IS in scope:
+
+* The JuiceLab Angular **overlay** (`juice-shop/frontend/src/app/juicelab-overlay/`) — leaks of private hints, quiz answers, walkthroughs, or any bypass of the server-side gating.
+* The JuiceLab **Express routes** (`juice-shop/routes/juicelab.ts`) — auth bypass, level-skip, walkthrough access without solve, admin endpoint without token.
+* The **Flask dashboard** (`dashboard/`) — auth bypass, SQL injection in `/api/cohort`, HMAC forgery in `/api/verify-flag` or `/api/proof`, IDOR on events, leaked teacher token in logs.
+* The **CTFd Mode C bridge** (`_push_hint_penalty` and `_resolve_ctfd_team` in `dashboard/app.py`) — credential exfiltration, team mapping spoofing, award injection on behalf of another student.
+* The **Docker stack** (`docker/`) — container escape, secret leakage, network exposure unintended by `docker-compose.yml`.
+* The **proof signing** (`HMAC-SHA-256` on `proof.md`) — any way to produce a valid proof without solving the challenge.
+
+**Out of scope.** Vulnerabilities in OWASP Juice Shop itself — report those to the upstream project at <https://github.com/juice-shop/juice-shop/security/policy>. Vulnerabilities in CTFd — report at <https://github.com/CTFd/CTFd/security/policy>. Vulnerabilities that require the attacker to already have the `DASHBOARD_TEACHER_TOKEN` or `CTFD_ADMIN_TOKEN` — those tokens grant teacher-level access by design.
+
+## Supported versions
+
+JuiceLab is alpha-stage classroom software. Only the `main` branch is supported. There is no LTS, no security branch, no backport policy. Patches for confirmed vulnerabilities land on `main` within the disclosure window below; deployments are expected to track `main` or pin a specific commit and apply security patches manually.
+
+| Version | Supported |
+|---|---|
+| `main` (rolling) | yes |
+| any older tag | no |
+
+## How to report a vulnerability
+
+**Do not file public GitHub issues for vulnerability reports.** Use one of the channels below:
+
+1. **GitHub private advisory** (preferred) — open a draft at <https://github.com/mo0ogly/juicelab/security/advisories/new>. This keeps the discussion private until the fix is ready.
+2. **Email** — `mo0ogly@proton.me`. Include `[JUICELAB-SEC]` in the subject line.
+
+Please include in your report:
+
+* A description of the vulnerability and its impact.
+* Step-by-step reproduction (a minimal payload is ideal).
+* The affected commit hash or branch.
+* Your assessment of the severity (low / medium / high / critical) and the exploit prerequisites (anonymous? authenticated student? local network? Mode C only?).
+* Whether you wish to be credited in the advisory, and under what name / handle.
+
+If you have PoC code, paste it inline or attach it — do not link to a public gist.
+
+## Disclosure timeline
+
+| Day | Action |
+|---|---|
+| 0 | Vulnerability reported. Maintainer acknowledges receipt within 72 hours. |
+| 0-7 | Maintainer reproduces the issue, scopes the impact, drafts a fix. |
+| 7-30 | Fix is committed to a private branch. Reporter is consulted on disclosure language. |
+| 30-60 | Fix is merged to `main`. Public advisory is published with credit (if requested). |
+| 60+ | If the fix is not yet ready and the reporter wants to disclose, the maintainer will not block it — the priority is downstream safety. |
+
+We aim for a 30-day disclosure window in the typical case. For critical vulnerabilities affecting the proof signing or the teacher token gating, we will move faster (7 to 14 days target). For low-severity issues that require a Mode C deployment with a misconfigured CTFd, we may extend to 60 days if the fix is non-trivial.
+
+## What we will not do
+
+* Sue or threaten you for reporting a vulnerability in good faith.
+* Demand silence beyond the agreed disclosure window.
+* Pay a bounty. JuiceLab is a non-funded classroom project. We will credit you publicly and gratefully if you wish.
+* Penalize a contributor for filing a vulnerability report against their own code, as long as the report follows this policy.
+
+## Hall of fame
+
+This section will list reporters who responsibly disclosed vulnerabilities to JuiceLab.
+
+(No entries yet.)
+
+## Cryptography
+
+JuiceLab uses two distinct HMAC chains:
+
+* **`ctf.key` -> `JUICESHOP_CTF_SECRET`** — `HMAC-SHA1(secret, challenge.name)` is the OWASP Juice Shop CTF flag formula. Shared between Juice Shop (`lib/utils.ts ctfFlag()`), the dashboard `/api/verify-flag`, and the CTFd `.csv` import. SHA-1 is used because the upstream OWASP `juice-shop-ctf-cli` mandates it for compatibility; we do not introduce a new flag format.
+* **`DASHBOARD_PROOF_SECRET`** — `HMAC-SHA-256(secret, proof_body)` signs the downloadable `proof.md`. SHA-256 because there is no compatibility constraint here, and the dashboard generates and verifies its own proofs (`dashboard/verify_proof.py`).
+
+Both secrets must be >= 16 characters. The dashboard refuses to boot the proof endpoint if `DASHBOARD_PROOF_SECRET` is shorter, and prints a warning if `JUICESHOP_CTF_SECRET` is empty (then `/api/verify-flag` returns 503).
+
+## Threat model summary
+
+| Actor | Capability | Mitigation |
+|---|---|---|
+| Curious student | Inspects HTTP traffic, opens DevTools, reads cookies | All hints / quiz answers / walkthroughs gated server-side. Quiz answers stripped from the wire on GET, only checked on POST. Walkthrough refused until `challenges.solved` is true. |
+| Aggressive student | Spoofs another student's `student_token` | The token is a browser UUID — easy to spoof. Mitigation: in Mode B / C, the cohort matrix shows the JWT email alongside, which the teacher can cross-check. The proof markdown is signed HMAC, so a forged token still cannot produce a valid proof. |
+| Malicious classmate | Tries to inject awards on a peer's CTFd team | The dashboard resolves the team from the JWT email, not from a client-supplied identifier. Spoofing requires forging a Juice Shop JWT, which is upstream-Juice-Shop territory. |
+| External attacker | Hits the dashboard / Juice Shop from the LAN or internet | CORS allowlist + teacher-token gating on admin routes. Public deployments must put HTTPS in front (Caddy / Traefik) and restrict the dashboard by IP at the firewall — documented in [`docker/README.md`](./docker/README.md) section 3. |
+| Compromised CTFd | Returns malicious data on `/api/v1/teams` | The dashboard only consumes `id` and `email` fields. A malicious CTFd can poison the team mapping but cannot inject code into the dashboard. The worst case is a wrong team_id, which produces a wrong leaderboard line — visible to the teacher and reversible. |
+
+## Acknowledgements
+
+The threat model is informed by:
+
+* OWASP Top 10 for LLM Applications (we are not an LLM app, but the principles of input separation apply).
+* The OWASP Juice Shop threat model under the `pwning.owasp-juice.shop` companion guide.
+* The CTFd hardening checklist at <https://docs.ctfd.io/docs/security/>.
+
+Thanks for keeping the classroom safe.

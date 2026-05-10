@@ -14,13 +14,14 @@
 | `research_archive/RESEARCH_ARCHIVE_GUIDE.md` | Structure research_archive, regles PDFs, ChromaDB |
 | `research_archive/RESEARCH_STATE.md` | Etat partage entre toutes les skills |
 
-## ZERO PLACEHOLDER / ZERO DECORATIVE — ABSOLUTE RULE
+## ZERO PLACEHOLDER / ZERO DECORATIVE / ZERO HARDCODING — ABSOLUTE RULE
 
-1. **ZERO placeholder** — chaque element UI connecte a un vrai appel API backend
-2. **ZERO decorative** — pas de Matrix rain, pas de fake "SYSTEM COMPROMISED"
-3. **ZERO emoticon** dans le code sauf demande explicite du user
-4. **ZERO approximation** — these doctorale, rien sans preuve (voir `rules/doctoral-research.md`)
-5. **ZERO schema ASCII** — tout diagramme dans le wiki DOIT etre en fence Mermaid (`flowchart`, `sequenceDiagram`, `pie`, etc.). JAMAIS de box-drawing `┌──┐│└──┘` ni ASCII art. Enforcement : PR blocker.
+1. **ZERO placeholder** — chaque element UI connecte a un vrai appel API backend. Pas de "TODO", "coming soon", "fake data", `setTimeout` qui simule une reponse.
+2. **ZERO hardcoding** — chaque chaine UI visible passe par un catalogue i18n (FR/EN minimum). Chaque URL/port/cle passe par un fichier de config ou une variable d'environnement. JAMAIS de `'Connecte-toi'`, `'http://localhost:3000'`, `'admin@juice-sh.op'` en dur dans un composant. Voir `frontend/src/app/juicelab-overlay/models/juicelab-i18n.ts` pour le catalogue UI.
+3. **ZERO decorative** — pas de Matrix rain, pas de fake "SYSTEM COMPROMISED"
+4. **ZERO emoticon** dans le code sauf demande explicite du user
+5. **ZERO approximation** — these doctorale, rien sans preuve (voir `rules/doctoral-research.md`)
+6. **ZERO schema ASCII** — tout diagramme dans le wiki DOIT etre en fence Mermaid (`flowchart`, `sequenceDiagram`, `pie`, etc.). JAMAIS de box-drawing `┌──┐│└──┘` ni ASCII art. Enforcement : PR blocker.
 
 **Audit** : `grep -rn 'setTimeout\|EXPLOITATION SUCCESSFUL\|SYSTEM COMPROMISED' frontend/src/` — 0 resultat attendu.
 

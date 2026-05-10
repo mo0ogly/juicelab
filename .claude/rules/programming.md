@@ -28,10 +28,11 @@
 ## General
 
 1. **ZERO emoticon** sauf demande explicite du user.
-2. **ZERO placeholder** sans validation explicite.
-3. **ZERO import inutile** — nettoyer apres refactoring.
-4. **ZERO fichier orphelin** — supprimer si plus utilise.
-5. **Chaque fichier cree doit etre reference** quelque part.
+2. **ZERO placeholder** sans validation explicite. Pas de "TODO", "coming soon", `setTimeout` qui simule une reponse, donnees fictives, mock client.
+3. **ZERO hardcoding** — toute chaine UI visible passe par un catalogue i18n (FR/EN au minimum, ex. `juicelab-overlay/models/juicelab-i18n.ts`). Toute URL / port / nom de hote passe par un fichier de config (ex. `assets/juicelab/config.json`) ou une variable d'environnement. JAMAIS d'`'Indices gradues'`, `'http://localhost:5050'`, `'admin@juice-sh.op'` en dur dans un composant. Une chaine hardcodee = un blocker de PR.
+4. **ZERO import inutile** — nettoyer apres refactoring.
+5. **ZERO fichier orphelin** — supprimer si plus utilise.
+6. **Chaque fichier cree doit etre reference** quelque part.
 
 ## File size — 800 lines max
 

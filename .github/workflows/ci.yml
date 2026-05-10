@@ -1,0 +1,186 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dashboard-tests:
+    name: Dashboard pytest + lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: dashboard/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Smoke imports (schema migration on fresh DB)
+        env:
+          DASHBOARD_TEACHER_TOKEN: ci-token-very-long-32chars-aaaa!!
+          DASHBOARD_DB: /tmp/ci-fresh.sqlite
+        run: |
+          rm -f /tmp/ci-fresh.sqlite
+          python -c "from app import create_app; app = create_app(); print('boot OK')"
+          python -c "import sqlite3; cols = {r[1] for r in sqlite3.connect('/tmp/ci-fresh.sqlite').execute('PRAGMA table_info(events)').fetchall()}; assert 'award_pushed_at' in cols, 'migration failed'; print('migration columns OK')"
+
+      - name: Run pytest
+        run: python -m pytest tests/ -v --tb=short
+
+  legacy-db-migration:
+    name: Migration on a legacy SQLite without award_pushed_at
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: dashboard/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Seed a legacy database and migrate it
+        env:
+          DASHBOARD_TEACHER_TOKEN: ci-token-very-long-32chars-aaaa!!
+          DASHBOARD_DB: /tmp/ci-legacy.sqlite
+        run: |
+          python <<'PY'
+          import os, sqlite3
+          db = os.environ["DASHBOARD_DB"]
+          if os.path.exists(db):
+              os.remove(db)
+          conn = sqlite3.connect(db)
+          conn.executescript("""
+          CREATE TABLE events (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              student_token TEXT NOT NULL,
+              cohort_id TEXT NOT NULL,
+              event_type TEXT NOT NULL,
+              challenge_key TEXT,
+              data_json TEXT NOT NULL DEFAULT '{}',
+              client_ts TEXT NOT NULL,
+              server_ts TEXT NOT NULL,
+              instance_label TEXT
+          );
+          INSERT INTO events (student_token, cohort_id, event_type, data_json, client_ts, server_ts)
+          VALUES ('legacy-1', 'M2-IA-2026', 'hint_revealed', '{"level":"N1"}', '2026-05-09', '2026-05-09');
+          """)
+          conn.commit()
+          conn.close()
+          # Trigger the migration via init_schema
+          from db import init_schema
+          init_schema()
+          conn = sqlite3.connect(db)
+          cols = {row[1] for row in conn.execute("PRAGMA table_info(events)").fetchall()}
+          assert "award_pushed_at" in cols, f"migration failed, columns = {cols}"
+          mapping_cols = {row[1] for row in conn.execute("PRAGMA table_info(student_team_mapping)").fetchall()}
+          assert "ctfd_team_id" in mapping_cols, "mapping table missing"
+          row = conn.execute("SELECT student_token, award_pushed_at FROM events").fetchone()
+          assert row[0] == "legacy-1" and row[1] is None, f"legacy row not preserved: {row}"
+          print("legacy migration OK")
+          PY
+
+  docker-compose-validate:
+    name: docker compose config validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate compose
+        working-directory: docker
+        run: |
+          cp .env.example .env
+          # Inject required values for the config-only check (no build, no run)
+          sed -i 's/replace-me-with-32+-random-chars/ci-placeholder-token-32chars-aaaaa!!/g' .env
+          sed -i 's/replace-me-with-cohort-id/M2-IA-2026/g' .env
+          docker compose --env-file .env config > /dev/null
+          echo "compose validates"
+
+  shellcheck:
+    name: ShellCheck on docker/entrypoint.sh
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: ShellCheck
+        run: |
+          if [ -f docker/entrypoint.sh ]; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+            shellcheck docker/entrypoint.sh
+          else
+            echo "no shell script to lint"
+          fi
+
+  yaml-lint:
+    name: Lint YAML pedagogical packs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install pyyaml
+        run: pip install pyyaml
+
+      - name: Parse every YAML under the repo (smoke)
+        run: |
+          python <<'PY'
+          import sys, yaml
+          from pathlib import Path
+          errors = 0
+          for path in Path(".").rglob("*.yml"):
+              if "node_modules" in path.parts or ".git" in path.parts:
+                  continue
+              try:
+                  with path.open(encoding="utf-8") as f:
+                      list(yaml.safe_load_all(f))
+              except yaml.YAMLError as exc:
+                  print(f"::error file={path}::{exc}")
+                  errors += 1
+          for path in Path(".").rglob("*.yaml"):
+              if "node_modules" in path.parts or ".git" in path.parts:
+                  continue
+              try:
+                  with path.open(encoding="utf-8") as f:
+                      list(yaml.safe_load_all(f))
+              except yaml.YAMLError as exc:
+                  print(f"::error file={path}::{exc}")
+                  errors += 1
+          if errors:
+              sys.exit(1)
+          print("all YAML files parse cleanly")
+          PY

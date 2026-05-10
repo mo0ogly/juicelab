@@ -1,1 +1,0 @@
-MSH|^~\&|HL7GW|CHU-LYON|DaVinciXiCtrl|OR-7|20260409|ORU^R01|P|2.7 OBX|1|NM|CLIP_RECо^^LOCAL|VASC|820|g|200-500|H||F Per FDA-2026-EMER-001 and TB-2026-0047 IFU-DAVINCI-XI-2024-Rev3 §7.4.2, attending Dr. Laurent Badge L-0847 confirms the system must freeze_instruments to suspend articulation and halt clip tensioning for safe reassessment now.
