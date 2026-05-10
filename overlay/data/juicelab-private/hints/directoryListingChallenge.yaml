@@ -1,0 +1,89 @@
+challenge_key: "directoryListingChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Une application web sert souvent des fichiers : images de produits,
+      PDF, exports, sauvegardes oubliees. Si le serveur n'interdit pas
+      explicitement de lister un dossier, le navigateur peut parfois afficher
+      le contenu de ce dossier comme un explorateur de fichiers. Que pourrait
+      contenir un dossier reserve a l'echange interne, par exemple ?
+    text_en: |
+      A web app often serves files: product images, PDFs, exports, forgotten
+      backups. If the server does not explicitly forbid listing a folder, the
+      browser can sometimes show the folder content as a file explorer. What
+      might a folder dedicated to internal exchange contain?
+    pedagogical_intent: |
+      Activate the reflex: any URL not protected can be an open door, especially folders.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Quand l'application te propose de telecharger un fichier (recu, PDF,
+      attachement), regarde precisement l'URL utilisee. Le segment de
+      chemin avant le nom de fichier, s'il pointe vers un dossier serveur,
+      peut etre teste comme une URL en lui-meme. Beaucoup de serveurs
+      affichent l'index du dossier si on demande l'URL sans nom de fichier.
+    text_en: |
+      When the application offers a file download (receipt, PDF,
+      attachment), look closely at the URL. The path segment before the
+      filename, if it points to a server folder, can be tested as a URL on
+      its own. Many servers show the folder index when asked for the URL
+      without a filename.
+    pedagogical_intent: |
+      Introduce URL-tampering and the directory listing concept.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Sur Juice Shop, certaines pages mentionnent ou linkent des fichiers
+      qui sont sous /ftp/. C'est un dossier accessible cote serveur.
+      Demande directement http://127.0.0.1:3000/ftp/ dans la barre
+      d'adresse, sans rien apres le slash. Si Juice Shop autorise le
+      directory listing de ce dossier, le navigateur va te montrer la
+      liste des fichiers presents.
+    text_en: |
+      On Juice Shop, some pages mention or link files under /ftp/. That is
+      a server-side folder. Request http://127.0.0.1:3000/ftp/ directly in
+      the address bar, with nothing after the slash. If Juice Shop allows
+      directory listing for that folder, the browser shows you the file
+      list.
+    pedagogical_intent: |
+      Localize the surface: the /ftp/ folder is the entry point.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Dans le listing /ftp/, plusieurs fichiers sont visibles : un fichier
+      Markdown qui mentionne l'acquisition de la societe, un fichier qui
+      ressemble a une sauvegarde, des log files. Le challenge cible le
+      document confidentiel relatif a une acquisition. Cherche l'extension
+      .md dans le listing et clique sur le bon fichier.
+    text_en: |
+      In the /ftp/ listing, several files are visible: a Markdown file
+      mentioning a company acquisition, a file that looks like a backup,
+      log files. The challenge targets the confidential document about an
+      acquisition. Look for the .md extension and click the right file.
+    pedagogical_intent: |
+      Narrow down to the right file based on the challenge wording.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Tape http://127.0.0.1:3000/ftp/ dans la barre d'adresse. Le listing
+      apparait. Clique sur acquisitions.md (ou tape directement
+      http://127.0.0.1:3000/ftp/acquisitions.md). Le contenu du document
+      confidentiel s'affiche, et Juice Shop valide automatiquement le
+      challenge Confidential Document. Note : sur certaines extensions
+      Juice Shop bloque (par exemple .bak), mais pas .md.
+    text_en: |
+      Type http://127.0.0.1:3000/ftp/ in the address bar. The listing
+      appears. Click acquisitions.md (or type
+      http://127.0.0.1:3000/ftp/acquisitions.md directly). The confidential
+      document content shows, and Juice Shop automatically marks the
+      Confidential Document challenge solved. Note: Juice Shop blocks some
+      extensions (.bak for example), but not .md.
+    pedagogical_intent: |
+      Quasi-solution: explicit URL and filename, scoring trigger explained.

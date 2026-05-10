@@ -1,0 +1,165 @@
+challenge_key: "manipulateClockChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Redeem successfully un coupon code de campagne
+  EXPIRE. Description OWASP. Hints officiels : (1)
+  "Try to identify past special event or holiday
+  campaigns of the shop first". (2) "Look for clues
+  about the past campaign or holiday event somewhere
+  in the application". (3) "Solving this challenge
+  does not require actual time traveling". [KILL_
+  CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/order.ts:194 (verifie source). Code exact :
+  `if (campaign && couponDate == campaign.validOn) {
+  challengeUtils.solveIf(challenges.manipulateClock
+  Challenge, () => { return campaign.validOn < new
+  Date().getTime() }) }`. Mecanique : (1) Le user
+  envoie `couponData` en BODY POST /api/Orders. (2)
+  Le serveur decode `couponData = Buffer.from(
+  req.body.couponData, 'base64').toString().split(
+  '-')`. (3) Extract `couponCode` (index 0) et
+  `couponDate` (index 1). (4) Si campagne existe ET
+  couponDate == campagne.validOn, redeem. Bug
+  racine : le `couponDate` est CLIENT-CONTROLLED
+  (encoded base64 par le client lors du redeem). Si
+  l'attaquant connait le code+date d'une campagne
+  expiree, il peut crafter un couponData encoded
+  pointing to that campaign. Hint #2 : campagnes
+  visibles dans le source code (campaigns object
+  dans order.ts:201-203). Workflow : trouver code +
+  date d'une campagne expiree (ex. WMNSDY2019),
+  encoder en base64, submit checkout.
+
+mission_en: |
+  Successfully redeem an EXPIRED campaign coupon
+  code. OWASP description. Official hints: (1) "Try
+  to identify past special event or holiday
+  campaigns of the shop first". (2) "Look for clues
+  about the past campaign or holiday event
+  somewhere in the application". (3) "Solving this
+  challenge does not require actual time
+  traveling". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/order.
+  ts:194 (verified source). Exact code: `if
+  (campaign && couponDate == campaign.validOn) {
+  challengeUtils.solveIf(challenges.manipulateClock
+  Challenge, () => { return campaign.validOn < new
+  Date().getTime() }) }`. Mechanic: (1) User sends
+  `couponData` in POST /api/Orders body. (2) Server
+  decodes `couponData = Buffer.from(req.body.
+  couponData, 'base64').toString().split('-')`. (3)
+  Extract `couponCode` (index 0) and `couponDate`
+  (index 1). (4) If campaign exists AND couponDate
+  == campaign.validOn, redeem. Root bug:
+  `couponDate` is CLIENT-CONTROLLED (encoded base64
+  by client at redeem). If attacker knows code+date
+  of expired campaign, can craft couponData
+  encoding pointing to that campaign. Hint #2:
+  campaigns visible in source code (campaigns
+  object in order.ts:201-203). Workflow: find
+  code+date of expired campaign (e.g.,
+  WMNSDY2019), encode in base64, submit checkout.
+
+concepts:
+  - title_fr: "Trust client timestamps : le bug racine"
+    title_en: "Trust client timestamps: the root bug"
+    body_fr: |
+      Source verifiee (routes/order.ts:182-198) : le
+      serveur decode couponData (base64), extract
+      couponCode + couponDate, et trust ces
+      DEUX values pour valider. Le bug : la `couponDate`
+      doit etre TIME-VERIFIE cote serveur, jamais
+      acceptee depuis le client. La logique
+      correcte : `if (campaign && campaign.validOn
+      <= now() <= campaign.validOn + 24h)` -
+      validation TIME au lieu de matching client-
+      provided date. Le code actuel inverse :
+      checke que couponDate matche validOn (qui est
+      DANS LE PASSE pour une campagne expiree),
+      puis re-check `validOn < now()` -> solve.
+      Pattern : trust client timestamp = bypass
+      garanti.
+    body_en: |
+      Verified source (routes/order.ts:182-198):
+      server decodes couponData (base64), extracts
+      couponCode + couponDate, trusts BOTH values
+      for validation. Bug: `couponDate` must be
+      TIME-VERIFIED server-side, never accepted
+      from client. Correct logic: `if (campaign &&
+      campaign.validOn <= now() <= campaign.validOn
+      + 24h)` - TIME validation instead of matching
+      client-provided date. Current code inverts:
+      checks couponDate matches validOn (which is
+      IN PAST for expired campaign), then re-checks
+      `validOn < now()` -> solve. Pattern: trust
+      client timestamp = guaranteed bypass.
+
+  - title_fr: "Source code campaigns : OSINT in-app"
+    title_en: "Source code campaigns: in-app OSINT"
+    body_fr: |
+      Hint OWASP #2 : "Look for clues about the past
+      campaign or holiday event somewhere in the
+      application". Les campaigns sont definies dans
+      le code source (routes/order.ts:201-203 +
+      following lines). Liste : WMNSDY2019, WMNSDY
+      2020, WMNSDY2021 (Women's Day), plus
+      potentiellement d'autres holidays. Sources
+      pour les students : (a) inspecter le bundle
+      Angular (DevTools Sources) - les coupon codes
+      apparaissent dans le code distribue ; (b)
+      regarder les promotions historiques sur la
+      page d'accueil ; (c) utiliser le hint OWASP
+      #1 pour les holidays connus. Pattern :
+      l'OSINT in-app (lecture du bundle source +
+      page content) est plus efficient que
+      OSINT externe.
+    body_en: |
+      OWASP hint #2: "Look for clues about the past
+      campaign or holiday event somewhere in the
+      application". Campaigns defined in source
+      code (routes/order.ts:201-203 + following).
+      List: WMNSDY2019, WMNSDY2020, WMNSDY2021
+      (Women's Day), plus potentially others.
+      Sources for students: (a) inspect Angular
+      bundle (DevTools Sources) - coupon codes
+      appear in distributed code; (b) look at
+      historical promotions on homepage; (c) use
+      OWASP hint #1 for known holidays. Pattern:
+      in-app OSINT (bundle source + page content
+      reading) more efficient than external OSINT.
+
+  - title_fr: "Hint #3 : pas de time traveling"
+    title_en: "Hint #3: no time traveling"
+    body_fr: |
+      Hint OWASP #3 : "Solving this challenge does
+      not require actual time traveling". Important
+      pedagogiquement : le student pourrait penser
+      "je dois changer mon system clock", "je dois
+      faire un rollback". Le hint le rassure :
+      l'attaque est CLIENT-PAYLOAD only. Pas
+      besoin de manipuler les hostnames, le
+      filesystem, le NTP. Tout se passe en
+      crafting un base64-encoded couponData. Cela
+      reflete une realite du pentest : la
+      manipulation TEMPORELLE est presque
+      toujours payload-based, jamais
+      systeme-level (sauf scenarios specifiques :
+      WMI clock skew exploitation, NTP poisoning).
+    body_en: |
+      OWASP hint #3: "Solving this challenge does
+      not require actual time traveling".
+      Pedagogically important: student could think
+      "I must change system clock", "I must
+      rollback". Hint reassures: attack is CLIENT-
+      PAYLOAD only. No need to manipulate
+      hostnames, filesystem, NTP. Everything in
+      crafting a base64-encoded couponData.
+      Reflects pentest reality: TEMPORAL
+      manipulation almost always payload-based,
+      never system-level (except specific
+      scenarios: WMI clock skew exploitation, NTP
+      poisoning).

@@ -1,0 +1,135 @@
+challenge_key: "nullByteChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la mecanique racine du Poison
+      Null Byte attack ?
+    question_en: |
+      What's the root mechanic of Poison Null
+      Byte attack?
+    options_fr:
+      - "Le null byte cause un crash"
+      - "Mismatch entre semantics de strings : C strings sont NULL-terminated (`\\0` = end), JS/Python/PHP strings NE LE SONT PAS. Quand une app JS passe un filename avec %00 a une C-based syscall (open(), readFile() OS-level), la C string s'arrete au null byte. Donc 'file.exe\\0.txt' en JS = 'file.exe' en C/OS. Le check JS endsWith(.txt) passe, mais l'OS lit file.exe = bypass complet"
+      - "Le null byte est encrypted"
+      - "Le null byte n'existe pas"
+    options_en:
+      - "Null byte causes crash"
+      - "String semantics mismatch: C strings NULL-terminated (`\\0` = end), JS/Python/PHP strings ARE NOT. When JS app passes filename with %00 to C-based syscall (open(), readFile() OS-level), C string stops at null byte. So 'file.exe\\0.txt' in JS = 'file.exe' in C/OS. JS endsWith(.txt) check passes, but OS reads file.exe = full bypass"
+      - "Null byte is encrypted"
+      - "Null byte doesn't exist"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : les vulnerabilites
+      arrivent souvent aux INTERFACES entre
+      systemes a string semantics differents
+      (JS <-> C, Python <-> C, Java <-> JNI).
+      Cas reels : historic PHP CVE-2006-7243
+      (null byte file inclusion), Java
+      ZipSlip-related null byte. Defense :
+      reject TOUT filename contenant null
+      byte avant tout autre check.
+    explanation_en: |
+      Reusable pattern: vulnerabilities often
+      arise at INTERFACES between systems with
+      different string semantics (JS <-> C,
+      Python <-> C, Java <-> JNI). Real cases:
+      historic PHP CVE-2006-7243 (null byte
+      file inclusion), Java ZipSlip-related
+      null byte. Defense: reject ANY filename
+      containing null byte before any other
+      check.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le bug racine est l'ORDRE des operations :
+      `endsWithAllowlistedFileType` AVANT
+      `cutOffPoisonNullByte`. Quelle defense
+      canonique ?
+    question_en: |
+      Root bug is operation ORDER:
+      `endsWithAllowlistedFileType` BEFORE
+      `cutOffPoisonNullByte`. What canonical
+      defense?
+    options_fr:
+      - "Forcer HTTPS"
+      - "Defense en 2 layers : (1) Reject EXPLICITLY tout filename contenant null byte (`if (file.includes('\\0')) reject`). (2) Si on doit strip, le faire AVANT le check d'extension : `file = strip(file); if (!isAllowlisted(file)) reject`. Combine avec UUID-based filenames pour eliminer le user input. Pattern : NORMALIZE input AVANT validation"
+      - "Encrypter les files"
+      - "Disabler /ftp/"
+    options_en:
+      - "Force HTTPS"
+      - "2-layer defense: (1) EXPLICITLY reject any filename containing null byte (`if (file.includes('\\0')) reject`). (2) If must strip, do it BEFORE extension check: `file = strip(file); if (!isAllowlisted(file)) reject`. Combined with UUID-based filenames to eliminate user input. Pattern: NORMALIZE input BEFORE validation"
+      - "Encrypt files"
+      - "Disable /ftp/"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : normalize input
+      AVANT validation est le principe general
+      pour eviter les confusions de
+      representation. Trim whitespace, lower-
+      case, strip null bytes, decode unicode
+      normalization (NFC), etc. AVANT toute
+      check security. Cas reels : Apple 2003
+      iframe srcdoc unicode normalization
+      bypass. Source : routes/fileServer.ts:
+      26-49 + OWASP Input Validation.
+    explanation_en: |
+      Reusable pattern: normalize input
+      BEFORE validation is general principle
+      avoiding representation confusions.
+      Trim whitespace, lowercase, strip null
+      bytes, decode unicode normalization
+      (NFC), etc. BEFORE any security check.
+      Real cases: Apple 2003 iframe srcdoc
+      unicode normalization bypass. Source:
+      routes/fileServer.ts:26-49 + OWASP
+      Input Validation.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #4 : "you will probably solve
+      [4 autres challenges] along the way".
+      Quelle est la lecon pedagogique sur les
+      KILL CHAINS ?
+    question_en: |
+      OWASP hint #4: "you will probably solve [4
+      other challenges] along the way". What's
+      the pedagogical LESSON on KILL CHAINS?
+    options_fr:
+      - "Solve un challenge a la fois"
+      - "Pattern reusable : un single bug peut etre un MULTIPLIER pour multiple attacks. Le null byte bypass ouvre l'acces a 5 files (eastere.gg, package.json.bak, coupons_2013.md.bak, suspicious_errors.yml, encrypt.pyc). Pour le pentester reel, c'est l'idee de KILL CHAIN MULTIPLIER : un bug = N exploits. Defense : refactor le check dans une fonction unique (single point of fix) pour eviter de fixer N fois"
+      - "Tous les challenges sont independants"
+      - "Hints OWASP sont mensonges"
+    options_en:
+      - "Solve one challenge at a time"
+      - "Reusable pattern: single bug can be MULTIPLIER for multiple attacks. Null byte bypass opens access to 5 files (eastere.gg, package.json.bak, coupons_2013.md.bak, suspicious_errors.yml, encrypt.pyc). For real pentester, KILL CHAIN MULTIPLIER idea: one bug = N exploits. Defense: refactor check into single function (single point of fix) to avoid fixing N times"
+      - "All challenges are independent"
+      - "OWASP hints are lies"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la pensee CHAIN-FIRST
+      en pentest reveal les bugs maximum
+      impact. Defense correspondante :
+      refactor le code pour avoir SINGLE POINT
+      DE VERIFICATION (le check d'allowlist
+      doit etre dans UNE fonction utilise
+      partout). Cas reels : Equifax 2017 via
+      Apache Struts bug = single bug,
+      breaches affecting 147M users. Source :
+      OWASP hint #4 + analyse Juice Shop /
+      ftp/.
+    explanation_en: |
+      Reusable pattern: CHAIN-FIRST thinking
+      in pentest reveals maximum impact bugs.
+      Corresponding defense: refactor code to
+      have SINGLE POINT OF VERIFICATION
+      (allowlist check must be in ONE
+      function used everywhere). Real cases:
+      Equifax 2017 via Apache Struts bug =
+      single bug, breaches affecting 147M
+      users. Source: OWASP hint #4 + Juice
+      Shop /ftp/ analysis.

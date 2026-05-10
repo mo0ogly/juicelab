@@ -1,0 +1,152 @@
+challenge_key: "ghostLoginChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Turns out that something is
+      technically and legally wrong with the implementation
+      of the right to be forgotten for users". Donc le bug
+      est dans l'implementation de l'erasure (RTBF). Hint
+      #4 : "What the Juice Shop does here is totally
+      incompliant with GDPR" - c'est un soft delete vs hard
+      delete issue.
+    text_en: |
+      Official OWASP hint #1: "Turns out that something is
+      technically and legally wrong with the implementation
+      of the right to be forgotten for users". So bug is
+      in erasure (RTBF) implementation. Hint #4: "What the
+      Juice Shop does here is totally incompliant with
+      GDPR" - it's soft delete vs hard delete issue.
+    pedagogical_intent: |
+      Activate GDPR compliance reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #2 : "Trying out the Request Data Erasure
+      functionality might be interesting, but cannot help
+      you solve this challenge in real time". Donc utiliser
+      la fonctionnalite RTBF NE resout PAS le challenge.
+      Hint #3 : "If you have solved the challenge Retrieve
+      a list of all user credentials via SQL Injection you
+      might have already retrieved some information about
+      how the Juice Shop deletes users". Pre-requis :
+      resoudre exposedCredentialsChallenge ou
+      unionSqlInjectionChallenge.
+    text_en: |
+      OWASP hint #2: "Trying out the Request Data Erasure
+      functionality might be interesting, but cannot help
+      you solve this challenge in real time". So using
+      RTBF functionality DOES NOT solve challenge. Hint
+      #3: "If you have solved the challenge Retrieve a list
+      of all user credentials via SQL Injection you might
+      have already retrieved some information about how
+      the Juice Shop deletes users". Prerequisite: solve
+      exposedCredentialsChallenge or
+      unionSqlInjectionChallenge.
+    pedagogical_intent: |
+      Spell prerequisites + reveal soft-delete hint.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Apres SQLi exfil de la table Users, tu verras Chris
+      dans la liste avec un champ `deletedAt` ou `is_deleted`
+      non-null (ex. "2026-04-02T12:34:56Z"). C'est un soft
+      delete : la row reste, juste un timestamp ajoute. La
+      cible : Chris est deletedAt mais ses credentials
+      (email + password hash) restent en DB. Le login
+      endpoint Juice Shop NE FILTRE PAS sur deletedAt
+      (Sequelize paranoid: false ou raw query).
+    text_en: |
+      After SQLi exfiltration of Users table, you'll see
+      Chris in list with non-null `deletedAt` or
+      `is_deleted` field (e.g., "2026-04-02T12:34:56Z").
+      Soft delete: row stays, only timestamp added. Target:
+      Chris is deletedAt but his credentials (email +
+      password hash) remain in DB. Juice Shop login
+      endpoint DOES NOT FILTER on deletedAt (Sequelize
+      paranoid: false or raw query).
+    pedagogical_intent: |
+      Reveal soft-delete + login bypass mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Pre-requis materiel :
+      1. Le hash bcrypt de Chris (via SQLi exfil).
+      2. Le password en clair via hashcat (-m 3200, rockyou
+         dict). Pour difficulty-3, le password est
+         typiquement faible (admin / 123456 / chris pattern).
+      3. L'email de Chris (`chris.pike@juice-sh.op` est
+         souvent le pattern pour pop-culture chars dans
+         Juice Shop ; verifie via SQLi).
+      Verification serveur (login.ts:73) : `user.data.id
+      === users.chris.id`. Donc tout ce qui matche
+      l'identite Chris en login = solve auto.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Material prerequisites:
+      1. Chris's bcrypt hash (via SQLi exfiltration).
+      2. Cleartext password via hashcat (-m 3200, rockyou
+         dict). For difficulty-3, password is typically
+         weak (admin / 123456 / chris pattern).
+      3. Chris's email (`chris.pike@juice-sh.op` often
+         pattern for pop-culture chars in Juice Shop;
+         verify via SQLi).
+      Server verification (login.ts:73): `user.data.id
+      === users.chris.id`. So anything matching Chris
+      identity in login = auto solve.
+    pedagogical_intent: |
+      Spell material prerequisites + solve check.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Resoudre exposedCredentialsChallenge ou
+         unionSqlInjectionChallenge prealablement.
+      2. Sur /#/forgot-password ou via SQLi, trouver
+         l'email de Chris (chris.pike@juice-sh.op pattern).
+      3. SQLi UNION SELECT id, email, password, deletedAt
+         FROM Users : tu vois Chris avec deletedAt non-null
+         et un hash bcrypt.
+      4. Crack le hash : hashcat -m 3200 chris.hash
+         rockyou.txt -> password en clair.
+      5. /#/login avec chris.pike@juice-sh.op + cracked
+         password.
+      6. Login succede car le serveur ne filtre pas
+         deletedAt -> challenge solve auto.
+      Source canonique : routes/login.ts:73 (solve
+      condition) + Sequelize paranoid mode docs +
+      cheatsheetseries.owasp.org User Privacy Protection.
+      Defense canonique : (a) Sequelize paranoid: true par
+      defaut + filtre deletedAt obligatoire dans login,
+      (b) hard-delete + anonymization apres RTBF, (c)
+      retention policy + audit log GDPR.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Solve exposedCredentialsChallenge or
+         unionSqlInjectionChallenge first.
+      2. On /#/forgot-password or via SQLi, find Chris's
+         email (chris.pike@juice-sh.op pattern).
+      3. SQLi UNION SELECT id, email, password, deletedAt
+         FROM Users: you see Chris with non-null deletedAt
+         and bcrypt hash.
+      4. Crack hash: hashcat -m 3200 chris.hash
+         rockyou.txt -> cleartext password.
+      5. /#/login with chris.pike@juice-sh.op + cracked
+         password.
+      6. Login succeeds because server doesn't filter
+         deletedAt -> challenge auto-solves.
+      Canonical source: routes/login.ts:73 (solve
+      condition) + Sequelize paranoid mode docs +
+      cheatsheetseries.owasp.org User Privacy
+      Protection.
+      Canonical defense: (a) Sequelize paranoid: true by
+      default + mandatory deletedAt filter in login, (b)
+      hard-delete + anonymization after RTBF, (c)
+      retention policy + GDPR audit log.
+    pedagogical_intent: |
+      Quasi-solution : workflow + defense canonique.

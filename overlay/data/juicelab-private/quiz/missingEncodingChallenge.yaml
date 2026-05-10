@@ -1,0 +1,122 @@
+challenge_key: "missingEncodingChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le bug est que le filename `<unicode>-
+      #zatschi-#whoneedsfourlegs-...jpg` contient
+      des `#` non-encodes. Pourquoi cela casse
+      le rendu ?
+    question_en: |
+      Bug is that filename `<unicode>-#zatschi-
+      #whoneedsfourlegs-...jpg` contains
+      non-encoded `#`. Why does this break
+      rendering?
+    options_fr:
+      - "Parce que # est un emoji"
+      - "Parce que `#` dans une URL est le FRAGMENT SEPARATOR (RFC 3986). Le browser strippe TOUT apres le `#` avant d'envoyer le GET au serveur. Donc le serveur recoit GET `/uploads/<unicode>-` (incomplet) et retourne 404. Defense correcte : URL-encode `#` en `%23` au build time du <img src>"
+      - "Parce que # est invalide"
+      - "Parce que jpg ne supporte pas #"
+    options_en:
+      - "Because # is an emoji"
+      - "Because `#` in URL is FRAGMENT SEPARATOR (RFC 3986). Browser strips EVERYTHING after `#` before sending GET to server. So server receives GET `/uploads/<unicode>-` (incomplete) and returns 404. Correct defense: URL-encode `#` as `%23` at <img src> build time"
+      - "Because # is invalid"
+      - "Because jpg doesn't support #"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour TOUTES les URLs
+      construites cote frontend, encoder
+      proprement les special chars
+      (encodeURIComponent JS). Cas reels :
+      special chars dans usernames, file
+      names, query params. Cf. l'XSS via
+      escaping confusion (CVE-XXX). Source :
+      RFC 3986 + analyse Juice Shop Photo
+      Wall.
+    explanation_en: |
+      Reusable pattern: for ALL frontend-built
+      URLs, properly encode special chars
+      (JS encodeURIComponent). Real cases:
+      special chars in usernames, file names,
+      query params. Cf. XSS via escaping
+      confusion (CVE-XXX). Source: RFC 3986 +
+      Juice Shop Photo Wall analysis.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #3 : "try out the Tweet-button
+      and observe what happens". Quelle est
+      l'astuce pedagogique ?
+    question_en: |
+      OWASP hint #3: "try out the Tweet-button
+      and observe what happens". What's the
+      pedagogical trick?
+    options_fr:
+      - "Tweet partage la photo"
+      - "Twitter web intent URL (`twitter.com/intent/tweet?url=...`) AUTOMATIQUEMENT URL-encode le `url` parameter (incluant les `#` -> `%23`). En cliquant le Tweet-button, la new Twitter tab contient l'URL CORRECTEMENT encodee. Le student peut copy-paste cette URL pour la photo. Pattern reusable : observer les comportements automatiques de tools (Twitter, GitHub, Slack) revele souvent le format attendu"
+      - "Tweet est obligatoire"
+      - "Twitter blocke les #"
+    options_en:
+      - "Tweet shares photo"
+      - "Twitter web intent URL (`twitter.com/intent/tweet?url=...`) AUTOMATICALLY URL-encodes `url` parameter (including `#` -> `%23`). Clicking Tweet-button, new Twitter tab contains CORRECTLY encoded URL. Student can copy-paste this URL for photo. Reusable pattern: observing tools automatic behaviors (Twitter, GitHub, Slack) often reveals expected format"
+      - "Tweet is mandatory"
+      - "Twitter blocks #"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : reverse-engineering
+      des tools tiers reveal souvent les
+      patterns standards. Une approche
+      pedagogique creative : utilise les tools
+      bien-implementees comme reference pour
+      identifier les bugs des tools mal-
+      implementees (Juice Shop ici). Source :
+      OWASP hint #3 + Twitter web intent docs.
+    explanation_en: |
+      Reusable pattern: reverse-engineering
+      third-party tools often reveals standard
+      patterns. Creative pedagogical approach:
+      use well-implemented tools as reference
+      to identify bugs in poorly-implemented
+      ones (Juice Shop here). Source: OWASP
+      hint #3 + Twitter web intent docs.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la defense CANONIQUE pour
+      eviter ce type de bug pour TOUS les file
+      uploads en production ?
+    question_en: |
+      Canonical defense to avoid this type of
+      bug for ALL production file uploads?
+    options_fr:
+      - "Forcer HTTPS"
+      - "Filename sanitization au UPLOAD time : (a) Generate UUID-based filenames (`<uuid>.jpg`) pour eviter ENTIEREMENT les special chars. (b) Stocker le original filename dans DB metadata (display only). (c) Si on doit garder original filename : allowlist [a-zA-Z0-9._-] et replace tout autre par underscore. Combine avec encodeURIComponent au frontend pour les URLs construites. Pattern : NEVER trust user-provided filenames"
+      - "Encrypter les filenames"
+      - "Disabler les uploads"
+    options_en:
+      - "Force HTTPS"
+      - "Filename sanitization at UPLOAD time: (a) Generate UUID-based filenames (`<uuid>.jpg`) to ENTIRELY avoid special chars. (b) Store original filename in DB metadata (display only). (c) If keeping original filename: allowlist [a-zA-Z0-9._-] and replace anything else with underscore. Combined with frontend encodeURIComponent for built URLs. Pattern: NEVER trust user-provided filenames"
+      - "Encrypt filenames"
+      - "Disable uploads"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la sanitization au
+      UPLOAD time (irreversible) est plus
+      robuste que la sanitization au DISPLAY
+      time (peut etre forgotten dans certains
+      paths). Combine avec UUID-based
+      filenames pour eliminer le probleme
+      ENTIEREMENT. Source : OWASP File Upload
+      Cheat Sheet + best practices.
+    explanation_en: |
+      Reusable pattern: UPLOAD-time
+      sanitization (irreversible) more robust
+      than DISPLAY-time sanitization (can be
+      forgotten in some paths). Combined with
+      UUID-based filenames to eliminate
+      problem ENTIRELY. Source: OWASP File
+      Upload Cheat Sheet + best practices.

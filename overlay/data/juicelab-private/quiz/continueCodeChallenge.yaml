@@ -1,0 +1,127 @@
+challenge_key: "continueCodeChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le salt utilise pour hashids est literalement
+      `'this is my salt'`. Quel est le concept
+      defensif viole ?
+    question_en: |
+      hashids salt is literally `'this is my
+      salt'`. What defensive concept is violated?
+    options_fr:
+      - "Les strings doivent etre encryptees"
+      - "Les SECRETS doivent etre crypto-random et stockes hors du source code. Un salt predictible/litteral = bypass garanti car l'attaquant peut reproduire le schema. Defense canonique : (a) crypto.randomBytes(32) genere le secret au premier deploy, (b) stocke en environment variable / KMS / vault, (c) JAMAIS hardcoded en source code visible. Pattern : 'don't put your secret in your code'"
+      - "Les salts doivent etre courts"
+      - "this is my salt est un bon nom"
+    options_en:
+      - "Strings must be encrypted"
+      - "SECRETS must be crypto-random and stored outside source code. Predictable/literal salt = guaranteed bypass since attacker can reproduce schema. Canonical defense: (a) crypto.randomBytes(32) generates secret at first deploy, (b) stored in environment variable / KMS / vault, (c) NEVER hardcoded in visible source code. Pattern: 'don't put your secret in your code'"
+      - "Salts must be short"
+      - "this is my salt is a good name"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la 12 facteurs app
+      methodology + OWASP Secrets Management
+      Cheat Sheet exigent secrets EXTERNES au
+      code. Cas reels : Twitter API leaks via
+      hardcoded keys (multiple cases),
+      Cloudbleed (secrets in logs), Uber 2017
+      breach (AWS keys hardcoded). Source :
+      OWASP Cryptographic Storage Cheat Sheet
+      + 12-factor app config principles.
+    explanation_en: |
+      Reusable pattern: 12-factor app
+      methodology + OWASP Secrets Management
+      Cheat Sheet require secrets EXTERNAL to
+      code. Real cases: Twitter API leaks via
+      hardcoded keys (multiple cases),
+      Cloudbleed (secrets in logs), Uber 2017
+      breach (hardcoded AWS keys). Source:
+      OWASP Cryptographic Storage Cheat Sheet
+      + 12-factor app config principles.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Hashids est utilise comme persistence
+      mechanism dans Juice Shop. Pourquoi
+      hashids n'est-il PAS adapte pour la
+      security ?
+    question_en: |
+      Hashids is used as persistence mechanism
+      in Juice Shop. Why is hashids NOT
+      suitable for security?
+    options_fr:
+      - "Hashids est trop lent"
+      - "Hashids est un encoding REVERSIBLE (npmjs.com/package/hashids documentation : 'DO NOT use Hashids for sensitive data'). Caracteristiques : (a) reversible (decode = integer original), (b) pas de MAC/signature (pas d'authenticity), (c) deterministic (meme input = meme output, replay attacks possibles). C'est un short-form encoding, pas une primitive crypto. Pour la security, utiliser JWT/HMAC/AES-GCM"
+      - "Hashids est commercial"
+      - "Hashids necessite GPU"
+    options_en:
+      - "Hashids is too slow"
+      - "Hashids is REVERSIBLE encoding (npmjs.com/package/hashids documentation: 'DO NOT use Hashids for sensitive data'). Characteristics: (a) reversible (decode = original integer), (b) no MAC/signature (no authenticity), (c) deterministic (same input = same output, replay attacks possible). It's short-form encoding, not crypto primitive. For security, use JWT/HMAC/AES-GCM"
+      - "Hashids is commercial"
+      - "Hashids requires GPU"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : DISTINGUISH encoding
+      vs hashing vs encryption vs signing.
+      Encoding (base64, hex, hashids) = reversible
+      transformation. Hashing (SHA256, BLAKE2) =
+      one-way. Encryption (AES) = reversible avec
+      key. Signing (RSA, Ed25519) = non-
+      repudiable. Chacun a son use case ; les
+      confondre = bugs critiques. Source :
+      hashids docs + crypto fundamentals.
+    explanation_en: |
+      Reusable pattern: DISTINGUISH encoding
+      vs hashing vs encryption vs signing.
+      Encoding (base64, hex, hashids) =
+      reversible transformation. Hashing
+      (SHA256, BLAKE2) = one-way. Encryption
+      (AES) = reversible with key. Signing
+      (RSA, Ed25519) = non-repudiable. Each has
+      its use case; confusing them = critical
+      bugs. Source: hashids docs + crypto
+      fundamentals.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense canonique remplace le
+      continueCode hashids-based en production ?
+    question_en: |
+      What canonical defense replaces hashids-
+      based continueCode in production?
+    options_fr:
+      - "Plus long le hashids salt, mieux c'est"
+      - "Defense en profondeur : (1) JWT signed RS256 avec claims (userId, solvedChallenges array, exp). Server verify la signature avant accept. (2) Server-side persistance : Sequelize Progress model lie a userId. Plus de continueCode du tout - user restore via login. (3) Si on garde continueCode pattern, signer avec HMAC-SHA256 + secret crypto-random stocke en env var. Pattern : authentication + integrity OBLIGATOIRES"
+      - "Hashids avec multi-salt"
+      - "Coder en C++"
+    options_en:
+      - "Longer hashids salt, better"
+      - "Defense in depth: (1) RS256-signed JWT with claims (userId, solvedChallenges array, exp). Server verifies signature before accept. (2) Server-side persistence: Sequelize Progress model linked to userId. No continueCode at all - user restores via login. (3) If keeping continueCode pattern, sign with HMAC-SHA256 + crypto-random secret stored in env var. Pattern: authentication + integrity MANDATORY"
+      - "Hashids with multi-salt"
+      - "Code in C++"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour les state
+      persistence tokens, l'authenticity
+      verification est obligatoire (sinon
+      forge-able). Architecture moderne =
+      stateful (server-side) preferred sinon
+      stateless avec JWT signed. hashids alone
+      = bypass garanti. Source : OWASP
+      Cryptographic Storage + JWT best
+      practices.
+    explanation_en: |
+      Reusable pattern: for state persistence
+      tokens, authenticity verification is
+      mandatory (otherwise forgeable). Modern
+      architecture = stateful (server-side)
+      preferred otherwise stateless with signed
+      JWT. hashids alone = guaranteed bypass.
+      Source: OWASP Cryptographic Storage +
+      JWT best practices.

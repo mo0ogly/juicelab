@@ -1,0 +1,199 @@
+challenge_key: "nullByteChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Bypass un security control avec un Poison Null
+  Byte pour acceder a un fichier non-prevu pour
+  toi. Tag : Prerequisite. Description OWASP. Hints
+  officiels : (1) "Analyze and tamper with links in
+  the application until you get to an unprotected
+  directory listing". (2) "Some files in there are
+  not directly accessible because a security
+  mechanism prevents access". (3) "The Poison Null
+  Byte can trick the security mechanism into
+  thinking that the file you want has a valid file
+  type". (4) "Depending on the files you try to
+  retrieve you will probably solve 'Access a
+  developer's forgotten backup file', 'Access a
+  salesman's forgotten backup file', 'Access a
+  misplaced SIEM signature file, or 'Find the
+  hidden easter egg' along the way". [KILL_CHAIN_
+  DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/fileServer.ts:46-49 (verifie source). Le
+  serveur fait `endsWithAllowlistedFileType(file)`
+  (allowlist .md/.pdf) PUIS `cutOffPoisonNullByte(
+  file)` qui strip le %00 et tout apres. Bug : le
+  endsWith check est fait AVANT le strip. Donc un
+  filename comme `eastere.gg%00.md` passe le
+  endsWith check (.md), puis le strip retourne
+  `eastere.gg`, qui est servi. Le challenge solve
+  via `easterEggLevelOneChallenge` OR
+  `forgottenDevBackupChallenge` OR
+  `forgottenBackupChallenge` OR
+  `misplacedSignatureFileChallenge` OR `file ===
+  'encrypt.pyc'`. Workflow : (1) directoryListing
+  Challenge resolu (acces /ftp/). (2) GET /ftp/
+  eastere.gg%00.md (ou similar avec autres files).
+
+mission_en: |
+  Bypass a security control with Poison Null Byte
+  to access a file not meant for you. Tag:
+  Prerequisite. OWASP description. Official
+  hints: (1) "Analyze and tamper with links in
+  the application until you get to an unprotected
+  directory listing". (2) "Some files in there
+  are not directly accessible because a security
+  mechanism prevents access". (3) "The Poison
+  Null Byte can trick the security mechanism into
+  thinking that the file you want has a valid
+  file type". (4) "Depending on the files you try
+  to retrieve you will probably solve 'Access a
+  developer's forgotten backup file', 'Access a
+  salesman's forgotten backup file', 'Access a
+  misplaced SIEM signature file, or 'Find the
+  hidden easter egg' along the way". [KILL_CHAIN_
+  DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  fileServer.ts:46-49 (verified source). Server
+  does `endsWithAllowlistedFileType(file)`
+  (allowlist .md/.pdf) THEN `cutOffPoisonNullByte
+  (file)` stripping %00 and everything after.
+  Bug: endsWith check done BEFORE strip. So
+  filename like `eastere.gg%00.md` passes
+  endsWith check (.md), then strip returns
+  `eastere.gg`, served. Challenge solves via
+  `easterEggLevelOneChallenge` OR
+  `forgottenDevBackupChallenge` OR
+  `forgottenBackupChallenge` OR
+  `misplacedSignatureFileChallenge` OR `file ===
+  'encrypt.pyc'`. Workflow: (1)
+  directoryListingChallenge solved (/ftp/
+  access). (2) GET /ftp/eastere.gg%00.md (or
+  similar with other files).
+
+concepts:
+  - title_fr: "Poison Null Byte : C string termination + JS string mismatch"
+    title_en: "Poison Null Byte: C string termination + JS string mismatch"
+    body_fr: |
+      Source canonique : Hakipedia "Poison Null
+      Byte" article (link in OWASP description).
+      Mecanique racine : C strings sont NULL-
+      terminated (`\0` = end-of-string). JS strings
+      ne sont PAS NULL-terminated. Quand un app JS
+      passe un filename (avec %00 = NULL byte) a
+      une C-based syscall (open(), readFile() au
+      niveau OS), la C string s'arrete au NULL
+      byte. Donc filename "eastere.gg\0.md" en JS
+      = "eastere.gg" en C. Le check JS endsWith
+      (.md) passe (full string), mais l'OS lit
+      `eastere.gg`. Bug : mismatch entre JS string
+      semantics et C string semantics. Cas reels :
+      historic Java/PHP null byte attacks.
+    body_en: |
+      Canonical source: Hakipedia "Poison Null
+      Byte" article (link in OWASP description).
+      Root mechanic: C strings NULL-terminated
+      (`\0` = end-of-string). JS strings NOT
+      NULL-terminated. When JS app passes a
+      filename (with %00 = NULL byte) to C-based
+      syscall (open(), readFile() at OS level), C
+      string stops at NULL byte. So filename
+      "eastere.gg\0.md" in JS = "eastere.gg" in
+      C. JS endsWith check (.md) passes (full
+      string), but OS reads `eastere.gg`. Bug:
+      mismatch between JS string semantics and C
+      string semantics. Real cases: historic
+      Java/PHP null byte attacks.
+
+  - title_fr: "Order of operations : check before strip"
+    title_en: "Order of operations: check before strip"
+    body_fr: |
+      Source verifiee (routes/fileServer.ts:26-38) :
+      ```js
+      function verify (file, res, next) {
+        if (file && (endsWithAllowlistedFileType(
+          file) || file === 'incident-support.
+          kdbx')) {
+          file = security.cutOffPoisonNullByte(
+            file);  // Strip APRES le check !
+          // ... serve file
+        } else {
+          // reject
+        }
+      }
+      ```
+      Bug : (1) endsWith verifie la full string
+      ('eastere.gg%00.md' ends with '.md' = true).
+      (2) cutOffPoisonNullByte strip ('eastere.gg').
+      (3) sendFile('ftp/eastere.gg') execute -
+      access granted. Defense correcte :
+      `cutOffPoisonNullByte` AVANT le check (ou
+      reject TOUT filename contenant `\0`).
+    body_en: |
+      Verified source (routes/fileServer.ts:26-38):
+      ```js
+      function verify (file, res, next) {
+        if (file && (endsWithAllowlistedFileType(
+          file) || file === 'incident-support.
+          kdbx')) {
+          file = security.cutOffPoisonNullByte(
+            file);  // Strip AFTER check!
+          // ... serve file
+        } else {
+          // reject
+        }
+      }
+      ```
+      Bug: (1) endsWith verifies full string
+      ('eastere.gg%00.md' ends with '.md' =
+      true). (2) cutOffPoisonNullByte strips
+      ('eastere.gg'). (3) sendFile('ftp/eastere.
+      gg') executes - access granted. Correct
+      defense: `cutOffPoisonNullByte` BEFORE
+      check (or reject ANY filename containing
+      `\0`).
+
+  - title_fr: "Composition multi-challenge : 4-en-1 reward"
+    title_en: "Multi-challenge composition: 4-in-1 reward"
+    body_fr: |
+      Hint OWASP #4 explicite : "Depending on the
+      files you try to retrieve you will probably
+      solve [4 autres challenges]". Le nullByte
+      Challenge est un PIVOT : son exploitation
+      ouvre l'acces a 4 autres files :
+      - eastere.gg -> easterEggLevelOneChallenge
+      - package.json.bak -> forgottenDevBackup
+        Challenge
+      - coupons_2013.md.bak -> forgottenBackup
+        Challenge
+      - suspicious_errors.yml -> misplacedSignature
+        FileChallenge
+      Pattern reusable : un single bug
+      (null byte bypass) peut UNLOCK plusieurs
+      challenges. Pour le pentester real, c'est
+      l'idee de KILL CHAIN MULTIPLIER : un bug
+      ouvre N attacks. Defense : reactor le check
+      dans une seule fonction utilisee partout
+      (single point of fix).
+    body_en: |
+      OWASP hint #4 explicit: "Depending on the
+      files you try to retrieve you will probably
+      solve [4 other challenges]". nullByteChallenge
+      is a PIVOT: its exploitation opens access to
+      4 other files:
+      - eastere.gg -> easterEggLevelOneChallenge
+      - package.json.bak -> forgottenDevBackup
+        Challenge
+      - coupons_2013.md.bak -> forgottenBackup
+        Challenge
+      - suspicious_errors.yml ->
+        misplacedSignatureFileChallenge
+      Reusable pattern: single bug (null byte
+      bypass) can UNLOCK multiple challenges. For
+      real pentester, it's KILL CHAIN MULTIPLIER
+      idea: one bug opens N attacks. Defense:
+      refactor check into single function used
+      everywhere (single point of fix).

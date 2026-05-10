@@ -1,0 +1,79 @@
+challenge_key: "rceOccupyChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la difference entre rceChallenge et
+      rceOccupyChallenge ?
+    question_en: |
+      What's the difference between rceChallenge and
+      rceOccupyChallenge?
+    options_fr:
+      - "Pas de difference"
+      - "rceChallenge declenche `Infinite loop detected - reached max iterations` (compteur instructions du sandbox notevil). rceOccupyChallenge declenche `Script execution timed out` (vm option timeout 2000ms). (1) loop simple finie en max iter. (2) computation longue avec progress (CPU-bound mais avoid max iter)"
+      - "Memes"
+      - "Bug version"
+    options_en:
+      - "No difference"
+      - "rceChallenge triggers `Infinite loop detected - reached max iterations` (notevil sandbox instruction counter). rceOccupyChallenge triggers `Script execution timed out` (vm 2000ms timeout option). (1) simple loop ended by max iter. (2) long computation with progress (CPU-bound but avoid max iter)"
+      - "Same"
+      - "Version bug"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : 2 mecanismes complementaires.
+      Source : b2bOrder.ts:23-31 + notevil docs.
+    explanation_en: |
+      Reusable pattern: 2 complementary mechanisms.
+      Source: b2bOrder.ts:23-31 + notevil docs.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Cas reels de DoS via expensive computation ?
+    question_en: |
+      Real cases of DoS via expensive computation?
+    options_fr:
+      - "Jamais arrive"
+      - "(1) ReDoS Cloudflare 2019 (1h downtime, regex catastrophic backtracking). (2) ReDoS Stack Overflow 2016 (34 min downtime). (3) Hash collision DoS Java/PHP/Python 2011 (CVE-2011-3414). (4) Algorithmic complexity attacks. CWE-1333 ReDoS + CWE-407 Inefficient Algorithm. Defense : timeouts + memory limits"
+      - "Mythes"
+      - "Trop technique"
+    options_en:
+      - "Never happened"
+      - "(1) ReDoS Cloudflare 2019 (1h downtime, regex catastrophic backtracking). (2) ReDoS Stack Overflow 2016 (34 min downtime). (3) Java/PHP/Python hash collision DoS 2011 (CVE-2011-3414). (4) Algorithmic complexity attacks. CWE-1333 ReDoS + CWE-407 Inefficient Algorithm. Defense: timeouts + memory limits"
+      - "Myths"
+      - "Too technical"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : computation = ressource.
+      Source : OWASP A04 + CWE-1333.
+    explanation_en: |
+      Reusable pattern: computation = resource.
+      Source: OWASP A04 + CWE-1333.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique en profondeur pour
+      computation user-provided ?
+    question_en: |
+      Canonical defense in depth for user-provided
+      computation?
+    options_fr:
+      - "Bloquer tout"
+      - "(1) isolated-vm avec cpu_time_limit + memory_limit. (2) Quotas par tenant (rate limit + concurrency limit). (3) Process separe (fork) pour isolation. (4) Monitoring + alerting CPU/request. (5) Circuit breaker auto-ban tenant abusing. (6) Auth + rate limit + timeout + isolation + monitoring = defense en profondeur"
+      - "Plus simple"
+      - "Encrypter resultat"
+    options_en:
+      - "Block all"
+      - "(1) isolated-vm with cpu_time_limit + memory_limit. (2) Per-tenant quotas (rate limit + concurrency limit). (3) Separate process (fork) for isolation. (4) Monitoring + alerting CPU/request. (5) Circuit breaker auto-ban abusing tenant. (6) Auth + rate limit + timeout + isolation + monitoring = defense in depth"
+      - "Simpler"
+      - "Encrypt result"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : isolation > sandbox.
+      Source : OWASP A04 + isolated-vm docs.
+    explanation_en: |
+      Reusable pattern: isolation > sandbox. Source:
+      OWASP A04 + isolated-vm docs.

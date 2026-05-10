@@ -1,0 +1,91 @@
+challenge_key: "loginAdminChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quel element technique exact rendait le formulaire de login
+      vulnerable a l'injection SQL ?
+    question_en: |
+      What exact technical element made the login form vulnerable to SQL
+      injection?
+    options_fr:
+      - "L'absence de HTTPS sur le formulaire de login"
+      - "La concatenation de chaines pour construire la requete SQL au lieu d'une requete parametree"
+      - "L'utilisation de SHA-1 au lieu de bcrypt pour hasher le mot de passe"
+      - "Le manque de captcha sur le formulaire"
+    options_en:
+      - "Absence of HTTPS on the login form"
+      - "String concatenation to build the SQL query instead of a parameterized query"
+      - "Use of SHA-1 instead of bcrypt to hash the password"
+      - "Lack of captcha on the form"
+    correct: 1
+    explanation_fr: |
+      Le serveur fait quelque chose comme : "SELECT * FROM users WHERE
+      email='" + req.body.email + "'". L'apostrophe injectee echappe la
+      chaine et le reste du payload devient du code SQL execute.
+    explanation_en: |
+      The server does something like: "SELECT * FROM users WHERE
+      email='" + req.body.email + "'". The injected single quote
+      escapes the string and the rest of the payload becomes executed
+      SQL code.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la methode de prevention CANONIQUE de l'injection SQL en
+      developpement applicatif ?
+    question_en: |
+      What is the CANONICAL prevention method for SQL injection in
+      application development?
+    options_fr:
+      - "Filtrer les caracteres dangereux comme l'apostrophe avec un blacklist regex"
+      - "Utiliser des requetes parametrees (prepared statements)"
+      - "Ajouter un WAF devant l'application"
+      - "Echapper les caracteres avec addslashes() avant la requete"
+    options_en:
+      - "Filter dangerous characters like single-quote with a blacklist regex"
+      - "Use parameterized queries (prepared statements)"
+      - "Add a WAF in front of the application"
+      - "Escape characters with addslashes() before the query"
+    correct: 1
+    explanation_fr: |
+      Les requetes parametrees garantissent par construction que les
+      donnees ne peuvent pas devenir du code. Le blacklist et l'escaping
+      sont fragiles, le WAF est defense en profondeur mais pas la
+      prevention fondamentale.
+    explanation_en: |
+      Parameterized queries guarantee by construction that data cannot
+      become code. Blacklisting and escaping are fragile, a WAF is
+      defense-in-depth but not the fundamental prevention.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Que se passe-t-il cote SQL quand on injecte ' OR true-- dans le
+      champ email ? Pourquoi le mot de passe n'est-il plus verifie ?
+    question_en: |
+      What happens server-side when ' OR true-- is injected in the email
+      field? Why is the password no longer verified?
+    options_fr:
+      - "Le serveur reconnait le mot 'true' et donne un acces invite"
+      - "Les deux tirets transforment la fin de la requete en commentaire SQL, ce qui neutralise la condition AND password = ..."
+      - "Le ' echappe la connexion a la base de donnees, qui retourne un acces par defaut"
+      - "true est remplace par 'admin' par le parser SQL"
+    options_en:
+      - "The server recognizes 'true' and grants guest access"
+      - "The two dashes turn the rest of the query into a SQL comment, neutralizing the AND password = ... condition"
+      - "The ' escapes the DB connection, which returns a default access"
+      - "true is replaced by 'admin' by the SQL parser"
+    correct: 1
+    explanation_fr: |
+      "-- " est le commentaire de ligne en SQL. Tout ce qui suit est
+      ignore, donc le AND password = '...' disparait. La clause WHERE
+      restante est ' OR true qui est toujours vraie : le SELECT retourne
+      le premier user (souvent admin par insertion initiale).
+    explanation_en: |
+      "-- " is the SQL line comment. Everything after is ignored, so
+      AND password = '...' disappears. The remaining WHERE clause is
+      ' OR true which is always true: SELECT returns the first user
+      (often admin by initial insertion).

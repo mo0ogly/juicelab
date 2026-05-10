@@ -1,0 +1,117 @@
+challenge_key: "loginAmyChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Description OWASP : Amy est un personnage. Hint OWASP
+      officiel #2 : "this challenge is of course about logging
+      in as Amy from that show". Quel show ? La culture pop
+      des developpeurs Juice Shop est evidente — les comptes
+      seedes referencent Futurama (Bender, Leela), Star Trek,
+      ou les personnages classiques d'animation. Recherche
+      "Amy Futurama" pour identifier la cible.
+    text_en: |
+      OWASP description: Amy is a character. Official OWASP
+      hint #2: "this challenge is of course about logging in
+      as Amy from that show". Which show? Juice Shop devs'
+      pop-culture is evident — seeded accounts reference
+      Futurama (Bender, Leela), Star Trek, or classic
+      animation characters. Search "Amy Futurama" to identify
+      the target.
+    pedagogical_intent: |
+      Activate pop-culture OSINT reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Amy = Amy Wong, fiancee puis epouse de Kif Kroker dans
+      Futurama. Hint OWASP officiel #3 : "Did you know that
+      Amy is married to an alien named Kif?". Le mari est
+      dans le mot de passe. Email : amy@juice-sh.op (convention
+      business firstName@domain). Reste a trouver le pattern
+      de mot de passe lie a Kif.
+    text_en: |
+      Amy = Amy Wong, fiancee then wife of Kif Kroker in
+      Futurama. Official OWASP hint #3: "Did you know that
+      Amy is married to an alien named Kif?". Husband in the
+      password. Email: amy@juice-sh.op (business convention
+      firstName@domain). Remains: find password pattern
+      related to Kif.
+    pedagogical_intent: |
+      Spell the OSINT target + email convention.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Hint OWASP officiel #4 : "few sentences which give away
+      some information how Amy decided to strengthen her
+      password". La description dit "93.83 billion trillion
+      trillion centuries to brute force, but luckily she did
+      not read the One Important Final Note". Reference
+      explicite : webcomic XKCD #936 ("correct horse battery
+      staple"). Amy a fait une longue passphrase mais pas
+      aleatoire. Pattern : concatenation de mots THEMATIQUES
+      lies a Kif.
+    text_en: |
+      Official OWASP hint #4: "few sentences which give away
+      some information how Amy decided to strengthen her
+      password". Description says "93.83 billion trillion
+      trillion centuries to brute force, but luckily she did
+      not read the One Important Final Note". Explicit
+      reference: XKCD webcomic #936 ("correct horse battery
+      staple"). Amy made a long passphrase but not random.
+      Pattern: concatenation of THEMATIC words related to
+      Kif.
+    pedagogical_intent: |
+      Pin the XKCD reference + passphrase pattern.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Pattern probable : 4-5 mots concatenes en lien avec Kif
+      Kroker. Quelques pistes :
+      - "iLoveKif" / "kifsLover" / "marryingKif"
+      - "OhDearIThinkILoveYouKif"
+      - "KifKrokerLittleAlien"
+      Le mot de passe officiel Juice Shop pour Amy est typique-
+      ment "K1f.....................Bo0m!" ou similaire (long
+      avec Kif au debut). Verifie le tutorial OWASP officiel
+      ou le source pour le pattern exact.
+    text_en: |
+      Probable pattern: 4-5 words concatenated about Kif
+      Kroker. Some leads:
+      - "iLoveKif" / "kifsLover" / "marryingKif"
+      - "OhDearIThinkILoveYouKif"
+      - "KifKrokerLittleAlien"
+      Juice Shop's official Amy password is typically
+      "K1f.....................Bo0m!" or similar (long with
+      Kif at start). Check the official OWASP tutorial or
+      source for the exact pattern.
+    pedagogical_intent: |
+      Spell pattern candidates with confidence caveat.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Le mot de passe officiel d'Amy dans Juice Shop est
+      typiquement "K1f.....................Bo0m!" (avec Kif
+      transforme leetspeak K1f, suivi de plusieurs points,
+      finissant par "Bo0m!"). Reference : la sequence "Bo0m"
+      vient de la passion d'Amy pour les "explosions" dans
+      Futurama (catchphrase "Spleesh" ou similaire). Email :
+      amy@juice-sh.op. Note : si la version Juice Shop a
+      change le password, fais un OSINT pop-culture rapide
+      sur Amy pour trouver le pattern actuel.
+    text_en: |
+      Amy's official Juice Shop password is typically
+      "K1f.....................Bo0m!" (Kif transformed
+      leetspeak K1f, followed by several dots, ending with
+      "Bo0m!"). Reference: "Bo0m" sequence comes from Amy's
+      passion for "explosions" in Futurama (catchphrase
+      "Spleesh" or similar). Email: amy@juice-sh.op. Note:
+      if the Juice Shop version changed the password, do
+      quick pop-culture OSINT on Amy for the current pattern.
+    pedagogical_intent: |
+      Quasi-solution : exact password + version-dependency caveat.

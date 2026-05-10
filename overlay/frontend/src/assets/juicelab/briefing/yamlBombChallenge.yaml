@@ -1,0 +1,93 @@
+challenge_key: "yamlBombChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Uploader un fichier YAML qui declenche un timeout/exception "Memory
+  bomb" via le parser YAML du shop. Tag : Insecure Deserialization. Hint
+  OWASP : "billion laughs YAML". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/fileUpload.ts:123-124 : si le YAML
+  parse trigger l'exception Script execution timeout, le serveur solve.
+  L'attaque YAML bomb (Billion Laughs adapte YAML) utilise des anchors
+  &amp; references pour creer une expansion exponentielle. Workflow :
+  (1) Connaitre la complaint upload form (/#/complain). (2) Crafter le
+  YAML bomb classique (a, b=10*a, c=10*b...). (3) Upload.
+
+mission_en: |
+  Upload a YAML file triggering "Memory bomb" timeout/exception via
+  shop's YAML parser. Tag: Insecure Deserialization. OWASP hint: "billion
+  laughs YAML". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/fileUpload.ts:123-124: if YAML parse
+  triggers Script execution timeout exception, server solves. YAML bomb
+  attack (Billion Laughs adapted YAML) uses anchors &amp; references to
+  create exponential expansion. Workflow: (1) Know complaint upload form
+  (/#/complain). (2) Craft classic YAML bomb (a, b=10*a, c=10*b...).
+  (3) Upload.
+
+concepts:
+  - title_fr: "YAML Bomb : Billion Laughs adapte YAML"
+    title_en: "YAML Bomb: Billion Laughs adapted to YAML"
+    body_fr: |
+      Source canonique : CVE-2003-1564 (Billion Laughs XML, original) +
+      adaptation YAML via anchors. YAML supporte les anchors (&) et
+      references (*) pour reuser un noeud. Pattern bomb :
+      ```yaml
+      a: &a ["lol", "lol", "lol", "lol", "lol", "lol", "lol", "lol", "lol", "lol"]
+      b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
+      c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]
+      ```
+      Apres 9 niveaux : 10^9 = 1 milliard d'occurrences en memoire. Defense :
+      `js-yaml safeLoad` ou `yaml.load(input, { schema: SAFE_SCHEMA })`.
+      Limit anchor depth or refuse anchors entirely.
+    body_en: |
+      Canonical source: CVE-2003-1564 (Billion Laughs XML, original) +
+      YAML adaptation via anchors. YAML supports anchors (&) and
+      references (*) to reuse a node. Bomb pattern:
+      ```yaml
+      a: &a ["lol", "lol", "lol", "lol", "lol", "lol", "lol", "lol", "lol", "lol"]
+      b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
+      c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]
+      ```
+      After 9 levels: 10^9 = 1 billion occurrences in memory. Defense:
+      `js-yaml safeLoad` or `yaml.load(input, { schema: SAFE_SCHEMA })`.
+      Limit anchor depth or refuse anchors entirely.
+
+  - title_fr: "Insecure Deserialization : YAML est code"
+    title_en: "Insecure Deserialization: YAML is code"
+    body_fr: |
+      Source canonique : OWASP A08:2021 + CWE-502. YAML parsers par
+      defaut acceptent (1) anchors/references (bomb), (2) custom tags
+      `!!python/object/apply:os.system [...]` qui peuvent executer du
+      code, (3) implicit type coercion (`!!str` vs `!!int`). Cas reels :
+      Rails CVE-2013-0156 (YAML.load arbitrary code execution),
+      Kubernetes (cf. yaml-front-matter parsing). Defense : ALWAYS use
+      safeLoad / SAFE_SCHEMA. JAMAIS load() default.
+    body_en: |
+      Canonical source: OWASP A08:2021 + CWE-502. YAML parsers by default
+      accept (1) anchors/references (bomb), (2) custom tags
+      `!!python/object/apply:os.system [...]` that can execute code, (3)
+      implicit type coercion (`!!str` vs `!!int`). Real cases: Rails
+      CVE-2013-0156 (YAML.load arbitrary code execution), Kubernetes (cf.
+      yaml-front-matter parsing). Defense: ALWAYS use safeLoad /
+      SAFE_SCHEMA. NEVER default load().
+
+  - title_fr: "Defense canonique : safeLoad + size limits + sandboxing"
+    title_en: "Canonical defense: safeLoad + size limits + sandboxing"
+    body_fr: |
+      (1) `js-yaml.load(input, { schema: SAFE_SCHEMA })` ou `safeLoad` -
+      no custom tags, no code execution. (2) Limite taille fichier upload
+      (max 100KB pour YAML config). (3) Limite anchor depth (custom
+      reviver). (4) Parsing dans isolated-vm si vraiment necessaire,
+      avec timeout + memory limit. (5) JSON Schema validation post-parse.
+      (6) Refuser carrement YAML si JSON suffit (preferer JSON pour API).
+      Pattern reusable : YAML for config human-readable, JSON for API
+      machine-readable.
+    body_en: |
+      (1) `js-yaml.load(input, { schema: SAFE_SCHEMA })` or `safeLoad` -
+      no custom tags, no code execution. (2) Limit upload file size (max
+      100KB for YAML config). (3) Limit anchor depth (custom reviver).
+      (4) Parse in isolated-vm if truly necessary, with timeout + memory
+      limit. (5) JSON Schema post-parse validation. (6) Refuse YAML
+      entirely if JSON suffices (prefer JSON for API). Reusable pattern:
+      YAML for human-readable config, JSON for machine-readable API.

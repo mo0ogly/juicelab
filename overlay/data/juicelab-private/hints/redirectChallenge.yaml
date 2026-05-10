@@ -1,0 +1,91 @@
+challenge_key: "redirectChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "any redirect not on allowlist". L'endpoint /redirect
+      a une allowlist mais elle est verifiable de maniere lax.
+    text_en: |
+      OWASP hint: "any redirect not on allowlist". /redirect endpoint has
+      allowlist but verified loosely.
+    pedagogical_intent: |
+      Activate allowlist + bypass reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      L'allowlist est dans lib/insecurity.ts (Set redirectAllowlist).
+      Test /redirect?to=https://www.attacker.com -> rejete. Mais /redirect
+      ?to=https://www.attacker.com?https://github.com/bkimminich/juice-shop
+      pourrait passer.
+    text_en: |
+      Allowlist is in lib/insecurity.ts (Set redirectAllowlist). Test
+      /redirect?to=https://www.attacker.com -> rejected. But /redirect
+      ?to=https://www.attacker.com?https://github.com/bkimminich/juice-shop
+      could pass.
+    pedagogical_intent: |
+      Spell concrete bypass form.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source bug lib/insecurity.ts:138 :
+      `allowed = allowed || url.includes(allowedUrl)`. includes() trouve
+      l'allowlist URL n'importe ou dans la chaine, pas qu'au debut. Donc
+      accole une URL allowlistee comme query parameter pour bypass.
+    text_en: |
+      Source bug lib/insecurity.ts:138:
+      `allowed = allowed || url.includes(allowedUrl)`. includes() finds
+      allowlist URL anywhere in string, not only at start. So append an
+      allowlisted URL as query parameter to bypass.
+    pedagogical_intent: |
+      Reveal exact bug.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Payload :
+      `/redirect?to=https://www.attacker.com?https://github.com/bkimminich
+      /juice-shop`. La cible reelle est attacker.com mais includes()
+      trouve l'URL juice-shop dans le string et passe. Le serveur redirige
+      vers attacker.com.
+    text_en: |
+      Payload:
+      `/redirect?to=https://www.attacker.com?https://github.com/bkimminich
+      /juice-shop`. Real target is attacker.com but includes() finds
+      juice-shop URL in string and passes. Server redirects to
+      attacker.com.
+    pedagogical_intent: |
+      Spell exact payload.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Lire lib/insecurity.ts:138
+      `allowed = allowed || url.includes(allowedUrl)` - faille includes().
+      (2) Lire redirectAllowlist (lib/insecurity.ts:124) - URLs autorisees
+      (github.com/bkimminich/juice-shop, etc.). (3) Crafter URL :
+      `http://localhost:3000/redirect?to=https://www.attacker.com?
+      https://github.com/bkimminich/juice-shop`. (4) Naviguer. (5) Le
+      serveur redirect.ts:18
+      `solveIf(() => isUnintendedRedirect(toUrl))` declenche.
+      isUnintendedRedirect verifie que l'URL ne commence PAS par un
+      allowedUrl - donc include passe mais startsWith fail = solve.
+      Defense : `const u = new URL(input); allowedHosts.has(u.hostname)`.
+      Source : lib/insecurity.ts:138.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Read lib/insecurity.ts:138
+      `allowed = allowed || url.includes(allowedUrl)` - includes() flaw.
+      (2) Read redirectAllowlist (lib/insecurity.ts:124) - allowed URLs
+      (github.com/bkimminich/juice-shop, etc.). (3) Craft URL:
+      `http://localhost:3000/redirect?to=https://www.attacker.com?
+      https://github.com/bkimminich/juice-shop`. (4) Navigate. (5) Server
+      redirect.ts:18 `solveIf(() => isUnintendedRedirect(toUrl))`
+      triggers. isUnintendedRedirect checks URL does NOT start with an
+      allowedUrl - so include passes but startsWith fails = solve.
+      Defense: `const u = new URL(input); allowedHosts.has(u.hostname)`.
+      Source: lib/insecurity.ts:138.
+    pedagogical_intent: |
+      Solution + canonical fix.

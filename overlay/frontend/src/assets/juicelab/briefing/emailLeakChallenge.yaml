@@ -1,0 +1,128 @@
+challenge_key: "emailLeakChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Realise une fuite d'information non desiree par acces
+  cross-domain aux donnees. Description OWASP : "Perform an
+  unwanted information disclosure by accessing data
+  cross-domain". Hints : (1) "find and attack an endpoint
+  that responds with user information. SQL Injection is not
+  the solution here", (2) "What ways are there to access data
+  from a web application cross-domain?", (3) "This challenge
+  uses an old way which is no longer recommended".
+  [KILL_CHAIN_PROBABLE]
+
+  Methode recommandee : la mitigationUrl du challenge pointe
+  vers OWASP XS-Leaks Cheat Sheet. Le hint #3 "old way no
+  longer recommended" pointe vers JSONP (JSON with Padding) —
+  technique d'avant CORS pour bypass la same-origin policy.
+  L'attaque type : trouver un endpoint qui retourne des
+  donnees user au format JSONP (callback wrappe le JSON dans
+  une fonction JavaScript), inclure ce script dans une page
+  attacker-controlled, intercepter le callback. Sur Juice
+  Shop, l'angle est probablement /rest/user/whoami ou un
+  endpoint similaire avec support JSONP.
+
+  Note la lecon : JSONP est obsolete depuis CORS (2014).
+  Maintenir des endpoints JSONP en 2026 = surface heritee
+  dangereuse. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Perform unwanted info disclosure via cross-domain data
+  access. OWASP description: "Perform an unwanted information
+  disclosure by accessing data cross-domain". Hints: (1)
+  "find and attack an endpoint that responds with user
+  information. SQL Injection is not the solution here", (2)
+  "What ways are there to access data from a web application
+  cross-domain?", (3) "This challenge uses an old way which
+  is no longer recommended". [KILL_CHAIN_PROBABLE]
+
+  Recommended method: challenge mitigationUrl points to
+  OWASP XS-Leaks Cheat Sheet. Hint #3 "old way no longer
+  recommended" points to JSONP (JSON with Padding) — pre-CORS
+  same-origin-policy bypass. Typical attack: find an endpoint
+  returning user data in JSONP format (callback wraps JSON in
+  a JavaScript function), include this script on an
+  attacker-controlled page, intercept the callback. On Juice
+  Shop, the angle is likely /rest/user/whoami or similar with
+  JSONP support.
+
+  Note the lesson: JSONP is obsolete since CORS (2014).
+  Maintaining JSONP endpoints in 2026 = dangerous legacy
+  surface. You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "JSONP : la technique pre-CORS qui survit"
+    title_en: "JSONP: the pre-CORS technique that survives"
+    body_fr: |
+      Avant CORS (Cross-Origin Resource Sharing, RFC 2014),
+      les developpeurs voulaient charger des donnees JSON
+      cross-domain. Hack : exploit du fait que <script
+      src="..."> n'a PAS la same-origin restriction. JSONP
+      retourne du code JavaScript exécutable :
+      callback({"data": ...}). En incluant le script sur sa
+      page, l'attaquant intercepte le callback. Aujourd'hui :
+      CORS permet le cross-domain proprement avec headers
+      Access-Control-Allow-Origin. JSONP devrait etre
+      DEPRECATED dans toute app moderne, mais beaucoup d'apps
+      gardent l'endpoint pour "compatibilite".
+    body_en: |
+      Before CORS (Cross-Origin Resource Sharing, 2014 RFC),
+      devs wanted to load cross-domain JSON. Hack: exploit
+      the fact that <script src="..."> has NO same-origin
+      restriction. JSONP returns executable JavaScript code:
+      callback({"data": ...}). By including the script on
+      their page, attacker intercepts the callback. Today:
+      CORS allows clean cross-domain via
+      Access-Control-Allow-Origin headers. JSONP should be
+      DEPRECATED in any modern app, but many apps keep the
+      endpoint for "compatibility".
+
+  - title_fr: "XS-Leaks : la classe de vulnerabilite cross-site moderne"
+    title_en: "XS-Leaks: modern cross-site vulnerability class"
+    body_fr: |
+      Source officielle OWASP XS-Leaks Cheat Sheet
+      (mitigationUrl). XS-Leaks (Cross-Site Leaks) regroupe
+      les attaques permettant de fuiter des donnees d'un site
+      A vers un site B sans CORS. Categories : (1) JSONP
+      callbacks. (2) Iframe events / window references. (3)
+      Browser side-channels (cache timing, ressource size).
+      (4) Postmessage abuse. Defense moderne : Cross-Origin-
+      Opener-Policy (COOP), Cross-Origin-Embedder-Policy
+      (COEP), Cross-Origin-Resource-Policy (CORP) qui
+      isolent strictement les origines.
+    body_en: |
+      Official OWASP XS-Leaks Cheat Sheet source
+      (mitigationUrl). XS-Leaks (Cross-Site Leaks) covers
+      attacks letting you leak data from site A to site B
+      without CORS. Categories: (1) JSONP callbacks. (2)
+      Iframe events / window references. (3) Browser
+      side-channels (cache timing, resource size). (4)
+      Postmessage abuse. Modern defense:
+      Cross-Origin-Opener-Policy (COOP),
+      Cross-Origin-Embedder-Policy (COEP),
+      Cross-Origin-Resource-Policy (CORP) strictly isolating
+      origins.
+
+  - title_fr: "Defense canonique : decommissionner JSONP + CORS strict"
+    title_en: "Canonical defense: decommission JSONP + strict CORS"
+    body_fr: |
+      Plan d'action en 3 etapes. (1) Identifier tous les
+      endpoints JSONP de l'app (grep `callback=` dans les
+      handlers). (2) Migrate vers CORS : Access-Control-
+      Allow-Origin avec allowlist explicite des domaines
+      autorises (jamais "*" pour des endpoints avec donnees
+      user). (3) Une fois 100% migre, retirer le support
+      JSONP du code. (4) Ajouter COOP / COEP / CORP comme
+      defense en profondeur contre les XS-Leaks
+      side-channels. Reference : MDN docs CORS + OWASP
+      XS-Leaks Cheat Sheet.
+    body_en: |
+      3-step action plan. (1) Identify all app JSONP
+      endpoints (grep `callback=` in handlers). (2) Migrate
+      to CORS: Access-Control-Allow-Origin with explicit
+      allowlist of authorized domains (never "*" for endpoints
+      with user data). (3) Once 100% migrated, remove JSONP
+      support from code. (4) Add COOP / COEP / CORP as
+      defense in depth against XS-Leaks side-channels.
+      Reference: MDN CORS docs + OWASP XS-Leaks Cheat Sheet.

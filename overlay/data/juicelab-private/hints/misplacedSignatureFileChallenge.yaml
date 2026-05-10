@@ -1,0 +1,118 @@
+challenge_key: "misplacedSignatureFileChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP #2 + #3 : "you already know
+      where the SIEM signature file is" + "
+      reuse the trick that already worked".
+      Pre-requis : nullByteChallenge (Lot 7).
+    text_en: |
+      OWASP hints #2 + #3: "you already know
+      where the SIEM signature file is" +
+      "reuse the trick that already worked".
+      Prerequisite: nullByteChallenge (Lot 7).
+    pedagogical_intent: |
+      Activate composition reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le file SIEM = Sigma format (.yml
+      extension). Cible : suspicious_errors.
+      yml dans /ftp/. Mais .yml n'est pas
+      dans allowlist endsWith .md/.pdf - donc
+      need null byte bypass.
+    text_en: |
+      SIEM file = Sigma format (.yml
+      extension). Target: suspicious_errors.
+      yml in /ftp/. But .yml not in
+      endsWith .md/.pdf allowlist - so
+      need null byte bypass.
+    pedagogical_intent: |
+      Spell file + bypass.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (routes/fileServer.ts:
+      44) : `solveIf(() => file === '
+      suspicious_errors.yml')`. Apres null
+      byte strip. Donc GET /ftp/suspicious_
+      errors.yml%00.md.
+    text_en: |
+      Server source (routes/fileServer.ts:
+      44): `solveIf(() => file === '
+      suspicious_errors.yml')`. After null
+      byte strip. So GET /ftp/suspicious_
+      errors.yml%00.md.
+    pedagogical_intent: |
+      Reveal exact target.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Construction : `curl http://localhost:
+      3000/ftp/suspicious_errors.yml%00.md`.
+      Le serveur :
+      (a) endsWith(.md) = true (allowlist
+          pass)
+      (b) cutOffPoisonNullByte strip ->
+          "suspicious_errors.yml"
+      (c) sendFile + solveIf trigger.
+    text_en: |
+      Construction: `curl http://localhost:
+      3000/ftp/suspicious_errors.yml%00.md`.
+      Server:
+      (a) endsWith(.md) = true (allowlist
+          passes)
+      (b) cutOffPoisonNullByte strips ->
+          "suspicious_errors.yml"
+      (c) sendFile + solveIf triggers.
+    pedagogical_intent: |
+      Spell exact request.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow :
+      1. Pre-requis : directoryListing +
+         nullByte (Lot 7).
+      2. GET /ftp/suspicious_errors.yml%00.md
+         via curl ou browser.
+      3. Le serveur :
+         - allowlist endsWith(.md) pass
+         - strip null byte
+         - sendFile suspicious_errors.yml
+         - solveIf match -> challenge solve
+           auto
+      4. Tu vois le content du Sigma rule
+         (typically YAML detection logic).
+      Source : routes/fileServer.ts:44 +
+      nullByteChallenge bypass.
+      Defense : security artifacts hors web
+      root + null byte rejection EXPLICITE
+      avant allowlist check.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow:
+      1. Prerequisites: directoryListing +
+         nullByte (Lot 7).
+      2. GET /ftp/suspicious_errors.yml%00.md
+         via curl or browser.
+      3. Server:
+         - endsWith(.md) allowlist passes
+         - strip null byte
+         - sendFile suspicious_errors.yml
+         - solveIf match -> challenge auto
+           solves
+      4. You see Sigma rule content
+         (typically YAML detection logic).
+      Source: routes/fileServer.ts:44 +
+      nullByteChallenge bypass.
+      Defense: security artifacts outside
+      web root + EXPLICIT null byte rejection
+      before allowlist check.
+    pedagogical_intent: |
+      Solution + defense.

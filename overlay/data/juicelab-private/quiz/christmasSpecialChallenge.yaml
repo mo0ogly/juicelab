@@ -1,0 +1,112 @@
+challenge_key: "christmasSpecialChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le pattern soft delete (column deletedAt + filter par defaut)
+      est largement utilise (Sequelize paranoid, Eloquent
+      SoftDeletes, EF Core ISoftDeletable). Quel est son COUT
+      principal en securite ?
+    question_en: |
+      The soft delete pattern (deletedAt column + default filter) is
+      widely used (Sequelize paranoid, Eloquent SoftDeletes, EF
+      Core ISoftDeletable). What is its main security COST?
+    options_fr:
+      - "Il est plus lent qu'un hard delete"
+      - "La donnee EXISTE toujours en DB et reste accessible si la requete contourne le filtre — un bypass SQLi sur la WHERE peut ressusciter des donnees deja 'supprimees' du point de vue UI"
+      - "Il viole le RGPD article 17 systematiquement"
+      - "Il consomme plus de bande passante reseau"
+    options_en:
+      - "It is slower than a hard delete"
+      - "The data STILL EXISTS in DB and remains reachable if the query bypasses the filter — a WHERE SQLi bypass can resurrect data already 'deleted' from the UI standpoint"
+      - "It violates GDPR article 17 systematically"
+      - "It consumes more network bandwidth"
+    correct: 1
+    explanation_fr: |
+      Distinction reelle/perceptuelle. Une suppression UI ne
+      garantit pas une suppression DB. Pour les donnees vraiment
+      sensibles (PII RGPD, secrets), il faut un hard delete + un
+      job de retention. Soft delete reste utile pour l'undo
+      utilisateur mais doit etre couple a un purge automatique.
+    explanation_en: |
+      Real/perceptual distinction. A UI delete does not guarantee
+      a DB delete. For truly sensitive data (GDPR PII, secrets),
+      you need a hard delete + a retention job. Soft delete
+      remains useful for user undo but must be paired with
+      automatic purging.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Sur le meme endpoint /rest/products/search, dbSchema et
+      unionSql ciblaient l'EXFILTRATION (lire d'autres tables).
+      Christmas Special cible quoi de DIFFERENT ?
+    question_en: |
+      On the same /rest/products/search endpoint, dbSchema and
+      unionSql targeted EXFILTRATION (reading other tables).
+      Christmas Special targets what DIFFERENT thing?
+    options_fr:
+      - "L'execution de code arbitraire sur le serveur"
+      - "Le BYPASS d'un filtre business (deletedAt IS NULL) — pas l'exfiltration mais la manipulation de la logique de filtrage pour faire apparaitre des donnees deja existantes mais cachees"
+      - "L'enumeration des comptes admin"
+      - "La modification du prix d'un produit"
+    options_en:
+      - "Arbitrary code execution on the server"
+      - "BYPASS of a business filter (deletedAt IS NULL) — not exfiltration but manipulation of filter logic to surface existing-but-hidden data"
+      - "Admin account enumeration"
+      - "Modification of a product price"
+    correct: 1
+    explanation_fr: |
+      Trois familles de SQLi sur le meme endpoint :
+      EXFILTRATION (dbSchema, unionSql), BYPASS de filtre
+      (christmas), MANIPULATION (NoSQL Reviews qui modifie des
+      rows). Le meme endpoint sert 3 objectifs distincts selon le
+      payload. C'est la le drame d'un endpoint search vulnerable :
+      surface multiplicateurs.
+    explanation_en: |
+      Three SQLi families on the same endpoint: EXFILTRATION
+      (dbSchema, unionSql), filter BYPASS (christmas),
+      MANIPULATION (NoSQL Reviews modifies rows). Same endpoint,
+      3 distinct objectives by payload. That's the drama of a
+      vulnerable search endpoint: multiplier surface.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      La defense canonique reste les prepared statements. Quelle
+      defense SECONDAIRE empecherait specifiquement la
+      ressuscitation d'un produit soft-deleted, meme en cas de SQLi
+      sur la WHERE ?
+    question_en: |
+      The canonical defense remains prepared statements. Which
+      SECONDARY defense would specifically prevent resurrecting a
+      soft-deleted product, even in case of SQLi on the WHERE?
+    options_fr:
+      - "Augmenter la frequence du backup DB"
+      - "Object-level ACL : meme si le produit est retourne par la query, le handler API verifie deletedAt avant de le serializer/retourner — un produit deletedAt non null retourne 410 Gone independamment de la query"
+      - "Forcer HTTPS sur l'endpoint"
+      - "Logger toutes les recherches dans un audit trail"
+    options_en:
+      - "Increase the DB backup frequency"
+      - "Object-level ACL: even if the product is returned by the query, the API handler checks deletedAt before serializing/returning — a product with non-null deletedAt returns 410 Gone regardless of the query"
+      - "Force HTTPS on the endpoint"
+      - "Log every search in an audit trail"
+    correct: 1
+    explanation_fr: |
+      Defense en profondeur. La SQLi peut casser le filter
+      query-side (WHERE), mais le handler API peut RE-VERIFIER
+      l'etat de l'objet apres la query. Cette double-couche est le
+      pattern recommande pour tout filtre business critique
+      (deletedAt, isActive, isPublished, isVisible). Couple aux
+      prepared statements, le bypass devient impossible meme avec
+      SQLi reussie.
+    explanation_en: |
+      Defense in depth. SQLi can break the query-side filter
+      (WHERE), but the API handler can RE-CHECK object state
+      after the query. This double layer is the recommended
+      pattern for any critical business filter (deletedAt,
+      isActive, isPublished, isVisible). Combined with prepared
+      statements, the bypass becomes impossible even with
+      successful SQLi.

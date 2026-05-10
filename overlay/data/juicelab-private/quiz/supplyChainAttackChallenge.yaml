@@ -1,0 +1,127 @@
+challenge_key: "supplyChainAttackChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      L'incident eslint-scope du 12 juillet 2018 est la
+      reference canonique du challenge. Quelle etait la
+      mecanique technique exacte du payload ?
+    question_en: |
+      The eslint-scope incident of July 12, 2018 is
+      challenge's canonical reference. What was the
+      exact technical mechanic of the payload?
+    options_fr:
+      - "Backdoor dans le code production"
+      - "Postinstall script (declenche par `npm install`) lit ~/.npmrc du developer (qui contient ses npm auth tokens), exfiltre via HTTP POST vers un Pastebin attaquant, puis se self-deletes pour ne pas laisser de trace. Le bundle eslint-scope ne contient pas de backdoor production - cible exclusivement le developer install pipeline. Detect ~6h apres publication"
+      - "SQL injection dans le linter"
+      - "Cross-site scripting injecte dans le HTML"
+    options_en:
+      - "Backdoor in production code"
+      - "Postinstall script (triggered by `npm install`) reads developer's ~/.npmrc (containing npm auth tokens), exfiltrates via HTTP POST to attacker Pastebin, then self-deletes to leave no trace. eslint-scope bundle does NOT contain production backdoor - targets exclusively developer install pipeline. Detected ~6h after publication"
+      - "SQL injection in linter"
+      - "Cross-site scripting injected in HTML"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la supply chain attack
+      MODERNE cible le DEV pipeline, pas la PROD
+      runtime. Cela explique pourquoi les antivirus
+      classiques ne detectent pas (pas de malware
+      runtime). Defense layer specifique : npm install
+      en sandbox isolee (Docker non-root, no internet
+      egress, ephemeral filesystem). Source : eslint-
+      scope GitHub issue #39 post-mortem + npm blog.
+    explanation_en: |
+      Reusable pattern: MODERN supply chain attack
+      targets DEV pipeline, not PROD runtime.
+      Explains why classic antiviruses don't detect
+      (no runtime malware). Specific defense layer:
+      npm install in isolated sandbox (non-root
+      Docker, no internet egress, ephemeral
+      filesystem). Source: eslint-scope GitHub
+      issue #39 post-mortem + npm blog.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #2 : "This is a research-heavy
+      challenge which does not involve any actual
+      hacking". Quelle LECON pedagogique en tirer
+      pour la security work generale ?
+    question_en: |
+      OWASP hint #2: "This is a research-heavy
+      challenge which does not involve any actual
+      hacking". What pedagogical LESSON for general
+      security work?
+    options_fr:
+      - "La security est inutile"
+      - "Une grande partie de la security work (red team, blue team, threat intel, audit) est de l'OSINT et du research, PAS de l'exploitation. Comprendre l'historique des incidents (eslint-scope, log4shell, SolarWinds, etc.) + lire les CVEs + suivre les advisories = 80% du travail. Le hands-on hacking = 20%. Pattern reusable : students qui veulent etre experts security doivent investir dans les research skills"
+      - "Tous les challenges sont OSINT"
+      - "Le hacking est plus facile que le research"
+    options_en:
+      - "Security is useless"
+      - "Large portion of security work (red team, blue team, threat intel, audit) is OSINT and research, NOT exploitation. Understanding incident history (eslint-scope, log4shell, SolarWinds, etc.) + reading CVEs + following advisories = 80% of work. Hands-on hacking = 20%. Reusable pattern: students wanting to be security experts must invest in research skills"
+      - "All challenges are OSINT"
+      - "Hacking is easier than research"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la security culture est
+      cumulative. Connaitre les incidents passes
+      (canonicaux) permet de reconnaitre les patterns
+      qui se repetent. eslint-scope (2018) -> ua-
+      parser-js (2021) -> colors.js (2022) ->
+      xz-utils (2024) sont la meme classe d'attaque
+      avec des variations. Source : Hint OWASP #2 +
+      methodology security incident response.
+    explanation_en: |
+      Reusable pattern: security culture is
+      cumulative. Knowing past incidents (canonical)
+      lets you recognize repeating patterns. eslint-
+      scope (2018) -> ua-parser-js (2021) ->
+      colors.js (2022) -> xz-utils (2024) are same
+      attack class with variations. Source: OWASP
+      Hint #2 + security incident response
+      methodology.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense moderne (post-2022) est la plus
+      EFFECTIVE pour PREVENIR les supply chain
+      attacks de ce type (compromise mainteneur npm) ?
+    question_en: |
+      Which modern defense (post-2022) is MOST
+      EFFECTIVE to PREVENT supply chain attacks of
+      this type (npm maintainer compromise)?
+    options_fr:
+      - "Forcer le HTTPS"
+      - "npm provenance attestation (Sigstore-based, v9.5+) : chaque package npm peut prouver cryptographiquement son origine (CI/CD pipeline + commit Git source) via attestations signees. Combine avec npm 2FA mandatory (top 1000 maintainers depuis 2022) + automated security scanning (Socket.dev, Snyk). La compromise account ne suffit plus : il faut aussi compromettre le CI/CD pipeline ET le signing key"
+      - "Stocker les npm tokens en plaintext"
+      - "Forcer SSH au lieu de HTTPS"
+    options_en:
+      - "Force HTTPS"
+      - "npm provenance attestation (Sigstore-based, v9.5+): each npm package can cryptographically prove its origin (CI/CD pipeline + source Git commit) via signed attestations. Combined with mandatory npm 2FA (top 1000 maintainers since 2022) + automated security scanning (Socket.dev, Snyk). Account compromise no longer suffices: must also compromise CI/CD pipeline AND signing key"
+      - "Store npm tokens in plaintext"
+      - "Force SSH instead of HTTPS"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la defense en profondeur
+      moderne contre supply chain attacks combine :
+      (1) authentification forte (2FA mandatory),
+      (2) attestation cryptographique (Sigstore /
+      provenance), (3) automated detection (Socket /
+      Snyk), (4) human review (changelog reading,
+      package manager linter). Aucune couche unique
+      ne suffit. Source : Sigstore project + npm
+      provenance docs + post-mortem eslint-scope.
+    explanation_en: |
+      Reusable pattern: modern defense in depth
+      against supply chain attacks combines: (1)
+      strong authentication (mandatory 2FA), (2)
+      cryptographic attestation (Sigstore /
+      provenance), (3) automated detection (Socket /
+      Snyk), (4) human review (changelog reading,
+      package manager linter). No single layer
+      suffices. Source: Sigstore project + npm
+      provenance docs + eslint-scope post-mortem.

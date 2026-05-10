@@ -1,0 +1,126 @@
+challenge_key: "zeroStarsChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP unique : "Before you invest time
+      bypassing the API, you might want to play
+      around with the UI a bit". Quelle est la
+      LECON pedagogique ?
+    question_en: |
+      Single OWASP hint: "Before you invest time
+      bypassing the API, you might want to play
+      around with the UI a bit". What's the
+      pedagogical LESSON?
+    options_fr:
+      - "L'UI est toujours plus securise"
+      - "Pattern reusable : commencer par l'exploration creative du UI avant de bypass via tooling lourd. Les bugs UI subtle (toggle states, hidden form fields, browser-side logic flaws, drag-and-drop tricks) sont souvent overlook par les pentesters automatises. Pour les difficulty 1 challenges en particulier, il y a souvent une astuce UI accessible. La creativite UX est UN tool pentest"
+      - "L'UI bypass est interdit"
+      - "Les Material rating sont buggy"
+    options_en:
+      - "UI is always more secure"
+      - "Reusable pattern: start with creative UI exploration before bypassing via heavy tooling. Subtle UI bugs (toggle states, hidden form fields, browser-side logic flaws, drag-and-drop tricks) often overlooked by automated pentesters. For difficulty 1 challenges especially, there's often accessible UI trick. UX creativity is A pentest tool"
+      - "UI bypass forbidden"
+      - "Material ratings are buggy"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la creativite cognitive
+      EXCEDE le tooling. Bug bounty hunters comme
+      Frans Rosen, James Kettle ont decouvert
+      des bugs majeurs via UI exploration
+      creative (HTTP smuggling via Burp manual,
+      cache poisoning via headers manipulation).
+      Source : OWASP hint #1 + bug bounty
+      methodologies.
+    explanation_en: |
+      Reusable pattern: cognitive creativity
+      EXCEEDS tooling. Bug bounty hunters like
+      Frans Rosen, James Kettle discovered major
+      bugs via creative UI exploration (HTTP
+      smuggling via manual Burp, cache poisoning
+      via headers manipulation). Source: OWASP
+      hint #1 + bug bounty methodologies.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      zeroStarsChallenge est tagged difficulty 1.
+      Comparable a passwordRepeat et
+      missingEncoding (tous diff 1). Qu'est-ce qui
+      caracterise les difficulty 1 challenges en
+      OWASP Juice Shop ?
+    question_en: |
+      zeroStarsChallenge tagged difficulty 1.
+      Comparable to passwordRepeat and
+      missingEncoding (all diff 1). What
+      characterizes difficulty 1 challenges in
+      OWASP Juice Shop?
+    options_fr:
+      - "Difficulty 1 = trivial pour debutants"
+      - "Difficulty 1 challenges utilisent des techniques accessibles SANS tooling complexe : DevTools Elements panel, copy-paste de URL, UI tricks, simple curl. Pas de Burp, pas de scripting. C'est l'introduction au pentest : montre que la security peut etre BREACHED avec basic browser tools. Pedagogiquement : les difficulty 1 sont les premiers WIN pour les students, motivation a continuer"
+      - "Difficulty 1 = test moteur"
+      - "Difficulty 1 = inutiles"
+    options_en:
+      - "Difficulty 1 = trivial for beginners"
+      - "Difficulty 1 challenges use techniques accessible WITHOUT complex tooling: DevTools Elements panel, URL copy-paste, UI tricks, simple curl. No Burp, no scripting. It's pentest introduction: shows security can be BREACHED with basic browser tools. Pedagogically: difficulty 1 are first WINS for students, motivation to continue"
+      - "Difficulty 1 = engine test"
+      - "Difficulty 1 = useless"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la pedagogie OWASP
+      monte progressivement la complexity. Diff 1
+      = browser tools, Diff 2 = curl + simple
+      payload, Diff 3 = combinaison + tooling,
+      Diff 4-6 = advanced exploitation chains.
+      Pour les students, completer les Diff 1
+      en premier construit la confidence.
+      Source : analyse OWASP Juice Shop
+      progression difficulty.
+    explanation_en: |
+      Reusable pattern: OWASP pedagogy
+      progressively scales complexity. Diff 1 =
+      browser tools, Diff 2 = curl + simple
+      payload, Diff 3 = combination + tooling,
+      Diff 4-6 = advanced exploitation chains.
+      For students, completing Diff 1 first
+      builds confidence. Source: OWASP Juice
+      Shop progression difficulty analysis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense canonique aurait empeche ce
+      challenge au niveau Sequelize ORM ?
+    question_en: |
+      Canonical defense at Sequelize ORM level
+      preventing this challenge?
+    options_fr:
+      - "Disabler les feedbacks"
+      - "Sequelize model validator : `rating: { type: DataTypes.INTEGER, validate: { min: 1, max: 5, isInt: true }}`. Avec cela, FeedbackModel.create({rating: 0}) throw avant l'insert. Combine avec joi/zod schema middleware + DB CHECK (`rating BETWEEN 1 AND 5`). Defense en profondeur 3-layers"
+      - "Stocker les feedbacks en plaintext"
+      - "Encrypter le rating"
+    options_en:
+      - "Disable feedbacks"
+      - "Sequelize model validator: `rating: { type: DataTypes.INTEGER, validate: { min: 1, max: 5, isInt: true }}`. With this, FeedbackModel.create({rating: 0}) throws before insert. Combined with joi/zod schema middleware + DB CHECK (`rating BETWEEN 1 AND 5`). 3-layer defense in depth"
+      - "Store feedbacks in plaintext"
+      - "Encrypt rating"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : Sequelize validators au
+      niveau model = declarative + difficile a
+      oublier. Cette defense couvre TOUS les
+      endpoints qui creent un Feedback (pas
+      uniquement /api/Feedbacks). Combine
+      multi-layer pour fail-closed depth. Source :
+      Sequelize docs validate + analyse
+      FeedbackModel.
+    explanation_en: |
+      Reusable pattern: Sequelize validators at
+      model level = declarative + hard to forget.
+      Defense covers ALL endpoints creating
+      Feedback (not only /api/Feedbacks).
+      Multi-layer combine for fail-closed depth.
+      Source: Sequelize docs validate +
+      FeedbackModel analysis.

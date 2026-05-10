@@ -1,0 +1,132 @@
+challenge_key: "ghostLoginChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #4 dit : "What the Juice Shop does here is
+      totally incompliant with GDPR. Luckily a 4% fine on a
+      gross income of 0$ is still 0$". Quelle est la
+      violation GDPR exacte ?
+    question_en: |
+      OWASP hint #4 says: "What the Juice Shop does here is
+      totally incompliant with GDPR. Luckily a 4% fine on
+      a gross income of 0$ is still 0$". What's the exact
+      GDPR violation?
+    options_fr:
+      - "Manque de consentement utilisateur"
+      - "Soft-delete au lieu de hard-delete viole GDPR Art. 17 (Right to Erasure / Right to be Forgotten) qui exige 'erase personal data without undue delay'. Garder une row avec deletedAt = preserve PII (email, hash) - pas erasure. Defense correcte : hard-delete + anonymization (replace email/name par hash UUID) + audit log de chaque deletion request"
+      - "Manque de privacy policy"
+      - "Utilisation de cookies trackers"
+    options_en:
+      - "Lack of user consent"
+      - "Soft-delete instead of hard-delete violates GDPR Art. 17 (Right to Erasure / Right to be Forgotten) requiring 'erase personal data without undue delay'. Keeping a row with deletedAt = preserves PII (email, hash) - not erasure. Correct defense: hard-delete + anonymization (replace email/name by UUID hash) + audit log of each deletion request"
+      - "Lack of privacy policy"
+      - "Use of tracking cookies"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : RTBF technique != RTBF legal. Soft
+      delete satisfait l'API design (reversibilite, audit
+      simple) mais VIOLE les regulations privacy.
+      Architecture moderne : (a) physical erasure ou
+      anonymization (hash de l'email pour preserver
+      analytics agregees), (b) signed deletion certificate
+      pour le user, (c) propagation deletion aux backups
+      avec timeline definie. Source : OWASP User Privacy
+      Protection Cheat Sheet + GDPR Art. 17.
+    explanation_en: |
+      Reusable pattern: technical RTBF != legal RTBF. Soft
+      delete satisfies API design (reversibility, simple
+      audit) but VIOLATES privacy regulations. Modern
+      architecture: (a) physical erasure or anonymization
+      (hash email to preserve aggregate analytics), (b)
+      signed deletion certificate for user, (c) deletion
+      propagation to backups with defined timeline.
+      Source: OWASP User Privacy Protection Cheat Sheet +
+      GDPR Art. 17.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Sequelize ORM gere les soft deletes via `paranoid:
+      true`. Quand l'attaquant peut-il bypass cette
+      protection dans le code Juice Shop ?
+    question_en: |
+      Sequelize ORM handles soft deletes via `paranoid:
+      true`. When can attacker bypass this protection in
+      Juice Shop code?
+    options_fr:
+      - "Quand le user est admin"
+      - "Quand le code utilise `paranoid: false` explicitement OU `Model.unscoped()` OU une raw query qui ne respecte pas les Sequelize hooks. Ces 3 patterns desactivent le filtre deletedAt automatique. Pour login.ts ghostLogin, le serveur fait probablement findOne avec un de ces patterns. Pattern reusable : ORM safety nets sont opt-in, pas mandatoires"
+      - "Quand le user a 2FA"
+      - "Jamais"
+    options_en:
+      - "When user is admin"
+      - "When code uses explicit `paranoid: false` OR `Model.unscoped()` OR raw query that doesn't respect Sequelize hooks. These 3 patterns disable automatic deletedAt filter. For login.ts ghostLogin, server likely does findOne with one of these patterns. Reusable pattern: ORM safety nets are opt-in, not mandatory"
+      - "When user has 2FA"
+      - "Never"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : un ORM offre des protections
+      defensives (paranoid mode, parameterized queries,
+      automatic escaping) mais ces protections sont
+      DESACTIVABLE par le developpeur. Le bug ghostLogin
+      vient probablement d'une query qui voulait inclure
+      les soft-deleted users (pour audit log par exemple)
+      mais a etait reutilisee dans login. Lecon : audit
+      des opt-out d'ORM safety = surface critique. Source :
+      Sequelize docs paranoid mode + analyse pattern
+      Juice Shop.
+    explanation_en: |
+      Reusable pattern: ORM offers defensive protections
+      (paranoid mode, parameterized queries, automatic
+      escaping) but these protections are DISABLE-able by
+      developer. ghostLogin bug likely comes from query
+      meant to include soft-deleted users (for audit log
+      e.g.) but reused in login. Lesson: audit ORM safety
+      opt-outs = critical surface. Source: Sequelize docs
+      paranoid mode + Juice Shop pattern analysis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #2 : "Trying out the Request Data Erasure
+      functionality might be interesting, but cannot help
+      you solve this challenge in real time". Pourquoi
+      cette nuance pedagogique ?
+    question_en: |
+      OWASP hint #2: "Trying out the Request Data Erasure
+      functionality might be interesting, but cannot help
+      you solve this challenge in real time". Why this
+      pedagogical nuance?
+    options_fr:
+      - "Parce que la fonctionnalite est cassee"
+      - "Parce que le student doit comprendre que SUPPRIMER son propre compte ne genere pas un compte ghost-loginable (ses propres credentials seraient deleted aussi). La cible Chris est un compte SOFT-deleted PRE-EXISTANT (seeded data). Le challenge se resout en exfiltrant les credentials Chris (SQLi) puis en utilisant l'absence de deletedAt filter dans login. La fonctionnalite RTBF est interessante a explorer pour comprendre l'implementation, mais le solve passe par SQLi"
+      - "Parce que RTBF est trop lente"
+      - "Parce que les students doivent l'eviter"
+    options_en:
+      - "Because the functionality is broken"
+      - "Because student must understand that DELETING their own account doesn't create a ghost-loginable account (their own credentials would be deleted too). Target Chris is a PRE-EXISTING SOFT-deleted account (seeded data). Challenge resolves by exfiltrating Chris credentials (SQLi) then using absence of deletedAt filter in login. RTBF functionality is interesting to explore for understanding implementation, but solve goes via SQLi"
+      - "Because RTBF is too slow"
+      - "Because students should avoid it"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la phase d'exploration UX
+      (utiliser la fonctionnalite normalement) est utile
+      pour comprendre, mais l'attaque cible un user
+      PRE-EXISTANT plutot qu'un user que l'attaquant
+      cree. Cela illustre le pattern threat modeling :
+      l'attaquant exploite l'etat existant, pas son propre
+      etat (qu'il pourrait modifier mais pas exploiter
+      sans pre-cible). Source : OWASP hint #2 + analyse
+      threat model du challenge.
+    explanation_en: |
+      Reusable pattern: UX exploration phase (using
+      functionality normally) is useful to understand,
+      but attack targets PRE-EXISTING user rather than
+      user attacker creates. Illustrates threat modeling
+      pattern: attacker exploits existing state, not own
+      state (which they could modify but not exploit
+      without pre-target). Source: OWASP hint #2 +
+      challenge threat model analysis.

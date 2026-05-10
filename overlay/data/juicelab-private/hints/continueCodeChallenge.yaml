@@ -1,0 +1,179 @@
+challenge_key: "continueCodeChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "You need to trick
+      the hacking progress persistence feature".
+      Donc le challenge cible le restore-progress
+      mecanisme. Hint #2 : "Find out how saving
+      and restoring progress is done behind the
+      scenes" - investigate /rest/continue-code/
+      apply/:continueCode endpoint.
+    text_en: |
+      Official OWASP hint #1: "You need to trick
+      the hacking progress persistence feature".
+      So challenge targets restore-progress
+      mechanism. Hint #2: "Find out how saving
+      and restoring progress is done behind the
+      scenes" - investigate /rest/continue-code/
+      apply/:continueCode endpoint.
+    pedagogical_intent: |
+      Activate persistence mechanism reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #3 : "Deduce from all available
+      information (e.g. the package.json.bak)".
+      Donc pre-requis : forgottenDevBackup pour
+      acceder package.json.bak. Cherche dans les
+      dependencies une library d'encoding/hashing
+      : tu trouveras `hashids`. C'est la library
+      utilisee.
+    text_en: |
+      OWASP hint #3: "Deduce from all available
+      information (e.g. package.json.bak)". So
+      prerequisite: forgottenDevBackup to access
+      package.json.bak. Look in dependencies for
+      encoding/hashing library: you'll find
+      `hashids`. That's the library used.
+    pedagogical_intent: |
+      Spell library identification.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Hints OWASP #4 + #5 : "additional secret
+      during its encryption" + "really stupid
+      mistake a developer might make when
+      choosing such a secret". Cherche dans le
+      bundle Angular OU dans le source Juice
+      Shop pour `new Hashids(...)`. Tu trouveras
+      le SALT. La "really stupid mistake" =
+      utiliser une string predictible/literale
+      comme salt.
+    text_en: |
+      OWASP hints #4 + #5: "additional secret
+      during its encryption" + "really stupid
+      mistake a developer might make when
+      choosing such a secret". Look in Angular
+      bundle OR Juice Shop source for `new
+      Hashids(...)`. You'll find SALT. "Really
+      stupid mistake" = using predictable/
+      literal string as salt.
+    pedagogical_intent: |
+      Spell salt discovery method.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur
+      verifiee (routes/restoreProgress.ts:18) :
+      ```js
+      const hashidsAlphabet = 'abcdefghijklmnop
+        qrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+        1234567890';
+      const hashids = new Hashids('this is my
+        salt', 60, hashidsAlphabet);
+      ```
+      Le salt est literalement `'this is my
+      salt'`. Le min length est 60. Tu peux
+      reproduire localement avec hashids npm
+      package.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server
+      source (routes/restoreProgress.ts:18):
+      ```js
+      const hashidsAlphabet = 'abcdefghijklmnop
+        qrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+        1234567890';
+      const hashids = new Hashids('this is my
+        salt', 60, hashidsAlphabet);
+      ```
+      Salt is literally `'this is my salt'`.
+      Min length is 60. You can reproduce
+      locally with hashids npm package.
+    pedagogical_intent: |
+      Reveal exact salt + parameters.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Install hashids :
+         `npm install hashids`
+      2. Generer le continueCode pour challenge
+         #999 :
+         ```js
+         const Hashids = require('hashids/cjs');
+         const alphabet = 'abcdefghijklmnopqrstu
+           vwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+           1234567890';
+         const hashids = new Hashids('this is
+           my salt', 60, alphabet);
+         const continueCode = hashids.encode(
+           [999]);
+         console.log(continueCode);
+         // -> string of 60+ chars
+         ```
+      3. Submit le continueCode :
+         `curl http://localhost:3000/rest/
+         continue-code/apply/<continueCode>`.
+      4. Le serveur :
+         (a) hashids.decode(continueCode) ->
+             [999]
+         (b) `ids.includes(999)` = true
+         (c) challengeUtils.solve(challenges.
+             continueCodeChallenge) -> challenge
+             solve auto.
+      Source canonique : routes/restoreProgress.
+      ts:18-25 + hashids docs.
+      Defense canonique : (a) JWT signed RS256
+      avec solvedChallenges claim. (b) HMAC-SHA256
+      sur continueCode avec crypto-random
+      secret. (c) Server-side state persistance
+      via DB Progress model. (d) hashids
+      uniquement comme cosmetic short-encoding,
+      JAMAIS comme security primitive.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Install hashids:
+         `npm install hashids`
+      2. Generate continueCode for challenge
+         #999:
+         ```js
+         const Hashids = require('hashids/cjs');
+         const alphabet = 'abcdefghijklmnopqrstu
+           vwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+           1234567890';
+         const hashids = new Hashids('this is
+           my salt', 60, alphabet);
+         const continueCode = hashids.encode(
+           [999]);
+         console.log(continueCode);
+         // -> string of 60+ chars
+         ```
+      3. Submit continueCode:
+         `curl http://localhost:3000/rest/
+         continue-code/apply/<continueCode>`.
+      4. Server:
+         (a) hashids.decode(continueCode) ->
+             [999]
+         (b) `ids.includes(999)` = true
+         (c) challengeUtils.solve(challenges.
+             continueCodeChallenge) -> challenge
+             auto solves.
+      Canonical source: routes/restoreProgress.
+      ts:18-25 + hashids docs.
+      Canonical defense: (a) RS256-signed JWT
+      with solvedChallenges claim. (b) HMAC-
+      SHA256 on continueCode with crypto-random
+      secret. (c) Server-side state persistence
+      via DB Progress model. (d) hashids only as
+      cosmetic short-encoding, NEVER as security
+      primitive.
+    pedagogical_intent: |
+      Solution complete + Node script + defense.

@@ -1,0 +1,128 @@
+challenge_key: "httpHeaderXssChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Finding a piece of displayed
+      information that could originate from an HTTP header is
+      part of this challenge". Donc trouve une PAGE Juice Shop
+      qui affiche une donnee qui vient typiquement d'un header
+      HTTP. Reflechis : User-Agent (afficher le navigateur de
+      l'user), Referer (afficher la page d'arrivee), IP
+      (afficher la derniere connexion). Quelle page Juice Shop
+      affiche ce type d'info ?
+    text_en: |
+      Official OWASP hint #1: "Finding a piece of displayed
+      information that could originate from an HTTP header is
+      part of this challenge". So find a Juice Shop PAGE
+      displaying data that typically comes from an HTTP header.
+      Think: User-Agent (display user's browser), Referer
+      (display landing page), IP (display last login). Which
+      Juice Shop page shows that kind of info?
+    pedagogical_intent: |
+      Activate header-displayed-data reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      La page Last Login IP (Account > Privacy & Security > Last
+      Login IP, URL /#/privacy-security/last-login-ip) affiche
+      ton IP de derniere connexion. Cette IP est typiquement
+      lue depuis un header HTTP. Hint OWASP officiel #2 : "less
+      common or even proprietary HTTP headers". Donc pas le
+      classique X-Forwarded-For. Quel header proprietaire est
+      utilise par les CDN (Akamai, Cloudflare) pour transmettre
+      l'IP client ?
+    text_en: |
+      The Last Login IP page (Account > Privacy & Security >
+      Last Login IP, URL /#/privacy-security/last-login-ip)
+      shows your last connection IP. This IP is typically read
+      from an HTTP header. Official OWASP hint #2: "less common
+      or even proprietary HTTP headers". So not the classic
+      X-Forwarded-For. Which proprietary header is used by CDNs
+      (Akamai, Cloudflare) to forward client IP?
+    pedagogical_intent: |
+      Pin the page + signal proprietary header.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      True-Client-IP. Header proprietaire popularise par Akamai.
+      Hint OWASP officiel #3 : "the HTTP header you need will
+      never be sent by the application on its own". Donc tu dois
+      AJOUTER ce header manuellement quand tu te logges. Comment
+      ? Tu ne peux pas modifier les headers d'une requete depuis
+      le navigateur facilement (l'app Angular ne te laisse pas
+      le faire). Outil : curl avec --header, ou Burp Repeater.
+    text_en: |
+      True-Client-IP. Proprietary header popularized by Akamai.
+      Official OWASP hint #3: "the HTTP header you need will
+      never be sent by the application on its own". So you must
+      ADD this header manually when you login. How? You can't
+      easily modify request headers from the browser (Angular
+      app doesn't let you). Tool: curl with --header, or Burp
+      Repeater.
+    pedagogical_intent: |
+      Spell the header name + tooling needed.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Workflow : (1) re-login via curl POST /rest/user/login en
+      ajoutant le header True-Client-IP avec le payload XSS. (2)
+      Visiter ensuite la page Last Login IP qui re-affiche cette
+      "IP". Squelette curl :
+      curl -X POST http://127.0.0.1:3000/rest/user/login
+        -H "Content-Type: application/json"
+        -H "True-Client-IP: <iframe src=\"javascript:alert(`xss`)\">"
+        -d '{"email":"<ton_email>","password":"<ton_pwd>"}'
+      Le serveur stocke cette "IP" dans ton lastLoginIp en DB.
+      Apres, /#/privacy-security/last-login-ip rend l'iframe.
+    text_en: |
+      Workflow: (1) re-login via curl POST /rest/user/login
+      adding the True-Client-IP header with the XSS payload. (2)
+      Then visit the Last Login IP page that re-displays this
+      "IP". curl skeleton:
+      curl -X POST http://127.0.0.1:3000/rest/user/login
+        -H "Content-Type: application/json"
+        -H "True-Client-IP: <iframe src=\"javascript:alert(`xss`)\">"
+        -d '{"email":"<your_email>","password":"<your_pwd>"}'
+      Server stores this "IP" in your lastLoginIp in DB. After,
+      /#/privacy-security/last-login-ip renders the iframe.
+    pedagogical_intent: |
+      Spell the exact curl command.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet :
+      1. Logout (deconnecte-toi de la session courante)
+      2. curl -X POST http://127.0.0.1:3000/rest/user/login
+           -H "Content-Type: application/json"
+           -H 'True-Client-IP: <iframe src="javascript:alert(`xss`)">'
+           -d '{"email":"<ton_email>","password":"<ton_pwd>"}'
+         -> Recupere le JWT dans la response
+      3. Re-login dans le navigateur (UI) avec le meme compte
+         pour rafraichir le state Angular
+      4. Va sur /#/privacy-security/last-login-ip
+      5. L'iframe execute, alert apparait, challenge se valide
+      Source : OWASP XSS Prevention Cheat Sheet, section sur les
+      sources d'input non evidentes (headers, cookies).
+    text_en: |
+      Complete workflow:
+      1. Logout (disconnect from current session)
+      2. curl -X POST http://127.0.0.1:3000/rest/user/login
+           -H "Content-Type: application/json"
+           -H 'True-Client-IP: <iframe src="javascript:alert(`xss`)">'
+           -d '{"email":"<your_email>","password":"<your_pwd>"}'
+         -> Get the JWT from the response
+      3. Re-login in the browser (UI) with same account to
+         refresh Angular state
+      4. Go to /#/privacy-security/last-login-ip
+      5. Iframe executes, alert appears, challenge solves
+      Source: OWASP XSS Prevention Cheat Sheet, non-obvious input
+      sources section (headers, cookies).
+    pedagogical_intent: |
+      Quasi-solution : 5-step workflow with curl one-liner.

@@ -1,0 +1,98 @@
+challenge_key: "accessLogDisclosureChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la mauvaise pratique architecturale
+      qui mene a accessLogDisclosure ?
+    question_en: |
+      What architectural bad practice leads to
+      accessLogDisclosure?
+    options_fr:
+      - "Logs sont chiffres"
+      - "Server logs sont stockes DANS la web root et exposes via routes Express (`/support/logs`). Defense : logs hors web root (filesystem-only access /var/log/) + authentification admin requise + log centralization (ELK/Splunk). Pattern reusable : ne JAMAIS expose des artifacts internes (logs, configs, dumps) via HTTP"
+      - "Logs sont compressed"
+      - "Logs sont JSON"
+    options_en:
+      - "Logs are encrypted"
+      - "Server logs stored IN web root and exposed via Express routes (`/support/logs`). Defense: logs outside web root (filesystem-only access /var/log/) + admin authentication required + log centralization (ELK/Splunk). Reusable pattern: NEVER expose internal artifacts (logs, configs, dumps) via HTTP"
+      - "Logs are compressed"
+      - "Logs are JSON"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : separation entre
+      DATA et SERVER artifacts est fundamental.
+      Cas reels : Apache Tomcat default
+      manager exposed (CVE-2010-XXX),
+      Jenkins logs publiques 2017 (5K
+      breaches). Source : OWASP Logging
+      Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: separation between
+      DATA and SERVER artifacts is
+      fundamental. Real cases: Apache
+      Tomcat default manager exposed (CVE-
+      2010-XXX), public Jenkins logs 2017
+      (5K breaches). Source: OWASP Logging
+      Cheat Sheet.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi accessLogDisclosure est dangereux
+      au-dela de l'info disclosure simple ?
+    question_en: |
+      Why is accessLogDisclosure dangerous
+      beyond simple info disclosure?
+    options_fr:
+      - "Les logs sont volumineux"
+      - "Chain potential : les access logs contiennent typiquement des QUERY PARAMETERS qui peuvent inclure des passwords, tokens, session IDs (anti-pattern : passwords dans URL au lieu de body). L'attaquant lit le log -> extract credential -> Password Spraying (cf. dlpPasswordSprayingChallenge). Bug 'low' (info disclosure) chain vers bug 'high' (auth bypass)"
+      - "Les logs prennent du disque"
+      - "Logs ne sont pas dangereux"
+    options_en:
+      - "Logs are voluminous"
+      - "Chain potential: access logs typically contain QUERY PARAMETERS that may include passwords, tokens, session IDs (anti-pattern: passwords in URL instead of body). Attacker reads log -> extracts credential -> Password Spraying (cf. dlpPasswordSprayingChallenge). 'Low' bug (info disclosure) chains to 'high' bug (auth bypass)"
+      - "Logs take disk space"
+      - "Logs aren't dangerous"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : threat modeling doit
+      identifier les CHAINS de bugs. Source :
+      analyse routes/login.ts + accessLog
+      Disclosure + dlpPasswordSpraying.
+    explanation_en: |
+      Reusable pattern: threat modeling must
+      identify bug CHAINS. Source: routes/
+      login.ts analysis + accessLogDisclosure
+      + dlpPasswordSpraying.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense canonique pour les logs
+      en production ?
+    question_en: |
+      Canonical defense for production logs?
+    options_fr:
+      - "Logs en plain text"
+      - "Defense en profondeur : (1) logs hors web root (path /var/log/), (2) auth required pour log access, (3) sanitize logs (PII redaction, password masking via middleware), (4) centralized logging (ELK/Splunk/Datadog) avec ACL, (5) retention policy + rotation, (6) audit log de chaque log access. Pattern : log = data sensitive treated like PII"
+      - "Disabler les logs"
+      - "Encrypter les logs"
+    options_en:
+      - "Logs in plain text"
+      - "Defense in depth: (1) logs outside web root (path /var/log/), (2) auth required for log access, (3) sanitize logs (PII redaction, password masking via middleware), (4) centralized logging (ELK/Splunk/Datadog) with ACL, (5) retention policy + rotation, (6) audit log of each log access. Pattern: log = sensitive data treated like PII"
+      - "Disable logs"
+      - "Encrypt logs"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : log data = PII +
+      credentials + secrets potentiels. Treat
+      comme such. Source : OWASP Logging Cheat
+      Sheet.
+    explanation_en: |
+      Reusable pattern: log data = PII +
+      credentials + potential secrets. Treat
+      as such. Source: OWASP Logging Cheat
+      Sheet.

@@ -1,0 +1,140 @@
+challenge_key: "typosquattingAngularChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #3 : "Other than for its
+      legacy companion, combing through the
+      package.json.bak does not help for this
+      challenge". Donc DIFFERENT de
+      typosquattingNpmChallenge : le typosquat n'est
+      PAS dans le backup, il est dans le frontend
+      RUNTIME. Hint #2 confirme : pas d'URL ni de
+      domain.
+    text_en: |
+      Official OWASP hint #3: "Other than for its
+      legacy companion, combing through the
+      package.json.bak does not help for this
+      challenge". So DIFFERENT from
+      typosquattingNpmChallenge: typosquat is NOT in
+      backup, it's in frontend RUNTIME. Hint #2
+      confirms: no URL nor domain.
+    pedagogical_intent: |
+      Activate frontend-runtime investigation reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le typosquat est dans les frontend dependencies
+      Angular. Sources d'investigation : (a) le current
+      package.json frontend (si expose via /frontend/
+      package.json ou similar), (b) le bundle Angular
+      lui-meme (DevTools Sources). Cherche des
+      dependencies au nom suspect dans les libraries
+      Angular (ngx-* pattern courant).
+    text_en: |
+      Typosquat is in Angular frontend dependencies.
+      Investigation sources: (a) current frontend
+      package.json (if exposed via /frontend/
+      package.json or similar), (b) Angular bundle
+      itself (DevTools Sources). Look for suspicious-
+      named dependencies in Angular libraries (ngx-*
+      common pattern).
+    pedagogical_intent: |
+      Spell investigation surfaces.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Open DevTools Sources tab, search dans les
+      bundles `cookie` ou `ngx-`. Tu trouveras des
+      import statements vers des libraries Angular.
+      Cherche specifiquement un nom qui ressemble a
+      `ngx-cookie` (legitime, sur npm) mais avec une
+      lettre changee (ex. ngx -> ngy, ou autre subtle
+      typo). C'est ngy-cookie le culprit.
+    text_en: |
+      Open DevTools Sources tab, search bundles for
+      `cookie` or `ngx-`. You'll find import statements
+      to Angular libraries. Specifically look for name
+      resembling `ngx-cookie` (legitimate, on npm) but
+      with letter changed (e.g., ngx -> ngy, or other
+      subtle typo). That's ngy-cookie the culprit.
+    pedagogical_intent: |
+      Reveal typosquat name + investigation method.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      (routes/verify.ts:277-282) : `void
+      checkPatternInFeedbackAndComplaints(challenges.
+      typosquattingAngularChallenge, { [Op.like]:
+      '%ngy-cookie%' })`. Donc le pattern cherche est
+      EXACTEMENT `ngy-cookie` (substring match via
+      Op.like). Submit un feedback /#/contact avec un
+      commentaire qui contient ce nom. Le serveur le
+      detecte automatiquement.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server source
+      (routes/verify.ts:277-282): `void
+      checkPatternInFeedbackAndComplaints(challenges.
+      typosquattingAngularChallenge, { [Op.like]:
+      '%ngy-cookie%' })`. So sought pattern is
+      EXACTLY `ngy-cookie` (substring match via
+      Op.like). Submit feedback /#/contact with
+      comment containing this name. Server detects it
+      automatically.
+    pedagogical_intent: |
+      Reveal exact pattern.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Open Juice Shop sur /#/.
+      2. Open DevTools (F12) -> Sources tab.
+      3. Cherche dans tous les .js bundles :
+         `Ctrl+Shift+F` -> recherche `ngx-cookie` ou
+         `ngy-cookie`. Tu trouves le import statement
+         suspect.
+      4. Aller sur /#/contact (Customer Feedback).
+      5. Remplir le form avec un commentaire incluant
+         "ngy-cookie" (ex. "Found typosquatting
+         frontend dependency ngy-cookie in Angular
+         bundle").
+      6. Soumettre le form. Le serveur fait
+         findAndCountAll() avec [Op.like] %ngy-cookie%
+         dans Feedback + Complaint models.
+      7. Match -> challenge solve auto.
+      Source canonique : routes/verify.ts:277-282
+      (solve check) + bundle inspection methodology.
+      Defense canonique : (a) SBOM generation au build
+      (CycloneDX), (b) approved-packages allowlist
+      audit, (c) SRI sur CDN imports, (d) CSP stricte,
+      (e) automated dependency scanning (Socket.dev).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Open Juice Shop on /#/.
+      2. Open DevTools (F12) -> Sources tab.
+      3. Search all .js bundles: `Ctrl+Shift+F` ->
+         search `ngx-cookie` or `ngy-cookie`. Find
+         suspect import statement.
+      4. Go to /#/contact (Customer Feedback).
+      5. Fill form with comment including "ngy-
+         cookie" (e.g., "Found typosquatting frontend
+         dependency ngy-cookie in Angular bundle").
+      6. Submit form. Server does findAndCountAll()
+         with [Op.like] %ngy-cookie% in Feedback +
+         Complaint models.
+      7. Match -> challenge auto solves.
+      Canonical source: routes/verify.ts:277-282
+      (solve check) + bundle inspection methodology.
+      Canonical defense: (a) SBOM generation at build
+      (CycloneDX), (b) approved-packages allowlist
+      audit, (c) SRI on CDN imports, (d) strict CSP,
+      (e) automated dependency scanning (Socket.dev).
+    pedagogical_intent: |
+      Quasi-solution : DevTools workflow + defense.

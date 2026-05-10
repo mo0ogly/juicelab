@@ -1,0 +1,110 @@
+challenge_key: "httpHeaderXssChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi les HTTP headers sont-ils une surface d'attaque
+      souvent oubliee mais aussi dangereuse que le body ou les
+      query params ?
+    question_en: |
+      Why are HTTP headers an often-forgotten attack surface
+      yet as dangerous as the body or query params?
+    options_fr:
+      - "Parce qu'ils sont chiffres en HTTPS"
+      - "Parce qu'ils sont 100% controles par le client (curl, Burp, scripts) au meme titre que le body, mais les developpeurs auditent rarement les headers proprietaires (True-Client-IP, X-Real-IP, X-Custom-...) qui sont parses et affiches sans validation"
+      - "Parce qu'ils sont caches par les navigateurs"
+      - "Parce qu'ils ont une taille limitee"
+    options_en:
+      - "Because they're HTTPS-encrypted"
+      - "Because they're 100% client-controlled (curl, Burp, scripts) just like the body, but developers rarely audit proprietary headers (True-Client-IP, X-Real-IP, X-Custom-...) that get parsed and displayed without validation"
+      - "Because they're hidden by browsers"
+      - "Because they have limited size"
+    correct: 1
+    explanation_fr: |
+      HTTPS protege le transport, pas la nature client-controlled
+      du header. Un attaquant utilise curl ou Burp pour envoyer
+      des headers arbitraires. Le bug du challenge est exemplaire
+      : le developpeur a fait confiance a True-Client-IP parce
+      que c'est un header "officiel CDN", sans realiser que sans
+      CDN au-devant, n'importe qui peut le forger.
+    explanation_en: |
+      HTTPS protects transport, not the client-controlled nature
+      of the header. Attacker uses curl or Burp to send
+      arbitrary headers. The challenge bug is exemplary:
+      developer trusted True-Client-IP because it's an "official
+      CDN" header, without realizing that without a CDN in
+      front, anyone can forge it.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense empeche STRUCTURELLEMENT un attaquant
+      d'injecter via True-Client-IP en l'absence de CDN devant
+      l'application ?
+    question_en: |
+      Which defense STRUCTURALLY prevents an attacker from
+      injecting via True-Client-IP when there's no CDN in front
+      of the application?
+    options_fr:
+      - "Augmenter la longueur max des headers a 200 chars"
+      - "Ne PAS accepter True-Client-IP du tout. Utiliser uniquement l'IP source du socket TCP (req.socket.remoteAddress en Node.js) qui est immuable cote application. Avec CDN, accepter le header SEULEMENT depuis les IPs sources Akamai/Cloudflare en allowlist"
+      - "Forcer HTTPS"
+      - "Logger tous les headers"
+    options_en:
+      - "Raise max header length to 200 chars"
+      - "Do NOT accept True-Client-IP at all. Use only the TCP socket source IP (req.socket.remoteAddress in Node.js) which is immutable application-side. With CDN, accept the header ONLY from Akamai/Cloudflare allowlisted source IPs"
+      - "Force HTTPS"
+      - "Log every header"
+    correct: 1
+    explanation_fr: |
+      Distinction immutable (TCP socket) vs mutable (HTTP
+      header). L'IP du socket est decidee par le 3-way handshake
+      TCP, l'attaquant ne peut pas la forger sans IP spoofing
+      reseau (impossible sur Internet). C'est la source de
+      verite. Les headers HTTP "IP" sont une convenience pour
+      les setups multi-proxy, mais doivent etre validees contre
+      un allowlist de proxies.
+    explanation_en: |
+      Immutable (TCP socket) vs mutable (HTTP header)
+      distinction. Socket IP is decided by the TCP 3-way
+      handshake, attacker can't forge it without network IP
+      spoofing (impossible on Internet). It's the truth source.
+      HTTP "IP" headers are convenience for multi-proxy setups
+      but must be validated against a proxy allowlist.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense en profondeur sur ce challenge : quels ELEMENTS
+      additionnels (au-dela de la validation header) reduisent
+      l'impact ?
+    question_en: |
+      Defense in depth on this challenge: which ADDITIONAL
+      elements (beyond header validation) reduce the impact?
+    options_fr:
+      - "Compresser les responses en gzip"
+      - "(1) Sanitization OUTPUT au render : DOMPurify ou Angular default escape, peu importe la source. (2) CSP frame-src 'self' bloque l'iframe execution. (3) HttpOnly + Secure sur les cookies pour limiter l'exfiltration meme si l'XSS execute"
+      - "Chiffrer chaque header en AES"
+      - "Bloquer le port 80, ne servir qu'en HTTPS"
+    options_en:
+      - "Gzip-compress responses"
+      - "(1) Output sanitization at render: DOMPurify or Angular default escape, regardless of source. (2) CSP frame-src 'self' blocks iframe execution. (3) HttpOnly + Secure on cookies to limit exfiltration even if XSS runs"
+      - "Encrypt each header in AES"
+      - "Block port 80, serve HTTPS only"
+    correct: 1
+    explanation_fr: |
+      Pattern recurrent : sanitize sources + sanitize outputs +
+      browser defenses (CSP, cookie attrs). Chacune attrape un
+      niveau different. Sanitize sources empeche le payload
+      d'entrer ; sanitize output empeche le payload de sortir
+      sous forme executable ; CSP empeche l'execution. La
+      combinaison est canonique en OWASP XSS Prevention.
+    explanation_en: |
+      Recurrent pattern: sanitize sources + sanitize outputs +
+      browser defenses (CSP, cookie attrs). Each catches a
+      different layer. Sanitize sources prevents payload entry;
+      sanitize output prevents payload exit in executable form;
+      CSP prevents execution. Canonical OWASP XSS Prevention
+      combination.

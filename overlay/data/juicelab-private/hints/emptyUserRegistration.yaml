@@ -1,0 +1,157 @@
+challenge_key: "emptyUserRegistration"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel unique : "Consider
+      intercepting and playing with the request
+      payload". Donc l'objectif est de bypass le
+      validation cote frontend en intercepted la
+      requete et la modified.
+    text_en: |
+      Official OWASP single hint: "Consider
+      intercepting and playing with the request
+      payload". So objective is bypass frontend
+      validation by intercepting and modifying
+      request.
+    pedagogical_intent: |
+      Activate frontend bypass reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le formulaire /#/register cote Angular utilise
+      Validators.required + Validators.email. Le
+      submit button est disabled si email vide. Mais
+      le serveur ne fait peut-etre PAS la meme
+      validation. Test : envoie une requete avec
+      email vide via curl ou Burp Repeater.
+    text_en: |
+      /#/register form Angular-side uses
+      Validators.required + Validators.email. Submit
+      button is disabled if empty email. But server
+      maybe doesn't do same validation. Test: send
+      request with empty email via curl or Burp
+      Repeater.
+    pedagogical_intent: |
+      Spell test methodology.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur verifiee (routes/verify.ts:
+      21-26) : `req.body.email === '' && req.body.
+      password === ''`. Donc le serveur attend
+      literalement EMPTY string pour les DEUX
+      (email AND password). Note : `passwordRepeat`
+      doit aussi matcher pour eviter de declencher
+      passwordRepeatChallenge ; mets-le aussi a
+      empty string.
+    text_en: |
+      Verified server source (routes/verify.ts:
+      21-26): `req.body.email === '' && req.body.
+      password === ''`. So server literally expects
+      EMPTY string for BOTH (email AND password).
+      Note: `passwordRepeat` must also match to
+      avoid triggering passwordRepeatChallenge; set
+      it to empty string too.
+    pedagogical_intent: |
+      Reveal exact server check.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Construction du payload :
+      ```bash
+      curl -X POST http://localhost:3000/api/Users
+        -H "Content-Type: application/json"
+        -d '{
+          "email":"",
+          "password":"",
+          "passwordRepeat":"",
+          "securityQuestion":{"id":1},
+          "securityAnswer":"x"
+        }'
+      ```
+      Le securityQuestion + securityAnswer doivent
+      etre fournis (sinon NULL constraint sur la
+      table). Si la DB rejette les empty strings sur
+      email/password, le challenge ne se solve PAS
+      (mais Juice Shop n'a pas ce constraint au
+      niveau ORM, donc ca passe).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Payload construction:
+      ```bash
+      curl -X POST http://localhost:3000/api/Users
+        -H "Content-Type: application/json"
+        -d '{
+          "email":"",
+          "password":"",
+          "passwordRepeat":"",
+          "securityQuestion":{"id":1},
+          "securityAnswer":"x"
+        }'
+      ```
+      securityQuestion + securityAnswer must be
+      provided (otherwise NULL constraint on table).
+      If DB rejects empty strings on email/password,
+      challenge does NOT solve (but Juice Shop
+      doesn't have this constraint at ORM level, so
+      it passes).
+    pedagogical_intent: |
+      Spell exact payload + edge constraints.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Open Burp Suite OR ouvrir un terminal pour
+         curl.
+      2. Construire la requete POST /api/Users avec
+         body :
+         `{"email":"","password":"","passwordRepeat"
+         :"","securityQuestion":{"id":1},
+         "securityAnswer":"anything"}`.
+      3. Envoyer la requete. Le serveur :
+         (a) Sequelize User.create avec email="" et
+             password="" sans validation.
+         (b) Le middleware verify.emptyUser
+             Registration (server.ts:422) check
+             req.body.email==='' && password==='' ->
+             match -> challenge solve auto.
+      4. Note : un user avec email vide est
+         essentiellement broken (impossible de login)
+         mais le challenge est solve.
+      Source canonique : routes/verify.ts:21-26 +
+      server.ts:422 + OWASP Input Validation Cheat
+      Sheet.
+      Defense canonique : Sequelize model validators
+      (allowNull: false + validate.notEmpty +
+      validate.isEmail) + middleware joi/zod schema.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Open Burp Suite OR terminal for curl.
+      2. Build POST /api/Users request with body:
+         `{"email":"","password":"","passwordRepeat"
+         :"","securityQuestion":{"id":1},
+         "securityAnswer":"anything"}`.
+      3. Send request. Server:
+         (a) Sequelize User.create with email="" and
+             password="" without validation.
+         (b) verify.emptyUserRegistration middleware
+             (server.ts:422) checks req.body.email
+             ==='' && password==='' -> match ->
+             challenge auto solves.
+      4. Note: user with empty email is essentially
+         broken (impossible to login) but challenge
+         solves.
+      Canonical source: routes/verify.ts:21-26 +
+      server.ts:422 + OWASP Input Validation Cheat
+      Sheet.
+      Canonical defense: Sequelize model validators
+      (allowNull: false + validate.notEmpty +
+      validate.isEmail) + middleware joi/zod schema.
+    pedagogical_intent: |
+      Solution complete + defense canonique.

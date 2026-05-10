@@ -1,0 +1,117 @@
+challenge_key: "manipulateClockChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le bug racine est que le serveur trust le
+      `couponDate` (timestamp) envoye par le client.
+      Quel principe de security est viole ?
+    question_en: |
+      Root bug is server trusting `couponDate`
+      (timestamp) sent by client. What security
+      principle violated?
+    options_fr:
+      - "HTTPS doit etre force"
+      - "Don't trust client-controlled time/timestamps : tous les fields qui ont une semantique TEMPORELLE (validOn, expiresAt, lastLogin, createdAt) doivent etre FETCHED server-side depuis une source d'authority (DB, NTP, JWT signed claim avec exp). Trust client timestamp = bypass garanti car l'attaquant peut crafter n'importe quelle date. Cas reels : Equifax 2017 (cookie expiry trust), Apple 2020 PIN bypass (time-based bruteforce)"
+      - "Forcer 2FA"
+      - "Encrypter les timestamps"
+    options_en:
+      - "HTTPS must be forced"
+      - "Don't trust client-controlled time/timestamps: all fields with TEMPORAL semantics (validOn, expiresAt, lastLogin, createdAt) must be FETCHED server-side from authority source (DB, NTP, signed JWT exp claim). Trust client timestamp = guaranteed bypass since attacker can craft any date. Real cases: Equifax 2017 (cookie expiry trust), Apple 2020 PIN bypass (time-based bruteforce)"
+      - "Force 2FA"
+      - "Encrypt timestamps"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : tout ce qui est
+      temporel-sensitive (auth tokens, sessions,
+      coupons, sale prices, account locks) doit
+      etre validated server-side avec une time
+      source authority. Pour les coupons, la
+      validOn doit etre FETCH depuis la DB par
+      code + date current verified via Date.now()
+      (server). Source : routes/order.ts:182-198
+      + OWASP general best practices.
+    explanation_en: |
+      Reusable pattern: all temporal-sensitive
+      (auth tokens, sessions, coupons, sale
+      prices, account locks) must be server-side
+      validated with authority time source. For
+      coupons, validOn must be FETCHED from DB by
+      code + current date verified via Date.now()
+      (server). Source: routes/order.ts:182-198 +
+      OWASP general best practices.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #3 : "Solving this challenge does
+      not require actual time traveling". Quelle
+      LECON pedagogique ?
+    question_en: |
+      OWASP hint #3: "Solving this challenge does
+      not require actual time traveling". What
+      pedagogical LESSON?
+    options_fr:
+      - "Time traveling est physiquement impossible"
+      - "Le student doit comprendre que les attacks contre les temporal logics sont PAYLOAD-BASED (manipulation des fields envoyes), pas SYSTEM-BASED (changer la clock). C'est la reorientation cognitive critique : pour 95% des cas, l'attaque est dans le request body, pas dans l'environnement. Pattern reusable : mefiez-vous des solutions qui demandent de changer le filesystem / clock / network - elles sont generalement le mauvais path"
+      - "Time traveling demande NTP"
+      - "Time traveling est trop complexe"
+    options_en:
+      - "Time traveling physically impossible"
+      - "Student must understand attacks against temporal logics are PAYLOAD-BASED (manipulation of sent fields), not SYSTEM-BASED (changing clock). It's critical cognitive reorientation: for 95% of cases, attack is in request body, not in environment. Reusable pattern: beware of solutions requiring filesystem/clock/network changes - they're generally wrong path"
+      - "Time traveling needs NTP"
+      - "Time traveling too complex"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la security pedagogie
+      doit reorienter les students vers les
+      attacks payload-based en priorite. Les
+      attacks system-level (clock skew, NTP
+      poisoning) sont rares et tres situational.
+      90% du temps, le pentester injects un
+      payload dans une requete normale. Source :
+      OWASP hint #3 + methodology pentest.
+    explanation_en: |
+      Reusable pattern: security pedagogy must
+      reorient students toward payload-based
+      attacks priority. System-level attacks
+      (clock skew, NTP poisoning) are rare and
+      very situational. 90% of time, pentester
+      injects payload in normal request. Source:
+      OWASP hint #3 + pentest methodology.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la defense canonique pour le
+      coupon redemption (au-dela du fix client-
+      timestamp) ?
+    question_en: |
+      Canonical defense for coupon redemption
+      (beyond client-timestamp fix)?
+    options_fr:
+      - "Coupons gratuits"
+      - "Multi-couches : (1) Coupon code uniquement comme input client. (2) Server fetch campaign.validOn + duration depuis la DB. (3) Verification time : `validOn <= Date.now() < validOn + duration`. (4) Idempotent redemption : track redeemed coupons par user (UNIQUE constraint) pour eviter double-use. (5) Coupon revocation API + audit log. Combine signed coupon URLs (HMAC) si shared via email externe"
+      - "Plain text coupons"
+      - "Encrypter les baskets"
+    options_en:
+      - "Free coupons"
+      - "Multi-layer: (1) Coupon code only as client input. (2) Server fetches campaign.validOn + duration from DB. (3) Time verification: `validOn <= Date.now() < validOn + duration`. (4) Idempotent redemption: track redeemed coupons per user (UNIQUE constraint) to prevent double-use. (5) Coupon revocation API + audit log. Combine signed coupon URLs (HMAC) if shared via external email"
+      - "Plain text coupons"
+      - "Encrypt baskets"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour les business
+      operations critiques (coupon, deluxe
+      upgrade, refund, password reset), defense
+      en profondeur multi-couches obligatoire.
+      Source : analyse routes/order.ts +
+      practices financial systems.
+    explanation_en: |
+      Reusable pattern: for critical business
+      operations (coupon, deluxe upgrade, refund,
+      password reset), mandatory multi-layer
+      defense in depth. Source: routes/order.ts
+      analysis + financial systems practices.

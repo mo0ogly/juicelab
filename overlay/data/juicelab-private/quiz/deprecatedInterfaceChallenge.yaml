@@ -1,0 +1,91 @@
+challenge_key: "deprecatedInterfaceChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quel anti-pattern est illustre par "
+      developers think they could go invisible
+      by closing their eyes" (hint #1) ?
+    question_en: |
+      What anti-pattern illustrated by "
+      developers think they could go invisible
+      by closing their eyes" (hint #1)?
+    options_fr:
+      - "Developers ferment vraiment les yeux"
+      - "Security through OBSCURITY (anti-pattern fundamental). Cacher le UI ne SUPPRIME PAS l'endpoint backend ; un attaquant qui scan les routes le trouve. Defense : DELETE entirely (code + routes + tests + docs) lors de la deprecation. Cas reels : Equifax 2017 (Apache Struts deprecated mais code laisse), 23andMe 2023 (deprecated API endpoint exposed)"
+      - "Developers sont visibles"
+      - "Endpoints invisibles existent"
+    options_en:
+      - "Developers really close eyes"
+      - "Security through OBSCURITY (fundamental anti-pattern). Hiding UI does NOT remove backend endpoint; attacker scanning routes finds it. Defense: DELETE entirely (code + routes + tests + docs) on deprecation. Real cases: Equifax 2017 (deprecated Apache Struts but code left), 23andMe 2023 (exposed deprecated API endpoint)"
+      - "Developers are visible"
+      - "Invisible endpoints exist"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : security through
+      obscurity = no security. Source :
+      OWASP Web Service Security.
+    explanation_en: |
+      Reusable pattern: security through
+      obscurity = no security. Source:
+      OWASP Web Service Security.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Tag "Prerequisite" : pourquoi ce
+      challenge est-il pre-requis ?
+    question_en: |
+      "Prerequisite" tag: why is challenge
+      prerequisite?
+    options_fr:
+      - "Toujours premier a faire"
+      - "Le deprecated interface (XML/YAML upload) est la SURFACE pour 3 autres challenges : xxeFileDisclosure, xxeDos, yamlBomb. Sans cet endpoint actif, ces challenges sont impossibles. Pattern reusable : un bug structural (deprecation incomplete) cree multiple kill chains. Defense : delete entirely = fix N challenges en un fix"
+      - "Tous prerequis a quelque chose"
+      - "Random"
+    options_en:
+      - "Always first to do"
+      - "Deprecated interface (XML/YAML upload) is SURFACE for 3 other challenges: xxeFileDisclosure, xxeDos, yamlBomb. Without active endpoint, these challenges impossible. Reusable pattern: structural bug (incomplete deprecation) creates multiple kill chains. Defense: delete entirely = fix N challenges in one fix"
+      - "All prerequisite to something"
+      - "Random"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : single structural
+      bug = N exploits. Source : analyse
+      Juice Shop architecture.
+    explanation_en: |
+      Reusable pattern: single structural
+      bug = N exploits. Source: Juice Shop
+      architecture analysis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour deprecation
+      processes en production ?
+    question_en: |
+      Canonical defense for production
+      deprecation processes?
+    options_fr:
+      - "Cacher le UI"
+      - "(1) DELETE entirely (code + routes + tests + docs). (2) Communicate la deprecation 6 mois en avance (sunset header HTTP). (3) Audit periodique des routes registered (`app._router.stack`). (4) Feature flags explicit avec deny-by-default. (5) Monitoring des deprecated endpoints (alert si access). Pattern : explicit deletion > implicit hiding"
+      - "Faire un commentaire"
+      - "Garder pour compat"
+    options_en:
+      - "Hide UI"
+      - "(1) DELETE entirely (code + routes + tests + docs). (2) Communicate deprecation 6 months in advance (sunset HTTP header). (3) Periodic audit of registered routes (`app._router.stack`). (4) Explicit feature flags with deny-by-default. (5) Monitoring of deprecated endpoints (alert if access). Pattern: explicit deletion > implicit hiding"
+      - "Make comment"
+      - "Keep for compat"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : deprecation =
+      DELETION cycle, pas hiding. Source :
+      RFC 8594 (Sunset header) + OWASP
+      Web Service Security.
+    explanation_en: |
+      Reusable pattern: deprecation =
+      DELETION cycle, not hiding. Source:
+      RFC 8594 (Sunset header) + OWASP
+      Web Service Security.

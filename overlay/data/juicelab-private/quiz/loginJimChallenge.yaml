@@ -1,0 +1,106 @@
+challenge_key: "loginJimChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Bender et Jim partagent la meme attaque finale (SQLi avec '--).
+      Quelle est la difference de classe d'UI pour la phase OSINT ?
+    question_en: |
+      Bender and Jim share the same final attack (SQLi with '--).
+      What is the UI class difference for the OSINT phase?
+    options_fr:
+      - "Aucune difference, les deux passent par About Us"
+      - "Bender = UI marketing curee (carousel selectionnee par le shop), Jim = UI user-generated (review tapee par lui-meme)"
+      - "Bender = page authentifiee, Jim = page publique"
+      - "Bender = mobile only, Jim = desktop only"
+    options_en:
+      - "No difference, both go through About Us"
+      - "Bender = curated marketing UI (carousel selected by the shop), Jim = user-generated UI (review typed by himself)"
+      - "Bender = authenticated page, Jim = public page"
+      - "Bender = mobile only, Jim = desktop only"
+    correct: 1
+    explanation_fr: |
+      Distinction structurelle. Bender fuite parce que le shop a
+      choisi son feedback. Jim fuite parce qu'il a inclus son email
+      dans son review. Les vecteurs de defense different : truncate
+      cote shop pour Bender, redaction PII a l'input pour Jim.
+    explanation_en: |
+      Structural distinction. Bender leaks because the shop picked
+      his feedback. Jim leaks because he included his email in his
+      review. Defense vectors differ: shop-side truncation for
+      Bender, input-side PII redaction for Jim.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pour empecher les utilisateurs de fuiter leur email dans le
+      contenu d'un review, quelle defense automatique est la PLUS
+      structurelle ?
+    question_en: |
+      To prevent users from leaking their email in the body of a
+      review, which automatic defense is the MOST structural?
+    options_fr:
+      - "Afficher un avertissement 'attention vos infos peuvent etre publiques' au-dessus du textarea"
+      - "Pipeline de redaction PII en submit time : regex emails/telephones + modele NER pour les patterns variables, refuse ou masque automatiquement"
+      - "Forcer l'utilisateur a se reconnecter avant de poster un review"
+      - "Limiter les reviews a 50 caracteres pour reduire la surface d'erreur"
+    options_en:
+      - "Show a 'careful, your info may go public' warning above the textarea"
+      - "PII redaction pipeline at submit time: emails/phones regex + NER model for variable patterns, automatically rejects or masks"
+      - "Force the user to re-authenticate before posting a review"
+      - "Limit reviews to 50 chars to reduce error surface"
+    correct: 1
+    explanation_fr: |
+      Le warning UX est ignore par 95% des utilisateurs (etudes UX
+      classiques). Re-auth ne change rien au contenu. La limite de
+      caracteres ne previent pas un email court. Le pipeline regex +
+      NER (Microsoft Presidio open-source, AWS Comprehend) est la
+      defense automatique structurelle, applicable a toute la base
+      historique aussi.
+    explanation_en: |
+      The UX warning is ignored by 95% of users (classic UX
+      studies). Re-auth changes nothing about the content. The char
+      limit does not prevent a short email. The regex + NER pipeline
+      (open-source Microsoft Presidio, AWS Comprehend) is the
+      structural automatic defense, applicable to the entire
+      historical base too.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Meme avec une defense parfaite contre les leaks de reviews, le
+      hint OWASP officiel ("smart-guess Jim's email") reste valide
+      sur 90% des sites. Quelle defense empecherait l'enumeration
+      par convention firstName@domain ?
+    question_en: |
+      Even with a perfect defense against review leaks, the official
+      OWASP hint ("smart-guess Jim's email") still works on 90% of
+      sites. Which defense would prevent enumeration by the
+      firstName@domain convention?
+    options_fr:
+      - "Bloquer la creation de comptes avec un prenom commun"
+      - "Decoupler l'identifiant de connexion de l'email : loginId genere aleatoirement (UUID, alias neutre user-12847@), email reste un canal de notification non utilise pour s'authentifier"
+      - "Forcer l'usage de Captcha sur le formulaire de login"
+      - "Limiter le nombre de tentatives de login a 3 par jour"
+    options_en:
+      - "Block account creation with a common first name"
+      - "Decouple the login identifier from the email: randomly generated loginId (UUID, neutral alias user-12847@), email remains a notification channel not used to authenticate"
+      - "Force Captcha on the login form"
+      - "Limit login attempts to 3 per day"
+    correct: 1
+    explanation_fr: |
+      La seule defense structurelle est de casser la correlation
+      attaquant-devine-email. Captcha ralentit mais ne bloque pas un
+      attaquant cible. Rate limit n'aide pas si l'attaquant connait
+      deja l'email. Bloquer les prenoms communs est absurde.
+      L'alias decouple est le pattern utilise par les banques et les
+      apps tres sensibles (numero de client > email).
+    explanation_en: |
+      The only structural defense is breaking the
+      attacker-guesses-email correlation. Captcha slows but does
+      not block a targeted attacker. Rate limit does not help if
+      the attacker already knows the email. Blocking common first
+      names is absurd. Decoupled alias is the pattern banks and
+      highly sensitive apps use (customer number > email).

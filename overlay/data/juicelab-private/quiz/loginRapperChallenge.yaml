@@ -1,0 +1,109 @@
+challenge_key: "loginRapperChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi le pattern "MC SafeSearch chante la securite mais
+      utilise un mauvais password" est-il pedagogiquement
+      important au-dela d'une blague ?
+    question_en: |
+      Why is the "MC SafeSearch sings security but uses a bad
+      password" pattern pedagogically important beyond a joke?
+    options_fr:
+      - "Parce que les rappeurs sont mauvais en securite"
+      - "Parce qu'il moque l'archetype reel 'do as I say, not as I do' : le security officer qui a 'Password123!' parce qu'il en a 'trop a retenir'. La defense est d'imposer le password manager pour TOUS, sans exception PSO/CISO"
+      - "Parce que les noms de rappeurs sont des passwords"
+      - "Parce que les paroles de rap chiffrent les passwords"
+    options_en:
+      - "Because rappers are bad at security"
+      - "Because it mocks the real 'do as I say, not as I do' archetype: the security officer with 'Password123!' because they 'have too many to remember'. Defense is mandating password manager for EVERYONE, no PSO/CISO exception"
+      - "Because rapper names are passwords"
+      - "Because rap lyrics encrypt passwords"
+    correct: 1
+    explanation_fr: |
+      Pattern social classique en entreprise. Defense : tools
+      (password manager) > policies (regles ecrites) > training
+      (security awareness). L'humain ne peut pas retenir des
+      dizaines de passwords forts, donc l'OUTILLAGE est la
+      seule defense scalable.
+    explanation_en: |
+      Classic social pattern in enterprise. Defense: tools
+      (password manager) > policies (written rules) > training
+      (security awareness). Humans can't memorize dozens of
+      strong passwords, so TOOLING is the only scalable
+      defense.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le NIST SP 800-63B (2017) DEPRECIE les regles classiques
+      de complexite ("au moins 1 majuscule + 1 chiffre + 1
+      special"). Pourquoi ?
+    question_en: |
+      NIST SP 800-63B (2017) DEPRECATES classic complexity
+      rules ("at least 1 uppercase + 1 digit + 1 special").
+      Why?
+    options_fr:
+      - "Parce que ces regles sont trop strictes"
+      - "Parce qu'elles poussent les humains vers des PATTERNS PREDICTIBLES (Password1, Welcome1!, Summer2024!) qui satisfont la regle mais sont devinables. Resultat : faux sentiment de securite. NIST recommande maintenant : minimum length + check haveibeenpwned"
+      - "Parce que les claviers AZERTY ne supportent pas les chars speciaux"
+      - "Parce que les bases de donnees ne supportent pas les majuscules"
+    options_en:
+      - "Because rules are too strict"
+      - "Because they push humans toward PREDICTABLE PATTERNS (Password1, Welcome1!, Summer2024!) satisfying the rule but guessable. Result: false sense of security. NIST now recommends: min length + haveibeenpwned check"
+      - "Because AZERTY keyboards don't support special chars"
+      - "Because databases don't support uppercase"
+    correct: 1
+    explanation_fr: |
+      Vrai paradoxe de la securite par regles : forcer la
+      complexite cree des passwords plus PREDICTIBLES, pas
+      plus aleatoires. Reference : NIST SP 800-63B section
+      5.1.1.2 "Memorized Secret Verifiers". Recommandation
+      moderne : minimum 8 chars + check breach + ENCOURAGER
+      les long passphrases via password manager.
+    explanation_en: |
+      Real rules-based-security paradox: forcing complexity
+      makes passwords more PREDICTABLE, not more random.
+      Reference: NIST SP 800-63B section 5.1.1.2 "Memorized
+      Secret Verifiers". Modern recommendation: min 8 chars +
+      breach check + ENCOURAGE long passphrases via password
+      manager.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Tu as login en tant que MC SafeSearch avec "Mr. N00dles".
+      Quelle defense AUTOMATIQUE empeche structurellement le
+      reuse de ce password (ou tout password compromis) sur ton
+      app ?
+    question_en: |
+      You logged in as MC SafeSearch with "Mr. N00dles". Which
+      AUTOMATIC defense structurally prevents reuse of this
+      password (or any compromised password) on your app?
+    options_fr:
+      - "Forcer le changement de password tous les 30 jours"
+      - "Integration de l'API haveibeenpwned (HIBP) Pwned Passwords au moment de la creation/modification du password : k-anonymity check qui rejette tout password apparu dans une breach publique. Couvre 'Mr. N00dles' et plus de 800M passwords compromis"
+      - "Bloquer les emails contenant 'safesearch'"
+      - "Logger tous les passwords en clair pour audit"
+    options_en:
+      - "Force password change every 30 days"
+      - "Integration of haveibeenpwned (HIBP) Pwned Passwords API at password creation/modification: k-anonymity check rejecting any password appeared in a public breach. Covers 'Mr. N00dles' and 800M+ compromised passwords"
+      - "Block emails containing 'safesearch'"
+      - "Log all passwords in cleartext for audit"
+    correct: 1
+    explanation_fr: |
+      HIBP est gratuit, utilise k-anonymity (envoie les 5
+      premiers chars du SHA-1, pas le password complet),
+      maintenu par Troy Hunt. Defense automatique scalable. Le
+      forced rotation 30 jours est DEPRECATED par NIST 2017
+      (pousse vers Password1, Password2...). Reference : NIST
+      SP 800-63B + HIBP API docs.
+    explanation_en: |
+      HIBP is free, uses k-anonymity (sends first 5 SHA-1
+      chars, not full password), maintained by Troy Hunt.
+      Scalable automatic defense. 30-day forced rotation is
+      DEPRECATED by NIST 2017 (pushes toward Password1,
+      Password2...). Reference: NIST SP 800-63B + HIBP API
+      docs.

@@ -1,0 +1,122 @@
+challenge_key: "geoStalkingVisualChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel unique : "Take a look at the details
+      in the photo to determine the location of where it was
+      taken". Donc pas de metadata EXIF (vs geoStalkingMeta),
+      mais analyse VISUELLE de la photo. Quelle est la
+      photo cible ? Va sur /#/photo-wall et cherche celle
+      d'Emma.
+    text_en: |
+      Single official OWASP hint: "Take a look at the details
+      in the photo to determine the location of where it was
+      taken". So no EXIF metadata (vs geoStalkingMeta), but
+      VISUAL analysis. Which is the target photo? Go to
+      /#/photo-wall and find Emma's.
+    pedagogical_intent: |
+      Localize the photo + signal visual OSINT.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Une fois la photo d'Emma reperee, telecharge-la et
+      analyse les details visibles. Cherche : (1) langue des
+      panneaux/textes, (2) architecture (style des batiments),
+      (3) plaques d'immatriculation, (4) monuments visibles,
+      (5) vegetation specifique a une region. Methode
+      Bellingcat : croque mentalement les 9 zones du cadre,
+      note tout detail identifiable.
+    text_en: |
+      Once Emma's photo found, download and analyze visible
+      details. Look for: (1) sign/text language, (2)
+      architecture (building style), (3) license plates, (4)
+      visible monuments, (5) region-specific vegetation.
+      Bellingcat method: mentally sketch the 9 frame zones,
+      note every identifiable detail.
+    pedagogical_intent: |
+      Spell visual analysis approach.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Si l'analyse manuelle est lente, utilise reverse image
+      search : Google Lens (lens.google.com), Yandex Images
+      (yandex.com/images), TinEye (tineye.com). Ces outils
+      cherchent dans leur index si la photo (ou des photos
+      similaires) a ete postee ailleurs. Si Emma a uploade
+      une photo unique, le reverse search peut donner peu
+      de resultats — bascule vers analyse manuelle des
+      details.
+    text_en: |
+      If manual analysis is slow, use reverse image search:
+      Google Lens (lens.google.com), Yandex Images
+      (yandex.com/images), TinEye (tineye.com). These search
+      their index for if the photo (or similar) was posted
+      elsewhere. If Emma uploaded a unique photo, reverse
+      search may give few results — fall back to manual
+      detail analysis.
+    pedagogical_intent: |
+      Spell reverse-search tools.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      L'objectif est d'identifier le lieu de la photo (souvent
+      une ville ou un monument iconique) et utiliser ce nom
+      comme reponse a la security question d'Emma. Question
+      typique : "What is your favorite place to vacation?" ou
+      "Where did you grow up?". La reponse est le nom du lieu
+      visible dans sa photo. Va sur /#/forgot-password, email
+      emma@juice-sh.op, answer = nom du lieu.
+    text_en: |
+      Goal is identifying photo location (often a city or
+      iconic monument) and using its name as Emma's security
+      question answer. Typical question: "What is your
+      favorite place to vacation?" or "Where did you grow
+      up?". Answer is the place name visible in her photo. Go
+      to /#/forgot-password, email emma@juice-sh.op, answer =
+      place name.
+    pedagogical_intent: |
+      Spell forgot-password workflow.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet :
+      1. /#/photo-wall : trouve la photo d'Emma.
+      2. Right-click + Save As, telecharge.
+      3. Analyse visuelle : identifie un detail
+         identifiable (panneau, monument, architecture).
+      4. Si necessaire : reverse image search via Google Lens
+         pour valider.
+      5. Le lieu identifie (ville/monument typique) =
+         reponse a la security question.
+      6. /#/forgot-password : email emma@juice-sh.op, answer
+         = nom du lieu, set un nouveau password.
+      7. Login. Challenge se valide automatiquement.
+      Source : OWASP Choosing Security Questions Cheat Sheet
+      + methodes Bellingcat OSINT visuelle (publiques).
+      Note : la photo seedee dans Juice Shop varie selon la
+      version, l'OSINT visuel reste applicable au pattern.
+    text_en: |
+      Complete workflow:
+      1. /#/photo-wall: find Emma's photo.
+      2. Right-click + Save As, download.
+      3. Visual analysis: identify an identifiable detail
+         (sign, monument, architecture).
+      4. If needed: Google Lens reverse search to validate.
+      5. Identified location (city/iconic monument) =
+         security question answer.
+      6. /#/forgot-password: email emma@juice-sh.op, answer
+         = place name, set new password.
+      7. Login. Challenge auto-solves.
+      Source: OWASP Choosing Security Questions Cheat Sheet
+      + Bellingcat visual OSINT methods (public). Note:
+      seeded photo varies by Juice Shop version, visual
+      OSINT remains applicable to the pattern.
+    pedagogical_intent: |
+      Quasi-solution : full workflow + version-dependency note.

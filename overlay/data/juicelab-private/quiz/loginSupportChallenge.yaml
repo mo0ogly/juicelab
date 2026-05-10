@@ -1,0 +1,97 @@
+challenge_key: "loginSupportChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le challenge est tagged "Brute Force +
+      Code Analysis". Quelle technique combine
+      ces 2 tags ?
+    question_en: |
+      Challenge tagged "Brute Force + Code
+      Analysis". What technique combines these
+      2 tags?
+    options_fr:
+      - "Brute force du login form"
+      - "Code Analysis (read fileServer.ts pour identifier l'exception kdbx file allowlist + login.ts pour le solve check) + Brute Force (cracker le master password KeePass via keepass2john + hashcat). Le password support lui-meme est trop strong pour brute force direct ; la kill chain passe par le KeePass file que cracker"
+      - "Hashcat sur le login"
+      - "SQLi"
+    options_en:
+      - "Brute force on login form"
+      - "Code Analysis (read fileServer.ts to identify kdbx file allowlist exception + login.ts for solve check) + Brute Force (crack KeePass master password via keepass2john + hashcat). Support password itself too strong for direct brute force; kill chain via KeePass file to crack"
+      - "Hashcat on login"
+      - "SQLi"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : combine code analysis
+      pour identifier les surfaces + brute
+      force pour exploiter. Source : routes/
+      fileServer.ts:27 + login.ts:61.
+    explanation_en: |
+      Reusable pattern: combine code analysis
+      for surface identification + brute
+      force for exploitation. Source: routes/
+      fileServer.ts:27 + login.ts:61.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelle est l'anti-pattern HUMAIN
+      illustre par le challenge ?
+    question_en: |
+      Human ANTI-PATTERN illustrated by
+      challenge?
+    options_fr:
+      - "Support engineers sont stupides"
+      - "Shared password manager file (kdbx) accessible a TOUS les support engineers, protegee par un master password faible (low-cost country team + fluctuating structure = weak security training). Defense moderne : password manager INDIVIDUAL (1Password Business, Bitwarden Teams) + PAM (Privileged Access Management) + MFA + audit log"
+      - "Low-cost countries sont risque"
+      - "KeePass est insecure"
+    options_en:
+      - "Support engineers are stupid"
+      - "Shared password manager file (kdbx) accessible to ALL support engineers, protected by weak master password (low-cost country team + fluctuating structure = weak security training). Modern defense: INDIVIDUAL password manager (1Password Business, Bitwarden Teams) + PAM (Privileged Access Management) + MFA + audit log"
+      - "Low-cost countries are risky"
+      - "KeePass is insecure"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : shared secrets =
+      anti-pattern fundamental. Cas reels :
+      Uber 2016 (shared 1Password vault
+      compromised). Source : OWASP
+      Authentication + PAM best practices.
+    explanation_en: |
+      Reusable pattern: shared secrets =
+      fundamental anti-pattern. Real cases:
+      Uber 2016 (shared 1Password vault
+      compromised). Source: OWASP
+      Authentication + PAM best practices.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense canonique pour les
+      shared credentials en entreprise ?
+    question_en: |
+      Canonical defense for enterprise
+      shared credentials?
+    options_fr:
+      - "Forcer HTTPS"
+      - "(1) PAM (Privileged Access Management) avec just-in-time access ; chaque request access est temporaire + auditee + revocable. (2) Password manager INDIVIDUAL per employee. (3) MFA mandatory pour toute access privileged. (4) Audit log + anomaly detection. (5) Service accounts avec rotation automatique. (6) Secrets en HSM/KMS pour application secrets"
+      - "Disabler le support"
+      - "Plus de passwords"
+    options_en:
+      - "Force HTTPS"
+      - "(1) PAM (Privileged Access Management) with just-in-time access; each access request temporary + audited + revocable. (2) INDIVIDUAL password manager per employee. (3) MFA mandatory for all privileged access. (4) Audit log + anomaly detection. (5) Service accounts with automatic rotation. (6) Secrets in HSM/KMS for application secrets"
+      - "Disable support"
+      - "No more passwords"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : PAM est le standard
+      moderne pour privileged credentials.
+      Source : OWASP Authentication + NIST
+      800-53 AC-6 (Least Privilege).
+    explanation_en: |
+      Reusable pattern: PAM is modern
+      standard for privileged credentials.
+      Source: OWASP Authentication + NIST
+      800-53 AC-6 (Least Privilege).

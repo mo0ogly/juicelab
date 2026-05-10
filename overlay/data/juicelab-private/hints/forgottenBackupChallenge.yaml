@@ -1,0 +1,115 @@
+challenge_key: "forgottenBackupChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 (identique a forgottenDevBackup) :
+      "trick a security mechanism into thinking that the file
+      you want has a valid file type". Si tu as resolu DevBackup,
+      tu connais le pattern : null byte bypass sur /ftp/. Ici la
+      cible differe — ce n'est pas un fichier dev (package.json
+      .bak) mais un fichier salesman (un nom evocateur business).
+      Quel fichier dans /ftp/ matche "salesman" / sales / promo /
+      tarifs ?
+    text_en: |
+      Official OWASP hint #1 (same as forgottenDevBackup):
+      "trick a security mechanism into thinking that the file
+      you want has a valid file type". If you solved DevBackup,
+      you know the pattern: null-byte bypass on /ftp/. Target
+      differs here — not a dev file (package.json.bak) but a
+      salesman file (business-evocative name). Which file in
+      /ftp/ matches "salesman" / sales / promo / pricing?
+    pedagogical_intent: |
+      Connect to DevBackup knowledge + signal target differs.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le directory listing /ftp/ (visible apres
+      directoryListingChallenge) montre plusieurs fichiers. Le
+      candidat sales est coupons_2013.md.bak (codes promo
+      distribues par le marketing en 2013). Le ".bak" indique
+      que c'est un backup, donc bloque par le filtre extension.
+      Bypass : meme null byte que DevBackup.
+    text_en: |
+      Directory listing /ftp/ (visible after
+      directoryListingChallenge) shows several files. Sales
+      candidate is coupons_2013.md.bak (promo codes handed out
+      by marketing in 2013). ".bak" means it's a backup, hence
+      blocked by extension filter. Bypass: same null byte as
+      DevBackup.
+    pedagogical_intent: |
+      Pin the target file.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      URL exacte :
+      http://127.0.0.1:3000/ftp/coupons_2013.md.bak%2500.md
+      Meme principe que DevBackup. Le serveur (1) regex check :
+      ".md" final, accepte. (2) filesystem : truncate sur \0,
+      ouvre coupons_2013.md.bak. Le contenu est un texte
+      Markdown listant les codes promo distribues en 2013 par
+      le marketing.
+    text_en: |
+      Exact URL:
+      http://127.0.0.1:3000/ftp/coupons_2013.md.bak%2500.md
+      Same principle as DevBackup. Server (1) regex check:
+      ".md" final, accepts. (2) filesystem: truncate on \0,
+      opens coupons_2013.md.bak. Content is Markdown text
+      listing 2013 promo codes from marketing.
+    pedagogical_intent: |
+      Spell exact URL with bypass technique reminder.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Tape l'URL dans la barre d'adresse. Le contenu apparait,
+      le challenge se valide automatiquement quand le serveur
+      detecte le pattern null-byte sur ce fichier specifique.
+      Note : les codes promo trouves peuvent etre utilises dans
+      d'autres challenges (notamment manipulateClockChallenge
+      / Expired Coupon ou similaires) — c'est un PREREQUIS
+      potentiel.
+    text_en: |
+      Type the URL in the address bar. Content shows,
+      challenge auto-solves when server detects null-byte
+      pattern on this specific file. Note: found promo codes
+      can be used in other challenges (notably
+      manipulateClockChallenge / Expired Coupon or similar) —
+      potential PREREQUISITE.
+    pedagogical_intent: |
+      Confirm the workflow + signal downstream usage.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow : exactement identique a forgottenDevBackup,
+      seul le nom de fichier change.
+      1. URL : http://127.0.0.1:3000/ftp/coupons_2013.md.bak%2500.md
+      2. Le serveur sert le contenu de coupons_2013.md.bak.
+      3. Sauvegarde le contenu (codes promo).
+      4. Challenge se valide automatiquement.
+      Le pattern d'attaque generalise : pour CHAQUE .bak dans
+      le directory listing /ftp/, applique la meme technique.
+      Un attaquant pentester reel ne s'arrete pas a un fichier,
+      il dump tout. Reference : pattern documente dans
+      easterEggLevelOne et forgottenDevBackup, technique
+      identique.
+    text_en: |
+      Workflow: exactly identical to forgottenDevBackup, only
+      filename changes.
+      1. URL: http://127.0.0.1:3000/ftp/coupons_2013.md.bak%2500.md
+      2. Server serves coupons_2013.md.bak content.
+      3. Save content (promo codes).
+      4. Challenge auto-solves.
+      Generalized attack pattern: for EACH .bak in the /ftp/
+      directory listing, apply the same technique. A real
+      pentester doesn't stop at one file, they dump
+      everything. Reference: pattern documented in
+      easterEggLevelOne and forgottenDevBackup, identical
+      technique.
+    pedagogical_intent: |
+      Quasi-solution : full URL + generalized attack mindset.

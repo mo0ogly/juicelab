@@ -1,0 +1,144 @@
+challenge_key: "zeroStarsChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Donner un feedback DEVASTATING zero-star au store.
+  Description OWASP. Hints officiels : (1) "Before
+  you invest time bypassing the API, you might want
+  to play around with the UI a bit". [KILL_CHAIN_
+  PROBABLE]
+
+  Methode recommandee : Le challenge est tagged
+  difficulty 1, le hint OWASP suggere d'essayer le
+  UI d'abord avant de bypass. La feedback form sur
+  /#/contact a un rating component (typiquement
+  Material Design star rating, 1-5). Le frontend
+  Angular limite probablement la valeur min a 1.
+  Hint OWASP suggere une astuce UI avant un bypass
+  API. Approches : (1) UI cleverness : peut-etre
+  click 1-star puis click la meme star pour
+  toggle off (Material star rating peut autoriser
+  cela), retournant rating=0. (2) Bypass via API
+  direct : POST /api/Feedbacks avec body `{rating:
+  0, comment: "...", captchaId: ..., captcha: ...}`.
+  La defense correcte serait Sequelize validators
+  `min: 1`. Le bug : pas de validation server-side
+  sur la valeur de rating.
+
+mission_en: |
+  Give a DEVASTATING zero-star feedback to the store.
+  OWASP description. Official hints: (1) "Before you
+  invest time bypassing the API, you might want to
+  play around with the UI a bit". [KILL_CHAIN_
+  PROBABLE]
+
+  Recommended method: Challenge tagged difficulty 1,
+  OWASP hint suggests trying UI first before
+  bypassing. /#/contact feedback form has a rating
+  component (typically Material Design star rating,
+  1-5). Angular frontend probably limits min value
+  to 1. OWASP hint suggests UI trick before API
+  bypass. Approaches: (1) UI cleverness: maybe click
+  1-star then click same star to toggle off
+  (Material star rating may allow this), returning
+  rating=0. (2) Bypass via direct API: POST /api/
+  Feedbacks with body `{rating: 0, comment: "...",
+  captchaId: ..., captcha: ...}`. Correct defense
+  would be Sequelize validators `min: 1`. Bug: no
+  server-side validation on rating value.
+
+concepts:
+  - title_fr: "UI cleverness vs API bypass : 2 approaches"
+    title_en: "UI cleverness vs API bypass: 2 approaches"
+    body_fr: |
+      Hint OWASP unique invite explicitement a UI
+      cleverness AVANT API bypass : "Before you
+      invest time bypassing the API, you might want
+      to play around with the UI a bit". Cela
+      reflete la realite pentest : (a) UI
+      cleverness = exploit subtle UI bugs (toggle
+      states, hidden form fields, browser-side
+      logic flaws). Plus rapide et peut etre
+      missed par les automated scanners. (b) API
+      bypass = curl/Burp pour skip frontend
+      entirely. Plus robuste mais demande plus de
+      tooling. Pattern reusable : essayer
+      cleverness UI EN PREMIER pour les
+      challenges difficulty 1 ; bypass API pour
+      les challenges plus avances.
+    body_en: |
+      Single OWASP hint explicitly invites to UI
+      cleverness BEFORE API bypass: "Before you
+      invest time bypassing the API, you might
+      want to play around with the UI a bit".
+      Reflects pentest reality: (a) UI
+      cleverness = exploit subtle UI bugs (toggle
+      states, hidden form fields, browser-side
+      logic flaws). Faster and may be missed by
+      automated scanners. (b) API bypass =
+      curl/Burp to skip frontend entirely. More
+      robust but needs more tooling. Reusable
+      pattern: try UI cleverness FIRST for
+      difficulty 1 challenges; API bypass for
+      more advanced challenges.
+
+  - title_fr: "Range validation : invariant business simple oublie"
+    title_en: "Range validation: simple forgotten business invariant"
+    body_fr: |
+      Source canonique : OWASP Input Validation
+      Cheat Sheet. Le rating semantique est
+      typiquement [1, 5] integers. Mais le serveur
+      ne valide pas ce range. Ressemble a
+      negativeOrderChallenge (quantity > 0
+      manquant) : meme pattern de business
+      invariant non-enforced server-side. Defense
+      canonique : (a) Sequelize model validator
+      `rating: { type: INTEGER, validate: { min:
+      1, max: 5 }}`. (b) joi/zod schema dans
+      middleware. (c) DB CHECK constraint
+      (`CHECK (rating BETWEEN 1 AND 5)`). Pattern
+      reusable : auditer TOUS les fields integer
+      pour leurs ranges acceptables et enforce.
+    body_en: |
+      Canonical source: OWASP Input Validation
+      Cheat Sheet. Rating semantic is typically
+      [1, 5] integers. But server doesn't
+      validate range. Resembles
+      negativeOrderChallenge (missing quantity >
+      0): same pattern of business invariant not
+      enforced server-side. Canonical defense:
+      (a) Sequelize model validator `rating: {
+      type: INTEGER, validate: { min: 1, max:
+      5 }}`. (b) joi/zod schema in middleware.
+      (c) DB CHECK constraint (`CHECK (rating
+      BETWEEN 1 AND 5)`). Reusable pattern:
+      audit ALL integer fields for acceptable
+      ranges and enforce.
+
+  - title_fr: "Difficulty 1 = leverage minimal"
+    title_en: "Difficulty 1 = minimal leverage"
+    body_fr: |
+      zeroStarsChallenge est tagged difficulty 1
+      = simplest tier. Cela suggere que le
+      bypass demande LITTLE OR NO tooling. C'est
+      coherent avec l'hint OWASP qui invite a
+      UI cleverness. Pour les students, l'idee
+      pedagogique : apprendre a explorer le UI
+      AVANT d'aller chercher Burp Suite. Pattern
+      reusable : la creativite UX est aussi
+      utile que le tooling pentest. Cas reels :
+      bug bounty hunters qui trouvent des bugs
+      via toggle clicks repete, drag-and-drop
+      attacks, copy-paste paste tricks.
+    body_en: |
+      zeroStarsChallenge tagged difficulty 1 =
+      simplest tier. Suggests bypass requires
+      LITTLE OR NO tooling. Consistent with
+      OWASP hint inviting UI cleverness. For
+      students, pedagogical idea: learn to
+      explore UI BEFORE going to Burp Suite.
+      Reusable pattern: UX creativity as useful
+      as pentest tooling. Real cases: bug bounty
+      hunters finding bugs via repeated toggle
+      clicks, drag-and-drop attacks, copy-paste
+      tricks.

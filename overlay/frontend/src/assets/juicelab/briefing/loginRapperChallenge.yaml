@@ -1,0 +1,124 @@
+challenge_key: "loginRapperChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Connecte-toi avec les credentials ORIGINAUX de MC SafeSearch
+  (sans SQLi). Description : "Log in with MC SafeSearch's
+  original user credentials without applying SQL Injection or
+  any other bypass". Hints : MC SafeSearch est un rappeur qui
+  a produit la chanson "Protect Ya' Passwordz" (hint #1), et
+  le difficulty rating "deux etoiles est slightly exaggerated"
+  (hint #2). [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : OSINT pop-culture/musical. MC
+  SafeSearch est un personnage fictif/parodique. Sa chanson
+  "Protect Ya' Passwordz" (parodie de "Protect Ya Neck" du
+  Wu-Tang Clan) explique exactement comment NE PAS choisir un
+  mot de passe. Recherche le clip ou les paroles : MC
+  SafeSearch utilise un mot de passe RIDICULEMENT mauvais
+  comme exemple parodique dans la chanson. C'est ce mot de
+  passe la qu'il a (par ironie) choisi pour son propre
+  compte. Email : mc.safesearch@juice-sh.op ou
+  mc-safesearch@juice-sh.op.
+
+  Note la lecon meta : meme un personnage qui ENSEIGNE la
+  securite peut avoir des mauvaises pratiques par
+  paresse/ironie. C'est l'archetype du "do as I say, not as I
+  do". Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Log in with MC SafeSearch's ORIGINAL credentials (no SQLi).
+  Description: "Log in with MC SafeSearch's original user
+  credentials without applying SQL Injection or any other
+  bypass". Hints: MC SafeSearch is a rapper who produced the
+  song "Protect Ya' Passwordz" (hint #1), and the difficulty
+  rating "two stars is slightly exaggerated" (hint #2).
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: pop-culture/musical OSINT. MC
+  SafeSearch is a fictional/parodic character. His song
+  "Protect Ya' Passwordz" (parody of Wu-Tang Clan's "Protect
+  Ya Neck") explains exactly how NOT to pick a password.
+  Search the clip or lyrics: MC SafeSearch uses a RIDICULOUSLY
+  bad password as a parodic example in the song. That's the
+  password he (ironically) chose for his own account. Email:
+  mc.safesearch@juice-sh.op or mc-safesearch@juice-sh.op.
+
+  Note the meta lesson: even a character who TEACHES security
+  may have bad practices through laziness/irony. The "do as I
+  say, not as I do" archetype. You will report it in the
+  "after" logbook.
+
+concepts:
+  - title_fr: "Le pattern 'Protect Ya' Passwordz' : l'enseignant qui ne suit pas ses propres regles"
+    title_en: "The 'Protect Ya' Passwordz' pattern: the teacher who doesn't follow their own rules"
+    body_fr: |
+      MC SafeSearch est un meta-character : il chante la
+      bonne pratique (passwords forts) mais l'utilise comme
+      exemple negatif. Pattern reel en entreprise : le
+      security awareness officer qui a "Password123!" comme
+      mot de passe parce qu'il en a "trop a retenir". Le
+      challenge OWASP raille cette ironie. Defense : password
+      manager OBLIGATOIRE pour TOUS, sans exception. Bitwarden,
+      1Password, KeePass — la dispense du PSO ou du CISO est
+      le top fail OWASP.
+    body_en: |
+      MC SafeSearch is a meta-character: he sings the good
+      practice (strong passwords) but uses it as a negative
+      example. Real enterprise pattern: the security awareness
+      officer with "Password123!" as their password because
+      they "have too many to remember". The OWASP challenge
+      mocks this irony. Defense: MANDATORY password manager
+      for EVERYONE, no exception. Bitwarden, 1Password,
+      KeePass — exempting the PSO or CISO is the top OWASP
+      fail.
+
+  - title_fr: "Difficulty 2 etoiles est exagere : le tell-tale sign"
+    title_en: "Two-star difficulty is exaggerated: the tell-tale sign"
+    body_fr: |
+      Hint OWASP officiel #2 : "After watching the music video
+      of this song, you should agree that even 2 stars is a
+      slightly exaggerated difficulty rating for this
+      challenge". Si l'OWASP team dit "trivial", c'est que le
+      mot de passe est dans la chanson EN CLAIR — pas dans le
+      sens du contenu poetique mais comme objet de moquerie
+      explicite. Methode : ecouter ou lire les paroles, prendre
+      le mot de passe que MC SafeSearch CITE comme exemple de
+      mauvais password.
+    body_en: |
+      Official OWASP hint #2: "After watching the music video
+      of this song, you should agree that even 2 stars is a
+      slightly exaggerated difficulty rating for this
+      challenge". If the OWASP team says "trivial", the
+      password is in the song IN CLEAR — not poetically but as
+      an explicit mockery object. Method: listen or read the
+      lyrics, take the password MC SafeSearch CITES as an
+      example of a bad password.
+
+  - title_fr: "Defense : password policy + interdire les passwords commun"
+    title_en: "Defense: password policy + ban common passwords"
+    body_fr: |
+      L'attaque MC SafeSearch fonctionne parce que le password
+      utilise est dans le top 10 des "worst passwords" annuels
+      (typiquement "password", "123456", "admin", "qwerty",
+      etc.). Defense canonique : (1) blocklist des passwords
+      compromis via haveibeenpwned API au moment de la
+      creation/modification du compte. (2) Force complexite
+      MAIS sans regles ridicules (le NIST SP 800-63B 2017
+      DEPRECIE les regles "1 majuscule + 1 chiffre" qui
+      poussent vers des patterns predictibles comme
+      "Password1"). (3) Encourager passphrases LONGUES +
+      ALEATOIRES via password manager. Reference : OWASP
+      Authentication Cheat Sheet section "Password Policy".
+    body_en: |
+      MC SafeSearch attack works because the used password is
+      in the top 10 annual "worst passwords" (typically
+      "password", "123456", "admin", "qwerty", etc.).
+      Canonical defense: (1) blocklist compromised passwords
+      via haveibeenpwned API at account creation/modification.
+      (2) Enforce complexity BUT without absurd rules (NIST SP
+      800-63B 2017 DEPRECATES "1 uppercase + 1 digit" rules
+      that push toward predictable patterns like "Password1").
+      (3) Encourage LONG + RANDOM passphrases via password
+      manager. Reference: OWASP Authentication Cheat Sheet
+      "Password Policy" section.

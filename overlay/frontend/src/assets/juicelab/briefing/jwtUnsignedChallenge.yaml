@@ -1,0 +1,170 @@
+challenge_key: "jwtUnsignedChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Forger un JWT essentiellement unsigned qui impersonate
+  l'utilisateur (non-existant) jwtn3d@juice-sh.op.
+  Description OWASP. Hints officiels : (1) "This
+  challenge exploits a weird option that is supported
+  when signing tokens with JWT". (2) "You should begin
+  with retrieving a valid JWT from the application's
+  Authorization request header". (3) "A JWT is only
+  given to users who have logged in. They have a
+  limited validity, so better do not dawdle". (4) "Try
+  to convince the site to give you a valid token with
+  the required payload while downgrading to no
+  encryption at all". (5) "Make sure your JWT is URL
+  safe!". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/verify.ts:82-83 + 108-130 (verifie source).
+  Code exact : `if (challengeUtils.notSolved(
+  challenges.jwtUnsignedChallenge)) { jwtChallenge(
+  challenges.jwtUnsignedChallenge, req, 'none', /
+  jwtn3d@/) }`. Donc 2 conditions : alg='none' (literal
+  string) ET email matches /jwtn3d@/. Workflow : (1)
+  Login pour obtenir un JWT valide (Authorization
+  header). (2) Decoder le JWT (jwt.io ou base64url
+  decode). (3) Modifier le header en
+  `{"alg":"none","typ":"JWT"}`. (4) Modifier le payload
+  pour `email: "jwtn3d@juice-sh.op"`. (5) Re-encoder en
+  base64url et concatener
+  `header.payload.` (signature vide). (6) Submit
+  Authorization: Bearer <forged-jwt>.
+
+mission_en: |
+  Forge an essentially unsigned JWT impersonating the
+  (non-existent) user jwtn3d@juice-sh.op. OWASP
+  description. Official hints: (1) "This challenge
+  exploits a weird option that is supported when
+  signing tokens with JWT". (2) "You should begin
+  with retrieving a valid JWT from the application's
+  Authorization request header". (3) "A JWT is only
+  given to users who have logged in. They have a
+  limited validity, so better do not dawdle". (4)
+  "Try to convince the site to give you a valid
+  token with the required payload while downgrading
+  to no encryption at all". (5) "Make sure your JWT
+  is URL safe!". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/verify.
+  ts:82-83 + 108-130 (verified source). Exact code:
+  `if (challengeUtils.notSolved(challenges.
+  jwtUnsignedChallenge)) { jwtChallenge(challenges.
+  jwtUnsignedChallenge, req, 'none', /jwtn3d@/) }`.
+  So 2 conditions: alg='none' (literal string) AND
+  email matches /jwtn3d@/. Workflow: (1) Login to
+  get valid JWT (Authorization header). (2) Decode
+  JWT (jwt.io or base64url decode). (3) Modify
+  header to `{"alg":"none","typ":"JWT"}`. (4) Modify
+  payload to `email: "jwtn3d@juice-sh.op"`. (5)
+  Re-encode in base64url and concatenate
+  `header.payload.` (empty signature). (6) Submit
+  Authorization: Bearer <forged-jwt>.
+
+concepts:
+  - title_fr: "alg=none : la trap dans la spec JWT (RFC 7519)"
+    title_en: "alg=none: the trap in JWT spec (RFC 7519)"
+    body_fr: |
+      Source canonique : RFC 7519 (JWT) + RFC 7515
+      (JWS). La spec definit explicitement
+      `alg: "none"` comme un algorithm valide
+      signifiant "no signature". Conceptuellement
+      utile (token transport sans confidentialite)
+      mais TRES dangereux dans la pratique : une
+      library qui supporte `alg=none` ET utilise le
+      meme code path que les algos signes peut
+      accepter un JWT FORGE par tout attaquant.
+      L'attaquant prend un JWT valide, modifie le
+      header en alg=none, modifie le payload, et
+      laisse la signature vide. Si la library ne
+      verifie pas que l'algorithm declare ne PEUT
+      PAS etre 'none' avant verify, le token est
+      accepte. CVE associee : CVE-2015-9235
+      (express-jwt 0.1.3 - cite dans
+      knownVulnerableComponentChallenge !).
+    body_en: |
+      Canonical source: RFC 7519 (JWT) + RFC 7515
+      (JWS). Spec explicitly defines `alg: "none"`
+      as valid algorithm meaning "no signature".
+      Conceptually useful (token transport without
+      confidentiality) but VERY dangerous in
+      practice: library supporting `alg=none` AND
+      using same code path as signed algos can
+      accept JWT FORGED by any attacker. Attacker
+      takes valid JWT, modifies header to alg=none,
+      modifies payload, leaves signature empty. If
+      library doesn't verify that declared algorithm
+      CANNOT BE 'none' before verify, token is
+      accepted. Associated CVE: CVE-2015-9235
+      (express-jwt 0.1.3 - cited in
+      knownVulnerableComponentChallenge!).
+
+  - title_fr: "Composition avec knownVulnerableComponent : meme racine"
+    title_en: "Composition with knownVulnerableComponent: same root"
+    body_fr: |
+      jwtUnsignedChallenge est l'EXPLOITATION concrete
+      de la library vulnerable mentionnee dans
+      knownVulnerableComponentChallenge (`express-jwt
+      0.1.3`). Pattern reusable : un challenge
+      "Vulnerable Library" (research-only) est suivi
+      d'un challenge "Exploit it" (hands-on). Les
+      students experimentent les 2 facettes : (a)
+      identifier la vuln via OSINT/research, (b)
+      construire le payload concret. Cela illustre la
+      kill chain typique pentest : recon -> identify
+      vuln -> develop exploit -> deliver. Source :
+      routes/verify.ts:229-251 (knownVuln) + 82-83
+      (jwtUnsigned) + 108-130 (jwtChallenge
+      function).
+    body_en: |
+      jwtUnsignedChallenge is concrete EXPLOITATION
+      of vulnerable library mentioned in
+      knownVulnerableComponentChallenge (`express-jwt
+      0.1.3`). Reusable pattern: "Vulnerable Library"
+      challenge (research-only) followed by "Exploit
+      it" challenge (hands-on). Students experiment
+      both facets: (a) identify vuln via OSINT/
+      research, (b) build concrete payload.
+      Illustrates typical pentest kill chain: recon
+      -> identify vuln -> develop exploit -> deliver.
+      Source: routes/verify.ts:229-251 (knownVuln) +
+      82-83 (jwtUnsigned) + 108-130 (jwtChallenge
+      function).
+
+  - title_fr: "Defense canonique : whitelist algorithms + library moderne"
+    title_en: "Canonical defense: algorithm whitelist + modern library"
+    body_fr: |
+      mitigationUrl du challenge :
+      cheatsheetseries.owasp.org/cheatsheets/JSON_Web_
+      Token_for_Java_Cheat_Sheet.html. Defense
+      canonique : (1) Specifier l'algorithm WHITELIST
+      explicit dans `jwt.verify(token, key,
+      {algorithms: ['RS256']})`. La spec moderne
+      jsonwebtoken (Auth0) FORCE algorithms parameter
+      depuis v9.0+. (2) Update express-jwt vers
+      version >= 6.0 (algorithms whitelist par
+      defaut). (3) Eviter `alg: "none"` ENTIEREMENT en
+      production. (4) Utiliser asymmetric crypto
+      (RS256) si possible plutot que symmetric (HS256)
+      pour eviter shared-secret leaks. (5) Token
+      expiration courte (15 min) + refresh tokens.
+      Pattern reusable : explicit-is-better-than-
+      implicit pour les crypto parameters.
+    body_en: |
+      Challenge mitigationUrl:
+      cheatsheetseries.owasp.org/cheatsheets/JSON_Web_
+      Token_for_Java_Cheat_Sheet.html. Canonical
+      defense: (1) Specify explicit algorithm
+      WHITELIST in `jwt.verify(token, key,
+      {algorithms: ['RS256']})`. Modern
+      jsonwebtoken (Auth0) spec FORCES algorithms
+      parameter since v9.0+. (2) Update express-jwt
+      to version >= 6.0 (default algorithms
+      whitelist). (3) Avoid `alg: "none"` ENTIRELY
+      in production. (4) Use asymmetric crypto
+      (RS256) if possible rather than symmetric
+      (HS256) to avoid shared-secret leaks. (5)
+      Short token expiration (15 min) + refresh
+      tokens. Reusable pattern: explicit-is-better-
+      than-implicit for crypto parameters.

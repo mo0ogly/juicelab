@@ -1,0 +1,122 @@
+challenge_key: "errorHandlingChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Provoquer une erreur ni gracieusement ni
+  consistement handled. Tag : Prerequisite.
+  Description OWASP. Hints : (1) "Try to submit
+  bad input to forms or tamper with URL paths".
+  (2) "triggers from various possible error
+  conditions". (3) "submit bad input to forms
+  to provoke an improper error handling". (4)
+  "Tampering with URL paths or parameters".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve dans routes/verify.ts:77.
+  Code : `solveIf(() => err && (statusCode ===
+  200 || statusCode > 401))`. Le solve trigger
+  quand un error handler est appele AVEC error
+  ET status 200 OR > 401. Le 200-with-error =
+  cas pathologique (response success mais avec
+  err middleware). Le > 401 = 5xx server
+  errors typically. Donc submit n'importe quoi
+  qui cause un 500. Workflow : multiple
+  options - upload file invalid, GET URL
+  malformed, submit JSON malformed, etc.
+
+mission_en: |
+  Provoke error neither gracefully nor
+  consistently handled. Tag: Prerequisite.
+  OWASP description. Hints: (1) "Try to submit
+  bad input to forms or tamper with URL
+  paths". (2) "triggers from various possible
+  error conditions". (3) "submit bad input to
+  forms to provoke improper error handling".
+  (4) "Tampering with URL paths or
+  parameters". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve in routes/verify.ts:77. Code:
+  `solveIf(() => err && (statusCode === 200
+  || statusCode > 401))`. Solve triggers when
+  error handler called WITH error AND status
+  200 OR > 401. 200-with-error = pathological
+  case (response success but with err
+  middleware). > 401 = 5xx server errors
+  typically. So submit anything causing 500.
+  Workflow: multiple options - upload invalid
+  file, GET malformed URL, submit malformed
+  JSON, etc.
+
+concepts:
+  - title_fr: "Improper error handling : information disclosure"
+    title_en: "Improper error handling: information disclosure"
+    body_fr: |
+      Source canonique : OWASP Error Handling
+      Cheat Sheet (mitigationUrl). Le risque :
+      les erreurs unhandled revelent souvent
+      (a) stack traces (file paths internal,
+      library versions), (b) DB structure
+      (column names, table names), (c) server
+      tech stack, (d) sometimes credentials/
+      tokens dans error messages. Defense :
+      generic error responses + detailed logs
+      backend-only.
+    body_en: |
+      Canonical source: OWASP Error Handling
+      Cheat Sheet (mitigationUrl). Risk:
+      unhandled errors often reveal (a) stack
+      traces (internal file paths, library
+      versions), (b) DB structure (column,
+      table names), (c) server tech stack,
+      (d) sometimes credentials/tokens in
+      error messages. Defense: generic error
+      responses + detailed backend-only logs.
+
+  - title_fr: "Difficulty 1 + Prerequisite : low-hanging fruit"
+    title_en: "Difficulty 1 + Prerequisite: low-hanging fruit"
+    body_fr: |
+      Difficulty 1 = trivial. Tag Prerequisite
+      = autres challenges depend de cette
+      vulnerabilite (typiquement les
+      challenges qui necessitent un 500
+      response). Hint #2 : "various possible
+      error conditions" = N approaches
+      possibles. Pattern : un fuzzer simple
+      qui tape un URL invalide ou submit un
+      JSON malformed = 500 trigger.
+    body_en: |
+      Difficulty 1 = trivial. Prerequisite tag
+      = other challenges depend on this
+      vulnerability (typically challenges
+      requiring 500 response). Hint #2:
+      "various possible error conditions" =
+      N possible approaches. Pattern: simple
+      fuzzer hitting invalid URL or
+      submitting malformed JSON = 500
+      trigger.
+
+  - title_fr: "Defense canonique : OWASP Error Handling Cheat Sheet"
+    title_en: "Canonical defense: OWASP Error Handling Cheat Sheet"
+    body_fr: |
+      Defense : (1) Generic error response :
+      `{error: "Server error", code: "ERR_500"}`
+      cote client, NEVER stack trace. (2)
+      Detailed logs backend (Datadog, ELK)
+      avec correlation IDs. (3) Express
+      global error handler : `app.use((err,
+      req, res, next) => res.status(500).
+      json({error: 'Server error'}))`. (4)
+      Sentry/Bugsnag pour error tracking
+      avec sanitization automatique.
+    body_en: |
+      Defense: (1) Generic error response:
+      `{error: "Server error", code:
+      "ERR_500"}` client-side, NEVER stack
+      trace. (2) Detailed backend logs
+      (Datadog, ELK) with correlation IDs.
+      (3) Express global error handler:
+      `app.use((err, req, res, next) => res.
+      status(500).json({error: 'Server
+      error'}))`. (4) Sentry/Bugsnag for
+      error tracking with automatic
+      sanitization.

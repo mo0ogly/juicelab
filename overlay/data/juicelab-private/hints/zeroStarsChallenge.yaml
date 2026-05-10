@@ -1,0 +1,167 @@
+challenge_key: "zeroStarsChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel unique : "Before you invest
+      time bypassing the API, you might want to play
+      around with the UI a bit". Donc tente le UI
+      cleverness en premier. Surface : feedback form
+      sur /#/contact.
+    text_en: |
+      Official OWASP single hint: "Before you invest
+      time bypassing the API, you might want to play
+      around with the UI a bit". So try UI
+      cleverness first. Surface: feedback form on
+      /#/contact.
+    pedagogical_intent: |
+      Activate UI exploration reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Sur /#/contact, le rating component est un
+      Material Design star rating (5 etoiles
+      cliquables). Le default est 1-5. Essai :
+      cliquer sur la 1ere etoile, puis re-cliquer
+      sur la MEME etoile pour toggle off (Material
+      star rating peut autoriser cela). Si la
+      valeur passe a 0, submit le form.
+    text_en: |
+      On /#/contact, rating component is Material
+      Design star rating (5 clickable stars).
+      Default is 1-5. Try: click 1st star, then
+      re-click SAME star to toggle off (Material
+      star rating may allow this). If value goes
+      to 0, submit form.
+    pedagogical_intent: |
+      Spell UI cleverness method.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Si le UI cleverness ne marche pas, bypass via
+      API directe. Inspecter la requete normale
+      (DevTools Network) : POST /api/Feedbacks
+      avec body
+      `{captchaId: ..., captcha: "..." (math),
+      comment: "...", rating: <int>, UserId: ...}`.
+      Le serveur n'a PAS de validator min/max sur
+      rating. Submit avec rating=0.
+    text_en: |
+      If UI cleverness doesn't work, bypass via
+      direct API. Inspect normal request (DevTools
+      Network): POST /api/Feedbacks with body
+      `{captchaId: ..., captcha: "..." (math),
+      comment: "...", rating: <int>, UserId: ...}`.
+      Server has NO min/max validator on rating.
+      Submit with rating=0.
+    pedagogical_intent: |
+      Spell API bypass alternative.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_PROBABLE] Construction du payload
+      via curl :
+      ```bash
+      # 1. Get a captcha
+      curl http://localhost:3000/rest/captcha
+        -H "Authorization: Bearer <token>"
+      # Response : {captchaId: 1, captcha: "5+3=",
+      #             answer: 8}
+      # 2. Submit feedback avec rating=0
+      curl -X POST http://localhost:3000/api/Feedbacks
+        -H "Authorization: Bearer <token>"
+        -H "Content-Type: application/json"
+        -d '{
+          "captchaId": 1,
+          "captcha": "8",
+          "comment": "Worst experience ever",
+          "rating": 0
+        }'
+      ```
+      Le serveur insert dans FeedbackModel sans
+      validation rating - challenge solve auto.
+    text_en: |
+      [KILL_CHAIN_PROBABLE] Payload construction
+      via curl:
+      ```bash
+      # 1. Get a captcha
+      curl http://localhost:3000/rest/captcha
+        -H "Authorization: Bearer <token>"
+      # Response: {captchaId: 1, captcha: "5+3=",
+      #            answer: 8}
+      # 2. Submit feedback with rating=0
+      curl -X POST http://localhost:3000/api/Feedbacks
+        -H "Authorization: Bearer <token>"
+        -H "Content-Type: application/json"
+        -d '{
+          "captchaId": 1,
+          "captcha": "8",
+          "comment": "Worst experience ever",
+          "rating": 0
+        }'
+      ```
+      Server inserts into FeedbackModel without
+      rating validation - challenge auto solves.
+    pedagogical_intent: |
+      Spell exact payload via curl.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_PROBABLE] Workflow complet :
+      1. Approche A (UI cleverness) :
+         - Naviguer /#/contact
+         - Cliquer 1 etoile (rating = 1)
+         - Re-cliquer la meme etoile (rating = 0
+           si toggle Material)
+         - Submit form
+         - Si solve : excellent
+         - Sinon -> approche B
+      2. Approche B (API bypass) :
+         - Get captcha : GET /rest/captcha
+         - Submit feedback : POST /api/Feedbacks
+           avec rating=0 dans le body
+         - Le serveur accepte (no min validator)
+         - Challenge solve auto
+      3. Verification : aller voir les feedback
+         sur la home page Juice Shop ; ton
+         feedback "0 stars" devrait apparaitre.
+      Source : analyse de la frontend Angular +
+      OWASP Input Validation Cheat Sheet.
+      Defense canonique : Sequelize FeedbackModel
+      validator `rating: { type: INTEGER, validate
+      : { min: 1, max: 5 }}`. Ce serait suffisant
+      pour bloquer le challenge.
+    text_en: |
+      [KILL_CHAIN_PROBABLE] Full workflow:
+      1. Approach A (UI cleverness):
+         - Navigate /#/contact
+         - Click 1 star (rating = 1)
+         - Re-click same star (rating = 0 if
+           Material toggle)
+         - Submit form
+         - If solve: excellent
+         - Otherwise -> approach B
+      2. Approach B (API bypass):
+         - Get captcha: GET /rest/captcha
+         - Submit feedback: POST /api/Feedbacks
+           with rating=0 in body
+         - Server accepts (no min validator)
+         - Challenge auto solves
+      3. Verification: check feedback on Juice
+         Shop home page; your "0 stars"
+         feedback should appear.
+      Source: Angular frontend analysis + OWASP
+      Input Validation Cheat Sheet.
+      Canonical defense: Sequelize FeedbackModel
+      validator `rating: { type: INTEGER,
+      validate: { min: 1, max: 5 }}`. Would be
+      sufficient to block challenge.
+    pedagogical_intent: |
+      Solution complete + 2 approaches +
+      defense.

@@ -1,0 +1,84 @@
+challenge_key: "hiddenImageChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Soumettre un feedback contenant le mot-cle "pickle rick" pour declencher
+  le solve via une image steganographique cachee. Tag : Security Through
+  Obscurity. Hint OWASP : "find the easter egg image". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/verify.ts:284-289 :
+  feedback comment contains "pickle rick" pattern. Pattern reusable :
+  steganographie classique - une image normale contient des donnees cachees
+  (LSB encoding, metadata, sub-image). Workflow : (1) Inspecter les images
+  du shop (DevTools, products, banners). (2) Identifier celle suspecte
+  (pickle-rick.jpg). (3) Decoder steg (stegcracker, zsteg, exiftool). (4)
+  Submit feedback avec le mot-cle.
+
+mission_en: |
+  Submit a feedback containing the keyword "pickle rick" to trigger solve
+  via hidden steganographic image. Tag: Security Through Obscurity. OWASP
+  hint: "find the easter egg image". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/verify.ts:284-289:
+  feedback comment contains "pickle rick" pattern. Reusable pattern:
+  classic steganography - a normal image contains hidden data (LSB
+  encoding, metadata, sub-image). Workflow: (1) Inspect shop images
+  (DevTools, products, banners). (2) Identify suspect one (pickle-rick.jpg).
+  (3) Decode steg (stegcracker, zsteg, exiftool). (4) Submit feedback with
+  keyword.
+
+concepts:
+  - title_fr: "Steganographie : cacher des donnees dans des images"
+    title_en: "Steganography: hiding data in images"
+    body_fr: |
+      Source canonique : NIST Steganography + LSB techniques classiques.
+      Patterns : (1) LSB (Least Significant Bit) - modifier le bit de poids
+      faible des pixels RGB (invisible visuellement). (2) Metadata EXIF
+      (commentaires, GPS, copyright fields). (3) Append data apres EOI
+      JPEG marker (concat). (4) Sub-image (image dans image). Tools : zsteg
+      (PNG), stegcracker, exiftool, binwalk, foremost, OpenStego. Cas
+      reels : Sundown EK 2018 (malware in PNG), Stegoloader 2015.
+    body_en: |
+      Canonical source: NIST Steganography + classic LSB techniques.
+      Patterns: (1) LSB (Least Significant Bit) - modify low-order bit of
+      RGB pixels (visually invisible). (2) EXIF metadata (comments, GPS,
+      copyright fields). (3) Append data after EOI JPEG marker (concat).
+      (4) Sub-image (image-in-image). Tools: zsteg (PNG), stegcracker,
+      exiftool, binwalk, foremost, OpenStego. Real cases: Sundown EK 2018
+      (malware in PNG), Stegoloader 2015.
+
+  - title_fr: "Easter eggs : pattern intentional dans les apps"
+    title_en: "Easter eggs: intentional pattern in apps"
+    body_fr: |
+      Les easter eggs developpeurs sont des features cachees, souvent
+      humour interne (ex. Konami code, Google Doodles, Tesla Autopilot
+      videos). Pour un pentester, c'est une surface de tests :
+      revele souvent des debug routes, panels admin, fonctionnalites non
+      documentees. Pattern : auditer les images, sons, JS pour detecter
+      les easter eggs (recherche string "easter" / "egg" / noms de cult
+      shows). Defense : separer prod / fun (build flags).
+    body_en: |
+      Developer easter eggs are hidden features, often inside humor (e.g.
+      Konami code, Google Doodles, Tesla Autopilot videos). For pentester,
+      it's a test surface: often reveals debug routes, admin panels,
+      undocumented features. Pattern: audit images, sounds, JS to detect
+      easter eggs (string search "easter" / "egg" / cult show names).
+      Defense: separate prod / fun (build flags).
+
+  - title_fr: "Defense canonique : audit reguliere + fuzzing"
+    title_en: "Canonical defense: regular audit + fuzzing"
+    body_fr: |
+      (1) Audit periodique des assets : `find /assets/ -name "*.png"
+      -o -name "*.jpg"` puis verifier provenance + steg checks. (2)
+      Build process strip metadata (exiftool -all=). (3) Test
+      steganographique en CI : `zsteg -a fichier.png` doit retourner zero
+      LSB suspect. (4) Documentation des assets legitimes : un fichier
+      ASSETS_MANIFEST.md. (5) Si steg detectee dans un asset uploade par
+      user (ex. profile pic), bloquer ou re-encoder.
+    body_en: |
+      (1) Periodic asset audit: `find /assets/ -name "*.png" -o -name
+      "*.jpg"` then verify provenance + steg checks. (2) Build process
+      strip metadata (exiftool -all=). (3) Steganographic test in CI:
+      `zsteg -a file.png` must return zero suspect LSB. (4) Legitimate
+      asset documentation: ASSETS_MANIFEST.md file. (5) If steg detected
+      in user-uploaded asset (e.g. profile pic), block or re-encode.

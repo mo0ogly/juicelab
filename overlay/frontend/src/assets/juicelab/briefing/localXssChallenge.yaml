@@ -1,0 +1,115 @@
+challenge_key: "localXssChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Fais executer un script JavaScript injecte (un alert classique suffit)
+  via le champ de recherche de Juice Shop. Le payload doit etre traite
+  ENTIEREMENT cote client : la string que tu tapes va etre rendue dans
+  le DOM par Angular sans echapement parce qu'un developpeur a appele
+  bypassSecurityTrustHtml. C'est un DOM XSS pur.
+
+  Methode recommandee : dans la barre de recherche, tape un payload
+  avec une balise iframe et un attribut handler comme onerror, par
+  exemple <iframe src="javascript:alert(1)">. Le composant
+  search-result inserer ce contenu dans le DOM via innerHTML (apres
+  bypass), et le navigateur execute le script. Le challenge est valide
+  des que l'alert apparait.
+
+  Note le payload exact, l'API Angular incriminee, et la difference
+  entre DOM XSS, Reflected XSS et Stored XSS. Tu en parleras dans le
+  journal "apres".
+
+mission_en: |
+  Trigger an injected JavaScript script (a classic alert is enough)
+  via the Juice Shop search field. The payload must be processed
+  ENTIRELY client-side: the string you type will be rendered in the
+  DOM by Angular without escaping because a developer called
+  bypassSecurityTrustHtml. This is a pure DOM XSS.
+
+  Recommended method: in the search bar, type a payload with an
+  iframe tag and a handler attribute like onerror, e.g.
+  <iframe src="javascript:alert(1)">. The search-result component
+  inserts this content into the DOM via innerHTML (after bypass),
+  and the browser executes the script. The challenge solves the
+  moment the alert pops.
+
+  Note the exact payload, the offending Angular API, and the
+  difference between DOM XSS, Reflected XSS, and Stored XSS. You
+  will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Trois familles XSS : DOM / Reflected / Stored"
+    title_en: "Three XSS families: DOM / Reflected / Stored"
+    body_fr: |
+      DOM XSS = traite ENTIEREMENT cote client par du JS, le serveur
+      ne voit jamais le payload (par exemple : window.location.hash
+      injecte dans innerHTML). Reflected = passe par le serveur dans
+      une requete, qui le renvoie dans la reponse sans echappement.
+      Stored = persiste en base et se rejoue a chaque visite des
+      autres utilisateurs (le pire pour l'impact viral). Les trois
+      partagent la meme racine : melange code/donnees dans le DOM.
+    body_en: |
+      DOM XSS = processed ENTIRELY client-side by JS, the server
+      never sees the payload (e.g. window.location.hash injected in
+      innerHTML). Reflected = goes through the server in a request,
+      which echoes it back unescaped. Stored = persists in DB and
+      replays on every visit by other users (worst viral impact).
+      All three share the same root: mixing code/data in the DOM.
+
+  - title_fr: "DomSanitizer.bypassSecurityTrustHtml : utilisation interdite"
+    title_en: "DomSanitizer.bypassSecurityTrustHtml: forbidden usage"
+    body_fr: |
+      Angular echappe par defaut tout contenu utilisateur dans
+      [innerHTML]="..." : un < devient &lt;. La fonction
+      bypassSecurityTrustHtml() dit explicitement "fais confiance,
+      n'echappe pas". Elle est concue UNIQUEMENT pour du contenu
+      statique de confiance (template HTML interne controle). Toute
+      application de cette fonction sur de l'input utilisateur est un
+      bug critique, detectable par grep ou semgrep.
+    body_en: |
+      Angular escapes by default any user content in
+      [innerHTML]="...": a < becomes &lt;. The
+      bypassSecurityTrustHtml() function says explicitly "trust this,
+      do not escape". It is designed ONLY for trusted static content
+      (controlled internal HTML template). Any application of this
+      function on user input is a critical bug, detectable via grep
+      or semgrep.
+
+  - title_fr: "CSP + Trusted Types : la defense moderne dediee"
+    title_en: "CSP + Trusted Types: the dedicated modern defense"
+    body_fr: |
+      Content-Security-Policy avec script-src 'self' + nonce/hash
+      bloque l'execution de scripts inline non explicitement
+      autorises. Trusted Types (Chromium) force les API DOM
+      dangereuses (innerHTML, eval) a recevoir des objets typeS
+      ayant traverse une policy de validation : un payload string
+      brut est refuse au niveau navigateur. Combinaison : meme en
+      presence de la vulnerabilite, l'execution du payload est
+      bloquee.
+    body_en: |
+      Content-Security-Policy with script-src 'self' + nonce/hash
+      blocks execution of inline scripts not explicitly allowed.
+      Trusted Types (Chromium) forces dangerous DOM APIs (innerHTML,
+      eval) to receive typed objects that have passed a validation
+      policy: a raw string payload is refused at the browser level.
+      Combined: even with the vulnerability present, the payload
+      execution is blocked.
+
+  - title_fr: "OWASP A03:2021 — Injection (XSS sous-categorie)"
+    title_en: "OWASP A03:2021 — Injection (XSS sub-category)"
+    body_fr: |
+      XSS est aujourd'hui classe sous Injection (depuis OWASP 2021),
+      car la racine est la meme : melange instruction/donnee. Le
+      framework moderne (Angular, React, Vue) echappe par defaut, ce
+      qui rend XSS plus rare qu'il y a 10 ans, MAIS chaque appel
+      conscient a un bypass (bypassSecurityTrustHtml en Angular,
+      dangerouslySetInnerHTML en React) cree une porte. Audit code
+      review obligatoire sur ces APIs.
+    body_en: |
+      XSS today sits under Injection (since OWASP 2021), because
+      the root is identical: mixing instruction/data. Modern
+      frameworks (Angular, React, Vue) escape by default, making
+      XSS rarer than 10 years ago, BUT every conscious bypass call
+      (bypassSecurityTrustHtml in Angular,
+      dangerouslySetInnerHTML in React) opens a door. Mandatory
+      code-review audit on those APIs.

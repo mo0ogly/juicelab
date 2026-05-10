@@ -1,0 +1,81 @@
+challenge_key: "privacyPolicyChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Toute application qui manipule des donnees personnelles est tenue
+      d'afficher une politique de confidentialite quelque part. C'est une
+      exigence du RGPD pour les applications europeennes et une bonne
+      pratique generale. Ou se trouve generalement ce genre de document
+      sur un site marchand ?
+    text_en: |
+      Any application that handles personal data is required to display a
+      privacy policy somewhere. It is a GDPR requirement for European apps
+      and good practice generally. Where do you usually find that kind of
+      document on a commerce site?
+    pedagogical_intent: |
+      Activate the legal/UX reflex: a privacy policy is mandated and discoverable.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Sur la plupart des sites, la politique de confidentialite est dans la
+      barre de navigation principale, le pied de page, ou un menu lateral.
+      Sur Juice Shop, le menu Account et le menu lateral hamburger en haut a
+      gauche regroupent les pages institutionnelles. Explore ces deux
+      endroits.
+    text_en: |
+      On most sites, the privacy policy lives in the main nav, the footer,
+      or a side menu. On Juice Shop, the Account menu and the left-hand
+      hamburger sidebar group the institutional pages. Explore those two.
+    pedagogical_intent: |
+      Localize the UI surfaces likely to host policy links.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Le menu hamburger en haut a gauche de Juice Shop ouvre un panneau
+      lateral avec des entrees comme About Us, Customer Feedback, et
+      Privacy Policy. Cherche l'entree Privacy Policy. La validation du
+      challenge se declenche automatiquement quand la page se charge,
+      grace au routage Angular qui notifie le backend.
+    text_en: |
+      The hamburger menu at the top-left of Juice Shop opens a side panel
+      with entries like About Us, Customer Feedback, and Privacy Policy.
+      Look for the Privacy Policy entry. The challenge is validated
+      automatically when the page loads, because Angular routing notifies
+      the backend.
+    pedagogical_intent: |
+      Localize the exact UI element: the hamburger sidebar with Privacy entry.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le route path complet est /#/privacy-security/privacy-policy. Si tu
+      l'ouvres directement dans l'URL plutot que par le menu, le challenge
+      se valide quand meme. Le mecanisme cote frontend declenche un appel
+      API qui marque le challenge comme resolu.
+    text_en: |
+      The full route path is /#/privacy-security/privacy-policy. If you open
+      it directly via the URL rather than through the menu, the challenge
+      is validated all the same. The frontend mechanism triggers an API
+      call that marks the challenge solved.
+    pedagogical_intent: |
+      Give the canonical path so the student can choose menu or direct URL.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Clique sur l'icone hamburger en haut a gauche, puis sur l'entree
+      Privacy Policy dans le panneau lateral. Tu vois le texte juridique
+      du shop. Le score-board indique automatiquement Privacy Policy
+      solved. Equivalent en URL directe : http://127.0.0.1:3000/#/privacy-security/privacy-policy
+    text_en: |
+      Click the hamburger icon at the top-left, then the Privacy Policy
+      entry in the sidebar. You see the shop's legal text. The score board
+      automatically marks Privacy Policy solved. Direct URL equivalent:
+      http://127.0.0.1:3000/#/privacy-security/privacy-policy
+    pedagogical_intent: |
+      Quasi-solution: explicit clicks or URL, scoring trigger explained.

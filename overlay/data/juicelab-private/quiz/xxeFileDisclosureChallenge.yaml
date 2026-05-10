@@ -1,0 +1,91 @@
+challenge_key: "xxeFileDisclosureChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la mecanique technique de
+      l'XXE attack ?
+    question_en: |
+      What's the technical mechanic of XXE
+      attack?
+    options_fr:
+      - "XML est trop verbose"
+      - "XML autorise des EXTERNAL ENTITIES via DOCTYPE qui peuvent pointer vers des local files (file:///) ou URLs (http://). Si le parser autorise expansion (libxml `noent: true`), l'attaquant lit des files arbitraires (file:///etc/passwd, file:///c:/windows/system.ini) ou exfiltre via SSRF (http://attacker.com?data=&xxe;). CWE-611. Cas reels : Facebook 2014 ($40K bounty)"
+      - "XXE est un bug parser"
+      - "XXE est XSS"
+    options_en:
+      - "XML is too verbose"
+      - "XML allows EXTERNAL ENTITIES via DOCTYPE pointing to local files (file:///) or URLs (http://). If parser allows expansion (libxml `noent: true`), attacker reads arbitrary files (file:///etc/passwd, file:///c:/windows/system.ini) or exfiltrates via SSRF (http://attacker.com?data=&xxe;). CWE-611. Real cases: Facebook 2014 ($40K bounty)"
+      - "XXE is parser bug"
+      - "XXE is XSS"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : XXE = file read +
+      SSRF + DoS (billion laughs). Defense :
+      disable DOCTYPE entirely. Source :
+      OWASP XXE Prevention Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: XXE = file read +
+      SSRF + DoS (billion laughs). Defense:
+      disable DOCTYPE entirely. Source:
+      OWASP XXE Prevention Cheat Sheet.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le bug exact dans Juice Shop est
+      `noent: true` dans libxml.parseXml.
+      Quelle est la defense ?
+    question_en: |
+      Exact bug in Juice Shop is `noent:
+      true` in libxml.parseXml. What's the
+      defense?
+    options_fr:
+      - "Activate noent: true plus"
+      - "Defense en profondeur : (1) `noent: false` (default safe). (2) `doctype: false` pour disable entirely. (3) Use modern pre-configured safe parsers (defusedxml Python, etree). (4) Avoid XML quand possible (preferer JSON). (5) Sandbox le parser (Docker no network). Pattern : defense par configuration explicit + library moderne"
+      - "Encrypter le XML"
+      - "Plus utiliser XML"
+    options_en:
+      - "Activate noent: true more"
+      - "Defense in depth: (1) `noent: false` (safe default). (2) `doctype: false` to disable entirely. (3) Use modern pre-configured safe parsers (defusedxml Python, etree). (4) Avoid XML when possible (prefer JSON). (5) Sandbox parser (no-network Docker). Pattern: defense via explicit configuration + modern library"
+      - "Encrypt XML"
+      - "Stop using XML"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : safe defaults +
+      explicit hardening + modern libraries.
+      Source : OWASP XXE Prevention.
+    explanation_en: |
+      Reusable pattern: safe defaults +
+      explicit hardening + modern libraries.
+      Source: OWASP XXE Prevention.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi XXE est-il une "Danger Zone"
+      tag dans Juice Shop ?
+    question_en: |
+      Why is XXE a "Danger Zone" tag in
+      Juice Shop?
+    options_fr:
+      - "Random tag"
+      - "XXE en exploitation reelle peut crash le serveur (billion laughs DoS), exfiltrer des secrets serveur (etc/shadow, /proc/self/environ avec env vars), pivot vers d'autres services internes via SSRF. Le challenge utilise un container Docker mais en prod l'impact est massive. Defense : sandbox + disable + monitoring"
+      - "Pas dangereux"
+      - "Just label"
+    options_en:
+      - "Random tag"
+      - "XXE in real exploitation can crash server (billion laughs DoS), exfiltrate server secrets (/etc/shadow, /proc/self/environ with env vars), pivot to other internal services via SSRF. Challenge uses Docker container but prod impact is massive. Defense: sandbox + disable + monitoring"
+      - "Not dangerous"
+      - "Just label"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : XXE = high-impact
+      vuln. Source : OWASP Top 10 + breach
+      reports.
+    explanation_en: |
+      Reusable pattern: XXE = high-impact
+      vuln. Source: OWASP Top 10 + breach
+      reports.

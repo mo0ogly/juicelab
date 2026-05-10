@@ -1,0 +1,170 @@
+challenge_key: "missingEncodingChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Check the Photo Wall
+      for an image that could not be loaded
+      correctly". Naviguer /#/photo-wall et trouver
+      une image qui ne charge pas (404/broken).
+      Hint #2 : "(literally) inspect the problem"
+      = inspecter avec DevTools.
+    text_en: |
+      Official OWASP hint #1: "Check the Photo Wall
+      for an image that could not be loaded
+      correctly". Navigate /#/photo-wall and find
+      image that doesn't load (404/broken). Hint
+      #2: "(literally) inspect the problem" =
+      inspect with DevTools.
+    pedagogical_intent: |
+      Activate UI exploration reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Sur /#/photo-wall, l'image "Bjoern's cat
+      melee combat-mode" ne charge pas. Open
+      DevTools Elements tab, trouver l'<img>
+      element avec son src. Tu verras le src
+      attribute contient des `#` non-encodes
+      dans le filename (ex.
+      "ᔚᘏᗢ-#zatschi-#whoneedsfourlegs-
+      1572600969477.jpg").
+    text_en: |
+      On /#/photo-wall, "Bjoern's cat melee
+      combat-mode" image doesn't load. Open
+      DevTools Elements tab, find <img> element
+      with its src. You'll see src attribute
+      contains non-encoded `#` in filename
+      (e.g., "ᔚᘏᗢ-#zatschi-#whoneedsfourlegs-
+      1572600969477.jpg").
+    pedagogical_intent: |
+      Spell DevTools investigation.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Le `#` dans une URL est le fragment
+      separator (RFC 3986). Le browser strippe
+      tout apres le `#` avant d'envoyer le GET
+      au serveur. Donc le serveur recoit GET
+      `/assets/public/images/uploads/ᔚᘏᗢ-`
+      (incomplet). Hint OWASP #3 : "try out the
+      Tweet-button" - Twitter encode le URL
+      automatiquement (`#` -> `%23`).
+    text_en: |
+      `#` in URL is fragment separator (RFC
+      3986). Browser strips everything after `#`
+      before sending GET to server. So server
+      receives GET `/assets/public/images/
+      uploads/ᔚᘏᗢ-` (incomplete). OWASP hint
+      #3: "try out the Tweet-button" - Twitter
+      automatically encodes URL (`#` -> `%23`).
+    pedagogical_intent: |
+      Reveal RFC 3986 + Tweet-button trick.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur
+      verifiee (routes/verify.ts:71) : `solveIf
+      (challenges.missingEncodingChallenge, () =>
+      { return utils.endsWith(url.toLowerCase(),
+      '%e1%93%9a%e1%98%8f%e1%97%a2-%23zatschi-
+      %23whoneedsfourlegs-1572600969477.jpg') })`.
+      Donc le serveur attend une URL avec %23
+      (encoded #) et l'unicode emoji encoded.
+      L'URL exacte : /assets/public/images/
+      uploads/%E1%93%9A%E1%98%8F%E1%97%A2-
+      %23zatschi-%23whoneedsfourlegs-
+      1572600969477.jpg.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server
+      source (routes/verify.ts:71): `solveIf(
+      challenges.missingEncodingChallenge, () =>
+      { return utils.endsWith(url.toLowerCase(),
+      '%e1%93%9a%e1%98%8f%e1%97%a2-%23zatschi-
+      %23whoneedsfourlegs-1572600969477.jpg') })`.
+      So server expects URL with %23 (encoded #)
+      and encoded unicode emoji. Exact URL:
+      /assets/public/images/uploads/
+      %E1%93%9A%E1%98%8F%E1%97%A2-%23zatschi-
+      %23whoneedsfourlegs-1572600969477.jpg.
+    pedagogical_intent: |
+      Reveal exact target URL.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Naviguer /#/photo-wall.
+      2. Trouver l'image "Bjoern's cat melee
+         combat-mode" (image broken).
+      3. Right-click sur l'image -> "Copy image
+         address" OU inspecter via DevTools
+         Elements pour voir le src attribute.
+      4. Tu obtiens l'URL avec `#` non-encoded.
+      5. Methode A (manual) : Replace les `#` par
+         `%23` dans l'URL puis paste dans la
+         barre d'adresse :
+         `http://localhost:3000/assets/public/
+         images/uploads/%E1%93%9A%E1%98%8F
+         %E1%97%A2-%23zatschi-%23whoneedsfour
+         legs-1572600969477.jpg`.
+      6. Methode B (Tweet-button) : cliquer le
+         Tweet-button de l'image. La new tab
+         Twitter contient l'URL encoded
+         correctement. Copy-paste dans le
+         browser address bar.
+      7. Le browser GET cette URL au serveur.
+      8. Le middleware verify.accessControl
+         Challenges (verify.ts:71) check
+         endsWith url avec le filename encode
+         -> match -> challenge solve auto.
+      9. Le photo charge correctement (cat in
+         melee combat mode).
+      Source canonique : routes/verify.ts:71 +
+      RFC 3986 URL encoding + analyse Photo
+      Wall.
+      Defense canonique : sanitize filenames au
+      upload (allowlist [a-zA-Z0-9._-]) ou
+      utiliser UUID-based filenames pour
+      eviter les special chars entirely.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Navigate /#/photo-wall.
+      2. Find "Bjoern's cat melee combat-mode"
+         image (broken image).
+      3. Right-click image -> "Copy image
+         address" OR inspect via DevTools
+         Elements to see src attribute.
+      4. You get URL with non-encoded `#`.
+      5. Method A (manual): Replace `#` with
+         `%23` in URL then paste in address
+         bar:
+         `http://localhost:3000/assets/public/
+         images/uploads/%E1%93%9A%E1%98%8F
+         %E1%97%A2-%23zatschi-%23whoneedsfour
+         legs-1572600969477.jpg`.
+      6. Method B (Tweet-button): click image
+         Tweet-button. New Twitter tab
+         contains correctly encoded URL.
+         Copy-paste to browser address bar.
+      7. Browser GETs this URL to server.
+      8. verify.accessControlChallenges
+         middleware (verify.ts:71) checks
+         endsWith url with encoded filename
+         -> match -> challenge auto solves.
+      9. Photo loads correctly (cat in melee
+         combat mode).
+      Canonical source: routes/verify.ts:71 +
+      RFC 3986 URL encoding + Photo Wall
+      analysis.
+      Canonical defense: sanitize filenames at
+      upload (allowlist [a-zA-Z0-9._-]) or use
+      UUID-based filenames to avoid special
+      chars entirely.
+    pedagogical_intent: |
+      Solution complete + 2 methodes + defense.

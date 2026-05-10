@@ -1,0 +1,77 @@
+challenge_key: "securityPolicyChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "discover security policy". Il existe un standard
+      industriel (RFC 9116) pour declarer la politique de securite d'un
+      site.
+    text_en: |
+      OWASP hint: "discover security policy". An industry standard (RFC
+      9116) exists to declare a site's security policy.
+    pedagogical_intent: |
+      Activate well-known standards reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le standard est security.txt. Recherche son emplacement canonique
+      sur securitytxt.org ou dans la RFC 9116.
+    text_en: |
+      Standard is security.txt. Search its canonical location on
+      securitytxt.org or in RFC 9116.
+    pedagogical_intent: |
+      Spell standard name.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      L'emplacement canonique est /.well-known/security.txt (RFC 8615
+      defines /.well-known/* namespace). Test
+      http://localhost:3000/.well-known/security.txt.
+    text_en: |
+      Canonical location is /.well-known/security.txt (RFC 8615 defines
+      /.well-known/* namespace). Test
+      http://localhost:3000/.well-known/security.txt.
+    pedagogical_intent: |
+      Reveal exact URL.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Naviguer http://localhost:3000/.well-known/security.txt. Le serveur
+      retourne le fichier (Contact, Encryption, etc.). Le check
+      verify.ts:70 declenche : `endsWith(url, '/security.txt')`.
+    text_en: |
+      Navigate http://localhost:3000/.well-known/security.txt. Server
+      returns file (Contact, Encryption, etc.). verify.ts:70 check
+      triggers: `endsWith(url, '/security.txt')`.
+    pedagogical_intent: |
+      Spell command.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Apprendre RFC 9116 (security.
+      txt) + RFC 8615 (.well-known namespace). (2) Naviguer
+      http://localhost:3000/.well-known/security.txt. (3) Lire le contenu
+      (Contact, Encryption PGP, Policy URL, Acknowledgments). (4) Le
+      serveur verify.ts:70 `solveIf(() => endsWith(url, '/security.txt'))`
+      declenche. (5) Notification "Solved Security Policy". Defense : (a)
+      DEPLOYER security.txt (transparency > obscurity). (b) Champs requis
+      : Contact, Expires, Canonical. (c) Verification continue
+      internet.nl. Source : verify.ts:70.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Learn RFC 9116 (security.txt)
+      + RFC 8615 (.well-known namespace). (2) Navigate
+      http://localhost:3000/.well-known/security.txt. (3) Read content
+      (Contact, Encryption PGP, Policy URL, Acknowledgments). (4) Server
+      verify.ts:70 `solveIf(() => endsWith(url, '/security.txt'))`
+      triggers. (5) "Solved Security Policy" notification. Defense: (a)
+      DEPLOY security.txt (transparency > obscurity). (b) Required fields:
+      Contact, Expires, Canonical. (c) Continuous verification
+      internet.nl. Source: verify.ts:70.
+    pedagogical_intent: |
+      Solution + standards mastery.

@@ -1,0 +1,91 @@
+challenge_key: "redirectCryptoCurrencyChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Rediriger vers une des 3 URLs blockchain donation listees mais retirees
+  silencieusement de la page about. Tag : Unvalidated Redirects. Hint OWASP
+  : "outdated cryptocurrency addresses". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/redirect.ts:17 : 3 URLs exactes
+  attendues : (a) `https://blockchain.info/address/
+  1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm`. (b) `https://explorer.dash.org/
+  address/Xr556RzuwX6hg5EGpkybbv5RanJoZN17kW`. (c) `https://etherscan.io/
+  address/0x0f933ab9fcaaa782d0279c300d73750e1311eae6`. Workflow : (1)
+  Trouver les URLs (Wayback Machine, GitHub history, ou allowlist
+  insecurity.ts:124). (2) Naviguer
+  /redirect?to=<URL_exacte>. (3) Solve.
+
+mission_en: |
+  Redirect to one of 3 listed blockchain donation URLs that were silently
+  removed from about page. Tag: Unvalidated Redirects. OWASP hint:
+  "outdated cryptocurrency addresses". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/redirect.ts:17: 3 expected exact URLs:
+  (a) `https://blockchain.info/address/
+  1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm`. (b) `https://explorer.dash.org/
+  address/Xr556RzuwX6hg5EGpkybbv5RanJoZN17kW`. (c) `https://etherscan.io/
+  address/0x0f933ab9fcaaa782d0279c300d73750e1311eae6`. Workflow: (1) Find
+  URLs (Wayback Machine, GitHub history, or allowlist
+  insecurity.ts:124). (2) Navigate /redirect?to=<exact_URL>. (3) Solve.
+
+concepts:
+  - title_fr: "Outdated allowlist : entrees obsoletes en config"
+    title_en: "Outdated allowlist: obsolete config entries"
+    body_fr: |
+      Pattern reusable : les allowlists derivent (drift) au fil du temps.
+      Une URL ajoutee pour une feature retiree reste dans la config sans
+      etre nettoyee. Cas reels : Equifax 2017 (URL Apache Struts retiree
+      de l'app mais encore dans config nginx), Capital One 2019 (IAM role
+      orphelin). Pour Juice Shop : redirectAllowlist (lib/insecurity.
+      ts:124) contient encore les 3 wallets crypto qui ont disparu de la
+      page about. Defense : audit periodique de la config + decommissioning
+      formel des features.
+    body_en: |
+      Reusable pattern: allowlists drift over time. URL added for retired
+      feature stays in config without cleanup. Real cases: Equifax 2017
+      (Apache Struts URL retired from app but still in nginx config),
+      Capital One 2019 (orphan IAM role). For Juice Shop:
+      redirectAllowlist (lib/insecurity.ts:124) still contains 3 crypto
+      wallets that disappeared from about page. Defense: periodic config
+      audit + formal feature decommissioning.
+
+  - title_fr: "Discovery : Wayback Machine + git history"
+    title_en: "Discovery: Wayback Machine + git history"
+    body_fr: |
+      Pattern reusable : pour decouvrir des features retirees,
+      consulter (1) web.archive.org (Wayback Machine) - snapshots de
+      pages anciennes. (2) git log de l'app si open-source. (3) Web
+      archives like archive.today. (4) Sitemap.xml ancien. (5) GitHub
+      Pages history pour github-hosted sites. Pour Juice Shop :
+      `git log -- frontend/src/app/about/about.component.html` revele
+      les wallets crypto enleves entre commits. Cas reels : la plupart
+      des bug bounty exploitations utilisent des features
+      "decommissioned" mais encore reachable.
+    body_en: |
+      Reusable pattern: to discover retired features, consult (1)
+      web.archive.org (Wayback Machine) - snapshots of old pages. (2)
+      app git log if open-source. (3) Web archives like archive.today.
+      (4) Old sitemap.xml. (5) GitHub Pages history for github-hosted
+      sites. For Juice Shop: `git log --
+      frontend/src/app/about/about.component.html` reveals crypto wallets
+      removed between commits. Real cases: most bug bounty exploitations
+      use "decommissioned" features still reachable.
+
+  - title_fr: "Defense canonique : decommissioning formel"
+    title_en: "Canonical defense: formal decommissioning"
+    body_fr: |
+      (1) Quand une feature est retiree, retirer SIMULTANEMENT : (a) UI
+      element, (b) backend route, (c) allowlist entries, (d) config
+      keys, (e) database tables, (f) DNS records, (g) test fixtures. (2)
+      Checklist documentee + signoff. (3) Audit CI : grep references
+      orphelines. (4) Test coverage : tester que l'URL retournee 404 (pas
+      302). (5) Sunset HTTP header (RFC 8594) sur les anciens endpoints.
+      Pattern reusable : config drift = vulnerabilite latente.
+    body_en: |
+      (1) When a feature is retired, SIMULTANEOUSLY remove: (a) UI
+      element, (b) backend route, (c) allowlist entries, (d) config
+      keys, (e) database tables, (f) DNS records, (g) test fixtures. (2)
+      Documented checklist + signoff. (3) CI audit: grep orphan
+      references. (4) Test coverage: test URL returns 404 (not 302). (5)
+      Sunset HTTP header (RFC 8594) on old endpoints. Reusable pattern:
+      config drift = latent vulnerability.

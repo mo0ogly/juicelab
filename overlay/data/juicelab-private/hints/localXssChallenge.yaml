@@ -1,0 +1,96 @@
+challenge_key: "localXssChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Quand tu tapes du texte dans un champ de saisie d'une application
+      web, ce texte est-il toujours traite comme du texte ? Et si le
+      navigateur, en cherchant a afficher ta saisie, l'interpretait comme
+      du HTML ou du JavaScript a executer ? Quels champs te paraissent
+      reaffichaient ta saisie sur la meme page ?
+    text_en: |
+      When you type text in an input field on a web app, is the text
+      always handled as text? What if the browser, while displaying your
+      input, interpreted it as HTML or JavaScript to execute? Which
+      fields seem to re-display your input on the same page?
+    pedagogical_intent: |
+      Activate the XSS mindset: input as data vs input as code, with reflection on same page.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le type de XSS le plus simple est le DOM XSS : ta saisie est
+      injectee directement dans le DOM par du JavaScript cote client,
+      sans que le serveur soit implique dans cette etape. Sur Juice
+      Shop, le champ de recherche en haut de page est un candidat ideal :
+      il echo ta requete dans la page de resultats. Essaie d'abord avec
+      un texte tres visible, comme une balise HTML simple.
+    text_en: |
+      The simplest XSS is DOM XSS: your input is injected directly into
+      the DOM by client-side JavaScript, with no server involvement at
+      that step. On Juice Shop, the search bar at the top is an ideal
+      candidate: it echoes your query on the results page. Try first
+      with a very visible text, like a simple HTML tag.
+    pedagogical_intent: |
+      Localize the surface: search bar + simple HTML probing.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Saisis dans le champ de recherche un fragment HTML simple,
+      typiquement une balise visuelle comme <h1>test</h1> ou
+      <strike>test</strike>. Si tu vois "test" en grand ou barre apparaitre
+      au-dessus des resultats, le frontend a interprete ta saisie comme
+      du HTML et pas comme du texte. C'est la signature d'une absence de
+      sanitization.
+    text_en: |
+      Type in the search bar a simple HTML fragment, typically a visual
+      tag like <h1>test</h1> or <strike>test</strike>. If you see "test"
+      large or struck through above the results, the frontend
+      interpreted your input as HTML, not as text. That is the signature
+      of missing sanitization.
+    pedagogical_intent: |
+      Validate the hypothesis with a benign probe before going to JS execution.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Une fois la confirmation que le champ est vulnerable, le challenge
+      cible un payload precis : un iframe dont l'attribut src vaut une
+      URL javascript: qui declenche un alert. La forme generale est
+      <iframe src="javascript:alert(...)">. Le contenu de l'alert
+      doit etre exactement la chaine xss entre backticks pour que Juice
+      Shop reconnaisse le payload comme valide.
+    text_en: |
+      Once you confirm the field is vulnerable, the challenge targets a
+      specific payload: an iframe whose src is a javascript: URL that
+      triggers alert. General form: <iframe src="javascript:alert(...)">.
+      The alert content must be exactly the xss string in backticks for
+      Juice Shop to recognize the payload as valid.
+    pedagogical_intent: |
+      Give the syntactic shape: iframe + javascript: + alert with backticks.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Dans le champ de recherche en haut de page, colle exactement :
+      <iframe src="javascript:alert(`xss`)">
+      puis appuie sur Entree (ou clique sur la loupe). Une popup avec
+      le texte xss apparait. Juice Shop valide automatiquement le
+      challenge DOM XSS car le frontend detecte un payload connu dans
+      le parametre de recherche traite par bypassSecurityTrustHtml. Le
+      contenu xss est entre backticks (`xss`) car les apostrophes et
+      double-quotes ne passent pas dans l'URL hash.
+    text_en: |
+      In the search bar at the top, paste exactly:
+      <iframe src="javascript:alert(`xss`)">
+      then press Enter (or click the magnifier). A popup with the text
+      xss appears. Juice Shop auto-validates the DOM XSS challenge as
+      its frontend detects a known payload in the search parameter
+      processed by bypassSecurityTrustHtml. The xss content uses
+      backticks (`xss`) because single and double quotes break the
+      URL hash.
+    pedagogical_intent: |
+      Quasi-solution: full payload with backtick rationale.

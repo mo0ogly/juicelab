@@ -1,0 +1,108 @@
+challenge_key: "dlpPastebinDataLeakChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Ce challenge necessite une kill chain composite. Quelles
+      sont les 3 sources d'information combinees ?
+    question_en: |
+      This challenge requires a composite kill chain. What
+      are the 3 combined info sources?
+    options_fr:
+      - "(1) Wikipedia, (2) Reddit, (3) Stack Overflow"
+      - "(1) SQLi cote webapp pour identifier le produit retire (recon interne via christmasSpecialChallenge), (2) OSINT externe sur Pastebin pour les ingredients leakes (Ctrl-V de quelqu'un d'autre), (3) submission via /contact sur la webapp avec les info assemblees"
+      - "(1) Brute force, (2) phishing, (3) social engineering"
+      - "(1) DDoS, (2) ransomware, (3) phishing"
+    options_en:
+      - "(1) Wikipedia, (2) Reddit, (3) Stack Overflow"
+      - "(1) Webapp-side SQLi to identify removed product (internal recon via christmasSpecialChallenge), (2) External OSINT on Pastebin for leaked ingredients (someone else's Ctrl-V), (3) submission via /contact on webapp with assembled info"
+      - "(1) Brute force, (2) phishing, (3) social engineering"
+      - "(1) DDoS, (2) ransomware, (3) phishing"
+    correct: 1
+    explanation_fr: |
+      Pattern realiste : un attaquant moderne ne se limite
+      pas a une surface. Il combine recon interne (webapp +
+      OSINT social) avec sources externes (pastebins, GitHub,
+      forums). Defense : threat intelligence multi-source
+      pour detecter quand des info internes apparaissent en
+      externe.
+    explanation_en: |
+      Realistic pattern: a modern attacker isn't limited to
+      one surface. They combine internal recon (webapp +
+      social OSINT) with external sources (pastebins,
+      GitHub, forums). Defense: multi-source threat intel to
+      detect when internal info appears externally.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pastebin est cite comme "the platform involved in
+      Dumpster dive". Pourquoi Pastebin (et ses cousins
+      ghostbin, justpaste.it) sont-ils des cibles de
+      threat intelligence ?
+    question_en: |
+      Pastebin is cited as "the platform involved in
+      Dumpster dive". Why are Pastebin (and cousins
+      ghostbin, justpaste.it) threat intelligence targets?
+    options_fr:
+      - "Parce qu'ils accelerent le partage de notes legitimes"
+      - "Parce qu'ils sont utilises legalement pour partager du code/notes, MAIS aussi par les attaquants pour publier des leaks (credentials breach, documents internes, source code). Pattern : 'leak first, takedown later'. Threat intel doit monitorer ces sites pour detecter les fuites concernant l'entreprise"
+      - "Parce qu'ils contiennent des virus"
+      - "Parce qu'ils sont obsoletes"
+    options_en:
+      - "Because they speed up legitimate note sharing"
+      - "Because they're used legally to share code/notes, BUT also by attackers to publish leaks (breach credentials, internal docs, source code). Pattern: 'leak first, takedown later'. Threat intel must monitor these sites for company-related leaks"
+      - "Because they contain viruses"
+      - "Because they're obsolete"
+    correct: 1
+    explanation_fr: |
+      Outils threat intel commerciaux (DeHashed, IntelX,
+      Recorded Future) monitor en permanence ces plateformes.
+      Pour les SMB sans budget : Have I Been Pwned (gratuit),
+      Google Alerts sur le nom de l'entreprise, surveillance
+      manuelle hebdomadaire. Pattern de defense reactive
+      (alerte + takedown).
+    explanation_en: |
+      Commercial threat intel tools (DeHashed, IntelX,
+      Recorded Future) monitor these platforms continuously.
+      For SMBs without budget: Have I Been Pwned (free),
+      Google Alerts on company name, weekly manual
+      surveillance. Reactive defense pattern (alert +
+      takedown).
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      DLP (Data Loss Prevention) couvre 3 aspects pour
+      empecher des leaks comme celui de ce challenge. Quels
+      sont-ils ?
+    question_en: |
+      DLP (Data Loss Prevention) covers 3 aspects to prevent
+      leaks like this challenge's. What are they?
+    options_fr:
+      - "(1) Prevention, (2) Vente, (3) Achat"
+      - "(1) PREVENTION : empecher la donnee de sortir (endpoint DLP, network DLP, cloud DLP). (2) DETECTION : monitoring des plateformes publiques (pastebins, GitHub) avec alerts. (3) REACTION : incident response pour remediate (takedown, secret rotation)"
+      - "(1) Logging, (2) backup, (3) compression"
+      - "(1) Firewall, (2) IDS, (3) IPS"
+    options_en:
+      - "(1) Prevention, (2) Sales, (3) Purchase"
+      - "(1) PREVENTION: stop data from leaving (endpoint DLP, network DLP, cloud DLP). (2) DETECTION: monitor public platforms (pastebins, GitHub) with alerts. (3) REACTION: incident response to remediate (takedown, secret rotation)"
+      - "(1) Logging, (2) backup, (3) compression"
+      - "(1) Firewall, (2) IDS, (3) IPS"
+    correct: 1
+    explanation_fr: |
+      Reference : NIST SP 800-46 + CASB tools (Cloud Access
+      Security Broker). Defense en profondeur : aucune des 3
+      aspects seul ne suffit. Pour ce challenge, c'est
+      DETECTION qui a echoue (employe a paste sans
+      detection). Outillage : DLP cote endpoint (Microsoft
+      Purview, Symantec) + threat intel cote externe.
+    explanation_en: |
+      Reference: NIST SP 800-46 + CASB tools (Cloud Access
+      Security Broker). Defense in depth: none of the 3
+      alone suffices. For this challenge, DETECTION failed
+      (employee pasted without detection). Tooling: endpoint
+      DLP (Microsoft Purview, Symantec) + external threat
+      intel.

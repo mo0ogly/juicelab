@@ -1,0 +1,92 @@
+challenge_key: "directoryListingChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi le directory listing est-il considere comme une
+      mesconfiguration de securite et pas comme une fonctionnalite
+      legitime du serveur ?
+    question_en: |
+      Why is directory listing considered a security misconfiguration and
+      not a legitimate server feature?
+    options_fr:
+      - "Parce qu'il consomme trop de bande passante quand le dossier contient beaucoup de fichiers"
+      - "Parce qu'il permet l'enumeration de fichiers oublies (sauvegardes, exports, configs) qui violent le principe du moindre privilege"
+      - "Parce qu'il est interdit par la RFC HTTP"
+      - "Parce qu'il rend le site plus lent a charger"
+    options_en:
+      - "Because it consumes too much bandwidth when the folder has many files"
+      - "Because it enables enumeration of forgotten files (backups, exports, configs) that violate the least-privilege principle"
+      - "Because it is forbidden by the HTTP RFC"
+      - "Because it makes the site slower to load"
+    correct: 1
+    explanation_fr: |
+      Le serveur expose tout ce qui se trouve dans le dossier sans
+      distinction. Sauvegardes, exports, fichiers de config oublies
+      deviennent decouvrables. C'est une violation du principe "n'expose
+      que ce qui doit l'etre".
+    explanation_en: |
+      The server exposes everything in the folder without distinction.
+      Backups, exports, forgotten config files become discoverable.
+      This violates the principle "expose only what must be exposed".
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Sur un serveur Express/Node.js moderne, quelle est la maniere la
+      plus simple d'eviter le directory listing tout en servant les
+      fichiers statiques d'un dossier ?
+    question_en: |
+      On a modern Express/Node.js server, what is the simplest way to
+      avoid directory listing while still serving static files from a
+      folder?
+    options_fr:
+      - "Utiliser app.use('/folder', express.static('folder')) sans serve-index"
+      - "Mettre un fichier .htaccess avec Options -Indexes"
+      - "Renommer tous les fichiers avec des noms aleatoires"
+      - "Bloquer le port 80 et utiliser uniquement HTTPS"
+    options_en:
+      - "Use app.use('/folder', express.static('folder')) without serve-index"
+      - "Put an .htaccess with Options -Indexes"
+      - "Rename all files with random names"
+      - "Block port 80 and use HTTPS only"
+    correct: 0
+    explanation_fr: |
+      express.static() seul retourne 404 si on demande un dossier sans
+      preciser de fichier. C'est le serve-index middleware qui ajoute
+      le directory listing, et ne pas l'utiliser suffit.
+    explanation_en: |
+      express.static() alone returns 404 when a folder is requested
+      without a filename. It is the serve-index middleware that adds
+      directory listing, and not using it is enough.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quel couple de noms de dossiers est typiquement teste par un
+      attaquant qui cherche du directory listing accessible ?
+    question_en: |
+      Which pair of folder names is typically tested by an attacker
+      looking for accessible directory listings?
+    options_fr:
+      - "/about/ et /contact/"
+      - "/backup/ et /.git/"
+      - "/css/ et /img/"
+      - "/login/ et /register/"
+    options_en:
+      - "/about/ and /contact/"
+      - "/backup/ and /.git/"
+      - "/css/ and /img/"
+      - "/login/ and /register/"
+    correct: 1
+    explanation_fr: |
+      /backup/ peut contenir des dumps de base, des exports, des configs.
+      /.git/ contient l'historique complet du repo (avec secrets effaces
+      anciennement mais toujours dans l'historique). Cibles classiques en
+      reconnaissance.
+    explanation_en: |
+      /backup/ can contain database dumps, exports, configs. /.git/
+      contains the full repo history (with secrets that were deleted
+      but remain in history). Classic recon targets.

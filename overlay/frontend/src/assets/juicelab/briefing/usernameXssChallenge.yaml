@@ -1,0 +1,126 @@
+challenge_key: "usernameXssChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Bypass la Content Security Policy de Juice Shop et execute un
+  XSS avec EXACTEMENT le payload <script>alert(`xss`)</script> sur
+  une page legacy de l'application. Description OWASP officielle.
+  Hint #1 : "What is even better than a legacy page with a
+  homegrown RegEx sanitizer? Having CSP injection issues on the
+  exact same page as well!". Le challenge combine deux failles :
+  un sanitizer regex bricole + une CSP injectee elle aussi.
+
+  Methode recommandee : trouve d'abord la page legacy. Hint #2 :
+  "Find a screen in the application that looks subtly odd and
+  dated compared with all other screens". Sur Juice Shop, c'est
+  la page /#/profile (page de profil utilisateur, layout vieux,
+  pas Angular Material). Le champ username sur cette page est
+  injectable. Hint #3 : "Before trying any XSS attacks, you
+  should understand how the page is setting its Content Security
+  Policy". La CSP est generee dynamiquement avec ton username
+  comme nonce — donc en injectant dans username, tu controle
+  PARTIELLEMENT la CSP. Hint #4 : "make good use of the flaws in
+  the homegrown sanitization based on a RegEx".
+
+  Note la combinaison rare : 1 bug = sanitizer regex faible, 2eme
+  bug = CSP user-controlled. Pour parler dans le journal "apres".
+
+mission_en: |
+  Bypass the Juice Shop Content Security Policy and execute an XSS
+  with EXACTLY the payload <script>alert(`xss`)</script> on a
+  legacy page. Official OWASP description. Hint #1: "What is
+  even better than a legacy page with a homegrown RegEx
+  sanitizer? Having CSP injection issues on the exact same page
+  as well!". Challenge combines two flaws: a hand-rolled regex
+  sanitizer + an injectable CSP.
+
+  Recommended method: first find the legacy page. Hint #2: "Find
+  a screen in the application that looks subtly odd and dated
+  compared with all other screens". On Juice Shop, it's
+  /#/profile (user profile page, old layout, not Angular
+  Material). The username field on this page is injectable.
+  Hint #3: "Before trying any XSS attacks, you should understand
+  how the page is setting its Content Security Policy". CSP is
+  generated dynamically with your username as a nonce — so
+  injecting username PARTIALLY controls the CSP. Hint #4: "make
+  good use of the flaws in the homegrown sanitization based on
+  a RegEx".
+
+  Note the rare combination: 1st bug = weak regex sanitizer, 2nd
+  bug = user-controlled CSP. For the "after" logbook.
+
+concepts:
+  - title_fr: "CSP user-controlled : l'erreur architecturale rare et grave"
+    title_en: "User-controlled CSP: rare and serious architectural error"
+    body_fr: |
+      Pattern d'erreur tres specifique. Une CSP est un HEADER
+      decide par le serveur, pas par l'utilisateur. Quand le
+      developpeur, voulant supporter des "personnalisations" ou
+      des "intgrations tierces", interpole de l'input user dans
+      le header CSP, il transforme la defense en surface
+      d'attaque. Ici : Content-Security-Policy: ... 'nonce-
+      <username>' ... Si username est attacker-controlled,
+      l'attaquant choisit le nonce et peut signer son script
+      inline. Defense : la CSP doit etre statique, ou
+      parametrer uniquement par des valeurs server-controlled
+      (random nonces, hash de scripts inline connus).
+    body_en: |
+      Very specific error pattern. A CSP is a HEADER decided by
+      the server, not the user. When the developer, trying to
+      support "customizations" or "3rd-party integrations",
+      interpolates user input into the CSP header, they turn the
+      defense into an attack surface. Here:
+      Content-Security-Policy: ... 'nonce-<username>' ... If
+      username is attacker-controlled, the attacker picks the
+      nonce and can sign their inline script. Defense: CSP
+      must be static, or parameterized only by server-controlled
+      values (random nonces, hashes of known inline scripts).
+
+  - title_fr: "Homegrown regex sanitizer : pourquoi c'est toujours casse"
+    title_en: "Homegrown regex sanitizer: why it's always broken"
+    body_fr: |
+      Hint OWASP officiel #4 : "make good use of the flaws in
+      the homegrown sanitization based on a RegEx". Pattern
+      anti-pattern eternel : un developpeur ecrit lui-meme une
+      regex /<script>/i pour bloquer les XSS. Probleme : les
+      bypass sont infinis. Casing alternatives (<ScRiPt>),
+      whitespace (<script\n>), null bytes, encodings
+      (&lt;script&gt; puis decoded), tags imbrigees (<scr<script>
+      ipt>), HTML5 events (<svg onload=...>). Defense : utiliser
+      un sanitizer maintenu (DOMPurify, sanitize-html) qui a une
+      surface d'attaque audited. JAMAIS DIY un sanitizer.
+    body_en: |
+      Official OWASP hint #4: "make good use of the flaws in
+      the homegrown sanitization based on a RegEx". Eternal
+      anti-pattern: a developer writes their own regex
+      /<script>/i to block XSS. Problem: bypasses are infinite.
+      Casing alternatives (<ScRiPt>), whitespace (<script\n>),
+      null bytes, encodings (&lt;script&gt; then decoded),
+      nested tags (<scr<script>ipt>), HTML5 events (<svg
+      onload=...>). Defense: use a maintained sanitizer
+      (DOMPurify, sanitize-html) with an audited attack surface.
+      NEVER DIY a sanitizer.
+
+  - title_fr: "Defense canonique : CSP statique + sanitizer maintenu"
+    title_en: "Canonical defense: static CSP + maintained sanitizer"
+    body_fr: |
+      Source : OWASP XSS Prevention Cheat Sheet
+      (cheatsheetseries.owasp.org/cheatsheets/Cross_Site_
+      Scripting_Prevention_Cheat_Sheet.html). Trois couches.
+      (1) CSP statique avec script-src 'self' + nonce/hash
+      server-generated, JAMAIS interpole avec input user. (2)
+      Sanitizer maintenu (DOMPurify) sur tout HTML user-rendu,
+      configuration whitelist stricte. (3) Framework defaults
+      respected (pas de bypassSecurityTrustHtml). La combinaison
+      empeche structurellement le XSS, meme en cas de bug
+      isole.
+    body_en: |
+      Source: OWASP XSS Prevention Cheat Sheet
+      (cheatsheetseries.owasp.org/cheatsheets/Cross_Site_
+      Scripting_Prevention_Cheat_Sheet.html). Three layers. (1)
+      Static CSP with script-src 'self' + server-generated
+      nonce/hash, NEVER interpolated with user input. (2)
+      Maintained sanitizer (DOMPurify) on all user-rendered
+      HTML, strict whitelist config. (3) Framework defaults
+      respected (no bypassSecurityTrustHtml). Combination
+      structurally prevents XSS, even with an isolated bug.

@@ -1,0 +1,90 @@
+challenge_key: "rceChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "make notevil throw infinite loop". L'endpoint b2b
+      orders execute du code JS user-provided dans un sandbox.
+    text_en: |
+      OWASP hint: "make notevil throw infinite loop". B2B orders endpoint
+      executes user-provided JS code in a sandbox.
+    pedagogical_intent: |
+      Activate eval + sandbox reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Endpoint : POST /api/b2b/v2/orders avec body.orderLinesData. Le
+      sandbox notevil bloque les boucles infinies (rejet "Infinite loop
+      detected"). Pour solve, faut declencher cette erreur.
+    text_en: |
+      Endpoint: POST /api/b2b/v2/orders with body.orderLinesData. notevil
+      sandbox blocks infinite loops (reject "Infinite loop detected"). To
+      solve, must trigger this error.
+    pedagogical_intent: |
+      Spell endpoint + condition.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Login (n'importe quel user). Send POST /api/b2b/v2/orders avec
+      body : `{"orderLinesData": "while(true){}"}`. Le notevil detecte la
+      boucle apres N iterations (max iterations limit) et throw "Infinite
+      loop detected - reached max iterations".
+    text_en: |
+      Login (any user). Send POST /api/b2b/v2/orders with body:
+      `{"orderLinesData": "while(true){}"}`. notevil detects loop after N
+      iterations (max iterations limit) and throws "Infinite loop detected
+      - reached max iterations".
+    pedagogical_intent: |
+      Reveal exact payload.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      curl avec auth :
+      `curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type:
+      application/json" -d '{"orderLinesData":"while(true){}"}'
+      http://localhost:3000/api/b2b/v2/orders`. Le serveur b2bOrder.ts:31
+      `solveIf(rceChallenge, () => getErrorMessage(err) === 'Infinite loop
+      detected - reached max iterations')` declenche.
+    text_en: |
+      curl with auth:
+      `curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type:
+      application/json" -d '{"orderLinesData":"while(true){}"}'
+      http://localhost:3000/api/b2b/v2/orders`. Server b2bOrder.ts:31
+      `solveIf(rceChallenge, () => getErrorMessage(err) === 'Infinite loop
+      detected - reached max iterations')` triggers.
+    pedagogical_intent: |
+      Spell exact request.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Login (Bearer token via
+      DevTools Network). (2) Inspect /#/order pour identifier B2B
+      endpoint. (3) Build curl POST avec orderLinesData = "while(true){}".
+      (4) Le serveur b2bOrder.ts:23
+      `vm.runInContext('safeEval(orderLinesData)', sandbox, { timeout:
+      2000 })` execute. (5) notevil detecte boucle apres max iterations,
+      throw `Error: Infinite loop detected - reached max iterations`. (6)
+      b2bOrder.ts:31 `solveIf(rceChallenge, () => getErrorMessage(err)
+      === 'Infinite loop detected - reached max iterations')` declenche.
+      Defense : remplacer eval par JSON Schema (Ajv) qui valide shape
+      declaratif. JAMAIS eval sur user input. Source : b2bOrder.ts:23-31.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Login (Bearer token via
+      DevTools Network). (2) Inspect /#/order to identify B2B endpoint.
+      (3) Build curl POST with orderLinesData = "while(true){}". (4)
+      Server b2bOrder.ts:23 `vm.runInContext('safeEval(orderLinesData)',
+      sandbox, { timeout: 2000 })` executes. (5) notevil detects loop
+      after max iterations, throws `Error: Infinite loop detected -
+      reached max iterations`. (6) b2bOrder.ts:31
+      `solveIf(rceChallenge, () => getErrorMessage(err) === 'Infinite loop
+      detected - reached max iterations')` triggers. Defense: replace
+      eval with JSON Schema (Ajv) validating declarative shape. NEVER
+      eval on user input. Source: b2bOrder.ts:23-31.
+    pedagogical_intent: |
+      Solution + canonical fix.

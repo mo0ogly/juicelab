@@ -1,0 +1,110 @@
+challenge_key: "loginAmyChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      La description OWASP cite "93.83 billion trillion trillion
+      centuries to brute force" mais ajoute "she did not read
+      the One Important Final Note". Quelle est la reference et
+      la lecon ?
+    question_en: |
+      OWASP description cites "93.83 billion trillion trillion
+      centuries to brute force" but adds "she did not read the
+      One Important Final Note". What's the reference and
+      lesson?
+    options_fr:
+      - "Reference au RFC 6238 (TOTP) sur le rate limiting"
+      - "Reference au webcomic XKCD #936 ('correct horse battery staple') : la note finale precise qu'une long passphrase n'est forte QUE si les mots sont VRAIMENT aleatoires. Avec des mots thematiques (lies a la vie de la cible), l'entropie chute drastiquement"
+      - "Reference au standard NIST SP 800-63B sur les mots de passe"
+      - "Reference au book Hitchhiker's Guide sur le 42"
+    options_en:
+      - "Reference to RFC 6238 (TOTP) on rate limiting"
+      - "Reference to XKCD #936 webcomic ('correct horse battery staple'): the final note specifies a long passphrase is strong ONLY if words are TRULY random. With thematic words (related to target's life), entropy drops drastically"
+      - "Reference to NIST SP 800-63B on passwords"
+      - "Reference to Hitchhiker's Guide book on 42"
+    correct: 1
+    explanation_fr: |
+      Reference culturelle/securitaire bien connue. Pattern
+      pedagogique : "long" != "fort" en cryptographie. La
+      randomness compte plus que la longueur. Si l'attaquant
+      peut limiter l'espace de recherche par OSINT
+      thematique, meme 30 caracteres tombent en heures sur
+      un cluster GPU.
+    explanation_en: |
+      Well-known cultural/security reference. Pedagogical
+      pattern: "long" != "strong" in cryptography. Randomness
+      matters more than length. If attacker can constrain
+      search space via thematic OSINT, even 30 chars fall in
+      hours on a GPU cluster.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi le pop-culture OSINT (recherche de personnages
+      lies a une cible) est-il si efficace contre les comptes
+      seedes par les developpeurs ?
+    question_en: |
+      Why is pop-culture OSINT (researching characters tied to
+      a target) so effective against developer-seeded
+      accounts?
+    options_fr:
+      - "Parce que les developpeurs aiment publier leurs mots de passe sur GitHub"
+      - "Parce que les developpeurs choisissent des credentials de test comme JEUX-MOTS sur les personnages d'une fiction (Futurama ici, Star Trek ailleurs). C'est un pattern recurrent — un attaquant qui identifie le show/univers reduit l'espace a quelques milliers de combos thematiques"
+      - "Parce que les comptes seedes ont toujours admin/admin comme password"
+      - "Parce que les credentials de test sont stockes en clair dans le DOM"
+    options_en:
+      - "Because devs love posting their passwords on GitHub"
+      - "Because devs pick test credentials as PUNS on fictional characters (Futurama here, Star Trek elsewhere). Recurrent pattern — an attacker identifying the show/universe narrows space to a few thousand thematic combos"
+      - "Because seeded accounts always have admin/admin"
+      - "Because test credentials are stored cleartext in the DOM"
+    correct: 1
+    explanation_fr: |
+      Anti-pattern dev recurrent : choisir des credentials
+      "amusants" en environnement de TEST puis les laisser en
+      PROD. Defense : utiliser des outils de seed qui
+      generent des credentials aleatoires + flag les
+      environnements (dev vs prod) pour empecher la migration
+      des comptes test.
+    explanation_en: |
+      Recurrent dev anti-pattern: pick "fun" credentials in
+      TEST then leave them in PROD. Defense: use seed tools
+      generating random credentials + flag environments (dev
+      vs prod) to prevent test-account migration.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense en profondeur contre l'OSINT-based password
+      guessing : 3 couches. Laquelle reste EFFICACE meme si
+      le password est devine ?
+    question_en: |
+      Defense in depth against OSINT-based password guessing:
+      3 layers. Which one remains EFFECTIVE even if password
+      is guessed?
+    options_fr:
+      - "Augmenter la longueur min des passwords a 30 chars"
+      - "2FA OBLIGATOIRE : meme si le password est devine via OSINT, 2FA bloque l'acces. Couple a (a) check haveibeenpwned API rejetant les passwords compromis et (b) anomaly detection sur les IPs nouvelles avec step-up auth"
+      - "Forcer HTTPS sur le formulaire de login"
+      - "Logger toutes les tentatives de login"
+    options_en:
+      - "Raise min password length to 30 chars"
+      - "MANDATORY 2FA: even if password guessed via OSINT, 2FA blocks access. Combined with (a) haveibeenpwned API check rejecting compromised passwords and (b) anomaly detection on new IPs with step-up auth"
+      - "Force HTTPS on login form"
+      - "Log every login attempt"
+    correct: 1
+    explanation_fr: |
+      2FA est la defense canonique contre password guessing
+      (OSINT, brute force, breach reuse). Combine a la
+      detection d'anomalie, l'attaquant doit aussi compromettre
+      le device ou le numero du user. Multi-couches =
+      multi-compromis necessaires. Reference : OWASP
+      Authentication Cheat Sheet.
+    explanation_en: |
+      2FA is the canonical defense against password guessing
+      (OSINT, brute force, breach reuse). Combined with
+      anomaly detection, attacker must also compromise the
+      user's device or phone number. Multi-layer = multi-
+      compromise needed. Reference: OWASP Authentication Cheat
+      Sheet.

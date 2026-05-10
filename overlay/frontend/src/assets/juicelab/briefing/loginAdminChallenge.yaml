@@ -1,0 +1,110 @@
+challenge_key: "loginAdminChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Connecte-toi en tant qu'administrateur SANS connaitre son mot de
+  passe. Le formulaire de login de Juice Shop construit sa requete SQL
+  par concatenation de chaines, ce qui te permet d'injecter du SQL via
+  le champ email. C'est le challenge canonique d'INJECTION SQL en
+  contexte authentification.
+
+  Methode recommandee : trouve l'email de l'admin (consulte la page
+  About Us, le score-board avec les solutions des autres, ou le pattern
+  habituel admin@<domain>). Sur le formulaire de login, dans le champ
+  email, tape une apostrophe pour casser la chaine SQL et un
+  commentaire SQL pour neutraliser la clause AND password = .... Le mot
+  de passe peut etre n'importe quoi : il est commente, jamais
+  evalue.
+
+  Note le payload exact qui a fonctionne, le SQL reconstruit, et la
+  raison pour laquelle le serveur t'a accorde un JWT admin. Tu en
+  parleras dans le journal "apres".
+
+mission_en: |
+  Log in as administrator WITHOUT knowing the password. The Juice Shop
+  login form builds its SQL query via string concatenation, letting you
+  inject SQL through the email field. This is the canonical SQL
+  INJECTION challenge in an authentication context.
+
+  Recommended method: find the admin email (look at About Us, the
+  score-board solutions of others, or the usual admin@<domain>
+  pattern). On the login form, in the email field, type a single
+  quote to break the SQL string and a SQL comment to neutralize the
+  AND password = ... clause. The password can be anything: it is
+  commented out, never evaluated.
+
+  Note the exact working payload, the reconstructed SQL, and why the
+  server granted you an admin JWT. You will report it in the "after"
+  logbook.
+
+concepts:
+  - title_fr: "Concatenation SQL : la racine du mal"
+    title_en: "SQL concatenation: the root of evil"
+    body_fr: |
+      Le serveur fait quelque chose comme : "SELECT * FROM users WHERE
+      email='" + req.body.email + "' AND password='" + hash(req.body.
+      password) + "'". L'apostrophe dans email echappe la chaine et le
+      reste devient du code SQL execute. Avec ' OR true-- , la requete
+      devient SELECT * FROM users WHERE email='' OR true--' AND
+      password='...' qui retourne le premier user (souvent admin par
+      ordre d'insertion).
+    body_en: |
+      The server does something like: "SELECT * FROM users WHERE
+      email='" + req.body.email + "' AND password='" + hash(req.body.
+      password) + "'". A single quote in email escapes the string and
+      the rest becomes executed SQL. With ' OR true-- , the query
+      becomes SELECT * FROM users WHERE email='' OR true--' AND
+      password='...' which returns the first user (often admin by
+      insertion order).
+
+  - title_fr: "Defense canonique : requetes parametrees"
+    title_en: "Canonical defense: parameterized queries"
+    body_fr: |
+      Les requetes parametrees (prepared statements) garantissent par
+      construction que les donnees ne peuvent pas devenir du code. Le
+      driver de la base distingue le squelette SQL et les valeurs : une
+      apostrophe injectee est echappee mecaniquement. Toute API
+      moderne (PDO, JDBC, psycopg, sqlite3) supporte cela par defaut.
+      Le filtrage par regex ou addslashes() est fragile et toujours
+      contournable.
+    body_en: |
+      Parameterized queries (prepared statements) guarantee by
+      construction that data cannot become code. The DB driver
+      distinguishes the SQL skeleton and values: an injected quote is
+      escaped mechanically. Every modern API (PDO, JDBC, psycopg,
+      sqlite3) supports this by default. Regex filtering or
+      addslashes() is fragile and always bypassable.
+
+  - title_fr: "Defense en profondeur : ORM et WAF"
+    title_en: "Defense in depth: ORM and WAF"
+    body_fr: |
+      Au-dela des requetes parametrees, deux ralentisseurs : un ORM
+      (Sequelize, SQLAlchemy, Hibernate) qui force le pattern parametre
+      et exige un effort conscient pour tomber dans la concatenation ;
+      un WAF (Cloudflare, ModSecurity, AWS WAF) qui bloque les
+      payloads SQLi connus en frontiere reseau. NI l'un ni l'autre ne
+      remplace les requetes parametrees, mais leur combinaison rend
+      l'exploitation tres couteuse.
+    body_en: |
+      Beyond parameterized queries, two slowdowns: an ORM (Sequelize,
+      SQLAlchemy, Hibernate) that enforces the parameter pattern and
+      requires conscious effort to fall back to concatenation; a WAF
+      (Cloudflare, ModSecurity, AWS WAF) that blocks known SQLi
+      payloads at the network boundary. Neither replaces parameterized
+      queries, but their combination makes exploitation very costly.
+
+  - title_fr: "OWASP A03:2021 — Injection (top 3 mondial)"
+    title_en: "OWASP A03:2021 — Injection (global top 3)"
+    body_fr: |
+      L'injection est encore en 2021 dans le top 3 des risques web.
+      SQLi en est la forme la plus connue, mais aussi LDAP, XPath, NoSQL
+      (MongoDB), OS command injection, template injection. Toutes
+      partagent la meme racine : melange de code et de donnees. La
+      defense est conceptuelle : separer ce qui est instruction de ce
+      qui est valeur, structurellement, partout.
+    body_en: |
+      Injection is still in the 2021 top 3 web risks. SQLi is the
+      best-known form, but also LDAP, XPath, NoSQL (MongoDB), OS
+      command injection, template injection. All share the same root:
+      mixing code and data. The defense is conceptual: separate
+      instruction from value, structurally, everywhere.

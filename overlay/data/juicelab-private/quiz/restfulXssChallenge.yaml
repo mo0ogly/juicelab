@@ -1,0 +1,113 @@
+challenge_key: "restfulXssChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      La codefixes officielle OWASP indique que le fix CORRECT
+      pour ce challenge est de "remove the bypass of sanitization
+      entirely" (fix #1). Mais l'explanation precise un point cle :
+      "XSS is only a consequence of broken authorization in this
+      case". Que signifie cette formulation ?
+    question_en: |
+      The official OWASP codefixes states the CORRECT fix is
+      "remove the bypass of sanitization entirely" (fix #1). But
+      the explanation makes a key point: "XSS is only a
+      consequence of broken authorization in this case". What
+      does this phrasing mean?
+    options_fr:
+      - "Cela veut dire que le XSS ne fonctionne pas sans authorization valide"
+      - "Le XSS est exploitable PARCE QUE la PUT API est non protegee. Si elle etait admin-only, l'XSS persisted serait inexploitable par un attaquant non-admin. Le bug racine est l'access control, pas le sanitization"
+      - "Cela veut dire que l'authorization seule suffit a fixer le bug"
+      - "Cela veut dire que le XSS est moins grave qu'une SQLi"
+    options_en:
+      - "It means XSS doesn't work without valid authorization"
+      - "XSS is exploitable BECAUSE the PUT API is unprotected. If it were admin-only, persisted XSS would be unexploitable by a non-admin attacker. The root bug is access control, not sanitization"
+      - "It means authorization alone fixes the bug"
+      - "It means XSS is less severe than SQLi"
+    correct: 1
+    explanation_fr: |
+      Source officielle codefixes fix #1 in extenso. La lecon :
+      ordonner les fixes par CAUSE PRIMAIRE. Ici, l'access
+      control est la cause primaire ; sans lui, le XSS n'a pas
+      de surface d'attaque. C'est l'inverse de localXss (DOM
+      pur) ou la cause primaire est la sanitization elle-meme.
+    explanation_en: |
+      Official source codefixes fix #1 in full. Lesson: order
+      fixes by PRIMARY CAUSE. Here, access control is the
+      primary cause; without it, XSS has no attack surface.
+      Opposite of localXss (pure DOM) where the primary cause is
+      sanitization itself.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un persisted XSS via API est-il fondamentalement
+      plus dangereux qu'un DOM XSS comme localXssChallenge ?
+    question_en: |
+      Why is a persisted XSS via API fundamentally more dangerous
+      than a DOM XSS like localXssChallenge?
+    options_fr:
+      - "Aucune difference, l'impact est identique"
+      - "DOM XSS = effet sur la session courante du navigateur de l'attaquant. PERSISTED XSS = stocke en DB, declenche pour TOUS les visiteurs futurs. Un seul payload affecte N users — viralisation de l'attaque"
+      - "DOM XSS contourne CSP, persisted non"
+      - "Persisted XSS necessite admin, DOM non"
+    options_en:
+      - "No difference, impact is identical"
+      - "DOM XSS = effect on current browser session of the attacker. PERSISTED XSS = stored in DB, triggered for EVERY future visitor. One payload affects N users — attack virality"
+      - "DOM XSS bypasses CSP, persisted does not"
+      - "Persisted XSS requires admin, DOM doesn't"
+    correct: 1
+    explanation_fr: |
+      Distinction critique pour la severity rating. Persisted XSS
+      multiplie l'impact par le nombre de visiteurs entre
+      l'injection et la detection. Sur un site eCommerce, c'est
+      typiquement quelques milliers d'users en quelques jours.
+      Defense : sanitize au moment du persist (pas du render),
+      audit log des edits sur les champs displayed.
+    explanation_en: |
+      Critical distinction for severity rating. Persisted XSS
+      multiplies impact by the number of visitors between
+      injection and detection. On an eCommerce site, typically
+      a few thousand users in a few days. Defense: sanitize at
+      persist time (not render), audit-log edits on displayed
+      fields.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense en profondeur sur ce challenge : 4 couches
+      cumulables. Laquelle reste EFFICACE meme si bypassSecurityTrustHtml
+      est utilise ET l'access control est manquant ET la
+      sanitization server-side est cassee ?
+    question_en: |
+      Defense in depth on this challenge: 4 stackable layers.
+      Which remains EFFECTIVE even if bypassSecurityTrustHtml
+      is used AND access control is missing AND server-side
+      sanitization is broken?
+    options_fr:
+      - "Logger les requetes PUT dans un audit log"
+      - "Content-Security-Policy avec frame-src 'self' (ou directive equivalente) qui bloque l'execution de l'iframe AU NIVEAU NAVIGATEUR, meme si le HTML est correctement injecte. Le CSP est la derniere ligne de defense"
+      - "Compresser les responses en gzip"
+      - "Forcer HTTPS sur toutes les routes /api/"
+    options_en:
+      - "Log PUT requests in an audit log"
+      - "Content-Security-Policy with frame-src 'self' (or equivalent directive) blocking iframe execution AT THE BROWSER LEVEL, even if HTML is correctly injected. CSP is the last defense line"
+      - "Gzip-compress responses"
+      - "Force HTTPS on all /api/ routes"
+    correct: 1
+    explanation_fr: |
+      CSP est la defense BROWSER-side qui agit au moment du
+      rendu, independamment du backend. Meme avec un payload
+      injecte parfaitement et un Angular bypass actif, le
+      navigateur refuse d'executer l'iframe si frame-src ne
+      l'autorise pas. C'est pourquoi la combinaison sanitization
+      server-side + CSP est canonique en defense XSS moderne.
+    explanation_en: |
+      CSP is the BROWSER-side defense acting at render time,
+      independent of the backend. Even with a perfectly injected
+      payload and active Angular bypass, the browser refuses to
+      execute the iframe if frame-src doesn't allow it. Why the
+      server-side sanitization + CSP combo is canonical in
+      modern XSS defense.

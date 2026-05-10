@@ -1,0 +1,108 @@
+challenge_key: "adminSectionChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Atteins la section /administration de Juice Shop avec un compte non-
+  admin (ou meme deconnecte). La page existe, est routee dans Angular,
+  et le seul rempart est un guard cote client (canActivate) qui retourne
+  false : c'est de la SECURITE FACADE, contournable trivialement.
+
+  Methode recommandee : tape directement http://127.0.0.1:3000/#/administration
+  dans la barre d'adresse. Si le router refuse le rendu, ouvre les
+  DevTools onglet Network et appelle directement les endpoints API
+  /api/Users (curl, Postman, ou fetch console). Le serveur ne verifie
+  pas non plus le role : tu recois la liste complete. Variante encore
+  plus claire : depuis l'enchainement loginAdmin -> JWT admin, tu peux
+  attaquer la section legitimement.
+
+  Note la difference entre le verrou frontend (canActivate Angular) et
+  l'absence de verrou backend (middleware d'autorisation manquant). Tu
+  en parleras dans le journal "apres".
+
+mission_en: |
+  Reach the Juice Shop /administration section with a non-admin account
+  (or even logged out). The page exists, is routed by Angular, and the
+  only barrier is a client-side guard (canActivate) returning false:
+  this is FACADE SECURITY, trivially bypassable.
+
+  Recommended method: type http://127.0.0.1:3000/#/administration
+  directly in the address bar. If the router refuses to render, open
+  DevTools Network and hit the API endpoints directly (/api/Users via
+  curl, Postman, or a fetch in the console). The server does not check
+  the role either: you receive the full list. Clearer variant: chain
+  loginAdmin -> admin JWT and attack the section legitimately.
+
+  Note the difference between the frontend lock (Angular canActivate)
+  and the absence of a backend lock (missing authorization
+  middleware). You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Authentification vs autorisation : les deux questions"
+    title_en: "Authentication vs authorization: the two questions"
+    body_fr: |
+      Authentification = QUI es-tu ? (un JWT valide, signature OK,
+      non expire). Autorisation = QUE peux-tu faire ? (ton role, tes
+      permissions sur la ressource demandee). Un JWT valide pour un
+      user normal ne devrait JAMAIS donner acces a une action admin.
+      Les deux verifications sont independantes, et l'autorisation se
+      fait a chaque requete sur une ressource sensible.
+    body_en: |
+      Authentication = WHO are you? (a valid JWT, signature OK, not
+      expired). Authorization = WHAT can you do? (your role, your
+      permissions on the requested resource). A valid JWT for a
+      normal user should NEVER grant access to an admin action. The
+      two checks are independent, and authorization runs on every
+      request to a sensitive resource.
+
+  - title_fr: "Frontend lock = securite facade"
+    title_en: "Frontend lock = facade security"
+    body_fr: |
+      Un guard Angular (canActivate, route guard) controle le rendu
+      visuel. Il n'empeche PAS curl, Postman, ou un fetch console
+      d'appeler directement l'endpoint API. Comme tout le code frontend
+      est public et inspectable, l'attaquant peut aussi simplement
+      patcher la fonction canActivate dans la console DevTools pour
+      retourner true. Moralite : la defense est cote serveur, ou elle
+      n'existe pas.
+    body_en: |
+      An Angular guard (canActivate, route guard) controls visual
+      rendering. It does NOT prevent curl, Postman, or a console
+      fetch from hitting the API endpoint directly. Since all
+      frontend code is public and inspectable, the attacker can also
+      patch the canActivate function in the DevTools console to
+      return true. Moral: defense is server-side or it does not
+      exist.
+
+  - title_fr: "Pattern correct : middleware d'autorisation par prefix"
+    title_en: "Correct pattern: prefix-based authorization middleware"
+    body_fr: |
+      Le pattern qui scale : un middleware applique au router prefix
+      /api/admin/* (ou un decorateur @AdminOnly) qui verifie le role
+      admin AVANT le handler. Tout nouvel endpoint sous ce prefix est
+      automatiquement protege, sans dependre de la discipline du
+      developpeur. C'est du DEFAULT DENY structurel, opposed au DEFAULT
+      ALLOW + checklist humaine.
+    body_en: |
+      The scalable pattern: a middleware applied at the
+      /api/admin/* router prefix (or an @AdminOnly decorator) that
+      checks the admin role BEFORE the handler. Any new endpoint
+      under that prefix is automatically protected, not depending on
+      developer discipline. This is structural DEFAULT DENY, opposed
+      to DEFAULT ALLOW + human checklist.
+
+  - title_fr: "OWASP A01:2021 — Broken Access Control (top 1)"
+    title_en: "OWASP A01:2021 — Broken Access Control (top 1)"
+    body_fr: |
+      Categorie numero 1 du top OWASP 2021. Couvre toutes les
+      situations ou un user accede a quelque chose qu'il ne devrait
+      pas : admin section non protegee, IDOR sur ressources d'autres
+      users, modification de privilege via parametre, force browsing
+      de chemins admin. Le challenge Admin Section est la version la
+      plus pure : pas d'enumeration, pas de devinette, juste taper
+      l'URL.
+    body_en: |
+      OWASP 2021 top category. Covers every situation where a user
+      accesses something they should not: unprotected admin section,
+      IDOR on others' resources, privilege change via parameter,
+      forced browsing of admin paths. Admin Section is the purest
+      version: no enumeration, no guessing, just typing the URL.

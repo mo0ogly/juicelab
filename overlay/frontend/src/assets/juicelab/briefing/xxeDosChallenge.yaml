@@ -1,0 +1,127 @@
+challenge_key: "xxeDosChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Give le serveur something to chew sur for
+  >2sec. Tag : Danger Zone. Description OWASP.
+  Hints : (1) "not as easy as sending large
+  amount of data directly". (2) "leverage
+  point is the same as XXE Data Access". (3)
+  "keep server busy >2sec". (4) "effectiveness
+  depends on operating system". [KILL_CHAIN_
+  DOCUMENTED]
+
+  Methode : Solve dans routes/fileUpload.ts:
+  91-92. Code : `if (utils.contains(error
+  Message, 'Script execution timed out')) {
+  challengeUtils.solve(challenges.xxeDos
+  Challenge) }`. Le solveIf trigger quand le
+  XML parsing TIMEOUT (>2sec, configure ligne
+  83 `timeout: 2000`). Pre-requis :
+  deprecatedInterface. Workflow : upload XML
+  avec billion laughs payload (recursive
+  entity expansion exponentielle). Le parser
+  consomme 2GB+ memory + plante avec timeout
+  -> solve.
+
+mission_en: |
+  Give server something to chew on for >2sec.
+  Tag: Danger Zone. OWASP description. Hints:
+  (1) "not as easy as sending large amount of
+  data directly". (2) "leverage point is same
+  as XXE Data Access". (3) "keep server busy
+  >2sec". (4) "effectiveness depends on
+  operating system". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve in routes/fileUpload.ts:91-92.
+  Code: `if (utils.contains(errorMessage,
+  'Script execution timed out')) {
+  challengeUtils.solve(challenges.xxeDos
+  Challenge) }`. solveIf triggers when XML
+  parsing TIMEOUTS (>2sec, configured line
+  83 `timeout: 2000`). Prerequisite:
+  deprecatedInterface. Workflow: upload XML
+  with billion laughs payload (exponential
+  recursive entity expansion). Parser
+  consumes 2GB+ memory + crashes with
+  timeout -> solve.
+
+concepts:
+  - title_fr: "Billion Laughs : exponential entity expansion"
+    title_en: "Billion Laughs: exponential entity expansion"
+    body_fr: |
+      Source canonique : CVE-2003-1564 (Billion
+      Laughs original). Mecanique : XML
+      autorise des entities qui referent OTHER
+      entities. Une chain `&lol1;` -> `&lol2;`
+      x10 -> `&lol3;` x10 -> ... x9 levels =
+      10^9 = 1 billion expansions. Chaque
+      expansion = string copy. Memory consume
+      = N bytes * 10^9 = GBs. Parser plante
+      ou freeze. Defense : entity expansion
+      limit + timeout + parser sandbox.
+    body_en: |
+      Canonical source: CVE-2003-1564
+      (original Billion Laughs). Mechanic:
+      XML allows entities referring OTHER
+      entities. A chain `&lol1;` -> `&lol2;`
+      x10 -> `&lol3;` x10 -> ... x9 levels =
+      10^9 = 1 billion expansions. Each
+      expansion = string copy. Memory consume
+      = N bytes * 10^9 = GBs. Parser crashes
+      or freezes. Defense: entity expansion
+      limit + timeout + parser sandbox.
+
+  - title_fr: "vm.runInContext timeout : the trap"
+    title_en: "vm.runInContext timeout: the trap"
+    body_fr: |
+      Source verifiee (routes/fileUpload.ts:
+      83) : `vm.runInContext('libxml.
+      parseXml(...)', sandbox, { timeout:
+      2000 })`. Le timeout 2sec signale que
+      les devs Juice Shop SAVENT que le
+      parsing peut etre slow. Mais le
+      timeout n'est pas une defense - il
+      cause juste un error 503 ET solve le
+      challenge ! Pattern reusable : un
+      timeout TOUT SEUL n'est pas une
+      defense ; il faut entity expansion
+      LIMIT (libxml options : `huge: false`,
+      `recover: false`).
+    body_en: |
+      Verified source (routes/fileUpload.ts:
+      83): `vm.runInContext('libxml.
+      parseXml(...)', sandbox, { timeout:
+      2000 })`. 2sec timeout signals Juice
+      Shop devs KNOW parsing can be slow.
+      But timeout is NOT a defense - it
+      just causes 503 error AND solves
+      challenge! Reusable pattern: timeout
+      ALONE not a defense; need entity
+      expansion LIMIT (libxml options:
+      `huge: false`, `recover: false`).
+
+  - title_fr: "Defense canonique : entity expansion limits"
+    title_en: "Canonical defense: entity expansion limits"
+    body_fr: |
+      Defense en profondeur : (1) Disable
+      DOCTYPE entirely (`doctype: false`) -
+      no entities possible. (2) Limit entity
+      expansion : `entityResolver: false` ou
+      configure max entity depth. (3) libxml
+      `huge: false` (default safe in v2.7+).
+      (4) Process timeout (already in Juice
+      Shop). (5) Resource limits (cgroups,
+      ulimit). (6) Sandbox container avec
+      memory limit (Docker `--memory=512m`).
+    body_en: |
+      Defense in depth: (1) Disable DOCTYPE
+      entirely (`doctype: false`) - no
+      entities possible. (2) Limit entity
+      expansion: `entityResolver: false` or
+      configure max entity depth. (3) libxml
+      `huge: false` (safe default in v2.7+).
+      (4) Process timeout (already in Juice
+      Shop). (5) Resource limits (cgroups,
+      ulimit). (6) Sandbox container with
+      memory limit (Docker `--memory=512m`).

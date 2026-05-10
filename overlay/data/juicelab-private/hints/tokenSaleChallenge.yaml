@@ -1,0 +1,77 @@
+challenge_key: "tokenSaleChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "find a hidden URL". Le UI ne montre PAS de lien vers
+      la token sale page. Cherche ailleurs (bundle JS, archive.org).
+    text_en: |
+      OWASP hint: "find a hidden URL". UI does NOT show a token sale page
+      link. Look elsewhere (JS bundle, archive.org).
+    pedagogical_intent: |
+      Activate STO + bundle reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le bundle Angular (DevTools > Sources > main.js) contient TOUTES les
+      routes definies dans app-routing.module. Cherche les routes qui ne
+      sont pas dans la nav menu (Recycle, About, Score Board sont
+      visibles).
+    text_en: |
+      Angular bundle (DevTools > Sources > main.js) contains ALL routes
+      defined in app-routing.module. Look for routes NOT in nav menu
+      (Recycle, About, Score Board are visible).
+    pedagogical_intent: |
+      Spell tool + technique.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Recherche `path:` ou `loadChildren` dans main.js. Tu trouveras des
+      routes hidden : token-sale, juicy-nft, accounting, admin, etc.
+    text_en: |
+      Search `path:` or `loadChildren` in main.js. You'll find hidden
+      routes: token-sale, juicy-nft, accounting, admin, etc.
+    pedagogical_intent: |
+      Reveal grep patterns.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      La route est /#/tokensale. Navigue vers
+      http://localhost:3000/#/tokensale. La page se charge avec un favicon
+      56px.png que le serveur logge - le solve check est sur cette URL :
+      `endsWith(url, '/56px.png')`.
+    text_en: |
+      Route is /#/tokensale. Navigate to
+      http://localhost:3000/#/tokensale. Page loads with 56px.png favicon
+      that server logs - solve check is on this URL:
+      `endsWith(url, '/56px.png')`.
+    pedagogical_intent: |
+      Spell exact route.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) DevTools > Sources > main.js,
+      Ctrl+F "tokensale" -> trouve `path:'tokensale'`. (2) Naviguer vers
+      http://localhost:3000/#/tokensale. (3) La page charge ses assets, le
+      browser GET /assets/public/images/products/56px.png. (4) Le serveur
+      verify.ts:66 `solveIf(() => endsWith(url, '/56px.png'))` declenche.
+      (5) Notification "Solved Token Sale". Defense : (a) ACL middleware
+      sur les routes sensibles. (b) Audit avec `grep -rn "path:"
+      frontend/src/app/` + table de protection. Source : verify.ts:66.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) DevTools > Sources > main.js,
+      Ctrl+F "tokensale" -> finds `path:'tokensale'`. (2) Navigate to
+      http://localhost:3000/#/tokensale. (3) Page loads its assets,
+      browser GETs /assets/public/images/products/56px.png. (4) Server
+      verify.ts:66 `solveIf(() => endsWith(url, '/56px.png'))` triggers.
+      (5) "Solved Token Sale" notification. Defense: (a) ACL middleware
+      on sensitive routes. (b) Audit with `grep -rn "path:"
+      frontend/src/app/` + protection table. Source: verify.ts:66.
+    pedagogical_intent: |
+      Solution + defense.

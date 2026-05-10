@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>JuiceLab - Login helper</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: #0f172a; color: #e2e8f0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .card {
+      width: min(560px, 92vw);
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 28px 28px 22px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.45);
+    }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    p.lead { margin: 0 0 18px; opacity: 0.78; font-size: 14px; line-height: 1.5; }
+    label { display: block; font-size: 13px; opacity: 0.78; margin: 14px 0 4px; }
+    select, input {
+      width: 100%; box-sizing: border-box;
+      padding: 10px 12px; border-radius: 8px;
+      border: 1px solid #475569; background: #0f172a; color: #e2e8f0;
+      font: inherit;
+    }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    button {
+      flex: 1; min-width: 140px;
+      padding: 11px 14px; border-radius: 8px; border: 0;
+      font: inherit; font-weight: 600; cursor: pointer;
+      background: #38bdf8; color: #0f172a;
+    }
+    button.secondary { background: #475569; color: #e2e8f0; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .status {
+      margin-top: 16px; padding: 10px 12px; border-radius: 8px;
+      font-size: 13px; line-height: 1.5; min-height: 20px;
+      background: #0f172a; border: 1px solid #334155;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      white-space: pre-wrap; word-break: break-all;
+    }
+    .status.ok    { border-color: #22c55e; color: #bbf7d0; }
+    .status.err   { border-color: #ef4444; color: #fecaca; }
+    .accounts { margin-top: 12px; font-size: 12px; opacity: 0.65; }
+    a { color: #38bdf8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>JuiceLab login helper</h1>
+    <p class="lead">
+      Petit utilitaire pour reparer une session Juice Shop quand le formulaire
+      de login normal pose probleme. Choisis un compte seede ou saisis tes
+      identifiants, clique "Login", et tu seras redirige vers le panneau JuiceLab.
+    </p>
+
+    <label for="preset">Compte de demo</label>
+    <select id="preset">
+      <option value="jim@juice-sh.op|ncc-1701">jim@juice-sh.op (mdp ncc-1701)</option>
+      <option value="morty@juice-sh.op|focusOnScienceMorty!focusOnScience">morty@juice-sh.op</option>
+      <option value="bender@juice-sh.op|OhG0dPlease1nsertLiquor!">bender@juice-sh.op</option>
+      <option value="admin@juice-sh.op|admin123">admin@juice-sh.op (admin123)</option>
+      <option value="custom">-- saisir manuellement --</option>
+    </select>
+
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="off" />
+
+    <label for="password">Mot de passe</label>
+    <input id="password" type="password" autocomplete="off" />
+
+    <div class="row">
+      <button id="loginBtn" type="button">Login + go to /#/juicelab</button>
+      <button id="logoutBtn" type="button" class="secondary">Logout (clear token)</button>
+    </div>
+
+    <div id="status" class="status">en attente.</div>
+
+    <div class="accounts">
+      Source : juice-shop/data/static/users.yml. Token stocke dans
+      <code>localStorage.token</code> sur l'origine courante.
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var preset = document.getElementById('preset')
+      var email  = document.getElementById('email')
+      var pass   = document.getElementById('password')
+      var btn    = document.getElementById('loginBtn')
+      var logout = document.getElementById('logoutBtn')
+      var status = document.getElementById('status')
+
+      function applyPreset () {
+        var v = preset.value
+        if (v === 'custom') { email.value = ''; pass.value = ''; email.focus(); return }
+        var parts = v.split('|')
+        email.value = parts[0]
+        pass.value  = parts[1]
+      }
+      preset.addEventListener('change', applyPreset)
+      applyPreset()
+
+      function setStatus (cls, msg) {
+        status.className = 'status ' + cls
+        status.textContent = msg
+      }
+
+      btn.addEventListener('click', function () {
+        if (!email.value || !pass.value) {
+          setStatus('err', 'email et mot de passe requis')
+          return
+        }
+        btn.disabled = true
+        setStatus('', 'POST /rest/user/login...')
+        fetch('/rest/user/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.value, password: pass.value }),
+        })
+          .then(function (r) {
+            return r.text().then(function (t) {
+              return { status: r.status, text: t }
+            })
+          })
+          .then(function (resp) {
+            if (resp.status !== 200) {
+              setStatus('err', 'HTTP ' + resp.status + '\n' + resp.text)
+              btn.disabled = false
+              return
+            }
+            var j
+            try { j = JSON.parse(resp.text) } catch (e) {
+              setStatus('err', 'reponse non JSON :\n' + resp.text)
+              btn.disabled = false
+              return
+            }
+            var tok = j && j.authentication && j.authentication.token
+            if (!tok) {
+              setStatus('err', 'pas de token dans la reponse :\n' + resp.text)
+              btn.disabled = false
+              return
+            }
+            try { localStorage.setItem('token', tok) } catch (e) {
+              setStatus('err', 'localStorage refuse : ' + e.message)
+              btn.disabled = false
+              return
+            }
+            setStatus(
+              'ok',
+              'OK len=' + tok.length + ' head=' + tok.slice(0, 12) +
+              '...\nredirection vers /#/juicelab dans 1 s.'
+            )
+            setTimeout(function () { location.href = '/#/juicelab' }, 1000)
+          })
+          .catch(function (err) {
+            setStatus('err', 'fetch a echoue : ' + (err && err.message ? err.message : err))
+            btn.disabled = false
+          })
+      })
+
+      logout.addEventListener('click', function () {
+        try {
+          localStorage.removeItem('token')
+          localStorage.removeItem('totp_tmp_token')
+          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+          setStatus('ok', 'localStorage et cookie token supprimes.')
+        } catch (e) {
+          setStatus('err', 'logout a echoue : ' + e.message)
+        }
+      })
+
+      var current = localStorage.getItem('token') || ''
+      if (current) {
+        setStatus(
+          'ok',
+          'token deja present : len=' + current.length + ' head=' + current.slice(0, 12) + '...'
+        )
+      }
+    })()
+  </script>
+</body>
+</html>

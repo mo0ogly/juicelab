@@ -1,0 +1,173 @@
+challenge_key: "nftMintChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Mint le Honey Pot NFT en gathering BEEs from the
+  bee haven. Tags : Web3, Internet Traffic.
+  Description OWASP. Hint officiel unique : (1)
+  "Discover NFT wonders among the captivating
+  visual memories". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/nftMint.ts:39 (verifie source). Code
+  exact : `if (addressesMinted.has(metamaskAddress))
+  { addressesMinted.delete(metamaskAddress);
+  challengeUtils.solveIf(challenges.nftMintChallenge,
+  () => true) }`. Donc le solve trigger lorsque le
+  WebSocket detecte un NFTMinted event sur la
+  Sepolia testnet (smart contract address
+  0x41427790c94E7a592B17ad694eD9c06A02bb9C39), puis
+  le user verifie son wallet via POST /walletNFT
+  Verify. Workflow Web3 : (1) Setup MetaMask sur
+  Sepolia testnet. (2) Acquerir des Sepolia ETH
+  via faucet. (3) Decouvrir le smart contract
+  Honey Pot via le Photo Wall (hint #1
+  "captivating visual memories"). (4) Trouver
+  les BEEs (probablement gathered in-app via
+  challenges adjacents). (5) Mint le Honey Pot
+  NFT via la function `mint()` du contract. (6)
+  POST /api/walletNFTVerify avec ton MetaMask
+  address.
+
+mission_en: |
+  Mint the Honey Pot NFT by gathering BEEs from
+  the bee haven. Tags: Web3, Internet Traffic.
+  OWASP description. Single official hint: (1)
+  "Discover NFT wonders among the captivating
+  visual memories". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  nftMint.ts:39 (verified source). Exact code:
+  `if (addressesMinted.has(metamaskAddress)) {
+  addressesMinted.delete(metamaskAddress);
+  challengeUtils.solveIf(challenges.nftMint
+  Challenge, () => true) }`. So solve triggers
+  when WebSocket detects NFTMinted event on
+  Sepolia testnet (smart contract address
+  0x41427790c94E7a592B17ad694eD9c06A02bb9C39),
+  then user verifies wallet via POST
+  /walletNFTVerify. Web3 workflow: (1) Setup
+  MetaMask on Sepolia testnet. (2) Acquire
+  Sepolia ETH via faucet. (3) Discover Honey
+  Pot smart contract via Photo Wall (hint #1
+  "captivating visual memories"). (4) Find BEEs
+  (probably gathered in-app via adjacent
+  challenges). (5) Mint Honey Pot NFT via
+  contract's `mint()` function. (6) POST /api/
+  walletNFTVerify with MetaMask address.
+
+concepts:
+  - title_fr: "Web3 + WebSocket Sepolia : architecture du challenge"
+    title_en: "Web3 + WebSocket Sepolia: challenge architecture"
+    body_fr: |
+      Source verifiee (routes/nftMint.ts:9-30) :
+      ```js
+      const nftAddress = '0x4142...9C39';
+      const provider = new WebSocketProvider(
+        'wss://eth-sepolia.g.alchemy.com/v2/...');
+      const contract = new Contract(nftAddress,
+        nftABI, provider);
+      contract.on('NFTMinted', (minter) => {
+        addressesMinted.add(minter);
+      });
+      ```
+      Architecture : Juice Shop ecoute via
+      WebSocket le smart contract Honey Pot sur
+      Sepolia testnet (Ethereum testnet pour les
+      tests sans real money). Quand un NFT est
+      minted, le minter address est tracked dans
+      addressesMinted Set in-memory. Pour
+      verifier : le user POST son MetaMask
+      address ; si presente dans le Set, solve.
+    body_en: |
+      Verified source (routes/nftMint.ts:9-30):
+      ```js
+      const nftAddress = '0x4142...9C39';
+      const provider = new WebSocketProvider(
+        'wss://eth-sepolia.g.alchemy.com/v2/...');
+      const contract = new Contract(nftAddress,
+        nftABI, provider);
+      contract.on('NFTMinted', (minter) => {
+        addressesMinted.add(minter);
+      });
+      ```
+      Architecture: Juice Shop listens via
+      WebSocket to Honey Pot smart contract on
+      Sepolia testnet (Ethereum testnet for
+      money-free testing). When NFT minted,
+      minter address tracked in in-memory
+      addressesMinted Set. To verify: user POSTs
+      MetaMask address; if in Set, solve.
+
+  - title_fr: "Solidity integer underflow : codefixes context"
+    title_en: "Solidity integer underflow: codefixes context"
+    body_fr: |
+      Codefixes/nftMintChallenge.info.yml hint #2
+      : "Read up specifically on Integer overflow
+      and underflow issues in Solidity to
+      understand the problem better". Le smart
+      contract a une vulnerabilite integer
+      underflow potentielle sur tokenId (uint256).
+      Codefixes fix #4 (correct) : utiliser
+      SafeMath's sub() pour eviter underflow
+      attacks. Cela suggest que la kill chain
+      pourrait inclure : (a) exploiter
+      l'underflow pour mint Tokens "free" (sans
+      paying des BEEs), (b) ou bien acquerir
+      les BEEs legitimement et mint normalement.
+      Pour le challenge OWASP, les BEEs sont
+      probablement collectionnees via OTHER
+      challenges (Photo Wall hint).
+    body_en: |
+      codefixes/nftMintChallenge.info.yml hint
+      #2: "Read up specifically on Integer
+      overflow and underflow issues in Solidity
+      to understand the problem better". Smart
+      contract has potential integer underflow
+      vulnerability on tokenId (uint256).
+      Codefixes fix #4 (correct): use SafeMath's
+      sub() to avoid underflow attacks. Suggests
+      kill chain may include: (a) exploit
+      underflow to mint "free" tokens (without
+      paying BEEs), (b) or acquire BEEs
+      legitimately and mint normally. For OWASP
+      challenge, BEEs probably collected via
+      OTHER challenges (Photo Wall hint).
+
+  - title_fr: "Pre-requis Web3 : MetaMask + Sepolia faucet"
+    title_en: "Web3 prerequisite: MetaMask + Sepolia faucet"
+    body_fr: |
+      Prerequis pratiques pour ce challenge : (1)
+      Install MetaMask browser extension. (2)
+      Add Sepolia testnet (Settings > Networks
+      > Show test networks). (3) Get Sepolia
+      ETH via faucet (sepoliafaucet.com,
+      sepolia-faucet.pk910.de) - gratuit avec
+      proof-of-work mining. (4) Connecter
+      MetaMask a Juice Shop via /#/wallet.
+      C'est le first time que beaucoup de
+      students touchent au Web3 ; ce
+      challenge est pedagogiquement
+      interessant pour introduire les concepts
+      blockchain (wallet, transaction, gas
+      fees) sans real money. Pattern reusable :
+      les Web3 challenges introduisent un new
+      threat model (smart contracts, gas, MEV).
+    body_en: |
+      Practical prerequisites for this
+      challenge: (1) Install MetaMask browser
+      extension. (2) Add Sepolia testnet
+      (Settings > Networks > Show test
+      networks). (3) Get Sepolia ETH via
+      faucet (sepoliafaucet.com, sepolia-
+      faucet.pk910.de) - free with
+      proof-of-work mining. (4) Connect
+      MetaMask to Juice Shop via /#/wallet.
+      First time many students touch Web3;
+      this challenge is pedagogically
+      interesting to introduce blockchain
+      concepts (wallet, transaction, gas
+      fees) without real money. Reusable
+      pattern: Web3 challenges introduce new
+      threat model (smart contracts, gas,
+      MEV).

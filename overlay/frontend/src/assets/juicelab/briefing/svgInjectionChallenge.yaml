@@ -1,0 +1,129 @@
+challenge_key: "svgInjectionChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Stick cute cross-domain kittens (cataas.com)
+  all over delivery boxes. Tag : Contraption.
+  Description OWASP. Hints : (1) "developers
+  made multiple gaffes". (2) "delivery box
+  image is made of [SVG]". (3) "dive deep
+  into Angular code to understand". (4) "
+  exploit another vulnerability with own two
+  challenges in its category". (5) "strict
+  use of cross-domain kittens. No other
+  kittens". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve dans lib/startup/
+  registerWebsocketEvents.ts:47. Code :
+  `solveIf(() => data?.match(/.*\.\.\/\.\.\/
+  \.\.[\w/-]*?\/redirect\?to=https?:\/\/
+  placecats.com\/(g\/)?[\d]+\/[\d]+.*/) &&
+  security.isRedirectAllowed(data))`. Le
+  payload exact : SVG avec image src qui
+  remonte path traversal vers /redirect?to=
+  cataas.com URL. Hint #4 : "another vuln
+  in its category" = redirectChallenge ou
+  redirectCryptoCurrencyChallenge (Lot 10).
+  Le challenge requires composition.
+
+mission_en: |
+  Stick cute cross-domain kittens (cataas.
+  com) all over delivery boxes. Tag:
+  Contraption. OWASP description. Hints:
+  (1) "developers made multiple gaffes".
+  (2) "delivery box image is made of
+  [SVG]". (3) "dive deep into Angular code
+  to understand". (4) "exploit another
+  vulnerability with own two challenges in
+  its category". (5) "strict use of
+  cross-domain kittens. No other kittens".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve in lib/startup/
+  registerWebsocketEvents.ts:47. Code:
+  `solveIf(() => data?.match(/.*\.\.\/\.\.
+  \/\.\.[\w/-]*?\/redirect\?to=https?:\/\/
+  placecats.com\/(g\/)?[\d]+\/[\d]+.*/) &&
+  security.isRedirectAllowed(data))`.
+  Exact payload: SVG with image src path-
+  traversing to /redirect?to=cataas.com
+  URL. Hint #4: "another vuln in its
+  category" = redirectChallenge or
+  redirectCryptoCurrencyChallenge (Lot 10).
+  Challenge requires composition.
+
+concepts:
+  - title_fr: "SVG injection : XML-based image format"
+    title_en: "SVG injection: XML-based image format"
+    body_fr: |
+      Source canonique : SVG est un XML-based
+      format permettant `<image>`, `<script>`,
+      `<foreignObject>`. Si l'app accepte des
+      SVG user-uploaded sans sanitization,
+      l'attaquant peut inject scripts (XSS),
+      images cross-domain (CORS bypass), ou
+      pivot vers SSRF. Defense : sanitize SVG
+      avec dompurify (allow only safe tags).
+    body_en: |
+      Canonical source: SVG is XML-based
+      format allowing `<image>`, `<script>`,
+      `<foreignObject>`. If app accepts
+      user-uploaded SVG without sanitization,
+      attacker can inject scripts (XSS),
+      cross-domain images (CORS bypass), or
+      pivot to SSRF. Defense: sanitize SVG
+      with dompurify (allow only safe tags).
+
+  - title_fr: "Composition multi-vuln : redirect bypass"
+    title_en: "Multi-vuln composition: redirect bypass"
+    body_fr: |
+      Hint OWASP #4 : "exploit another
+      vulnerability with own two challenges
+      in its category" = Unvalidated
+      Redirects (Lot 10 redirectChallenge +
+      redirectCryptoCurrencyChallenge).
+      L'attaquant utilise le /redirect
+      endpoint pour bypass CORS et load
+      cataas.com depuis le domain Juice
+      Shop. Pattern : multiple bugs
+      chained pour un single exploit.
+    body_en: |
+      OWASP hint #4: "exploit another
+      vulnerability with own two challenges
+      in its category" = Unvalidated
+      Redirects (Lot 10 redirectChallenge +
+      redirectCryptoCurrencyChallenge).
+      Attacker uses /redirect endpoint to
+      bypass CORS and load cataas.com from
+      Juice Shop domain. Pattern: multiple
+      bugs chained for single exploit.
+
+  - title_fr: "Multiple gaffes : pattern de challenge complexe"
+    title_en: "Multiple gaffes: complex challenge pattern"
+    body_fr: |
+      Hint OWASP #1 : "developers made
+      multiple gaffes for this to be
+      possible". Le challenge est tres
+      complexe (Code Analysis required).
+      Les gaffes : (a) SVG accept comme
+      image source, (b) /redirect endpoint
+      avec allowlist incomplete (cf.
+      redirectChallenge), (c) WebSocket
+      relay des deliveries qui logge le
+      payload. Defense : audit chaque
+      gaffe individuellement. Le challenge
+      illustre les compose-vulnerability
+      patterns reels en pentest.
+    body_en: |
+      OWASP hint #1: "developers made
+      multiple gaffes for this to be
+      possible". Challenge is very complex
+      (Code Analysis required). Gaffes:
+      (a) SVG accept as image source, (b)
+      /redirect endpoint with incomplete
+      allowlist (cf. redirectChallenge),
+      (c) WebSocket relay of deliveries
+      logging payload. Defense: audit each
+      gaffe individually. Challenge
+      illustrates compose-vulnerability
+      patterns real in pentest.

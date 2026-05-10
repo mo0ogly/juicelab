@@ -1,0 +1,110 @@
+challenge_key: "exposedMetricsChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Find l'endpoint qui sert usage data pour
+  Prometheus monitoring system. Tag : Good
+  Practice. Description OWASP. Hints : (1) "
+  Guessing the path is probably just as quick
+  as taking the RTFM route via prometheus.io/
+  docs". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve dans server.ts:727 +
+  metrics.ts:68. Code : `app.get('/metrics',
+  metrics.serveMetrics())` + `solveIf(...)`.
+  Le standard Prometheus = endpoint /metrics
+  (RFC + Prometheus best practices).
+  Workflow : GET /metrics. Solve auto.
+
+mission_en: |
+  Find endpoint serving usage data for
+  Prometheus monitoring system. Tag: Good
+  Practice. OWASP description. Hints: (1) "
+  Guessing the path is probably just as
+  quick as taking the RTFM route via
+  prometheus.io/docs". [KILL_CHAIN_
+  DOCUMENTED]
+
+  Method: Solve in server.ts:727 + metrics.
+  ts:68. Code: `app.get('/metrics', metrics.
+  serveMetrics())` + `solveIf(...)`. Standard
+  Prometheus = /metrics endpoint (RFC +
+  Prometheus best practices). Workflow: GET
+  /metrics. Auto solves.
+
+concepts:
+  - title_fr: "/metrics endpoint : convention Prometheus"
+    title_en: "/metrics endpoint: Prometheus convention"
+    body_fr: |
+      Source canonique : Prometheus exposition
+      format spec (prometheus.io/docs/instrumenting/
+      exposition_formats/). La convention :
+      l'application expose ses metrics au path
+      `/metrics` en text/plain format. C'est
+      bien-known et scrapable par Prometheus
+      server. Pour les pentesters, c'est aussi
+      une surface OSINT : metrics revealent
+      souvent (a) version software, (b) request
+      counts/patterns, (c) error rates, (d)
+      memory/CPU usage, (e) database stats.
+    body_en: |
+      Canonical source: Prometheus exposition
+      format spec (prometheus.io/docs/
+      instrumenting/exposition_formats/).
+      Convention: application exposes metrics
+      at path `/metrics` in text/plain
+      format. Well-known and scrapable by
+      Prometheus server. For pentesters, also
+      OSINT surface: metrics often reveal (a)
+      software version, (b) request counts/
+      patterns, (c) error rates, (d) memory/
+      CPU usage, (e) database stats.
+
+  - title_fr: "Bug : metrics expose publiquement"
+    title_en: "Bug: metrics publicly exposed"
+    body_fr: |
+      Le challenge "Good Practice" tag est
+      ironique : exposer /metrics publiquement
+      sans authentification est anti-pattern.
+      Defense canonique : (a) auth required
+      sur /metrics (basic auth ou client
+      cert), (b) network segmentation
+      (Prometheus accessible uniquement par
+      l'IP du Prometheus server), (c) reverse
+      proxy avec ACL. Pour Juice Shop, le
+      bug est l'absence de defense.
+    body_en: |
+      "Good Practice" challenge tag is ironic:
+      exposing /metrics publicly without
+      authentication is anti-pattern.
+      Canonical defense: (a) auth required on
+      /metrics (basic auth or client cert),
+      (b) network segmentation (Prometheus
+      accessible only by Prometheus server
+      IP), (c) reverse proxy with ACL. For
+      Juice Shop, bug is absence of defense.
+
+  - title_fr: "Difficulty 1 + RTFM : pedagogie OWASP"
+    title_en: "Difficulty 1 + RTFM: OWASP pedagogy"
+    body_fr: |
+      Hint OWASP unique : "Guessing the path is
+      probably just as quick as taking the RTFM
+      route". Difficulty 1 - tres simple. La
+      pedagogie : connaitre les conventions
+      industry standard (Prometheus /metrics,
+      gRPC /grpc, OpenAPI /docs, GraphQL /
+      graphql). Pour les pentesters, ces
+      paths sont des first-targets en recon.
+      Source : Prometheus docs + OSINT
+      methodology.
+    body_en: |
+      Single OWASP hint: "Guessing the path
+      is probably just as quick as taking
+      the RTFM route". Difficulty 1 - very
+      simple. Pedagogy: know industry
+      standard conventions (Prometheus
+      /metrics, gRPC /grpc, OpenAPI /docs,
+      GraphQL /graphql). For pentesters,
+      these paths are first-targets in
+      recon. Source: Prometheus docs +
+      OSINT methodology.

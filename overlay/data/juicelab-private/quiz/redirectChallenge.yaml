@@ -1,0 +1,78 @@
+challenge_key: "redirectChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi `url.includes(allowedUrl)` est dangereux
+      en allowlist ?
+    question_en: |
+      Why is `url.includes(allowedUrl)` dangerous in
+      allowlist?
+    options_fr:
+      - "Tres performant"
+      - "includes() trouve la sous-chaine n'importe ou. Si allowlist a 'github.com/bkimminich', alors 'https://attacker.com?ref=github.com/bkimminich' PASSE. Defense : startsWith() pour debut strict, ou parser URL et matcher hostname (`new URL(u).hostname`)"
+      - "Performant Lazy"
+      - "Bug regex"
+    options_en:
+      - "Very performant"
+      - "includes() finds substring anywhere. If allowlist has 'github.com/bkimminich', then 'https://attacker.com?ref=github.com/bkimminich' PASSES. Defense: startsWith() for strict start, or parse URL and match hostname (`new URL(u).hostname`)"
+      - "Performant Lazy"
+      - "Regex bug"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : substring != prefix.
+      Source : OWASP A01 + CWE-601.
+    explanation_en: |
+      Reusable pattern: substring != prefix. Source:
+      OWASP A01 + CWE-601.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi les open redirects sont valuables pour
+      phishing ?
+    question_en: |
+      Why are open redirects valuable for phishing?
+    options_fr:
+      - "Fast"
+      - "Phishing kits utilisent open redirects de sites trusted (Google, AWS, banques) pour bypass email filters et reputation. URL apparait legit `https://google.com/url?q=...`. Cas reels : Wells Fargo 2018, Slack 2019, AWS Cognito 2021. Defense : redirects relatifs uniquement"
+      - "Pour decoration"
+      - "C'est obligatoire"
+    options_en:
+      - "Fast"
+      - "Phishing kits use open redirects from trusted sites (Google, AWS, banks) to bypass email filters and reputation. URL looks legit `https://google.com/url?q=...`. Real cases: Wells Fargo 2018, Slack 2019, AWS Cognito 2021. Defense: relative redirects only"
+      - "For decoration"
+      - "It's mandatory"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : trust transit. Source :
+      OWASP Phishing Prevention.
+    explanation_en: |
+      Reusable pattern: trust transit. Source: OWASP
+      Phishing Prevention.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour /redirect endpoint ?
+    question_en: |
+      Canonical defense for /redirect endpoint?
+    options_fr:
+      - "Tout permettre"
+      - "(1) Parser l'URL : `const u = new URL(input)`. (2) Verifier `u.protocol === 'https:'`. (3) Verifier `allowedHosts.has(u.hostname)` (Set strict). (4) Re-builder l'URL pour eliminer query attaquants. (5) Logger toute tentative non-allowlist. Pattern : parsing > string matching"
+      - "Encrypter URL"
+      - "Bloquer tout HTTP"
+    options_en:
+      - "Allow all"
+      - "(1) Parse URL: `const u = new URL(input)`. (2) Verify `u.protocol === 'https:'`. (3) Verify `allowedHosts.has(u.hostname)` (strict Set). (4) Re-build URL to eliminate attacker queries. (5) Log any non-allowlist attempt. Pattern: parsing > string matching"
+      - "Encrypt URL"
+      - "Block all HTTP"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : URL parsing canonique.
+      Source : OWASP A01 + WHATWG URL.
+    explanation_en: |
+      Reusable pattern: canonical URL parsing. Source:
+      OWASP A01 + WHATWG URL.

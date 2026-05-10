@@ -1,0 +1,130 @@
+challenge_key: "ssrfChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Pre-requis pedagogique : as-tu resolu sstiChallenge ? Si
+      non, ce challenge ne peut pas etre resolu (il necessite
+      le malware juicy.efb deja place sur le serveur). Hint OWASP
+      officiel #3 te donne l'esprit : "make the Juice Shop server
+      attack itself". L'attaque est interne, le serveur cible
+      lui-meme. Hint #1 : "Reverse engineering something bad can
+      make good things happen". Le "something bad", c'est le
+      malware.
+    text_en: |
+      Pedagogical prerequisite: have you solved sstiChallenge?
+      If not, this challenge can't be solved (requires juicy.efb
+      already on the server). Official OWASP hint #3 gives the
+      spirit: "make the Juice Shop server attack itself". The
+      attack is internal, the server targets itself. Hint #1:
+      "Reverse engineering something bad can make good things
+      happen". The "something bad" is the malware.
+    pedagogical_intent: |
+      Activate prerequisite reflex + introduce the SSRF concept.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Tu dois reverse-engineer le malware juicy.efb pour
+      decouvrir une URL hardcodee. Hint OWASP officiel #4 : "Take
+      it apart with classic reverse-engineering techniques. Do
+      not try to find the source code for the malware on
+      GitHub". Outils : strings (extrait les chaines lisibles),
+      hexdump, objdump, ou un disassembler. La commande la plus
+      simple : strings juicy.efb | grep -E "http|localhost|127".
+    text_en: |
+      Reverse-engineer juicy.efb to discover a hardcoded URL.
+      Official OWASP hint #4: "Take it apart with classic
+      reverse-engineering techniques. Do not try to find the
+      source code for the malware on GitHub". Tools: strings
+      (extracts readable strings), hexdump, objdump, or a
+      disassembler. Simplest command:
+      strings juicy.efb | grep -E "http|localhost|127".
+    pedagogical_intent: |
+      Spell the reverse-engineering tools.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Le malware contient une URL hardcodee de la forme
+      http://localhost:3000/solve/challenges/server-side ou
+      similaire (le path interne varie selon la version Juice
+      Shop). Hint OWASP #2 : "Using whatever you find inside the
+      malware directly will not do you any good" — tu ne peux
+      pas atteindre localhost:3000 depuis ton navigateur (c'est
+      le serveur loopback). Il te faut un endpoint Juice Shop
+      qui fait une requete HTTP cote serveur a une URL fournie
+      par toi.
+    text_en: |
+      The malware holds a hardcoded URL like
+      http://localhost:3000/solve/challenges/server-side or
+      similar (internal path varies by Juice Shop version).
+      OWASP hint #2: "Using whatever you find inside the malware
+      directly will not do you any good" — you can't reach
+      localhost:3000 from your browser (server loopback). You
+      need a Juice Shop endpoint making a server-side HTTP
+      request to a URL you provide.
+    pedagogical_intent: |
+      Connect malware to SSRF surface.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      L'endpoint vulnerable est typiquement /profile (la page
+      profil utilisateur) qui accepte un parametre URL pour
+      l'avatar (image profile). Le serveur fait alors un GET
+      cote serveur sur cette URL pour la copier en local. Si tu
+      passes l'URL interne du malware au lieu d'une URL
+      d'image, le serveur fait une requete HTTP a sa propre
+      ressource interne, ce qui resout le challenge.
+      Workflow : ouvre /profile, identifie le champ profileImage
+      ou similaire, change l'URL pour l'URL interne extraite du
+      malware.
+    text_en: |
+      Vulnerable endpoint is typically /profile (user profile
+      page) accepting a URL parameter for the avatar (profile
+      image). Server then does a server-side GET on that URL to
+      copy it locally. If you pass the malware's internal URL
+      instead of an image URL, the server makes an HTTP request
+      to its own internal resource, solving the challenge.
+      Workflow: open /profile, identify the profileImage field
+      or similar, change the URL to the internal URL extracted
+      from the malware.
+    pedagogical_intent: |
+      Locate the SSRF endpoint and explain the workflow.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow concret :
+      1. Place juicy.efb sur le serveur (resoudre sstiChallenge
+         avant)
+      2. Reverse : strings ./juicy.efb | grep http
+         -> trouve http://localhost:3000/solve/challenges/server-side
+      3. Va sur /profile
+      4. Edit le champ Profile Image URL avec :
+         http://localhost:3000/solve/challenges/server-side
+      5. Submit
+      Le serveur fait un GET cote serveur sur sa propre URL
+      interne, declenche le solver du challenge cote serveur, et
+      le challenge se valide automatiquement. Note : le path
+      exact peut varier selon la version Juice Shop, ajuste
+      selon ce que strings te donne.
+    text_en: |
+      Concrete workflow:
+      1. Place juicy.efb on the server (solve sstiChallenge
+         first)
+      2. Reverse: strings ./juicy.efb | grep http
+         -> finds http://localhost:3000/solve/challenges/server-side
+      3. Go to /profile
+      4. Edit Profile Image URL field with:
+         http://localhost:3000/solve/challenges/server-side
+      5. Submit
+      Server does server-side GET on its own internal URL,
+      triggers the server-side solver, challenge auto-solves.
+      Note: exact path may vary by Juice Shop version, adjust
+      based on strings output.
+    pedagogical_intent: |
+      Quasi-solution : full 5-step workflow from malware to SSRF.

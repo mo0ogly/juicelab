@@ -1,0 +1,109 @@
+challenge_key: "christmasSpecialChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Find out how the application handles
+      unavailable products and try to find a loophole". Le shop
+      n'affiche QUE les produits disponibles dans le catalogue. Mais
+      les produits indisponibles existent-ils vraiment "supprimes"
+      ou simplement "caches" ? Si caches, comment les revealer ?
+    text_en: |
+      Official OWASP hint #1: "Find out how the application handles
+      unavailable products and try to find a loophole". The shop
+      only shows AVAILABLE products in the catalog. But are the
+      unavailable products truly "deleted" or simply "hidden"? If
+      hidden, how to reveal them?
+    pedagogical_intent: |
+      Activate the soft-delete reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP officiel #2 : "Find out how the application hides
+      deleted products from its customers". Pattern ORM standard :
+      column deletedAt timestamp, le SELECT par defaut filtre WHERE
+      deletedAt IS NULL. Si tu pouvais MANIPULER la WHERE clause
+      pour qu'elle accepte aussi les deletedAt NON null, le produit
+      Christmas reapparaitrait. Quelle technique permet de
+      manipuler une WHERE depuis l'exterieur ?
+    text_en: |
+      Official OWASP hint #2: "Find out how the application hides
+      deleted products from its customers". Standard ORM pattern:
+      deletedAt timestamp column, default SELECT filters WHERE
+      deletedAt IS NULL. If you could MANIPULATE the WHERE clause
+      to also accept non-null deletedAt, the Christmas product
+      would reappear. Which technique manipulates a WHERE from
+      outside?
+    pedagogical_intent: |
+      Connect soft-delete to SQLi as the bypass mechanism.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      SQLi sur /rest/products/search?q=<input>. Le hint OWASP
+      officiel #3 : "Try to craft an attack string that makes
+      deleted products visible again". L'idee : injecter une
+      condition booleenne qui force la WHERE a accepter tout, par
+      exemple OR true ou ferme la condition deletedAt et la
+      remplace par true.
+    text_en: |
+      SQLi on /rest/products/search?q=<input>. Official OWASP
+      hint #3: "Try to craft an attack string that makes deleted
+      products visible again". The idea: inject a boolean
+      condition that forces the WHERE to accept everything, e.g.
+      OR true or close the deletedAt condition and replace with
+      true.
+    pedagogical_intent: |
+      Spell the conditional injection pattern.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le payload classique pour bypass un soft-delete sur /rest/
+      products/search est :
+      ?q=qwert')) OR (1=1)--
+      ou
+      ?q=qwert')) OR true--
+      Le double parenthese ferme la sous-requete, OR true rend la
+      WHERE toujours vraie, le double tiret commente le AND
+      deletedAt IS NULL. Tous les produits incluant les
+      soft-deletes apparaissent. Trouve le Christmas special dans
+      la liste, note son id.
+    text_en: |
+      Classic payload to bypass soft-delete on /rest/products/
+      search:
+      ?q=qwert')) OR (1=1)--
+      or
+      ?q=qwert')) OR true--
+      Double parentheses close the subquery, OR true makes WHERE
+      always true, double dash comments out the AND deletedAt IS
+      NULL. All products including soft-deletes appear. Find the
+      Christmas special in the list, note its id.
+    pedagogical_intent: |
+      Spell the exact bypass payload + how to read the result.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Une fois l'id du Christmas Special trouve (typiquement 10),
+      ajoute-le au basket via POST /api/BasketItems/ avec body
+      { "ProductId": 10, "BasketId": <ton_bid>, "quantity": 1 }
+      depuis Burp ou curl avec ton JWT en Authorization. Puis fais
+      checkout via le bouton frontend ou POST /rest/basket/<bid>/
+      checkout. Le challenge se valide quand la commande contient
+      ce produit. Hint OWASP #4 : "You need to get the deleted
+      product into your shopping cart and trigger the Checkout".
+    text_en: |
+      Once you find the Christmas Special id (typically 10), add
+      it to the basket via POST /api/BasketItems/ with body
+      { "ProductId": 10, "BasketId": <your_bid>, "quantity": 1 }
+      from Burp or curl with your JWT in Authorization. Then
+      checkout via the frontend button or POST /rest/basket/<bid>/
+      checkout. The challenge solves when the order contains this
+      product. OWASP hint #4: "You need to get the deleted product
+      into your shopping cart and trigger the Checkout".
+    pedagogical_intent: |
+      Quasi-solution : full workflow from id discovery to checkout.

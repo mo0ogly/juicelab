@@ -1,0 +1,114 @@
+challenge_key: "noSqlCommandChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Provoque un DENI DE SERVICE volontaire en faisant dormir le serveur
+  via NoSQL Injection. La description OWASP officielle : "Let the
+  server sleep for some time". Hint OWASP officiel #1 : c'est
+  essentiellement une attaque DoS, mais via NoSQL injection (hint #3
+  : "the categorization into the NoSQL Injection category totally
+  gives away the expected attack vector"). Surtout pas de flooding
+  qui tuerait le serveur (hint #4) — le challenge demande UN payload
+  unique qui consomme du temps CPU.
+
+  Methode recommandee : Juice Shop utilise MongoDB pour les reviews
+  produit (hint OWASP #2 : "OWASP Juice Shop uses a MongoDB derivate
+  as its NoSQL database"). MongoDB supporte l'operateur $where qui
+  evalue une fonction JavaScript cote serveur. Sur l'endpoint
+  /rest/products/reviews (POST search avec un body { id: "..." }),
+  injecter un body { id: { "$where": "sleep(5000)" } } fait dormir
+  le worker MongoDB 5 secondes. Aucun flooding, juste un payload qui
+  consomme.
+
+  Note la difference fondamentale entre SQLi (filtres construits par
+  string concatenation) et NoSQLi (objets JSON parses qui supportent
+  des operateurs). Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Trigger a deliberate denial-of-service by making the server sleep
+  via NoSQL Injection. Official OWASP description: "Let the server
+  sleep for some time". Official hint #1: this is essentially a DoS
+  attack, but via NoSQL injection (hint #3: "the categorization
+  into the NoSQL Injection category totally gives away the
+  expected attack vector"). Especially no flooding that would kill
+  the server (hint #4) — the challenge wants ONE payload that
+  consumes CPU time.
+
+  Recommended method: Juice Shop uses MongoDB for product reviews
+  (official OWASP hint #2: "OWASP Juice Shop uses a MongoDB
+  derivate as its NoSQL database"). MongoDB supports the $where
+  operator that evaluates a JavaScript function server-side. On
+  /rest/products/reviews (POST search with body { id: "..." }),
+  injecting body { id: { "$where": "sleep(5000)" } } makes the
+  MongoDB worker sleep 5 seconds. No flooding, just one consuming
+  payload.
+
+  Note the fundamental difference between SQLi (filters built via
+  string concatenation) and NoSQLi (parsed JSON objects supporting
+  operators). You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "NoSQLi vs SQLi : objets vs strings, operateurs vs concatenation"
+    title_en: "NoSQLi vs SQLi: objects vs strings, operators vs concatenation"
+    body_fr: |
+      Difference structurelle. SQLi exploite la concatenation de
+      strings dans une requete SQL ("SELECT * WHERE x='" + input +
+      "'"). NoSQLi exploite la deserialization JSON dans un filtre
+      MongoDB ({ x: input }). Quand l'API accepte un input JSON
+      sans validation de type, l'attaquant remplace une valeur
+      attendue (string) par un OBJET avec operateurs MongoDB :
+      { "$where": "..." }, { "$gt": "" }, { "$ne": null }. Le moteur
+      les interprete comme parts de la query. C'est une faille de
+      type-confusion.
+    body_en: |
+      Structural difference. SQLi exploits string concatenation in
+      a SQL query ("SELECT * WHERE x='" + input + "'"). NoSQLi
+      exploits JSON deserialization in a MongoDB filter
+      ({ x: input }). When the API accepts JSON input without type
+      validation, the attacker replaces an expected value (string)
+      with an OBJECT carrying MongoDB operators: { "$where": "..."
+      }, { "$gt": "" }, { "$ne": null }. The engine interprets
+      them as parts of the query. A type-confusion flaw.
+
+  - title_fr: "Operateur $where : execution JavaScript serveur"
+    title_en: "$where operator: server-side JavaScript execution"
+    body_fr: |
+      MongoDB supporte historiquement $where qui prend une string
+      JavaScript et l'execute SUR LE SERVEUR pour chaque document
+      analyse. C'est concu pour des conditions complexes mais ca
+      offre litteralement un moteur d'execution arbitraire au
+      payload. Ex : $where: "this.id === 1" est legitime,
+      $where: "sleep(5000)" est un DoS, $where: "while(true){}"
+      est un DoS plus brutal. MongoDB 4.4+ deconseille $where et
+      pousse $expr a la place. La defense canonique est de
+      DESACTIVER $where serveur-side via la config MongoDB.
+    body_en: |
+      MongoDB historically supports $where which takes a JavaScript
+      string and runs it SERVER-SIDE for each scanned document.
+      Designed for complex conditions but literally offers an
+      arbitrary execution engine to the payload. E.g. $where:
+      "this.id === 1" is legitimate, $where: "sleep(5000)" is a
+      DoS, $where: "while(true){}" is a brutal DoS. MongoDB 4.4+
+      discourages $where and pushes $expr instead. Canonical
+      defense: DISABLE $where server-side via MongoDB config.
+
+  - title_fr: "Defense canonique : validation de schema + denylist d'operateurs"
+    title_en: "Canonical defense: schema validation + operator denylist"
+    body_fr: |
+      Trois couches. (1) Validation de schema sur le body API :
+      JSON Schema force que id est une STRING, pas un objet — un
+      object passe au validateur est rejete en 400. (2) Denylist
+      cote app : refuser tout body qui contient une cle commencant
+      par $. (3) Cote MongoDB : disable javascriptEnabled dans la
+      config (mongod.conf : security.javascriptEnabled: false).
+      Apres ca, $where retourne une erreur. Defense en profondeur :
+      les 3 couches font qu'aucune compromission unique ne suffit.
+    body_en: |
+      Three layers. (1) Schema validation on the API body: JSON
+      Schema forces id to be a STRING, not an object — an object
+      passed to the validator is rejected with 400. (2) App-side
+      denylist: refuse any body with a key starting with $. (3)
+      MongoDB-side: disable javascriptEnabled in the config
+      (mongod.conf: security.javascriptEnabled: false). After that,
+      $where errors out. Defense in depth: the 3 layers ensure no
+      single compromise is enough.

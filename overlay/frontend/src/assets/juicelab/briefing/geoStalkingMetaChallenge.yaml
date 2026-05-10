@@ -1,0 +1,129 @@
+challenge_key: "geoStalkingMetaChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Determine la reponse a la security question de John en
+  inspectant les METADATA d'une photo qu'il a uploadee sur le
+  Photo Wall, puis utilise cette reponse pour reset son
+  password via /forgot-password. Description OWASP officielle.
+  Hints : (1) "Take a look at the meta data of the
+  corresponding photo", (2) "Make use of tools that can inspect
+  the metadata of images", (3) "Use this information to answer
+  the security question of John, who enjoys hiking in the
+  park". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : navigate sur /#/photo-wall pour voir
+  les photos uploadees. Repere celle de John (caption
+  mentionnant hiking dans un parc). Telecharge l'image,
+  inspecte ses metadata EXIF avec un outil (exiftool, online
+  EXIF viewer, ou meme Properties Windows). Les coordonnees
+  GPS dans EXIF revelent le PARC ou la photo a ete prise.
+  Cherche le NOM du parc via les coordonnees (Google Maps,
+  reverse geocoding). Va sur /#/forgot-password, entre
+  l'email de John, reponse a la security question = nom du
+  parc, set un nouveau password.
+
+  Note la lecon : metadata EXIF (GPS, camera, timestamp,
+  device) leakent des INFOS PERSONNELLES SENSIBLES par defaut.
+  Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Determine John's security question answer by inspecting
+  METADATA of a photo he uploaded to the Photo Wall, then use
+  that answer to reset his password via /forgot-password.
+  Official OWASP description. Hints: (1) "Take a look at the
+  meta data of the corresponding photo", (2) "Make use of
+  tools that can inspect the metadata of images", (3) "Use
+  this information to answer the security question of John,
+  who enjoys hiking in the park". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: browse /#/photo-wall to see uploaded
+  photos. Spot John's (caption mentioning hiking in a park).
+  Download the image, inspect EXIF metadata with a tool
+  (exiftool, online EXIF viewer, even Windows Properties).
+  GPS coordinates in EXIF reveal the PARK where the photo
+  was taken. Search the park's NAME from coordinates (Google
+  Maps, reverse geocoding). Go to /#/forgot-password, enter
+  John's email, answer to security question = park name, set
+  new password.
+
+  Note the lesson: EXIF metadata (GPS, camera, timestamp,
+  device) leak SENSITIVE PERSONAL INFO by default. You will
+  report it in the "after" logbook.
+
+concepts:
+  - title_fr: "EXIF metadata : la fuite par defaut"
+    title_en: "EXIF metadata: the default leak"
+    body_fr: |
+      Toute photo prise par smartphone moderne contient par
+      defaut un block EXIF avec : coordonnees GPS exactes
+      (lat/lng), heure precise (timezone), modele du device
+      (iPhone 15 Pro, etc.), reglages camera, parfois
+      l'orientation. Ces infos peuvent reveler : domicile
+      (photos prises chez soi), lieu de travail, habitudes
+      (parcs frequentes), niveau de richesse (device cher),
+      identite via croisement (un seul iPhone 15 Pro Max
+      photographing dans tel quartier a telle heure). Defense
+      cote utilisateur : strip EXIF avant upload (ImageOptim,
+      ExifPurge, ou simple capture d'ecran). Defense cote app
+      : strip EXIF SERVER-SIDE au moment de l'upload, jamais
+      faire confiance au client.
+    body_en: |
+      Every modern smartphone photo contains a default EXIF
+      block with: exact GPS coordinates (lat/lng), precise
+      time (timezone), device model (iPhone 15 Pro, etc.),
+      camera settings, sometimes orientation. These can
+      reveal: home (photos at home), workplace, habits
+      (frequented parks), wealth level (expensive device),
+      identity via cross-correlation (one iPhone 15 Pro Max
+      photographing in such neighborhood at such time).
+      User-side defense: strip EXIF before upload (ImageOptim,
+      ExifPurge, or just screenshot). App-side defense: strip
+      EXIF SERVER-SIDE at upload time, never trust the client.
+
+  - title_fr: "Security questions : un anti-pattern OWASP"
+    title_en: "Security questions: an OWASP anti-pattern"
+    body_fr: |
+      Source officielle OWASP Choosing and Using Security
+      Questions Cheat Sheet (mitigationUrl du challenge).
+      Recommandation : "If at all, they should not be used as
+      the only factor for a security-relevant function". Le
+      pattern classique : "what is your favorite park?" avec
+      reponse trouvable via OSINT (instagram posts, EXIF
+      photos, signatures email "sent from Park X"). Defense
+      moderne : remplacer security questions par 2FA (TOTP,
+      WebAuthn) qui est CRYPTOGRAPHIQUEMENT lie au device, pas
+      a une connaissance OSINTable.
+    body_en: |
+      Official OWASP source Choosing and Using Security
+      Questions Cheat Sheet (challenge mitigationUrl).
+      Recommendation: "If at all, they should not be used as
+      the only factor for a security-relevant function".
+      Classic pattern: "what is your favorite park?" with
+      answer findable via OSINT (Instagram posts, EXIF
+      photos, email signatures "sent from Park X"). Modern
+      defense: replace security questions with 2FA (TOTP,
+      WebAuthn) CRYPTOGRAPHICALLY tied to the device, not
+      OSINT-able knowledge.
+
+  - title_fr: "Defense canonique : strip EXIF + 2FA + remove security questions"
+    title_en: "Canonical defense: strip EXIF + 2FA + remove security questions"
+    body_fr: |
+      Trois couches. (1) Strip EXIF SERVER-SIDE sur tout
+      upload de photo. Lib : sharp (Node.js)
+      .withMetadata(false), ou ImageMagick mogrify -strip.
+      Defense automatique transparent au user. (2) 2FA
+      OBLIGATOIRE pour reset password (TOTP via Google
+      Authenticator/Authy, ou WebAuthn). (3) Phase out
+      complete des security questions a l'echeance des comptes
+      existants. Reference : NIST SP 800-63B 5.1.1.2
+      "knowledge-based authentication" deprecated.
+    body_en: |
+      Three layers. (1) SERVER-SIDE strip EXIF on every photo
+      upload. Lib: sharp (Node.js) .withMetadata(false), or
+      ImageMagick mogrify -strip. User-transparent automatic
+      defense. (2) MANDATORY 2FA for password reset (TOTP via
+      Google Authenticator/Authy, or WebAuthn). (3) Complete
+      phase-out of security questions at existing account
+      expiry. Reference: NIST SP 800-63B 5.1.1.2
+      "knowledge-based authentication" deprecated.

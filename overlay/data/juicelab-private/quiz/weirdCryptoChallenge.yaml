@@ -1,0 +1,129 @@
+challenge_key: "weirdCryptoChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le challenge accepte 5 reponses (z85,
+      base85, hashids, md5, base64). Quelle
+      est la lecon CONCEPTUELLE commune ?
+    question_en: |
+      Challenge accepts 5 answers (z85,
+      base85, hashids, md5, base64). What's
+      common CONCEPTUAL lesson?
+    options_fr:
+      - "Toutes commencent par lettre b ou m"
+      - "Les 5 sont MAL UTILISES comme primitive cryptographique : (a) z85/base85/base64/hashids = ENCODINGS reversibles SANS security property. (b) md5 = HASH BROKEN depuis 2004 (collision attacks pratiques). Confusion frequente : developers pensent que 'encoding' = 'encryption' ou que 'hashing legacy' = 'hashing secure'. Pattern reusable : DISTINGUISH encoding/hashing/encryption/signing"
+      - "Toutes sont propres a JS"
+      - "Toutes utilisent ASCII"
+    options_en:
+      - "All start with letter b or m"
+      - "5 are BADLY USED as cryptographic primitive: (a) z85/base85/base64/hashids = reversible ENCODINGS WITHOUT security property. (b) md5 = HASH BROKEN since 2004 (practical collision attacks). Frequent confusion: developers think 'encoding' = 'encryption' or 'legacy hashing' = 'secure hashing'. Reusable pattern: DISTINGUISH encoding/hashing/encryption/signing"
+      - "All are JS-specific"
+      - "All use ASCII"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la fundamental
+      crypto distinction est OBLIGATOIRE pour
+      tout developer ou auditeur. Cas reels :
+      Adobe 2013 (130M passwords ECB-
+      encrypted instead of hashed - le bug a
+      ete decouvert via les memes ciphertexts
+      pour memes passwords), Sony BMG 2005
+      (rootkit "encrypted" avec base64).
+      Source : OWASP Cryptographic Storage +
+      crypto fundamentals.
+    explanation_en: |
+      Reusable pattern: fundamental crypto
+      distinction MANDATORY for every
+      developer or auditor. Real cases: Adobe
+      2013 (130M passwords ECB-encrypted
+      instead of hashed - bug discovered via
+      same ciphertexts for same passwords),
+      Sony BMG 2005 (rootkit "encrypted"
+      with base64). Source: OWASP
+      Cryptographic Storage + crypto
+      fundamentals.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      MD5 est listee parmi les 5 reponses.
+      Pourquoi MD5 n'est-il PAS approprie
+      comme primitive cryptographique en
+      2026 ?
+    question_en: |
+      MD5 listed among 5 answers. Why is MD5
+      NOT appropriate as cryptographic
+      primitive in 2026?
+    options_fr:
+      - "MD5 est trop lent"
+      - "MD5 est BROKEN depuis 2004 (Wang & Yu published practical collision attack). Cela permet aux attaquants de creer 2 inputs differents avec le SAME MD5 hash - violation de la propriete fundamental d'un hash function. Cas reels : Flame malware 2012 (Microsoft signing bypass via MD5 chosen-prefix collision). Defense : utiliser SHA-256 minimum, ou SHA-3 / BLAKE2 / BLAKE3 modern. MD5 acceptable uniquement pour checksums NON-securitaires"
+      - "MD5 est commercial"
+      - "MD5 est court"
+    options_en:
+      - "MD5 is too slow"
+      - "MD5 BROKEN since 2004 (Wang & Yu published practical collision attack). Allows attackers creating 2 different inputs with SAME MD5 hash - violation of fundamental hash function property. Real cases: Flame malware 2012 (Microsoft signing bypass via MD5 chosen-prefix collision). Defense: use minimum SHA-256, or modern SHA-3 / BLAKE2 / BLAKE3. MD5 acceptable only for NON-security checksums"
+      - "MD5 is commercial"
+      - "MD5 is short"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : connaitre l'historique
+      des broken algorithms. Liste de
+      aboutions deprecated : MD5 (2004
+      collisions), SHA-1 (2017 SHATTERED),
+      DES (1990s broken via brute), 3DES
+      (deprecated 2017), RC4 (deprecated
+      2015). Pour les students, memoriser ces
+      milestones evite les fautes en
+      production. Source : NIST SP 800-131A
+      (cryptographic transitions).
+    explanation_en: |
+      Reusable pattern: know broken
+      algorithms history. Deprecated
+      shortlist: MD5 (2004 collisions),
+      SHA-1 (2017 SHATTERED), DES (1990s
+      broken via brute), 3DES (deprecated
+      2017), RC4 (deprecated 2015). For
+      students, memorizing these milestones
+      avoids production mistakes. Source:
+      NIST SP 800-131A (cryptographic
+      transitions).
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelles sont les primitives crypto
+      MODERNES recommandees a la place des 5
+      anti-patterns ?
+    question_en: |
+      What MODERN crypto primitives
+      recommended instead of 5 anti-patterns?
+    options_fr:
+      - "Continuer a utiliser md5"
+      - "(1) Hashing : SHA-256/SHA-3 (integrity), bcrypt/argon2id (passwords). (2) Encryption : AES-GCM (symmetric), RSA-OAEP / ECIES (asymmetric). (3) Signing : Ed25519 / RSA-PSS (asymmetric). (4) Encoding (cosmetic uniquement) : base64url, hex - NEVER as security primitive. (5) Coupon/token : JWT signed RS256 + DB tracking. Source : OWASP Cryptographic Storage Cheat Sheet"
+      - "Encoder en base32"
+      - "Disabler la crypto"
+    options_en:
+      - "Continue using md5"
+      - "(1) Hashing: SHA-256/SHA-3 (integrity), bcrypt/argon2id (passwords). (2) Encryption: AES-GCM (symmetric), RSA-OAEP / ECIES (asymmetric). (3) Signing: Ed25519 / RSA-PSS (asymmetric). (4) Encoding (cosmetic only): base64url, hex - NEVER as security primitive. (5) Coupon/token: RS256-signed JWT + DB tracking. Source: OWASP Cryptographic Storage Cheat Sheet"
+      - "Encode in base32"
+      - "Disable crypto"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour chaque besoin
+      crypto, identifier la PRIMITIVE
+      MODERNE recommandee. La regle generale
+      : utiliser ce qu'OWASP / NIST
+      recommande, JAMAIS rouler sa propre
+      crypto. Source : OWASP Cryptographic
+      Storage Cheat Sheet + NIST SP 800-131A.
+    explanation_en: |
+      Reusable pattern: for each crypto
+      need, identify recommended MODERN
+      PRIMITIVE. General rule: use what
+      OWASP / NIST recommends, NEVER roll
+      own crypto. Source: OWASP
+      Cryptographic Storage Cheat Sheet +
+      NIST SP 800-131A.

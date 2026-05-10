@@ -1,0 +1,107 @@
+challenge_key: "unionSqlInjectionChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi resoudre Database Schema avant User Credentials est
+      un parcours pedagogique plus efficient qu'attaquer User
+      Credentials directement ?
+    question_en: |
+      Why is solving Database Schema before User Credentials a more
+      efficient pedagogical path than attacking User Credentials
+      directly?
+    options_fr:
+      - "Database Schema rapporte plus de points dans le score-board"
+      - "Database Schema fournit le nom exact de la table (Users) et de ses colonnes (email, password) — sans recon, l'attaquant devine aveuglement et perd du temps en essais infructueux"
+      - "Database Schema desactive le rate limiter sur l'endpoint search"
+      - "Database Schema est obligatoire car il pose un cookie de challenge"
+    options_en:
+      - "Database Schema gives more points in the score-board"
+      - "Database Schema provides the exact table name (Users) and column names (email, password) — without recon, the attacker guesses blindly and wastes time on failed attempts"
+      - "Database Schema disables the rate limiter on the search endpoint"
+      - "Database Schema is mandatory because it sets a challenge cookie"
+    correct: 1
+    explanation_fr: |
+      Pattern kill chain : recon -> exploit. Sans dbSchema,
+      l'attaquant teste UNION SELECT FROM users, User, member,
+      account, customer... 5-10 essais avant de trouver le bon
+      nom. Avec dbSchema, c'est immediat. Hint OWASP #5 explicite
+      cette progression dans la documentation officielle.
+    explanation_en: |
+      Kill chain pattern: recon -> exploit. Without dbSchema, the
+      attacker tries UNION SELECT FROM users, User, member,
+      account, customer... 5-10 attempts before hitting the right
+      name. With dbSchema, it's immediate. OWASP hint #5 makes
+      this progression explicit in official docs.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Tu places email en column 2 et password en column 3 du UNION
+      SELECT. Pourquoi pas en column 1 ou 9 (qui contiennent
+      typiquement l'id et le timestamp) ?
+    question_en: |
+      You place email in column 2 and password in column 3 of the
+      UNION SELECT. Why not column 1 or 9 (typically id and
+      timestamp)?
+    options_fr:
+      - "Column 1 et 9 sont chiffrees par le serveur"
+      - "Le frontend Juice Shop affiche typiquement les colonnes 2 (name) et 3 (description) dans la liste des resultats search — placer email et password ailleurs revient a les exfiltrer dans une zone non rendue par l'UI"
+      - "Column 1 et 9 ne supportent que les entiers"
+      - "Column 1 et 9 sont protegees par autorisation"
+    options_en:
+      - "Columns 1 and 9 are server-encrypted"
+      - "The Juice Shop frontend typically renders columns 2 (name) and 3 (description) in the search result list — placing email and password elsewhere means exfiltrating them in a UI-invisible zone"
+      - "Columns 1 and 9 only accept integers"
+      - "Columns 1 and 9 are authorization-protected"
+    correct: 1
+    explanation_fr: |
+      Channel mapping. La SQLi reussit techniquement (la requete
+      retourne les rows) mais le canal d'exfiltration (l'UI)
+      n'affiche que certaines colonnes. Les colonnes choisies
+      doivent matcher celles rendues. C'est de l'art de la fuite :
+      reussir techniquement ET via un canal observable.
+    explanation_en: |
+      Channel mapping. The SQLi technically succeeds (the query
+      returns the rows) but the exfiltration channel (the UI)
+      only displays certain columns. The chosen columns must
+      match those rendered. This is the art of leak: succeed
+      technically AND via an observable channel.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Tu obtiens des hashes bcrypt. Bcrypt n'est pas reversible.
+      Pourtant le challenge est considere "Sensitive Data Exposure"
+      avec un risque eleve. Pourquoi ?
+    question_en: |
+      You obtain bcrypt hashes. Bcrypt is not reversible. Yet the
+      challenge is rated "Sensitive Data Exposure" with high risk.
+      Why?
+    options_fr:
+      - "Bcrypt est reversible avec une cle qu'on peut deviner"
+      - "Le brute-force offline (hashcat sur GPU avec wordlist) n'a pas de rate-limit reseau ; un mot de passe faible tombe en minutes, un moyen en jours. Pour les users a passwords faibles, le hash equivaut au mot de passe en clair"
+      - "Le hash bcrypt contient le mot de passe en clair dans son sel"
+      - "Bcrypt utilise MD5 en interne"
+    options_en:
+      - "Bcrypt is reversible with a guessable key"
+      - "Offline brute-force (hashcat on GPU with wordlist) has no network rate limit; a weak password falls in minutes, a medium one in days. For users with weak passwords, the hash equals the plaintext password"
+      - "Bcrypt hash contains the cleartext password in its salt"
+      - "Bcrypt uses MD5 internally"
+    correct: 1
+    explanation_fr: |
+      Reflexe a graver : un hash leake = brute-force offline =
+      contenu reel du password sous des semaines/mois. Defense :
+      politique de mots de passe forts (au moins 14 chars + char
+      classes), 2FA, et SURTOUT ne pas leak le hash. Bcrypt n'est
+      pas reversible mais c'est sans importance si l'attaquant
+      peut deviner le password en clair par brute-force.
+    explanation_en: |
+      Reflex to engrave: a leaked hash = offline brute-force =
+      real password content within weeks/months. Defense: strong
+      password policy (at least 14 chars + char classes), 2FA,
+      and ABOVE ALL, do not leak the hash. Bcrypt is not
+      reversible but that's irrelevant if the attacker can guess
+      the cleartext password via brute-force.

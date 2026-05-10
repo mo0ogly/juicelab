@@ -1,0 +1,86 @@
+challenge_key: "privacyPolicyChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un attaquant en phase de reconnaissance lit-il la politique
+      de confidentialite et les mentions legales d'une cible ?
+    question_en: |
+      Why does an attacker in reconnaissance read the privacy policy and
+      legal notice of a target?
+    options_fr:
+      - "Pour verifier que la cible est conforme RGPD avant d'attaquer"
+      - "Pour identifier sous-traitants, technologies utilisees et contacts (DPO, juridique) exploitables en social engineering"
+      - "Parce que la loi oblige a y declarer les vulnerabilites connues"
+      - "Pour calculer le montant de l'amende potentielle"
+    options_en:
+      - "To verify the target is GDPR-compliant before attacking"
+      - "To identify subprocessors, used technologies and contacts (DPO, legal) exploitable in social engineering"
+      - "Because the law forces vulnerabilities to be declared there"
+      - "To calculate the potential fine amount"
+    correct: 1
+    explanation_fr: |
+      Ces documents publient sous-traitants, technologies, juridictions,
+      contacts. Tout est exploitable pour cartographier la stack et lancer
+      du phishing cible.
+    explanation_en: |
+      These documents disclose subprocessors, technologies,
+      jurisdictions, contacts. Everything is exploitable to map the
+      stack and run targeted phishing.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quel article du RGPD impose specifiquement la transparence et la
+      lisibilite des informations communiquees aux personnes concernees ?
+    question_en: |
+      Which GDPR article specifically requires transparency and
+      readability of the information communicated to data subjects?
+    options_fr:
+      - "Article 6 (bases legales du traitement)"
+      - "Article 12 (transparence des informations)"
+      - "Article 17 (droit a l'effacement)"
+      - "Article 35 (analyse d'impact)"
+    options_en:
+      - "Article 6 (legal bases for processing)"
+      - "Article 12 (transparent information)"
+      - "Article 17 (right to erasure)"
+      - "Article 35 (impact assessment)"
+    correct: 1
+    explanation_fr: |
+      L'article 12 du RGPD impose que les informations soient fournies
+      sous une forme concise, transparente, comprehensible et facilement
+      accessible.
+    explanation_en: |
+      GDPR article 12 requires that information be provided in a
+      concise, transparent, intelligible, and easily accessible form.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quel risque pratique decoule d'une politique de confidentialite
+      obsolete (non mise a jour apres changement de sous-traitants) ?
+    question_en: |
+      What practical risk arises from an outdated privacy policy (not
+      updated after a subprocessor change)?
+    options_fr:
+      - "Aucun risque tant que les utilisateurs ont accepte la version anterieure"
+      - "Sanction RGPD (CNIL), perte de confiance et incoherence reglementaire entre la realite et l'information donnee"
+      - "Le site est automatiquement deindexe par Google"
+      - "Le certificat SSL expire au bout de 90 jours"
+    options_en:
+      - "No risk as long as users accepted the previous version"
+      - "GDPR sanction (DPA), loss of trust, and regulatory incoherence between reality and disclosed information"
+      - "The site is automatically deindexed by Google"
+      - "The SSL certificate expires after 90 days"
+    correct: 1
+    explanation_fr: |
+      Un consentement n'est valide que si l'information donnee est exacte.
+      Une politique obsolete = risque d'amende RGPD + perte de confiance
+      utilisateur, sans aucun lien avec SEO ni TLS.
+    explanation_en: |
+      Consent is valid only if the information given is accurate. An
+      outdated policy means GDPR fine risk and loss of user trust,
+      with no link to SEO or TLS.

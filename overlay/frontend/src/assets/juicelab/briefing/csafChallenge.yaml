@@ -1,0 +1,94 @@
+challenge_key: "csafChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Trouver et soumettre via /#/contact le hash SHA-512 d'un document CSAF
+  (Common Security Advisory Framework) cache sur le shop. Tag :
+  Miscellaneous. [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/verify.ts:312-317 :
+  `checkPatternInFeedbackAndComplaints(csafChallenge, { [Op.like]: '%' +
+  config.get('challenges.csafHashValue') + '%' })`. Le hash attendu est dans
+  config/default.yml ligne 83 :
+  `7e7ce7c65db3bf0625fcea4573d25cff41f2f7e3474f2c74334b14fc65bb4fd26af802ad17a3a03bf0eee6827a00fb8f7905f338c31b5e6ea9cb31620242e843`
+  (SHA-512). Workflow : (1) Connaitre CSAF (OASIS standard). (2) Trouver le
+  document avis CSAF du shop (probablement /assets/csaf/ ou /.well-known/
+  csaf-aggregator/). (3) Calculer SHA-512. (4) Submit via /#/contact.
+
+mission_en: |
+  Find and submit via /#/contact the SHA-512 hash of a CSAF (Common Security
+  Advisory Framework) document hidden on shop. Tag: Miscellaneous.
+  [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/verify.ts:312-317:
+  `checkPatternInFeedbackAndComplaints(csafChallenge, { [Op.like]: '%' +
+  config.get('challenges.csafHashValue') + '%' })`. Expected hash in
+  config/default.yml line 83:
+  `7e7ce7c65db3bf0625fcea4573d25cff41f2f7e3474f2c74334b14fc65bb4fd26af802ad17a3a03bf0eee6827a00fb8f7905f338c31b5e6ea9cb31620242e843`
+  (SHA-512). Workflow: (1) Know CSAF (OASIS standard). (2) Find shop's CSAF
+  advisory document (likely /assets/csaf/ or /.well-known/csaf-aggregator/).
+  (3) Compute SHA-512. (4) Submit via /#/contact.
+
+concepts:
+  - title_fr: "CSAF : Common Security Advisory Framework (OASIS)"
+    title_en: "CSAF: Common Security Advisory Framework (OASIS)"
+    body_fr: |
+      Source canonique : OASIS CSAF 2.0 specification (2022). CSAF est un
+      format JSON standard pour publier des advisories de securite
+      machine-readable. Chaque advisory contient : product_tree
+      (produits affectes), vulnerabilities (CVE references),
+      remediations (patch URL), document metadata (hash SHA-256/512 de
+      l'advisory pour integrity). Locations canoniques :
+      /.well-known/csaf-aggregator/ (provider-metadata.json) ou
+      /assets/csaf/. Fournit machine-readable security disclosure (vs PDF
+      humans-only). Adopte par : Microsoft, Cisco, Red Hat, Siemens.
+    body_en: |
+      Canonical source: OASIS CSAF 2.0 specification (2022). CSAF is a
+      standard JSON format to publish machine-readable security
+      advisories. Each advisory contains: product_tree (affected
+      products), vulnerabilities (CVE references), remediations (patch
+      URL), document metadata (SHA-256/512 hash of advisory for
+      integrity). Canonical locations:
+      /.well-known/csaf-aggregator/ (provider-metadata.json) or
+      /assets/csaf/. Provides machine-readable security disclosure (vs
+      humans-only PDF). Adopted by: Microsoft, Cisco, Red Hat, Siemens.
+
+  - title_fr: "Hash integrity : SHA-512 sur advisory"
+    title_en: "Hash integrity: SHA-512 on advisory"
+    body_fr: |
+      Pattern reusable : un advisory CSAF contient son propre hash dans
+      document.tracking.aliases ou est sign avec PGP. SHA-512 est utilise
+      pour integrity (FIPS 180-4 standard). Calcul : `sha512sum
+      advisory.json` (Linux) ou `Get-FileHash -Algorithm SHA512` (PS).
+      Defense : (1) Hash sign avec OpenPGP detached signature
+      (.json.asc). (2) Aggregator publie hashes a part dans
+      provider-metadata.json. (3) Verification cote consumer avant parsing.
+      Pattern : trust mais verify cryptographique.
+    body_en: |
+      Reusable pattern: a CSAF advisory contains its own hash in
+      document.tracking.aliases or is signed with PGP. SHA-512 used for
+      integrity (FIPS 180-4 standard). Computation: `sha512sum
+      advisory.json` (Linux) or `Get-FileHash -Algorithm SHA512` (PS).
+      Defense: (1) Hash signed with OpenPGP detached signature
+      (.json.asc). (2) Aggregator publishes hashes separately in
+      provider-metadata.json. (3) Consumer-side verification before
+      parsing. Pattern: trust but cryptographically verify.
+
+  - title_fr: "Defense canonique : adopter CSAF + signing"
+    title_en: "Canonical defense: adopt CSAF + signing"
+    body_fr: |
+      (1) Publier les advisories en CSAF JSON (pas seulement HTML/PDF). (2)
+      Signer chaque advisory avec PGP (.asc). (3) Publier
+      provider-metadata.json a /.well-known/csaf-aggregator/. (4)
+      Lister dans csaf.csaf-tools.org pour discoverability. (5)
+      Documentation dans security.txt : Policy + lien CSAF aggregator.
+      Pattern : machine-readable security disclosure facilite la
+      remediation rapide chez les consumers.
+    body_en: |
+      (1) Publish advisories in CSAF JSON (not only HTML/PDF). (2) Sign
+      each advisory with PGP (.asc). (3) Publish provider-metadata.json
+      at /.well-known/csaf-aggregator/. (4) List in
+      csaf.csaf-tools.org for discoverability. (5) Documentation in
+      security.txt: Policy + CSAF aggregator link. Pattern:
+      machine-readable security disclosure facilitates rapid remediation
+      at consumers.

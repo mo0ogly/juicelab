@@ -1,0 +1,128 @@
+challenge_key: "changeProductChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Modifie le href du lien dans la description du produit "OWASP SSL
+  Advanced Forensic Tool (O-Saft)" pour le faire pointer vers
+  https://owasp.slack.com. Description OWASP officielle precise.
+  Hint #1 : "Theoretically there are three possible ways to beat
+  this challenge: a) broken admin functionality, b) holes in
+  RESTful API or c) possibility for SQL Injection". Hint #2 : "In
+  practice two of these three ways should turn out to be dead
+  ends" — donc UNE seule voie est exploitable.
+
+  Methode recommandee : la voie qui marche est l'API RESTful.
+  Sequelize en mode auto-generation (utilise par Juice Shop)
+  expose par defaut tous les verbs HTTP (GET, POST, PUT, DELETE)
+  sur les endpoints /api/Products/:id sans restriction
+  d'autorisation. Source officielle : codefixes/
+  changeProductChallenge.info.yml fix #3 (correct) : "Disabling
+  all HTTP verbs other than GET for the products API is indeed
+  the only safe way". Donc le bug = PUT non bloque. Fais un PUT
+  /api/Products/9 (l'id de O-Saft) avec body { description:
+  "<nouveau href>" }.
+
+  Note la difference entre "API auto-generated par defaut
+  permissive" et "API explicit handler par defaut restrictive".
+  Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Change the href of the link in the "OWASP SSL Advanced Forensic
+  Tool (O-Saft)" product description to point to
+  https://owasp.slack.com. Official OWASP description is precise.
+  Hint #1: "Theoretically there are three possible ways to beat
+  this challenge: a) broken admin functionality, b) holes in
+  RESTful API or c) possibility for SQL Injection". Hint #2: "In
+  practice two of these three ways should turn out to be dead
+  ends" — so ONLY ONE way is exploitable.
+
+  Recommended method: the working way is the RESTful API.
+  Sequelize in auto-generation mode (used by Juice Shop) exposes
+  by default every HTTP verb (GET, POST, PUT, DELETE) on
+  /api/Products/:id endpoints with no authorization restriction.
+  Official source: codefixes/changeProductChallenge.info.yml fix
+  #3 (correct): "Disabling all HTTP verbs other than GET for the
+  products API is indeed the only safe way". So the bug = PUT
+  not blocked. Do a PUT /api/Products/9 (O-Saft id) with body
+  { description: "<new href>" }.
+
+  Note the difference between "API auto-generated permissive
+  by default" and "API explicit handler restrictive by default".
+  You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "API generee automatiquement : default allow vs default deny"
+    title_en: "Auto-generated API: default allow vs default deny"
+    body_fr: |
+      Sequelize avec express-paginate ou similaire genere
+      automatiquement les CRUD endpoints /api/<Model>/:id pour
+      chaque modele. Par defaut, les 4 verbs (GET POST PUT DELETE)
+      sont actifs SANS restriction d'autorisation. Source officielle
+      codefixes/changeProductChallenge.info.yml fix #2 : "Removing
+      all dedicated handling of the products API made things worse,
+      as now the default permissions of the underlying API
+      generator will be used: Allowing GET, POST, PUT and DELETE
+      - without any restrictions". Anti-pattern : compter sur
+      l'auto-generation sans override explicite.
+    body_en: |
+      Sequelize with express-paginate or similar auto-generates
+      CRUD endpoints /api/<Model>/:id for every model. By default,
+      all 4 verbs (GET POST PUT DELETE) are active WITHOUT
+      authorization restriction. Official source codefixes/
+      changeProductChallenge.info.yml fix #2: "Removing all
+      dedicated handling of the products API made things worse,
+      as now the default permissions of the underlying API
+      generator will be used: Allowing GET, POST, PUT and DELETE
+      - without any restrictions". Anti-pattern: relying on
+      auto-generation without explicit override.
+
+  - title_fr: "Defense canonique : disable verbs non-GET sur les ressources public-readable"
+    title_en: "Canonical defense: disable non-GET verbs on publicly-readable resources"
+    body_fr: |
+      Pour les ressources qui doivent etre VISIBLES publiquement
+      (catalogue produits, contenu marketing) : autoriser GET,
+      bloquer POST/PUT/DELETE. Pour les modifications, utiliser
+      des endpoints DEDIES sous /api/admin/products avec controle
+      d'autorisation. Source codefixes fix #3 (correct) : "Shop
+      administrators should not use the customer facing web UI
+      to manage the store's inventory anyway". Le pattern : split
+      l'API en read-public vs write-admin. Code Express type :
+      router.use('/api/Products', auth, restrictToAdmin, productsCRUD)
+      ou alternativement productsRouter.get(...) sans expose le
+      productsRouter.put.
+    body_en: |
+      For resources that must be PUBLICLY visible (product
+      catalog, marketing content): allow GET, block POST/PUT/
+      DELETE. For modifications, use DEDICATED endpoints under
+      /api/admin/products with authorization control. Source
+      codefixes fix #3 (correct): "Shop administrators should not
+      use the customer facing web UI to manage the store's
+      inventory anyway". Pattern: split the API into read-public
+      vs write-admin. Sample Express:
+      router.use('/api/Products', auth, restrictToAdmin, productsCRUD)
+      or alternatively productsRouter.get(...) without exposing
+      productsRouter.put.
+
+  - title_fr: "OWASP REST Security Cheat Sheet : whitelist HTTP verbs"
+    title_en: "OWASP REST Security Cheat Sheet: whitelist HTTP verbs"
+    body_fr: |
+      Source officielle OWASP REST Security Cheat Sheet
+      (cheatsheetseries.owasp.org/cheatsheets/REST_Security_
+      Cheat_Sheet.html). Recommandation explicite : "Validate
+      content type and HTTP verb on each request". Pattern :
+      pour chaque endpoint, definir explicitement la liste des
+      verbs autorises et retourner 405 Method Not Allowed sinon.
+      C'est l'application du principe "default deny" au niveau
+      protocole HTTP. La doc Express recommande
+      app.all('/path', (req,res) => res.status(405)) pour catch
+      tous les verbs non explicitement gerees.
+    body_en: |
+      Official OWASP REST Security Cheat Sheet
+      (cheatsheetseries.owasp.org/cheatsheets/REST_Security_
+      Cheat_Sheet.html). Explicit recommendation: "Validate
+      content type and HTTP verb on each request". Pattern: for
+      each endpoint, explicitly list allowed verbs and return 405
+      Method Not Allowed otherwise. Application of "default deny"
+      at the HTTP protocol level. Express docs recommend
+      app.all('/path', (req,res) => res.status(405)) to catch
+      all verbs not explicitly handled.

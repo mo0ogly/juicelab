@@ -1,0 +1,182 @@
+challenge_key: "nullByteChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Analyze and tamper
+      with links until you get to an unprotected
+      directory listing". Donc pre-requis :
+      directoryListingChallenge resolu pour acceder
+      /ftp/. Hint #2 : "Some files there are not
+      directly accessible because a security
+      mechanism prevents access". L'allowlist
+      `.md/.pdf` est le mecanisme.
+    text_en: |
+      Official OWASP hint #1: "Analyze and tamper
+      with links until you get to an unprotected
+      directory listing". So prerequisite:
+      directoryListingChallenge solved to access
+      /ftp/. Hint #2: "Some files there are not
+      directly accessible because a security
+      mechanism prevents access". `.md/.pdf`
+      allowlist is the mechanism.
+    pedagogical_intent: |
+      Activate null byte + directory listing reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #3 : "The Poison Null Byte can
+      trick the security mechanism into thinking
+      that the file you want has a valid file
+      type". Le null byte (`%00` URL-encoded) est
+      le caractere `\0`. Concept : tromper le
+      check d'extension en ajoutant `.md` ou
+      `.pdf` APRES le null byte.
+    text_en: |
+      OWASP hint #3: "The Poison Null Byte can
+      trick the security mechanism into thinking
+      that the file you want has a valid file
+      type". Null byte (`%00` URL-encoded) is
+      `\0` character. Concept: trick extension
+      check by adding `.md` or `.pdf` AFTER null
+      byte.
+    pedagogical_intent: |
+      Spell null byte concept.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Files cibles (hint OWASP #4) : `eastere.gg`,
+      `package.json.bak`, `coupons_2013.md.bak`,
+      `suspicious_errors.yml`, `encrypt.pyc`.
+      Aucun ne match l'allowlist `.md/.pdf`. Test :
+      `GET /ftp/eastere.gg%00.md` ou similar pour
+      chacun des 5 files. Le serveur lit `eastere.
+      gg` mais le check passe car ends with `.md`.
+    text_en: |
+      Target files (OWASP hint #4): `eastere.gg`,
+      `package.json.bak`, `coupons_2013.md.bak`,
+      `suspicious_errors.yml`, `encrypt.pyc`.
+      None match `.md/.pdf` allowlist. Test:
+      `GET /ftp/eastere.gg%00.md` or similar for
+      each of 5 files. Server reads `eastere.gg`
+      but check passes as ends with `.md`.
+    pedagogical_intent: |
+      Reveal target files.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur
+      verifiee (routes/fileServer.ts:26-49) : (a)
+      `endsWithAllowlistedFileType(file)` accepte
+      ".md" ou ".pdf". (b) `cutOffPoisonNullByte`
+      strip le %00 et tout apres. (c) Le check
+      est AVANT le strip = bypass. (d) solveIf
+      nullByte trigger si `easterEggLevelOne`
+      OR `forgottenDevBackup` OR
+      `forgottenBackup` OR `misplacedSignature`
+      sont solved DURING this access, OR file ===
+      'encrypt.pyc'. Cf. ligne 46-49.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server
+      source (routes/fileServer.ts:26-49): (a)
+      `endsWithAllowlistedFileType(file)` accepts
+      ".md" or ".pdf". (b) `cutOffPoisonNullByte`
+      strips %00 and everything after. (c) Check
+      done BEFORE strip = bypass. (d) solveIf
+      nullByte triggers if `easterEggLevelOne`
+      OR `forgottenDevBackup` OR
+      `forgottenBackup` OR `misplacedSignature`
+      solved DURING this access, OR file ===
+      'encrypt.pyc'. Cf. lines 46-49.
+    pedagogical_intent: |
+      Reveal exact code path.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Pre-requis : directoryListingChallenge
+         resolu (acces /ftp/).
+      2. Naviguer /ftp/. Tu vois la liste de
+         fichiers : acquisitions.md (accessible),
+         eastere.gg, package.json.bak,
+         coupons_2013.md.bak,
+         suspicious_errors.yml, encrypt.pyc
+         (NON-accessible directement, 403).
+      3. Pour eastere.gg specifiquement :
+         `GET http://localhost:3000/ftp/eastere.
+         gg%00.md`. Le serveur :
+         (a) endsWithAllowlistedFileType(
+             "eastere.gg\0.md") = true (.md
+             match)
+         (b) cutOffPoisonNullByte returns
+             "eastere.gg"
+         (c) sendFile("ftp/eastere.gg")
+         (d) easterEggLevelOneChallenge solveIf
+             trigger
+         (e) nullByteChallenge solveIf trigger
+             (depends on easterEgg solved).
+      4. Repeter pour les 5 files si tu veux
+         tous les solve en kill chain :
+         `package.json.bak%00.md`,
+         `coupons_2013.md.bak%00.md`,
+         `suspicious_errors.yml%00.md`,
+         `encrypt.pyc%00.md`.
+      5. Pattern : 1 bug -> 5 challenges
+         solved.
+      Source canonique : routes/fileServer.ts:
+      26-49 + Hakipedia Poison Null Byte +
+      OWASP File Upload (related).
+      Defense canonique : (a) cutOffPoisonNull
+      Byte AVANT endsWith check. (b) Reject
+      TOUT filename contenant `\0`. (c) Use
+      path.basename() pour eviter path
+      traversal. (d) Allowlist par UUID-
+      based filenames.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Prerequisite: directoryListingChallenge
+         solved (/ftp/ access).
+      2. Navigate /ftp/. You see file list:
+         acquisitions.md (accessible),
+         eastere.gg, package.json.bak,
+         coupons_2013.md.bak,
+         suspicious_errors.yml, encrypt.pyc
+         (NON-accessible directly, 403).
+      3. For eastere.gg specifically: `GET
+         http://localhost:3000/ftp/eastere.gg
+         %00.md`. Server:
+         (a) endsWithAllowlistedFileType(
+             "eastere.gg\0.md") = true (.md
+             match)
+         (b) cutOffPoisonNullByte returns
+             "eastere.gg"
+         (c) sendFile("ftp/eastere.gg")
+         (d) easterEggLevelOneChallenge solveIf
+             triggers
+         (e) nullByteChallenge solveIf triggers
+             (depends on easterEgg solved).
+      4. Repeat for 5 files if you want all
+         solved in kill chain:
+         `package.json.bak%00.md`,
+         `coupons_2013.md.bak%00.md`,
+         `suspicious_errors.yml%00.md`,
+         `encrypt.pyc%00.md`.
+      5. Pattern: 1 bug -> 5 challenges
+         solved.
+      Canonical source: routes/fileServer.ts:
+      26-49 + Hakipedia Poison Null Byte +
+      OWASP File Upload (related).
+      Canonical defense: (a) cutOffPoisonNull
+      Byte BEFORE endsWith check. (b) Reject
+      ANY filename containing `\0`. (c) Use
+      path.basename() to avoid path traversal.
+      (d) Allowlist via UUID-based filenames.
+    pedagogical_intent: |
+      Solution complete + kill chain
+      multiplier + defense.

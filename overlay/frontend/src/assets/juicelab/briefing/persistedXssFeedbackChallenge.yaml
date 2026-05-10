@@ -1,0 +1,150 @@
+challenge_key: "persistedXssFeedbackChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Realise un XSS persiste avec EXACTEMENT le payload <iframe src="
+  javascript:alert(`xss`)"> en bypassant un sanitizer SERVER-SIDE.
+  Description OWASP officielle. Le challenge cible le champ
+  Comment de Customer Feedback (hint #1). Hint #3 : "The attack
+  payload <iframe src=`javascript:alert(\`xss\`)`> will not be
+  rejected by any validator but stripped from the comment before
+  persisting it". Donc le serveur sanitize en STRIPPANT, pas en
+  rejetant. Le bypass est dans une fragilite du sanitizer
+  utilise.
+
+  Methode recommandee : hint #4 : "Look for possible dependencies
+  related to input processing in the package.json.bak you
+  harvested earlier". Donc le challenge necessite d'avoir resolu
+  un challenge file disclosure (forgottenDevBackup typiquement)
+  pour decouvrir la version exacte du sanitizer (sanitize-html
+  typiquement, ancienne version vulnerable). Une fois la lib
+  identifiee, recherche un payload connu qui bypass cette version
+  specifique. Hint #5 te previent que tu pourrais avoir un alert
+  qui apparait sans que le challenge se valide — il faut que la
+  string EXACTE soit dans la DB.
+
+  Note la lecon : meme un sanitizer maintenu peut avoir des CVEs.
+  Maintenir les deps est une defense de securite. Tu en parleras
+  dans le journal "apres".
+
+mission_en: |
+  Perform a persisted XSS with EXACTLY the payload <iframe src="
+  javascript:alert(`xss`)"> bypassing a SERVER-SIDE sanitizer.
+  Official OWASP description. Challenge targets the Comment
+  field of Customer Feedback (hint #1). Hint #3: "The attack
+  payload <iframe src=`javascript:alert(\`xss\`)`> will not be
+  rejected by any validator but stripped from the comment
+  before persisting it". So the server sanitizes by STRIPPING,
+  not rejecting. The bypass is in a fragility of the sanitizer
+  used.
+
+  Recommended method: hint #4: "Look for possible dependencies
+  related to input processing in the package.json.bak you
+  harvested earlier". So the challenge requires having solved a
+  file-disclosure challenge (forgottenDevBackup typically) to
+  discover the exact sanitizer version (sanitize-html typically,
+  old vulnerable version). Once lib identified, lookup a known
+  payload bypassing this specific version. Hint #5 warns you
+  may get an alert that appears without the challenge solving —
+  the EXACT string must end up in DB.
+
+  Note the lesson: even a maintained sanitizer can have CVEs.
+  Maintaining deps is a security defense. You will report it
+  in the "after" logbook.
+
+concepts:
+  - title_fr: "CVE sur sanitizer : meme un lib maintenu peut avoir des bugs"
+    title_en: "CVE on a sanitizer: even a maintained lib can have bugs"
+    body_fr: |
+      Conventional wisdom : "use a maintained sanitizer". Vrai
+      mais incomplet. La version compte. Sanitize-html, DOMPurify,
+      jsoup ont eu des CVEs au fil des annees. Patterns CVE
+      typiques : (1) parsing differentiel attaquant/sanitizer
+      (mutation XSS), (2) tags/attributs nouveaux (HTML5) non
+      reconnus par d'anciennes versions, (3) bugs de
+      normalization Unicode. Defense : maintenir les deps a jour
+      via Dependabot, Renovate, npm audit + automation. Une
+      version vieille de 2 ans est probablement vulnerable.
+    body_en: |
+      Conventional wisdom: "use a maintained sanitizer". True
+      but incomplete. Version matters. Sanitize-html, DOMPurify,
+      jsoup have had CVEs over years. Typical CVE patterns: (1)
+      differential parsing between attacker and sanitizer
+      (mutation XSS), (2) new tags/attributes (HTML5) not
+      recognized by old versions, (3) Unicode normalization
+      bugs. Defense: keep deps up-to-date via Dependabot,
+      Renovate, npm audit + automation. A 2-year-old version is
+      likely vulnerable.
+
+  - title_fr: "Composition challenges : file disclosure -> CVE lookup -> bypass"
+    title_en: "Challenge composition: file disclosure -> CVE lookup -> bypass"
+    body_fr: |
+      Hint OWASP officiel #4 fait reference a "package.json.bak
+      you harvested earlier" — donc ce challenge requiert
+      forgottenDevBackup ou equivalent. La kill chain : (1) file
+      disclosure pour obtenir package.json.bak, (2) lire la
+      version exacte du sanitizer (ex sanitize-html@1.4.2), (3)
+      chercher CVE de cette version sur snyk.io ou nvd.nist.gov,
+      (4) appliquer le payload de bypass connu. C'est une chaine
+      OPSEC realiste : un pentester reel commence TOUJOURS par
+      l'inventaire des dependances avant l'exploitation
+      frontale.
+    body_en: |
+      Official OWASP hint #4 refers to "package.json.bak you
+      harvested earlier" — so this challenge requires
+      forgottenDevBackup or equivalent. Kill chain: (1) file
+      disclosure to obtain package.json.bak, (2) read exact
+      sanitizer version (e.g. sanitize-html@1.4.2), (3) lookup
+      CVE for that version on snyk.io or nvd.nist.gov, (4)
+      apply known bypass payload. Realistic OPSEC chain: a real
+      pentester ALWAYS starts with dependency inventory before
+      direct exploitation.
+
+  - title_fr: "Pattern de bypass : mutation XSS et tag-confusion"
+    title_en: "Bypass pattern: mutation XSS and tag-confusion"
+    body_fr: |
+      Une CVE classique sur sanitizer : le sanitizer parse une
+      string SOURCE, retire ce qu'il considere malicieux, et
+      retourne une OUTPUT. Le navigateur reparse cet OUTPUT et
+      peut avoir un comportement different (different parser,
+      different state machine). L'attaquant cree un payload qui
+      passe le sanitizer (apparait benin) mais que le navigateur
+      reparse comme malicieux. Exemple historique :
+      <iframe/src="javascript:alert(1)"> avec un slash apres
+      iframe, ou des nesting bizarres. Defense : utiliser un
+      sanitizer qui FAIT le parse + serialize complet pour
+      garantir l'idempotence.
+    body_en: |
+      Classic sanitizer CVE: the sanitizer parses a SOURCE
+      string, strips what it considers malicious, returns an
+      OUTPUT. Browser re-parses that output and may behave
+      differently (different parser, different state machine).
+      Attacker crafts a payload that passes the sanitizer
+      (looks benign) but the browser re-parses as malicious.
+      Historic example: <iframe/src="javascript:alert(1)"> with
+      a slash after iframe, or weird nesting. Defense: use a
+      sanitizer that DOES full parse + serialize to ensure
+      idempotence.
+
+  - title_fr: "Defense canonique : sanitize au persist + au render + maintenir deps"
+    title_en: "Canonical defense: sanitize at persist + render + maintain deps"
+    body_fr: |
+      Triple defense. (1) Sanitize au moment du PERSIST avec un
+      sanitizer maintenu (DOMPurify cote backend via JSDOM, ou
+      sanitize-html version recente). (2) Sanitize au moment du
+      RENDER cote frontend, en plus, peu importe la source. (3)
+      CI gate qui run npm audit a chaque PR et fail le build si
+      une CVE high/critical est trouvee dans les deps de
+      sanitization. La couche (3) est ce qui aurait empeche
+      structurellement ce challenge : la version vieille avec
+      CVE n'aurait pas passe le CI.
+    body_en: |
+      Triple defense. (1) Sanitize at PERSIST time with a
+      maintained sanitizer (DOMPurify backend via JSDOM, or
+      sanitize-html recent version). (2) Sanitize at RENDER
+      time client-side too, regardless of source. (3) CI gate
+      running npm audit on every PR and failing build if a
+      high/critical CVE is found in sanitization deps. Layer
+      (3) is what would structurally have prevented this
+      challenge: the old version with CVE wouldn't have passed
+      CI.

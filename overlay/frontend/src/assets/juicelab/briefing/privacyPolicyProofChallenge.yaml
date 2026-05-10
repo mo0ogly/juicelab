@@ -1,0 +1,89 @@
+challenge_key: "privacyPolicyProofChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Trouver l'URL "preuve de lecture" de la privacy policy. Tag :
+  Security Through Obscurity. Hint OWASP : "find the privacy proof URL".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/privacyPolicyProof.ts:13 :
+  `solveIf(privacyPolicyProofChallenge, () => true)` - le simple GET de
+  l'URL declenche le solve. La route est definie quelque part dans
+  server.ts et serve frontend/dist/frontend/assets/private/thank-you.jpg.
+  Workflow : (1) Inspecter le bundle Angular ou la page /#/privacy-
+  security pour trouver une mention. (2) Decouvrir l'URL hidden. (3)
+  Naviguer.
+
+mission_en: |
+  Find the privacy policy "read proof" URL. Tag: Security Through
+  Obscurity. OWASP hint: "find the privacy proof URL".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/privacyPolicyProof.ts:13:
+  `solveIf(privacyPolicyProofChallenge, () => true)` - simple GET of URL
+  triggers solve. Route defined somewhere in server.ts and serves
+  frontend/dist/frontend/assets/private/thank-you.jpg. Workflow: (1)
+  Inspect Angular bundle or /#/privacy-security page for mention. (2)
+  Discover hidden URL. (3) Navigate.
+
+concepts:
+  - title_fr: "Hidden URLs : private routes mais publiques"
+    title_en: "Hidden URLs: private routes but public"
+    body_fr: |
+      Pattern reusable : un dossier nomme "/private/" peut donner
+      l'illusion d'etre proteged - mais s'il n'a aucun middleware auth,
+      c'est public. Le cas Juice Shop : `frontend/dist/frontend/assets/
+      private/thank-you.jpg`. STO encore une fois : le nom "private" ne
+      suffit pas. Cas reels : AWS S3 buckets nommes "private-data-2023"
+      mais world-readable, GitHub repos nommes "internal-only" mais
+      publics. Defense : auth middleware sur les ressources sensibles +
+      audit periodique.
+    body_en: |
+      Reusable pattern: a folder named "/private/" can give illusion of
+      protection - but without auth middleware, it's public. Juice Shop
+      case: `frontend/dist/frontend/assets/private/thank-you.jpg`. STO
+      again: name "private" doesn't suffice. Real cases: AWS S3 buckets
+      named "private-data-2023" but world-readable, GitHub repos named
+      "internal-only" but public. Defense: auth middleware on sensitive
+      resources + periodic audit.
+
+  - title_fr: "Bundle Angular grep + route discovery"
+    title_en: "Angular bundle grep + route discovery"
+    body_fr: |
+      Pour trouver l'URL hidden : (1) DevTools > Sources > main.js,
+      Ctrl+F "privacy" / "thank" / "proof". (2) `grep -rn "privacyPolicy
+      ||thankyou||private" frontend/dist/`. (3) Inspect le source de
+      privacy-security component. (4) Wayback Machine pour anciennes
+      versions. (5) curl /privacy-security-policy/* (fuzzing path).
+      Defense : (a) Audit reguliere des assets static. (b) Route enumeration
+      script en CI. (c) Tests E2E qui verifient que les routes "private"
+      retournent 401 sans auth.
+    body_en: |
+      To find hidden URL: (1) DevTools > Sources > main.js, Ctrl+F
+      "privacy" / "thank" / "proof". (2) `grep -rn "privacyPolicy
+      ||thankyou||private" frontend/dist/`. (3) Inspect privacy-security
+      component source. (4) Wayback Machine for old versions. (5) curl
+      /privacy-security-policy/* (path fuzzing). Defense: (a) Periodic
+      static asset audit. (b) Route enumeration script in CI. (c) E2E
+      tests verifying "private" routes return 401 without auth.
+
+  - title_fr: "Defense canonique : auth middleware + route audit"
+    title_en: "Canonical defense: auth middleware + route audit"
+    body_fr: |
+      (1) Middleware auth sur tout endpoint qui sert un asset
+      "private" : `app.get('/api/proof', requireAuth, ...)`. (2) Route
+      naming convention claire : `/private/*` reserve aux assets reellement
+      authentifies. (3) Test E2E : `it('rejects /private/ without auth',
+      async () => expect(await get('/private/x')).toEqual(401))`. (4)
+      Audit script CI : `grep -rn "app.use\|app.get" routes/ |
+      verify_auth_middleware.sh`. Pattern reusable : naming != security,
+      auth middleware = security.
+    body_en: |
+      (1) Auth middleware on any endpoint serving "private" asset:
+      `app.get('/api/proof', requireAuth, ...)`. (2) Clear route naming
+      convention: `/private/*` reserved for truly authenticated assets.
+      (3) E2E test: `it('rejects /private/ without auth', async () =>
+      expect(await get('/private/x')).toEqual(401))`. (4) CI audit
+      script: `grep -rn "app.use\|app.get" routes/ |
+      verify_auth_middleware.sh`. Reusable pattern: naming != security,
+      auth middleware = security.

@@ -1,0 +1,88 @@
+challenge_key: "csafChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      CSAF est un standard OASIS pour security advisories. Un fichier CSAF
+      est cache sur le shop. Il faut trouver son hash et le rapporter via
+      /#/contact.
+    text_en: |
+      CSAF is OASIS standard for security advisories. A CSAF file is
+      hidden on shop. Find its hash and report via /#/contact.
+    pedagogical_intent: |
+      Activate CSAF + standard reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      L'emplacement canonique CSAF est /.well-known/csaf-aggregator/
+      provider-metadata.json. Ou /assets/csaf/. Le hash attendu est
+      SHA-512 (long hex 128 chars).
+    text_en: |
+      CSAF canonical location is /.well-known/csaf-aggregator/
+      provider-metadata.json. Or /assets/csaf/. Expected hash is SHA-512
+      (long hex 128 chars).
+    pedagogical_intent: |
+      Spell location + algo.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Naviguer /.well-known/csaf-aggregator/provider-metadata.json (RFC
+      8615 + CSAF 2.0). Identifier le ou les advisories listes. Calculer
+      sha512sum sur le fichier advisory.
+    text_en: |
+      Navigate /.well-known/csaf-aggregator/provider-metadata.json (RFC
+      8615 + CSAF 2.0). Identify listed advisory(ies). Compute sha512sum
+      on advisory file.
+    pedagogical_intent: |
+      Spell exact step.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Une fois le hash SHA-512 calcule (ex.
+      `sha512sum advisory.json` Linux ou
+      `Get-FileHash -Algorithm SHA512` PowerShell), le coller dans le
+      Customer Feedback (/#/contact) en commentaire.
+    text_en: |
+      Once SHA-512 hash computed (e.g. `sha512sum advisory.json` Linux or
+      `Get-FileHash -Algorithm SHA512` PowerShell), paste it in Customer
+      Feedback (/#/contact) comment.
+    pedagogical_intent: |
+      Spell exact action.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Apprendre CSAF (OASIS 2.0).
+      (2) Naviguer /.well-known/csaf-aggregator/provider-metadata.json. (3)
+      Suivre le lien vers le ou les CSAF advisories listes. (4) Telecharger
+      l'advisory.json. (5) Calculer
+      `sha512sum advisory.json` (Linux) ou
+      `Get-FileHash -Algorithm SHA512 advisory.json` (PowerShell). (6)
+      Hash attendu (ref config/default.yml:83) commence par
+      "7e7ce7c65db3bf...e843". (7) /#/contact > comment = ce hash > Submit
+      avec etoiles. (8) verify.ts:312-317
+      `checkPatternInFeedbackAndComplaints` declenche.
+      Defense : (a) Adopter CSAF + signer advisories PGP. (b) Provider-
+      metadata.json a /.well-known/csaf-aggregator/. (c) Listing
+      csaf.csaf-tools.org. Source : verify.ts:312-317 +
+      config/default.yml:83.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Learn CSAF (OASIS 2.0). (2)
+      Navigate /.well-known/csaf-aggregator/provider-metadata.json. (3)
+      Follow link to listed CSAF advisory(ies). (4) Download advisory.json.
+      (5) Compute `sha512sum advisory.json` (Linux) or `Get-FileHash
+      -Algorithm SHA512 advisory.json` (PowerShell). (6) Expected hash
+      (ref config/default.yml:83) starts with "7e7ce7c65db3bf...e843". (7)
+      /#/contact > comment = this hash > Submit with stars. (8)
+      verify.ts:312-317 `checkPatternInFeedbackAndComplaints` triggers.
+      Defense: (a) Adopt CSAF + sign advisories PGP. (b) Provider-
+      metadata.json at /.well-known/csaf-aggregator/. (c) Listing
+      csaf.csaf-tools.org. Source: verify.ts:312-317 +
+      config/default.yml:83.
+    pedagogical_intent: |
+      Solution + standards mastery.

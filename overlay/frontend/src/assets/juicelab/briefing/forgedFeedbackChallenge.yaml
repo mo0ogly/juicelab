@@ -1,0 +1,122 @@
+challenge_key: "forgedFeedbackChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Poste un feedback en utilisant l'identite d'un AUTRE utilisateur.
+  Description OWASP officielle : "Post some feedback in another
+  user's name". Le tutoriel hacking-instructor forgedFeedback.ts
+  donne la cle : "There is more than meets the eye among the
+  fields of the form" et "find the field that shouldn't even be
+  there" — il y a un input cache (userId) dans le HTML form du
+  feedback que le frontend pre-rempli avec ton id mais que le
+  backend accepte tel quel sans verification d'autorisation.
+
+  Methode recommandee (suit le tutoriel OWASP forgedFeedback.ts) :
+  va sur Customer Feedback, ouvre le DevTools onglet Elements,
+  inspecte le formulaire de feedback. Trouve le hidden input
+  userId. Modifie sa valeur (ex de ton id 21 vers admin id 1).
+  Submit le formulaire. Le backend stocke le feedback avec
+  userId=1, donc attribue a l'admin. C'est un Broken Access
+  Control de classe "client-trusted-input".
+
+  Note la difference fondamentale entre faire confiance au
+  client (mauvais) et deduire l'identite du JWT serveur-side (bon).
+  Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Post a feedback using the identity of ANOTHER user. Official
+  OWASP description: "Post some feedback in another user's name".
+  The hacking-instructor tutorial forgedFeedback.ts gives the key:
+  "There is more than meets the eye among the fields of the form"
+  and "find the field that shouldn't even be there" — there's a
+  hidden input (userId) in the feedback form HTML that the
+  frontend pre-fills with your id but the backend accepts as-is
+  without authorization check.
+
+  Recommended method (follows the OWASP forgedFeedback.ts
+  tutorial): go to Customer Feedback, open DevTools Elements
+  tab, inspect the feedback form. Find the hidden userId input.
+  Change its value (e.g. from your id 21 to admin id 1). Submit
+  the form. The backend stores the feedback with userId=1,
+  attributing it to admin. This is a Broken Access Control of
+  the "client-trusted-input" class.
+
+  Note the fundamental difference between trusting the client
+  (bad) and deriving identity from the server-side JWT (good).
+  You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Hidden input + trust client = anti-pattern broken access"
+    title_en: "Hidden input + trust client = broken-access anti-pattern"
+    body_fr: |
+      Le code Juice Shop pre-rempli le hidden input userId via
+      Angular en lisant le JWT cote client. Le backend recoit ce
+      userId dans le body et l'utilise tel quel pour attribuer
+      le feedback. ANTI-PATTERN classique : tout ce qui vient du
+      client est manipulable, meme un hidden input. La meme
+      famille de bug : choisir son role d'utilisateur via un
+      param dans l'URL, choisir sa userId via un cookie, etc.
+      Reference OWASP Authorization Cheat Sheet.
+    body_en: |
+      Juice Shop code pre-fills the hidden userId input via
+      Angular by reading the JWT client-side. The backend
+      receives that userId in the body and uses it as-is to
+      attribute the feedback. CLASSIC ANTI-PATTERN: anything
+      coming from the client is tamper-able, even a hidden
+      input. Same bug family: choosing your user role via a URL
+      param, choosing your userId via a cookie, etc. Reference
+      OWASP Authorization Cheat Sheet.
+
+  - title_fr: "Pattern correct : deduire userId du JWT serveur-side"
+    title_en: "Correct pattern: derive userId from JWT server-side"
+    body_fr: |
+      Le backend doit IGNORER toute userId provenant du body et
+      la deduire EXCLUSIVEMENT du JWT verifie. Code Express
+      type :
+      router.post('/feedback', auth, (req, res) => {
+        Feedback.create({
+          ...req.body,
+          UserId: req.user.id  // OVERRIDE — pas req.body.UserId
+        })
+      })
+      Le spread de req.body permet a l'attaquant d'envoyer
+      n'importe quoi, mais le UserId final est ecrit par le
+      serveur, pas par le client. C'est le pattern canonique
+      utilise par tous les frameworks d'auth modernes (Spring
+      Security, NestJS Guards, FastAPI Depends).
+    body_en: |
+      The backend must IGNORE any userId from the body and
+      derive it EXCLUSIVELY from the verified JWT. Sample Express
+      code:
+      router.post('/feedback', auth, (req, res) => {
+        Feedback.create({
+          ...req.body,
+          UserId: req.user.id  // OVERRIDE — not req.body.UserId
+        })
+      })
+      Spreading req.body lets the attacker send anything, but
+      the final UserId is written by the server, not the client.
+      Canonical pattern used by every modern auth framework
+      (Spring Security, NestJS Guards, FastAPI Depends).
+
+  - title_fr: "OWASP Authorization Cheat Sheet : top 3 patterns"
+    title_en: "OWASP Authorization Cheat Sheet: top 3 patterns"
+    body_fr: |
+      Source officielle OWASP : cheatsheetseries.owasp.org/
+      cheatsheets/Authorization_Cheat_Sheet.html. Les 3 patterns
+      les plus importants : (1) NEVER trust client-supplied
+      identity. (2) Server must always derive identity from
+      authentication tokens. (3) Authorize at the gateway/
+      middleware level, not in business logic. Forged Feedback
+      illustre la violation de (1) et (2). Le tutoriel
+      hacking-instructor le confirme : "This challenge is about
+      broken access controls".
+    body_en: |
+      Official OWASP source: cheatsheetseries.owasp.org/
+      cheatsheets/Authorization_Cheat_Sheet.html. Top 3 patterns:
+      (1) NEVER trust client-supplied identity. (2) Server must
+      always derive identity from authentication tokens. (3)
+      Authorize at the gateway/middleware level, not in business
+      logic. Forged Feedback illustrates violation of (1) and
+      (2). The hacking-instructor tutorial confirms: "This
+      challenge is about broken access controls".

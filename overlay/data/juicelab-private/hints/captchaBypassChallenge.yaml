@@ -1,0 +1,91 @@
+challenge_key: "captchaBypassChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "feedback rate limiting". Le CAPTCHA est cote serveur
+      mais le rate limiting laisse passer trop de requetes en peu de temps.
+    text_en: |
+      OWASP hint: "feedback rate limiting". CAPTCHA is server-side but
+      rate limiting lets too many requests through in short time.
+    pedagogical_intent: |
+      Activate rate-limit reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le challenge est resolu si tu arrives a submit 10 feedbacks en moins
+      de 20 secondes. Solver le math CAPTCHA programmatically (eval). API
+      endpoint : POST /api/Feedbacks.
+    text_en: |
+      Challenge solves if you submit 10 feedbacks in less than 20 seconds.
+      Solve math CAPTCHA programmatically (eval). API endpoint: POST
+      /api/Feedbacks.
+    pedagogical_intent: |
+      Spell condition + endpoint.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      DevTools Network > submit un feedback manuel > inspect la POST
+      request. Headers : Authorization Bearer token. Body : { comment,
+      rating, captcha, captchaId }. Pour scripter : GET /api/captcha
+      retourne le challenge math.
+    text_en: |
+      DevTools Network > submit manual feedback > inspect POST request.
+      Headers: Authorization Bearer token. Body: { comment, rating,
+      captcha, captchaId }. To script: GET /api/captcha returns math
+      challenge.
+    pedagogical_intent: |
+      Reveal API surface.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Script Python : `for i in range(10): r = requests.get('/api/captcha');
+      ans = eval(r.json()['captcha']); requests.post('/api/Feedbacks',
+      json={'comment': f'msg{i}', 'rating': 5, 'captcha': str(ans),
+      'captchaId': r.json()['captchaId']})`. Le serveur verify.ts:37-41
+      detecte 10 reqs en <20s.
+    text_en: |
+      Python script: `for i in range(10): r = requests.get('/api/captcha');
+      ans = eval(r.json()['captcha']); requests.post('/api/Feedbacks',
+      json={'comment': f'msg{i}', 'rating': 5, 'captcha': str(ans),
+      'captchaId': r.json()['captchaId']})`. Server verify.ts:37-41
+      detects 10 reqs in <20s.
+    pedagogical_intent: |
+      Spell working script.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) DevTools Network sur
+      /#/contact > submit manuel > inspect POST /api/Feedbacks. (2) Notes
+      shape body : { comment, rating, captcha, captchaId }. (3) Notes que
+      GET /api/captcha retourne { captcha: "3+5", captchaId: 42 }. (4)
+      Script bash :
+      `for i in $(seq 1 10); do C=$(curl -s localhost:3000/api/captcha);
+      ID=$(echo $C | jq .captchaId); MATH=$(echo $C | jq -r .captcha);
+      ANS=$(echo "$MATH" | bc); curl -X POST -H "Content-Type:
+      application/json" -d "{\"comment\":\"x$i\",\"rating\":5,\"captcha\":
+      \"$ANS\",\"captchaId\":$ID}" localhost:3000/api/Feedbacks; done`. (5)
+      verify.ts:37-41 detecte 10 reqs en <20s, solve. Defense : express-
+      rate-limit (max=5/min) + express-slow-down + reCAPTCHA v3 + honeypot
+      + behavioral analysis. Source : verify.ts:37-41.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) DevTools Network on /#/contact
+      > manual submit > inspect POST /api/Feedbacks. (2) Note body shape:
+      { comment, rating, captcha, captchaId }. (3) Note GET /api/captcha
+      returns { captcha: "3+5", captchaId: 42 }. (4) Bash script:
+      `for i in $(seq 1 10); do C=$(curl -s localhost:3000/api/captcha);
+      ID=$(echo $C | jq .captchaId); MATH=$(echo $C | jq -r .captcha);
+      ANS=$(echo "$MATH" | bc); curl -X POST -H "Content-Type:
+      application/json" -d "{\"comment\":\"x$i\",\"rating\":5,\"captcha\":
+      \"$ANS\",\"captchaId\":$ID}" localhost:3000/api/Feedbacks; done`. (5)
+      verify.ts:37-41 detects 10 reqs in <20s, solve. Defense: express-
+      rate-limit (max=5/min) + express-slow-down + reCAPTCHA v3 +
+      honeypot + behavioral analysis. Source: verify.ts:37-41.
+    pedagogical_intent: |
+      Solution + multi-layer defense.

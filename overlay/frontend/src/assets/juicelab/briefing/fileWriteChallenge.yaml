@@ -1,0 +1,153 @@
+challenge_key: "fileWriteChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Overwrite le fichier /ftp/legal.md (Legal Information).
+  Description OWASP. Hints officiels : (1) "Look out for a
+  tweet praising new functionality of the web shop. Then find
+  a third party vulnerability associated with it". (2) "Find
+  all places in the application where file uploads are
+  possible". (3) "For at least one of these, the Juice Shop is
+  depending on a library that suffers from an arbitrary file
+  overwrite vulnerability". (4) "You can find a hint toward
+  the underlying vulnerability in the @owasp_juiceshop Twitter
+  timeline". Tag : Danger Zone, Prerequisite.
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le bug est dans
+  routes/fileUpload.ts:43 (verifie source). Code exact :
+  `challengeUtils.solveIf(challenges.fileWriteChallenge, ()
+  => { return absolutePath === path.resolve('ftp/legal.md')
+  })` apres unzipper.Parse() sur un .zip uploade. Mecanique
+  Zip Slip (CVE Snyk-2018) : (1) Crafter un .zip dont une
+  entry path contient une path traversal vers la cible (ex.
+  `../../ftp/legal.md`). (2) POST cet artifact .zip dans
+  /file-upload via le formulaire B2B complaint. (3) unzipper
+  extrait l'entry avec `path.resolve('uploads/complaints/'
+  + '../../ftp/legal.md')` qui se resout en `path.resolve(
+  'ftp/legal.md')`. (4) Le check `if (absolutePath.includes(
+  path.resolve('.')))` ligne 44 autorise l'ecriture (ftp est
+  dans le cwd). (5) Le file legal.md est overwrite par le
+  contenu de l'entry zip. Solve auto.
+
+mission_en: |
+  Overwrite the /ftp/legal.md (Legal Information) file. OWASP
+  description. Official hints: (1) "Look out for a tweet
+  praising new functionality of the web shop. Then find a
+  third party vulnerability associated with it". (2) "Find
+  all places in the application where file uploads are
+  possible". (3) "For at least one of these, the Juice Shop
+  is depending on a library that suffers from an arbitrary
+  file overwrite vulnerability". (4) "You can find a hint
+  toward the underlying vulnerability in the
+  @owasp_juiceshop Twitter timeline". Tag: Danger Zone,
+  Prerequisite. [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Bug is in routes/fileUpload.ts:43
+  (verified source). Exact code: `challengeUtils.solveIf(
+  challenges.fileWriteChallenge, () => { return
+  absolutePath === path.resolve('ftp/legal.md') })` after
+  unzipper.Parse() on uploaded .zip. Zip Slip mechanic (CVE
+  Snyk-2018): (1) Craft .zip with entry path containing
+  path traversal toward target (e.g.,
+  `../../ftp/legal.md`). (2) POST this .zip artifact in
+  /file-upload via B2B complaint form. (3) unzipper
+  extracts entry with `path.resolve('uploads/complaints/' +
+  '../../ftp/legal.md')` resolving to
+  `path.resolve('ftp/legal.md')`. (4) The check `if
+  (absolutePath.includes(path.resolve('.')))` line 44
+  allows write (ftp is in cwd). (5) legal.md file is
+  overwritten by zip entry content. Solve auto.
+
+concepts:
+  - title_fr: "Zip Slip : la vulnerabilite path traversal dans les ZIP extractors"
+    title_en: "Zip Slip: path traversal vulnerability in ZIP extractors"
+    body_fr: |
+      Source canonique : Snyk research disclosure 2018
+      (snyk.io/research/zip-slip-vulnerability) qui a
+      affecte des dizaines de libraries (unzip, unzipper,
+      adm-zip, jszip, etc.). Le pattern : un .zip contient
+      une entry dont le `path` field utilise `../` pour
+      remonter au-dela du dossier d'extraction. Si
+      l'extracteur n'inspecte pas l'entry path avant
+      ecriture, il ecrit n'importe ou sur le filesystem.
+      C'est une categorie d'attaque connue depuis 2003
+      (Apache Tomcat CVE-2003-0042) mais re-decouverte
+      mass-scale en 2018 par Snyk. Defense : `if
+      (entry.path.includes('..')) reject_entry()` ou utiliser
+      des extractors avec safe-by-default (yauzl, decompress
+      avec strip option). Cf. mitigationUrl =
+      OWASP Vulnerable Dependency Management Cheat Sheet.
+    body_en: |
+      Canonical source: Snyk research disclosure 2018
+      (snyk.io/research/zip-slip-vulnerability) affecting
+      dozens of libraries (unzip, unzipper, adm-zip, jszip,
+      etc.). Pattern: a .zip contains entry whose `path`
+      field uses `../` to climb above extraction folder.
+      If extractor doesn't inspect entry path before
+      writing, it writes anywhere on filesystem. Attack
+      class known since 2003 (Apache Tomcat CVE-2003-0042)
+      but re-discovered mass-scale in 2018 by Snyk.
+      Defense: `if (entry.path.includes('..')) reject_
+      entry()` or use safe-by-default extractors (yauzl,
+      decompress with strip option). Cf. mitigationUrl =
+      OWASP Vulnerable Dependency Management Cheat Sheet.
+
+  - title_fr: "Defense insuffisante : `absolutePath.includes(cwd)` n'est PAS une protection"
+    title_en: "Insufficient defense: `absolutePath.includes(cwd)` is NOT protection"
+    body_fr: |
+      Source verifiee (routes/fileUpload.ts:44) : `if
+      (absolutePath.includes(path.resolve('.')))`. C'est une
+      pseudo-defense classique : "verifier que le path
+      resolu est dans le cwd". Probleme structurel : tout
+      sous-dossier du cwd (ftp/, uploads/, .git/, node_
+      modules/, server.js) est INCLUS dans le cwd. La
+      defense laisse passer toute ecriture dans n'importe
+      quel sous-dossier - exactement ce qu'on voulait
+      eviter. La defense correcte : verifier que
+      `absolutePath.startsWith(extractionDir + path.sep)`
+      ET refuser tout `..` dans l'entry path. Pattern :
+      includes() != startsWith() != equals(). Source :
+      OWASP Path Traversal Cheat Sheet.
+    body_en: |
+      Verified source (routes/fileUpload.ts:44): `if
+      (absolutePath.includes(path.resolve('.')))`. Classic
+      pseudo-defense: "verify resolved path is in cwd".
+      Structural problem: any subdirectory of cwd (ftp/,
+      uploads/, .git/, node_modules/, server.js) is
+      INCLUDED in cwd. Defense lets through any write to
+      any subdirectory - exactly what we wanted to avoid.
+      Correct defense: verify `absolutePath.startsWith(
+      extractionDir + path.sep)` AND reject any `..` in
+      entry path. Pattern: includes() != startsWith() !=
+      equals(). Source: OWASP Path Traversal Cheat Sheet.
+
+  - title_fr: "Threat intelligence : suivre @owasp_juiceshop pour les hints"
+    title_en: "Threat intelligence: follow @owasp_juiceshop for hints"
+    body_fr: |
+      Hint OWASP #4 : "You can find a hint toward the
+      underlying vulnerability in the @owasp_juiceshop
+      Twitter timeline". C'est un cas insolite ou la
+      threat intelligence (suivre les annonces du
+      project) fait partie de la kill chain. Pour le
+      challenge, l'annonce identifie unzipper comme la
+      library affectee. Pattern reusable cybersecurity :
+      les CVE et les nouvelles vulnerabilites sont
+      annoncees sur Twitter, GitHub Security Advisories,
+      Snyk blog, Lakera AI Blog. Un security engineer
+      doit suivre ces sources pour reagir vite (defense
+      moderne = automated dependency scanning : Snyk,
+      Dependabot, OWASP Dependency-Check).
+    body_en: |
+      OWASP hint #4: "You can find a hint toward the
+      underlying vulnerability in the @owasp_juiceshop
+      Twitter timeline". Unusual case where threat
+      intelligence (following project announcements) is
+      part of kill chain. For challenge, announcement
+      identifies unzipper as affected library. Reusable
+      cybersecurity pattern: CVEs and new vulnerabilities
+      announced on Twitter, GitHub Security Advisories,
+      Snyk blog, Lakera AI Blog. Security engineer must
+      follow these sources for quick reaction (modern
+      defense = automated dependency scanning: Snyk,
+      Dependabot, OWASP Dependency-Check).

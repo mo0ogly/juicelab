@@ -1,0 +1,182 @@
+challenge_key: "premiumPaywallChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Acceder le Premium Challenge (paywall) sans payer.
+  Tag : Shenanigans. Description OWASP. Hints
+  officiels : (1) "You do not have to pay anything
+  to unlock this challenge! Nonetheless, donations
+  are very much appreciated". (2) "There is no
+  inappropriate, self-written or misconfigured
+  cryptographic library to be exploited here". (3)
+  "How much protection does a sturdy top-quality
+  door lock add to your house if you put the key
+  under the door mat? Or hide the key in the
+  nearby plant pot? Or tape the key to the
+  underside of the mailbox?". (4) "Once more: You
+  do not have to pay anything to unlock this
+  challenge!". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/premiumReward.ts:13 (verifie source).
+  Code exact : `challengeUtils.solveIf(challenges.
+  premiumPaywallChallenge, () => { return true })`
+  apres GET du URL secret. La description du
+  challenge contient un commentaire HTML AES-
+  encrypted : `<!--IvLuRfBJYlmStf9XfL6ckJFngyd9LfV1J
+  aaN/KRTPQPidTuJ7FR+D/nkWJUF+0xUF07CeCeqYfxq+OJ
+  VVa0gNbqgYkUNvn//UbE7e95C+6e+7GtdpqJ8mqm4WcPvUGI
+  UxmGLTTAC2+G9UuFCD1DUjg==-->`. Hint OWASP #3
+  "key under the door mat" = la clef AES est
+  hardcoded DANS le bundle Angular (visible).
+  Workflow : (1) Lire la description du Premium
+  Paywall challenge dans le score-board source HTML
+  (View Source ou DevTools). (2) Extraire le
+  ciphertext base64-encoded. (3) Trouver la clef
+  AES dans le bundle Angular (DevTools Sources,
+  search "encryptionKey" ou "decrypt"). (4)
+  Decrypter le ciphertext avec la clef. (5) Le
+  plaintext contient l'URL secret du premium
+  reward. (6) GET cette URL -> solve auto.
+
+mission_en: |
+  Access Premium Challenge (paywall) without
+  paying. Tag: Shenanigans. OWASP description.
+  Official hints: (1) "You do not have to pay
+  anything to unlock this challenge! Nonetheless,
+  donations are very much appreciated". (2)
+  "There is no inappropriate, self-written or
+  misconfigured cryptographic library to be
+  exploited here". (3) "How much protection does
+  a sturdy top-quality door lock add to your
+  house if you put the key under the door mat?
+  Or hide the key in the nearby plant pot? Or
+  tape the key to the underside of the mailbox?".
+  (4) "Once more: You do not have to pay
+  anything to unlock this challenge!".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  premiumReward.ts:13 (verified source). Exact
+  code: `challengeUtils.solveIf(challenges.
+  premiumPaywallChallenge, () => { return true
+  })` after GET of secret URL. Challenge
+  description contains AES-encrypted HTML
+  comment: `<!--IvLuRfBJYlmStf9XfL6ckJFngyd9LfV
+  1JaaN/KRTPQPidTuJ7FR+D/nkWJUF+0xUF07CeCeqYfxq
+  +OJVVa0gNbqgYkUNvn//UbE7e95C+6e+7GtdpqJ8mqm4Wc
+  PvUGIUxmGLTTAC2+G9UuFCD1DUjg==-->`. OWASP hint
+  #3 "key under the door mat" = AES key
+  hardcoded IN Angular bundle (visible). Workflow:
+  (1) Read Premium Paywall challenge description
+  in score-board source HTML (View Source or
+  DevTools). (2) Extract base64-encoded
+  ciphertext. (3) Find AES key in Angular bundle
+  (DevTools Sources, search "encryptionKey" or
+  "decrypt"). (4) Decrypt ciphertext with key.
+  (5) Plaintext contains premium reward secret
+  URL. (6) GET this URL -> auto solves.
+
+concepts:
+  - title_fr: "Hardcoded crypto keys : the key under the doormat anti-pattern"
+    title_en: "Hardcoded crypto keys: the key under the doormat anti-pattern"
+    body_fr: |
+      Source canonique : OWASP Key Management
+      Cheat Sheet (mitigationUrl du challenge).
+      Hint OWASP #3 verbatim : "How much
+      protection does a sturdy top-quality door
+      lock add to your house if you put the key
+      under the door mat?". L'AES-256 (la
+      cryptographie moderne robuste) est COMME un
+      door lock excellent. Mais si la clef est
+      embedded dans le code source visible
+      (bundle Angular shippe au browser), c'est
+      come la cacher sous le doormat. Tout le
+      monde peut la trouver. Hint #2 : "There is
+      no inappropriate, self-written or
+      misconfigured cryptographic library" -
+      AES-256 est correctement utilise.
+      Le PROBLEM est le KEY MANAGEMENT, pas
+      l'algorithm.
+    body_en: |
+      Canonical source: OWASP Key Management
+      Cheat Sheet (challenge mitigationUrl).
+      OWASP hint #3 verbatim: "How much
+      protection does a sturdy top-quality door
+      lock add to your house if you put the
+      key under the door mat?". AES-256 (modern
+      robust cryptography) is LIKE excellent
+      door lock. But if key is embedded in
+      visible source code (Angular bundle
+      shipped to browser), it's like hiding it
+      under doormat. Everyone can find it. Hint
+      #2: "There is no inappropriate, self-
+      written or misconfigured cryptographic
+      library" - AES-256 correctly used.
+      PROBLEM is KEY MANAGEMENT, not algorithm.
+
+  - title_fr: "Bundle inspection : la surface OSINT runtime"
+    title_en: "Bundle inspection: runtime OSINT surface"
+    body_fr: |
+      Methode d'investigation : (a) Open
+      DevTools Sources tab dans Juice Shop. (b)
+      Search dans les bundles `.js` : "decrypt"
+      / "encryptionKey" / "AES" / "CryptoJS"
+      (typique). (c) Identifier la fonction de
+      decryption + la clef hardcoded. (d)
+      Reproduire localement avec CryptoJS Node.
+      js library. Pattern reusable : pour les
+      bundles JS shippes au client, TOUTES les
+      strings sont visibles - never put des
+      cryptographic secrets dedans. Defense :
+      les operations crypto-sensitive doivent
+      etre serveur-side (avec key dans HSM/
+      KMS). Le frontend n'est pas un security
+      boundary.
+    body_en: |
+      Investigation method: (a) Open DevTools
+      Sources tab in Juice Shop. (b) Search in
+      `.js` bundles: "decrypt" / "encryption
+      Key" / "AES" / "CryptoJS" (typical). (c)
+      Identify decryption function + hardcoded
+      key. (d) Reproduce locally with
+      CryptoJS Node.js library. Reusable
+      pattern: for JS bundles shipped to
+      client, ALL strings visible - never put
+      cryptographic secrets there. Defense:
+      crypto-sensitive operations must be
+      server-side (with key in HSM/KMS).
+      Frontend is not security boundary.
+
+  - title_fr: "Defense canonique : OWASP Key Management Cheat Sheet"
+    title_en: "Canonical defense: OWASP Key Management Cheat Sheet"
+    body_fr: |
+      Defense canonique key management : (1)
+      Generate keys via `crypto.randomBytes(32)`
+      au premier deploy. (2) Stocker en
+      environment variable / KMS (AWS KMS,
+      Hashicorp Vault, Azure Key Vault). (3)
+      JAMAIS hardcode dans source code. (4)
+      Rotation automatique periodique (90
+      jours). (5) Audit log de chaque key
+      access. (6) Pour les paywalls/premium
+      content : utiliser des signed URLs
+      time-limited (S3 presigned URLs, Cloud
+      Front signed URLs) plutot que de
+      decrypter cote client. Pattern reusable :
+      le secret SHOULD'NT TOUCH le client jamais.
+    body_en: |
+      Canonical key management defense: (1)
+      Generate keys via `crypto.randomBytes(32)`
+      at first deploy. (2) Store in environment
+      variable / KMS (AWS KMS, Hashicorp Vault,
+      Azure Key Vault). (3) NEVER hardcode in
+      source code. (4) Automatic periodic
+      rotation (90 days). (5) Audit log of
+      each key access. (6) For paywalls/
+      premium content: use time-limited
+      signed URLs (S3 presigned URLs,
+      CloudFront signed URLs) instead of
+      decrypting client-side. Reusable
+      pattern: secret SHOULDN'T TOUCH client
+      ever.

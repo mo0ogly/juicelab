@@ -1,0 +1,75 @@
+challenge_key: "csafChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Qu'est-ce que CSAF et a quoi sert-il ?
+    question_en: |
+      What is CSAF and what is it for?
+    options_fr:
+      - "Format de coupons"
+      - "Common Security Advisory Framework (OASIS 2.0, 2022) - format JSON standard pour security advisories machine-readable. Chaque advisory : product_tree (produits), vulnerabilities (CVE), remediations, document.tracking (hash, version). Adopte par : Microsoft, Cisco, Red Hat, Siemens"
+      - "Cipher cryptographique"
+      - "Norme ISO 27001"
+    options_en:
+      - "Coupon format"
+      - "Common Security Advisory Framework (OASIS 2.0, 2022) - standard JSON format for machine-readable security advisories. Each advisory: product_tree (products), vulnerabilities (CVE), remediations, document.tracking (hash, version). Adopted by: Microsoft, Cisco, Red Hat, Siemens"
+      - "Cryptographic cipher"
+      - "ISO 27001 standard"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : machine-readable disclosure
+      facilite remediation. Source : OASIS CSAF 2.0.
+    explanation_en: |
+      Reusable pattern: machine-readable disclosure
+      facilitates remediation. Source: OASIS CSAF 2.0.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Ou trouver les advisories CSAF d'un fournisseur ?
+    question_en: |
+      Where to find a vendor's CSAF advisories?
+    options_fr:
+      - "Sur Twitter"
+      - "(1) /.well-known/csaf-aggregator/provider-metadata.json (RFC 8615 + CSAF 2.0). (2) /.well-known/csaf-trusted-provider/. (3) Listing public sur csaf.csaf-tools.org. (4) Reference dans security.txt > Policy field. Pattern reusable : standards well-known facilitent discovery"
+      - "GitHub Issues only"
+      - "Email private"
+    options_en:
+      - "On Twitter"
+      - "(1) /.well-known/csaf-aggregator/provider-metadata.json (RFC 8615 + CSAF 2.0). (2) /.well-known/csaf-trusted-provider/. (3) Public listing on csaf.csaf-tools.org. (4) Reference in security.txt > Policy field. Reusable pattern: well-known standards facilitate discovery"
+      - "GitHub Issues only"
+      - "Private email"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : enumerer well-known. Source :
+      RFC 8615 + CSAF 2.0.
+    explanation_en: |
+      Reusable pattern: enumerate well-known. Source:
+      RFC 8615 + CSAF 2.0.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi signer (PGP) un advisory CSAF ?
+    question_en: |
+      Why sign (PGP) a CSAF advisory?
+    options_fr:
+      - "C'est cool"
+      - "Sans signature, un attaquant MITM peut alterer l'advisory (changer CVE references, retirer remediations) entre publication et consumption. Signature PGP detached (.asc) permet verification cryptographique au consumer. Pattern : trust mais verify"
+      - "Inutile"
+      - "Obligatoire EU"
+    options_en:
+      - "It's cool"
+      - "Without signature, MITM attacker can alter advisory (change CVE references, remove remediations) between publication and consumption. PGP detached signature (.asc) enables cryptographic verification at consumer. Pattern: trust but verify"
+      - "Useless"
+      - "Mandatory EU"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : crypto integrity. Source :
+      CSAF 2.0 + RFC 4880 (OpenPGP).
+    explanation_en: |
+      Reusable pattern: crypto integrity. Source:
+      CSAF 2.0 + RFC 4880 (OpenPGP).

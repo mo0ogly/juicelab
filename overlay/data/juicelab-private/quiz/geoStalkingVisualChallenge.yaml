@@ -1,0 +1,109 @@
+challenge_key: "geoStalkingVisualChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      geoStalkingMeta utilise les EXIF GPS coords. geoStalking
+      Visual utilise quoi de DIFFERENT pour identifier le
+      lieu ?
+    question_en: |
+      geoStalkingMeta uses EXIF GPS coords. geoStalkingVisual
+      uses what DIFFERENT thing to identify the location?
+    options_fr:
+      - "Les hashtags du caption de la photo"
+      - "Les DETAILS VISIBLES dans la photo elle-meme : langue des panneaux, architecture, plaques d'immatriculation, vegetation, monuments uniques. Discipline 'geo OSINT' developpee par Bellingcat. Aucune metadata utilisee — l'info est dans les pixels"
+      - "Les commentaires des autres users sur la photo"
+      - "Les tags de moderation appliques par le shop"
+    options_en:
+      - "The photo caption hashtags"
+      - "The VISIBLE DETAILS in the photo itself: sign language, architecture, license plates, vegetation, unique monuments. 'Geo OSINT' discipline developed by Bellingcat. No metadata used — info is in the pixels"
+      - "Other users' comments on the photo"
+      - "Shop-applied moderation tags"
+    correct: 1
+    explanation_fr: |
+      Distinction critique. EXIF strip resout
+      geoStalkingMeta. NE resout PAS geoStalkingVisual. C'est
+      pourquoi les deux challenges existent comme paire :
+      illustrer que metadata != donnee visible. La defense
+      varie : pour metadata, server-side strip facile ; pour
+      visuel, education user + flou automatique
+      compute-expensive.
+    explanation_en: |
+      Critical distinction. EXIF strip solves
+      geoStalkingMeta. Does NOT solve geoStalkingVisual.
+      That's why both challenges exist as a pair: illustrate
+      metadata != visible data. Defense varies: for metadata,
+      easy server-side strip; for visual, user education +
+      automatic blur compute-expensive.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Bellingcat est connu pour son expertise en geo OSINT
+      visuel. Quelle methode propose-t-il pour identifier
+      systematiquement le lieu d'une photo ?
+    question_en: |
+      Bellingcat is known for visual geo OSINT expertise.
+      Which method do they propose to systematically
+      identify a photo's location?
+    options_fr:
+      - "Faire une recherche aleatoire jusqu'a trouver"
+      - "Methode '9 zones du cadre' : decomposer la photo en 9 zones (3x3 grid), analyser systematiquement chaque zone pour des indices identifiables (langue, architecture, vegetation, plaques, monuments), puis cross-reference avec maps/databases"
+      - "Demander a une IA de deviner aleatoirement"
+      - "Telephoner a Bellingcat directement"
+    options_en:
+      - "Random searching until you find it"
+      - "'9 frame zones' method: decompose the photo into 9 zones (3x3 grid), systematically analyze each zone for identifiable clues (language, architecture, vegetation, plates, monuments), then cross-reference with maps/databases"
+      - "Ask an AI to guess randomly"
+      - "Call Bellingcat directly"
+    correct: 1
+    explanation_fr: |
+      Methode publiquement documentee dans les training
+      Bellingcat. Discipline professionnelle utilisee en
+      journalisme d'investigation et en pentest. Reference :
+      bellingcat.com/category/resources/. Combine avec
+      reverse image search pour valider l'hypothese.
+    explanation_en: |
+      Publicly documented method in Bellingcat training.
+      Professional discipline used in investigative
+      journalism and pentest. Reference:
+      bellingcat.com/category/resources/. Combined with
+      reverse image search to validate hypothesis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense difficile contre geoStalkingVisual : pourquoi
+      EXIF strip ne suffit-il pas ?
+    question_en: |
+      Hard defense against geoStalkingVisual: why doesn't
+      EXIF strip suffice?
+    options_fr:
+      - "Parce que EXIF strip casse l'image"
+      - "Parce que l'info de localisation est dans les PIXELS de l'image, pas dans les metadata. EXIF strip ne change rien aux details visibles. Defenses possibles : (a) education user, (b) flou automatique des elements identifiables (compute-expensive), (c) reduction resolution. Aucune defense parfaite cote app"
+      - "Parce que EXIF strip est interdit par RGPD"
+      - "Parce que les browsers reactivent EXIF automatiquement"
+    options_en:
+      - "Because EXIF strip breaks the image"
+      - "Because location info is in the IMAGE PIXELS, not metadata. EXIF strip changes nothing for visible details. Possible defenses: (a) user education, (b) automatic blur of identifiable elements (compute-expensive), (c) resolution reduction. No perfect app-side defense"
+      - "Because EXIF strip is GDPR-forbidden"
+      - "Because browsers re-enable EXIF automatically"
+    correct: 1
+    explanation_fr: |
+      Lecon doctorale : differencier les couches de la donnee.
+      Metadata (EXIF) = couche structuree, attaquable par
+      strip. Pixels = couche visible, attaquable seulement
+      par destruction d'information. Cette distinction
+      explique pourquoi certaines defenses scalent (EXIF) et
+      d'autres pas (visuel). Reference : OWASP Privacy
+      cheatsheet section "Image upload".
+    explanation_en: |
+      Doctoral lesson: distinguish data layers. Metadata
+      (EXIF) = structured layer, attackable by strip. Pixels
+      = visible layer, attackable only by information
+      destruction. This distinction explains why some
+      defenses scale (EXIF) and others don't (visual).
+      Reference: OWASP Privacy cheatsheet "Image upload"
+      section.

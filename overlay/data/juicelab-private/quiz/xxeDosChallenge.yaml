@@ -1,0 +1,93 @@
+challenge_key: "xxeDosChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la mecanique exacte du
+      Billion Laughs attack ?
+    question_en: |
+      What's exact mechanic of Billion
+      Laughs attack?
+    options_fr:
+      - "Send 1 billion XMLs"
+      - "Recursive entity expansion : N levels d'entities chacune referencing 10x children. Apres 9 levels = 10^9 = 1 billion expansions. Chaque expansion = string copy. Memory consume = N bytes * 10^9 = GBs. Parser crash ou freeze. CVE-2003-1564 (original 2003). Defense : disable DOCTYPE + entity expansion limit (libxml `huge: false`)"
+      - "Send 1 billion users"
+      - "Send Lol meme"
+    options_en:
+      - "Send 1 billion XMLs"
+      - "Recursive entity expansion: N levels of entities each referencing 10x children. After 9 levels = 10^9 = 1 billion expansions. Each expansion = string copy. Memory consume = N bytes * 10^9 = GBs. Parser crashes or freezes. CVE-2003-1564 (original 2003). Defense: disable DOCTYPE + entity expansion limit (libxml `huge: false`)"
+      - "Send 1 billion users"
+      - "Send Lol meme"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : exponential
+      expansion attacks. Cf. ZIP bomb (cf.
+      fileWriteChallenge), JSON bomb,
+      regex DoS. Source : CVE-2003-1564 +
+      OWASP DoS Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: exponential
+      expansion attacks. Cf. ZIP bomb (cf.
+      fileWriteChallenge), JSON bomb,
+      regex DoS. Source: CVE-2003-1564 +
+      OWASP DoS Cheat Sheet.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi le timeout 2sec dans Juice
+      Shop n'est-il PAS une defense ?
+    question_en: |
+      Why is 2sec timeout in Juice Shop NOT
+      a defense?
+    options_fr:
+      - "2sec est trop court"
+      - "Le timeout cause juste un 503 error response, mais l'attaque DOS reussit (les attaquants want resources consumed). De plus, le code Juice Shop solve le CHALLENGE quand le timeout trigger - pedagogiquement le timeout IS la solution. Defense reelle : ENTITY EXPANSION LIMIT (libxml `huge: false`, max recursion depth) + DOCTYPE disable. Le timeout est un band-aid"
+      - "2sec est suffisant"
+      - "Timeout est obsolete"
+    options_en:
+      - "2sec too short"
+      - "Timeout just causes 503 error response, but DOS attack succeeds (attackers want resources consumed). Plus Juice Shop code solves CHALLENGE when timeout triggers - pedagogically timeout IS the solution. Real defense: ENTITY EXPANSION LIMIT (libxml `huge: false`, max recursion depth) + DOCTYPE disable. Timeout is band-aid"
+      - "2sec is enough"
+      - "Timeout obsolete"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : timeout != attack
+      prevention. Defense en profondeur =
+      multiple layers. Source : routes/
+      fileUpload.ts:83-95 + OWASP DoS.
+    explanation_en: |
+      Reusable pattern: timeout != attack
+      prevention. Defense in depth =
+      multiple layers. Source: routes/
+      fileUpload.ts:83-95 + OWASP DoS.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour XXE bombing
+      attacks ?
+    question_en: |
+      Canonical defense for XXE bombing
+      attacks?
+    options_fr:
+      - "Disabler XML"
+      - "Defense en profondeur 6 layers : (1) DOCTYPE disable (`doctype: false`) elimine entities entirely. (2) Entity expansion limit (libxml `huge: false`, max recursion). (3) Modern safe parser (defusedxml Python). (4) Process timeout (band-aid). (5) Resource limits (cgroups, Docker memory). (6) Sandbox parser (no network access). Pattern : couche par couche"
+      - "Reboot le serveur"
+      - "Encrypter le XML"
+    options_en:
+      - "Disable XML"
+      - "6-layer defense in depth: (1) DOCTYPE disable (`doctype: false`) entirely eliminates entities. (2) Entity expansion limit (libxml `huge: false`, max recursion). (3) Modern safe parser (defusedxml Python). (4) Process timeout (band-aid). (5) Resource limits (cgroups, Docker memory). (6) Sandbox parser (no network access). Pattern: layer by layer"
+      - "Reboot server"
+      - "Encrypt XML"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : multi-layer
+      defense pour DoS attacks. Source :
+      OWASP XXE Prevention.
+    explanation_en: |
+      Reusable pattern: multi-layer
+      defense for DoS attacks. Source:
+      OWASP XXE Prevention.

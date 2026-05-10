@@ -1,0 +1,173 @@
+challenge_key: "uploadSizeChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "You can attach a small
+      file to the Complaint form. Investigate how this
+      upload actually works". Surface = Complaint form
+      avec file upload. Hint #2 : "understand how the
+      file upload is actually handled on the client
+      and server side".
+    text_en: |
+      Official OWASP hint #1: "You can attach a small
+      file to the Complaint form. Investigate how this
+      upload actually works". Surface = Complaint form
+      with file upload. Hint #2: "understand how the
+      file upload is actually handled on the client
+      and server side".
+    pedagogical_intent: |
+      Activate file upload investigation reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Inspecte le formulaire B2B Complaint :
+      /#/complain. Le file picker accept .pdf et
+      .zip uniquement (HTML accept attribute). Le
+      submit button verifie la taille via JS
+      (frontend). Si tu uploades > 100kB via UI,
+      le frontend rejette. Question : est-ce
+      bypass-able ?
+    text_en: |
+      Inspect B2B Complaint form: /#/complain. File
+      picker accepts only .pdf and .zip (HTML
+      accept attribute). Submit button verifies
+      size via JS (frontend). If you upload >
+      100kB via UI, frontend rejects. Question: is
+      it bypassable?
+    pedagogical_intent: |
+      Spell investigation surface.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (routes/fileUpload.ts:60-65) :
+      `function checkUploadSize ({ file }, res,
+      next) { if (file != null) { challengeUtils.
+      solveIf(challenges.uploadSizeChallenge, ()
+      => { return file?.size > 100000 }) } next() }`.
+      Le check est SEULEMENT pour le solve, PAS
+      pour rejeter le upload. Le multer middleware
+      n'a pas de `limits` config. Donc tout file
+      passe, le solve trigger si > 100kB.
+    text_en: |
+      Server source (routes/fileUpload.ts:60-65):
+      `function checkUploadSize ({ file }, res,
+      next) { if (file != null) { challengeUtils.
+      solveIf(challenges.uploadSizeChallenge, ()
+      => { return file?.size > 100000 }) } next() }`.
+      Check is ONLY for solve, NOT to reject
+      upload. Multer middleware has no `limits`
+      config. So any file passes, solve triggers
+      if > 100kB.
+    pedagogical_intent: |
+      Reveal server bypass mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Construction du
+      payload : crafter un fichier > 100kB :
+      ```bash
+      # Generer un .pdf factice de 200kB
+      dd if=/dev/urandom of=large.pdf bs=1k
+        count=200
+      # Ou un .zip de 200kB
+      dd if=/dev/urandom of=large.zip bs=1k
+        count=200
+      ```
+      Submit via curl bypassing frontend :
+      ```bash
+      curl -X POST http://localhost:3000/file-upload
+        -H "Authorization: Bearer <token>"
+        -F "file=@large.pdf"
+      ```
+      Le frontend ne peut pas filtrer les requests
+      curl. Le backend accepte (no multer limits).
+      solveIf trigger -> challenge solve.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Payload construction:
+      craft a > 100kB file:
+      ```bash
+      # Generate fake 200kB .pdf
+      dd if=/dev/urandom of=large.pdf bs=1k
+        count=200
+      # Or 200kB .zip
+      dd if=/dev/urandom of=large.zip bs=1k
+        count=200
+      ```
+      Submit via curl bypassing frontend:
+      ```bash
+      curl -X POST http://localhost:3000/file-upload
+        -H "Authorization: Bearer <token>"
+        -F "file=@large.pdf"
+      ```
+      Frontend can't filter curl requests.
+      Backend accepts (no multer limits). solveIf
+      triggers -> challenge solves.
+    pedagogical_intent: |
+      Spell payload + curl + bypass.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Login Juice Shop (besoin authenticated
+         user pour /file-upload).
+      2. Generer un fichier > 100kB :
+         `dd if=/dev/urandom of=large.pdf bs=1k
+         count=200`.
+      3. Recup ton JWT depuis localStorage ou
+         DevTools.
+      4. Submit via curl :
+         ```bash
+         curl -X POST
+           http://localhost:3000/file-upload
+           -H "Authorization: Bearer <token>"
+           -F "file=@large.pdf"
+         ```
+      5. Le serveur :
+         (a) multer accept (no size limit)
+         (b) checkUploadSize verifie file.size >
+             100000 -> match -> solveIf trigger
+         (c) challenge solve auto.
+      Source canonique : routes/fileUpload.ts:60-65
+      + OWASP File Upload Cheat Sheet.
+      Defense canonique : (a) multer `limits:
+      { fileSize: 100 * 1024 }`. (b) reverse proxy
+      `client_max_body_size 100k`. (c) body-parser
+      `limit: '100kb'`. (d) Disk quota
+      OS-level. Defense en profondeur 4-layers.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Login Juice Shop (need authenticated
+         user for /file-upload).
+      2. Generate > 100kB file: `dd
+         if=/dev/urandom of=large.pdf bs=1k
+         count=200`.
+      3. Retrieve JWT from localStorage or
+         DevTools.
+      4. Submit via curl:
+         ```bash
+         curl -X POST
+           http://localhost:3000/file-upload
+           -H "Authorization: Bearer <token>"
+           -F "file=@large.pdf"
+         ```
+      5. Server:
+         (a) multer accepts (no size limit)
+         (b) checkUploadSize verifies file.size >
+             100000 -> match -> solveIf triggers
+         (c) challenge auto solves.
+      Canonical source: routes/fileUpload.ts:60-65
+      + OWASP File Upload Cheat Sheet.
+      Canonical defense: (a) multer `limits:
+      { fileSize: 100 * 1024 }`. (b) reverse
+      proxy `client_max_body_size 100k`. (c)
+      body-parser `limit: '100kb'`. (d) OS-level
+      disk quota. 4-layer defense in depth.
+    pedagogical_intent: |
+      Solution complete + 4-layer defense.

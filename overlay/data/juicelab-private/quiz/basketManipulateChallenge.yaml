@@ -1,0 +1,104 @@
+challenge_key: "basketManipulateChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la difference fondamentale entre IDOR sur GET
+      (read, basketAccess) et IDOR sur POST/PUT (write,
+      basketManipulate) en termes d'IMPACT ?
+    question_en: |
+      What's the fundamental difference between IDOR on GET
+      (read, basketAccess) and IDOR on POST/PUT (write,
+      basketManipulate) in terms of IMPACT?
+    options_fr:
+      - "Aucune difference, l'impact est identique"
+      - "GET = leak des donnees (mauvais mais reversible : rotation des secrets, suppression). POST/PUT = modification persistante (mauvais ET non reversible sans backup + rollback). Le second permet harassment, denial-of-checkout, attaques coordonnees sur N users"
+      - "GET est plus dangereux que POST"
+      - "POST necessite un compte admin, GET non"
+    options_en:
+      - "No difference, impact is identical"
+      - "GET = data leak (bad but reversible: rotate secrets, delete). POST/PUT = persistent modification (bad AND irreversible without backup + rollback). The second enables harassment, denial-of-checkout, coordinated attacks on N users"
+      - "GET is more dangerous than POST"
+      - "POST requires an admin account, GET doesn't"
+    correct: 1
+    explanation_fr: |
+      Read/write distinction critique dans toute analyse de
+      severite. Un IDOR write doit etre traite comme priorite
+      maximale en remediation. Pattern de reflexion : avant tout
+      audit IDOR, mapper d'abord les operations write puis les
+      operations read.
+    explanation_en: |
+      Read/write distinction is critical in any severity
+      analysis. A write IDOR must be top priority in remediation.
+      Reflection pattern: before any IDOR audit, first map write
+      operations then read operations.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le bug technique est que le backend Juice Shop accepte un
+      BasketId du body sans verification. Quel pattern de defense
+      empeche structurellement l'IDOR sur cet endpoint ?
+    question_en: |
+      The technical bug is the Juice Shop backend accepting a
+      body BasketId without verification. Which defense pattern
+      structurally prevents IDOR on this endpoint?
+    options_fr:
+      - "Augmenter le rate limit a 1 BasketItem par minute"
+      - "Ne PAS accepter de BasketId du body. Le deduire du JWT en chargeant le basket du user (Basket.findOne({ where: { UserId: req.user.id }})). Par construction, l'utilisateur ne peut ajouter qu'a son propre basket"
+      - "Chiffrer le BasketId avec AES dans le body"
+      - "Logger chaque ajout de BasketItem"
+    options_en:
+      - "Raise rate limit to 1 BasketItem per minute"
+      - "Do NOT accept BasketId from body. Derive it from JWT by loading the user's basket (Basket.findOne({ where: { UserId: req.user.id }})). By construction, the user can only add to their own basket"
+      - "Encrypt BasketId with AES in body"
+      - "Log every BasketItem addition"
+    correct: 1
+    explanation_fr: |
+      Pattern /api/me/<resource> applique aux operations write.
+      L'attaquant ne peut PAS supplier un BasketId puisque le
+      serveur ne le lit jamais du body. Equivalent du pattern
+      basketAccess (read) mais en write. Defense structurelle =
+      l'attaque est syntaxiquement impossible.
+    explanation_en: |
+      /api/me/<resource> pattern applied to write ops. Attacker
+      CANNOT supply a BasketId since the server never reads it
+      from body. Equivalent to basketAccess pattern (read) but
+      write. Structural defense = attack is syntactically
+      impossible.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Si on garde l'API style POST /api/BasketItems/ avec
+      BasketId dans le body (par compatibilite), quel check
+      MINIMAL doit etre fait avant l'insertion ?
+    question_en: |
+      If we keep the API style POST /api/BasketItems/ with
+      BasketId in body (for compatibility), which MINIMAL check
+      must happen before insertion?
+    options_fr:
+      - "Verifier que le BasketId est un entier positif"
+      - "Charger le Basket par BasketId, verifier que basket.UserId === req.user.id, sinon 403. C'est le ownership check standard, applicable a toute operation sur une ressource user-scoped"
+      - "Rate-limiter l'endpoint a 60 requetes par minute"
+      - "Logger chaque BasketItem cree"
+    options_en:
+      - "Verify BasketId is a positive integer"
+      - "Load Basket by BasketId, verify basket.UserId === req.user.id, else 403. Standard ownership check, applicable to any operation on a user-scoped resource"
+      - "Rate-limit endpoint to 60 requests per minute"
+      - "Log every created BasketItem"
+    correct: 1
+    explanation_fr: |
+      Ownership check est la SEULE defense qui bloque l'IDOR si
+      l'API expose un identifiant client-controlled. Les autres
+      mesures sont complementaires (audit, observability) mais ne
+      previennent pas l'attaque. C'est le pattern OWASP
+      API1:2023 (Broken Object Level Authorization).
+    explanation_en: |
+      Ownership check is the ONLY defense blocking IDOR if the
+      API exposes a client-controlled identifier. Other measures
+      are complementary (audit, observability) but don't prevent
+      the attack. OWASP API1:2023 (Broken Object Level
+      Authorization) pattern.

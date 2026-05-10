@@ -1,0 +1,128 @@
+challenge_key: "easterEggLevelOneChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Trouve l'easter egg cache dans le serveur Juice Shop. La
+  description OWASP officielle est volontairement minimaliste : "Find
+  the hidden easter egg" (avec lien vers la page Wikipedia
+  expliquant la culture des easter eggs en software). Hint #1 :
+  "If you solved one of the four file access challenges, you already
+  know where to find the easter egg". Hint #2 : "Simply reuse the
+  trick that already worked for the files above". Pre-requis
+  pedagogique : avoir resolu un challenge sur /ftp/ (Confidential
+  Document, Forgotten Backup, etc.).
+
+  Methode recommandee : retourne sur /ftp/ (le directory listing
+  vu en Confidential Document). L'easter egg est un fichier dans
+  ce dossier, mais avec une extension qui devrait normalement etre
+  bloquee (.bak, .md.bak, ou similaire). La technique du
+  poison null byte (extension cachee avec %00) ou d'un suffix
+  query string (?.md) permet souvent de bypass le filtre
+  d'extension cote serveur. Note l'extension exacte du fichier et
+  la technique utilisee.
+
+  Reflechis a la culture des easter eggs en software : pourquoi
+  les developpeurs en cachent ? Quel est le risque securite quand
+  l'easter egg n'est pas audit ? Tu en parleras dans le journal
+  "apres".
+
+mission_en: |
+  Find the hidden easter egg on the Juice Shop server. The
+  official OWASP description is deliberately minimal: "Find the
+  hidden easter egg" (with a link to the Wikipedia page explaining
+  software easter egg culture). Hint #1: "If you solved one of
+  the four file access challenges, you already know where to find
+  the easter egg". Hint #2: "Simply reuse the trick that already
+  worked for the files above". Pedagogical prerequisite: solved a
+  challenge on /ftp/ (Confidential Document, Forgotten Backup,
+  etc.).
+
+  Recommended method: go back to /ftp/ (the directory listing
+  seen in Confidential Document). The easter egg is a file in
+  that folder, but with an extension that should normally be
+  blocked (.bak, .md.bak, or similar). The poison null byte
+  technique (hidden extension with %00) or a query string suffix
+  (?.md) often bypasses the server-side extension filter. Note
+  the exact file extension and the technique used.
+
+  Reflect on the easter egg culture in software: why do
+  developers hide them? What's the security risk when an easter
+  egg isn't audited? You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Easter eggs : culture historique et risque securite"
+    title_en: "Easter eggs: historic culture and security risk"
+    body_fr: |
+      Tradition software depuis Atari Adventure (1979) ou un
+      programmeur (Warren Robinett) a cache son nom dans un
+      tableau secret. Aujourd'hui : Konami code, Google Easter
+      eggs, dev signatures. Probleme securite : un easter egg est
+      par definition non documente, donc non audit. Si le
+      developpeur a inclus du code de debug, des credentials de
+      test, ou un endpoint backdoor pour son demo personnel, il
+      reste en production avec son code. Sur Juice Shop, l'easter
+      egg est un fichier dans /ftp/ — pedagogie : l'attaquant
+      reutilise la meme vulnerabilite (directory listing) deux
+      fois sur la meme surface.
+    body_en: |
+      Software tradition since Atari Adventure (1979) where a
+      programmer (Warren Robinett) hid his name in a secret room.
+      Today: Konami code, Google Easter eggs, dev signatures.
+      Security issue: an easter egg is by definition undocumented,
+      hence unaudited. If the developer included debug code, test
+      credentials, or a backdoor endpoint for their personal
+      demo, it stays in production with their code. On Juice
+      Shop, the easter egg is a file in /ftp/ — pedagogy: the
+      attacker reuses the same vulnerability (directory listing)
+      twice on the same surface.
+
+  - title_fr: "Bypass de filtre d'extension : null byte et query string"
+    title_en: "Extension filter bypass: null byte and query string"
+    body_fr: |
+      Beaucoup d'apps filtrent les extensions des fichiers
+      servies via une regex en frontiere. Sur Juice Shop, .bak est
+      typiquement bloque (sauvegardes, dumps). Bypass classiques :
+      (1) poison null byte URL-encoded %00 : foo.bak%00.md (le
+      filtre voit .md, le filesystem ouvre .bak avec truncation
+      C-string en certains stack). (2) Query string suffix :
+      foo.bak?.md (regex naive matche .md mais l'app sert
+      foo.bak). (3) Double extension : foo.md.bak (le filtre
+      bloque .bak final, mais certains parsers prennent .md).
+      Defense : allowlist d'extensions au lieu de blocklist, et
+      validation au niveau filesystem (check du fichier ouvert,
+      pas juste du path requis).
+    body_en: |
+      Many apps filter served file extensions via boundary regex.
+      On Juice Shop, .bak is typically blocked (backups, dumps).
+      Classic bypasses: (1) URL-encoded poison null byte %00:
+      foo.bak%00.md (filter sees .md, filesystem opens .bak with
+      C-string truncation in some stacks). (2) Query string
+      suffix: foo.bak?.md (naive regex matches .md but the app
+      serves foo.bak). (3) Double extension: foo.md.bak (filter
+      blocks final .bak, but some parsers take .md). Defense:
+      extension allowlist instead of blocklist, and
+      filesystem-level validation (check the opened file, not
+      just the requested path).
+
+  - title_fr: "Defense : asset retention + audit periodique"
+    title_en: "Defense: asset retention + periodic audit"
+    body_fr: |
+      Au-dela du fix d'extension, defense en profondeur. (1)
+      Retention strategy : un dossier accessible publiquement ne
+      doit contenir QUE les assets necessaires en production.
+      Audit periodique : pour chaque fichier dans /ftp/ ou
+      /uploads/, verifier sa raison d'etre. (2) Detection : alerte
+      sur les requetes a des extensions inhabituelles (.bak, .git,
+      .env, .log, .swp). (3) Honeypot : laisser un fichier
+      tentant nomme honeypot.bak qui declenche un alert SIEM des
+      qu'on y accede. Cette derniere strategie attrape les
+      reconnaissance scans automatiques.
+    body_en: |
+      Beyond the extension fix, defense in depth. (1) Retention
+      strategy: a publicly-accessible folder must contain ONLY
+      assets needed in production. Periodic audit: for every file
+      in /ftp/ or /uploads/, verify its reason to exist. (2)
+      Detection: alert on requests to unusual extensions (.bak,
+      .git, .env, .log, .swp). (3) Honeypot: leave a tempting
+      file named honeypot.bak triggering a SIEM alert whenever
+      accessed. This last strategy catches automatic recon scans.

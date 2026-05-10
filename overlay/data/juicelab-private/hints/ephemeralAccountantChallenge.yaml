@@ -1,0 +1,106 @@
+challenge_key: "ephemeralAccountantChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Le hint OWASP officiel #2 dit "the user literally needs to be
+      ephemeral as in lasting for only a short time". Ephemere = qui
+      ne dure pas, qui n'est pas persiste. Si tu ne peux pas
+      enregistrer le user (le shop refuse) et tu ne peux pas
+      l'inserer en DB (le challenge est invalidate), comment serait-il
+      possible d'avoir un user "qui n'existe pas vraiment" mais qui
+      te connecte quand meme ?
+    text_en: |
+      The official OWASP hint #2 says "the user literally needs to be
+      ephemeral as in lasting for only a short time". Ephemeral =
+      doesn't last, not persisted. If you can't register (the shop
+      refuses) and you can't INSERT in DB (challenge invalidated),
+      how could a user "not really existing" still log you in?
+    pedagogical_intent: |
+      Activate the conceptual reflex on persistence vs transient session.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le hint OWASP officiel #5 le dit explicitement : "The fact that
+      this challenge is in the Injection category should already give
+      away the intended approach". Il faut faire une injection SQL
+      sur le login. Mais quelle FAMILLE de SQLi peut FABRIQUER des
+      donnees au lieu de simplement filtrer ?
+    text_en: |
+      Official OWASP hint #5 says it explicitly: "The fact that this
+      challenge is in the Injection category should already give away
+      the intended approach". You must SQL inject on login. But which
+      FAMILY of SQLi can FABRICATE data instead of just filtering?
+    pedagogical_intent: |
+      Distinguish UNION-based from comment-based SQLi by hinting at fabrication.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      UNION SELECT permet d'ajouter un row choisi par l'attaquant a un
+      resultat de requete. Si le backend SELECT * FROM users WHERE
+      email='<input>', tu peux injecter '
+      UNION SELECT ...,'acc0unt4nt@juice-sh.op',... -- pour fabriquer
+      un user. Probleme technique : il faut le BON nombre de colonnes
+      avec les BONS types pour que l'UNION soit accepte. Methode :
+      test progressif (NULL,NULL,...) jusqu'a ce que ca passe.
+    text_en: |
+      UNION SELECT lets you append a row chosen by the attacker to a
+      query result. If the backend is SELECT * FROM users WHERE
+      email='<input>', you can inject '
+      UNION SELECT ...,'acc0unt4nt@juice-sh.op',... -- to fabricate
+      a user. Technical issue: you need the RIGHT column count with
+      compatible types for the UNION to be accepted. Method:
+      progressive testing (NULL,NULL,...) until it goes through.
+    pedagogical_intent: |
+      Give the syntactic shape and the column-alignment difficulty.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      La table users de Juice Shop a 9 colonnes pertinentes : id,
+      username, email, password, role, deluxeToken, lastLoginIp,
+      profileImage, totpSecret. Pour fabriquer un user accountant,
+      tu dois passer un UNION qui aligne ces 9 columns avec des
+      valeurs sensees : id (n'importe quel int), email
+      (acc0unt4nt@juice-sh.op), password (hash bidon), role
+      (accountant), totpSecret (chaine vide). Les autres peuvent
+      etre vides ou NULL.
+    text_en: |
+      Juice Shop's users table has 9 relevant columns: id, username,
+      email, password, role, deluxeToken, lastLoginIp, profileImage,
+      totpSecret. To fabricate an accountant user, you must pass a
+      UNION aligning these 9 columns with sensible values: id (any
+      int), email (acc0unt4nt@juice-sh.op), password (dummy hash),
+      role (accountant), totpSecret (empty string). The rest can be
+      empty or NULL.
+    pedagogical_intent: |
+      Spell the schema, demystify the alignment.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Payload type pour le champ email :
+      ' UNION SELECT 0,null,'acc0unt4nt@juice-sh.op',null,'accountant',
+      null,null,null,null FROM Users--
+      avec un mot de passe quelconque dans le champ password. Le
+      backend execute SELECT * FROM Users WHERE email='' UNION
+      SELECT ... FROM Users--' AND password='...'. Le UNION fabrique
+      un row accountant ephemere, le AND password est commente, le
+      JWT est signe pour ce row fictif. Tu es connecte sous une
+      identite qui n'a jamais existe en DB.
+    text_en: |
+      Sample payload for the email field:
+      ' UNION SELECT 0,null,'acc0unt4nt@juice-sh.op',null,'accountant',
+      null,null,null,null FROM Users--
+      with any password in the password field. The backend executes
+      SELECT * FROM Users WHERE email='' UNION SELECT ... FROM
+      Users--' AND password='...'. The UNION fabricates an ephemeral
+      accountant row, the AND password gets commented, the JWT is
+      signed for that fake row. You are logged in under an identity
+      that never existed in DB.
+    pedagogical_intent: |
+      Quasi-solution : full payload + reconstructed SQL + behavior explained.

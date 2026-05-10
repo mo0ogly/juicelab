@@ -1,0 +1,123 @@
+challenge_key: "loginJimChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Connecte-toi sous le compte de Jim. Comme Login Bender, c'est une
+  SQLi sur le formulaire de login, mais la SOURCE D'OSINT est
+  differente : Jim signe ses critiques de produit (product reviews) et
+  pas la carousel About Us. Le challenge te force a explorer une
+  surface UI distincte : les reviews sont des donnees utilisateur sous
+  un produit, pas une page institutionnelle.
+
+  Methode recommandee (suit le tutoriel hacking-instructor OWASP
+  loginJim.ts) : retourne sur la page produits, ouvre le dialog de
+  details d'un produit, lis les reviews. Trouve une review signee par
+  Jim avec son email visible. Sur le formulaire de login, applique la
+  meme SQLi que pour Login Admin / Login Bender :
+  jim@juice-sh.op'-- avec un mot de passe quelconque.
+
+  Note la difference d'experience entre OSINT institutionnelle (About
+  Us) et OSINT data-utilisateur (reviews). Les deux fuitent, mais pour
+  des raisons differentes. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Log in under Jim's account. Like Login Bender, this is a SQLi on the
+  login form, but the OSINT SOURCE differs: Jim signs his product
+  reviews and not the About Us carousel. The challenge forces you to
+  explore a distinct UI surface: reviews are user data under a
+  product, not an institutional page.
+
+  Recommended method (follows the OWASP hacking-instructor tutorial
+  loginJim.ts): go back to the products page, open a product details
+  dialog, read the reviews. Find a review signed by Jim with his
+  email visible. On the login form, apply the same SQLi as Login
+  Admin / Login Bender: jim@juice-sh.op'-- with any password.
+
+  Note the experiential difference between institutional OSINT
+  (About Us) and user-data OSINT (reviews). Both leak, but for
+  different reasons. You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "OSINT data-utilisateur : product reviews comme leak d'emails"
+    title_en: "User-data OSINT: product reviews as email leak"
+    body_fr: |
+      Source : tutoriel OWASP loginJim.ts ligne 46-47 ("for instance
+      in the product reviews"). Difference structurelle avec About
+      Us : les reviews sont saisies par les utilisateurs eux-memes
+      (Jim a tape son email volontairement dans son review). Le
+      probleme n'est pas le marketing mais le manque de moderation
+      ET l'absence de redaction PII automatique. Un review devrait
+      avoir un author signe par display name, jamais par email
+      complet. Defense : strip PII via regex au moment de l'affichage
+      ou au moment de l'insertion.
+    body_en: |
+      Source: OWASP tutorial loginJim.ts line 46-47 ("for instance
+      in the product reviews"). Structural difference with About Us:
+      reviews are entered by users themselves (Jim voluntarily typed
+      his email in his review). The problem is not marketing but
+      lack of moderation AND absence of automatic PII redaction. A
+      review should have an author shown as display name, never the
+      full email. Defense: strip PII via regex on display or insert.
+
+  - title_fr: "Comparer Bender vs Jim : surface UI determine la pedagogie"
+    title_en: "Bender vs Jim compared: UI surface drives the lesson"
+    body_fr: |
+      Bender = OSINT via UI marketing curee (carousel selectionne
+      par le shop). Jim = OSINT via UI generee par utilisateurs
+      (reviews soumises et affichees brutes). Les deux fuitent l'email
+      mais les vecteurs de defense different : pour Bender, le shop
+      contraole l'affichage et peut tronquer ; pour Jim, le shop
+      contraole le filtre d'INPUT et peut empecher l'utilisateur
+      d'inclure un email dans son review en premier lieu (validation
+      input + redaction PII). Cette distinction est cruciale en
+      pentest reel : identifier la classe d'UI avant de proposer
+      la defense.
+    body_en: |
+      Bender = OSINT via curated marketing UI (carousel selected by
+      the shop). Jim = OSINT via user-generated UI (reviews
+      submitted and shown raw). Both leak the email but defense
+      vectors differ: for Bender, the shop controls the display and
+      can truncate; for Jim, the shop controls the INPUT filter and
+      can prevent the user from including an email in the review in
+      the first place (input validation + PII redaction). This
+      distinction is crucial in real pentests: identify the UI class
+      before proposing the defense.
+
+  - title_fr: "Defense en profondeur sur reviews : moderation + PII detection"
+    title_en: "Defense in depth on reviews: moderation + PII detection"
+    body_fr: |
+      Pipeline de defense pour user-generated content qui fuite des
+      PII : (1) regex de detection email/telephone/IBAN au moment de
+      la soumission, refuse ou redact ; (2) modele NER (named-entity
+      recognition) pour les patterns moins reguliers (noms propres
+      complets, adresses) ; (3) moderation humaine asynchrone pour
+      les ambiguites ; (4) audit periodique du dataset existant pour
+      retire les leaks historiques. Outils : aws-comprehend, gcp-dlp,
+      Microsoft Presidio open-source.
+    body_en: |
+      Defense pipeline for user-generated content that leaks PII:
+      (1) email/phone/IBAN detection regex at submit time, refuse
+      or redact; (2) NER model (named-entity recognition) for less
+      regular patterns (full proper names, addresses); (3)
+      asynchronous human moderation for ambiguities; (4) periodic
+      audit of the existing dataset to remove historical leaks.
+      Tools: aws-comprehend, gcp-dlp, open-source Microsoft Presidio.
+
+  - title_fr: "Le pattern email business comme alternative a l'OSINT"
+    title_en: "Business email pattern as OSINT alternative"
+    body_fr: |
+      Hint OWASP officiel : "smart-guess Jim's email address". Si
+      l'OSINT echoue (review supprimee, modere), la convention
+      firstName@juice-sh.op donne jim@juice-sh.op directement. Cette
+      methode "guess" n'est meme pas une attaque, c'est une
+      enumeration triviale. Defense : tirer un loginId aleatoire ou
+      un alias neutre (user-12847@) pour casser la correlation entre
+      le nom de l'utilisateur et son adresse de connexion.
+    body_en: |
+      Official OWASP hint: "smart-guess Jim's email address". If
+      OSINT fails (review deleted, moderated), the
+      firstName@juice-sh.op convention yields jim@juice-sh.op
+      directly. This "guess" method is not even an attack, it is
+      trivial enumeration. Defense: assign a random loginId or a
+      neutral alias (user-12847@) to break the correlation between
+      a user's name and their login address.

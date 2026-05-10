@@ -1,0 +1,111 @@
+challenge_key: "misplacedSignatureFileChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Acceder a un misplaced SIEM signature file. Tags :
+  Good Practice, Contraption. Description OWASP.
+  Hints : (1) "trick a security mechanism into
+  thinking that the file you want has a valid file
+  type". (2) "If you solved one of the other four
+  file access challenges, you already know where
+  the SIEM signature file is located". (3) "Simply
+  reuse the trick that already worked".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve dans routes/fileServer.ts:44.
+  Code : `solveIf(() => file === 'suspicious_
+  errors.yml')`. Le file est `suspicious_errors.
+  yml` dans /ftp/ (extension .yml pas dans
+  allowlist .md/.pdf). Reutiliser le null byte
+  trick. Workflow : GET /ftp/suspicious_errors.
+  yml%00.md. Le serveur passe l'allowlist check
+  + cutOffPoisonNullByte strip = serve
+  suspicious_errors.yml. Solve auto.
+
+mission_en: |
+  Access a misplaced SIEM signature file. Tags:
+  Good Practice, Contraption. OWASP description.
+  Hints: (1) "trick a security mechanism into
+  thinking that the file you want has a valid
+  file type". (2) "If you solved one of the
+  other four file access challenges, you already
+  know where the SIEM signature file is
+  located". (3) "Simply reuse the trick that
+  already worked". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve in routes/fileServer.ts:44.
+  Code: `solveIf(() => file === 'suspicious_
+  errors.yml')`. File is `suspicious_errors.yml`
+  in /ftp/ (.yml extension not in .md/.pdf
+  allowlist). Reuse null byte trick. Workflow:
+  GET /ftp/suspicious_errors.yml%00.md. Server
+  passes allowlist check + cutOffPoisonNullByte
+  strips = serves suspicious_errors.yml. Auto
+  solves.
+
+concepts:
+  - title_fr: "Composition Lot 7 nullByte : reuse the trick"
+    title_en: "Lot 7 nullByte composition: reuse the trick"
+    body_fr: |
+      Hint OWASP #3 explicite : "Simply reuse
+      the trick that already worked". C'est le
+      null byte bypass de fileServer.ts:46-49
+      (cf. nullByteChallenge Lot 7). Pattern
+      pedagogique : un meme bug ouvre plusieurs
+      challenges. Pour misplacedSignatureFile,
+      la cible est suspicious_errors.yml (SIEM
+      signature file = Sigma format).
+    body_en: |
+      OWASP hint #3 explicit: "Simply reuse
+      the trick that already worked". Null
+      byte bypass from fileServer.ts:46-49
+      (cf. nullByteChallenge Lot 7). Pedagogical
+      pattern: same bug opens multiple
+      challenges. For misplacedSignatureFile,
+      target is suspicious_errors.yml (SIEM
+      signature file = Sigma format).
+
+  - title_fr: "SIEM signature file : Sigma format"
+    title_en: "SIEM signature file: Sigma format"
+    body_fr: |
+      Sigma (github.com/Neo23x0/sigma, link
+      du challenge description) est un format
+      generic pour SIEM detection rules. Les
+      Sigma rules describent des log patterns
+      a detecter (failed logins, suspicious
+      processes, etc). Cible "Misplaced" : ce
+      file devrait etre dans le SIEM
+      management directory, pas dans /ftp/
+      public. Defense : audit periodique des
+      file placements (tools : tripwire,
+      AIDE).
+    body_en: |
+      Sigma (github.com/Neo23x0/sigma,
+      challenge description link) is generic
+      format for SIEM detection rules. Sigma
+      rules describe log patterns to detect
+      (failed logins, suspicious processes,
+      etc). "Misplaced" target: file should
+      be in SIEM management directory, not
+      public /ftp/. Defense: periodic file
+      placement audit (tools: tripwire,
+      AIDE).
+
+  - title_fr: "Defense canonique : security artifacts hors web root"
+    title_en: "Canonical defense: security artifacts outside web root"
+    body_fr: |
+      Defense : (a) aucun security artifact
+      (Sigma rules, IDS configs, ML models)
+      dans web-accessible directory. (b)
+      separate filesystem partition pour
+      sensitive files. (c) periodic audit de
+      file placements (tripwire). (d) DLP
+      scanning continue.
+    body_en: |
+      Defense: (a) no security artifact
+      (Sigma rules, IDS configs, ML models)
+      in web-accessible directory. (b)
+      separate filesystem partition for
+      sensitive files. (c) periodic file
+      placement audit (tripwire). (d)
+      continuous DLP scanning.

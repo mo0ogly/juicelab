@@ -1,0 +1,125 @@
+challenge_key: "xssBonusChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Resous le challenge "Bonus Payload" en injectant un payload qui charge
+  une iframe vers une source externe (Soundcloud). Le but pedagogique
+  est d'aller au-dela du simple alert(1) et de demontrer ce qu'une
+  primitive XSS permet vraiment : controle du DOM, exfiltration,
+  redirection, embed externe. C'est un complement aux deux XSS
+  precedents (DOM et Reflected).
+
+  Methode recommandee : utilise le meme vecteur que pour le DOM XSS
+  (champ de recherche) ou le Reflected XSS (parametre URL), mais
+  remplace le payload alert par une iframe avec un src vers un
+  fragment Soundcloud (la cible exacte est documentee dans la
+  hint N4 ou trouvable via les tags contextuels du challenge sur le
+  score-board). Le challenge se valide quand l'iframe Soundcloud
+  s'affiche.
+
+  Note la difference d'impact entre alert(1) (cosmetique) et
+  l'execution d'une vraie iframe externe (chargement de tracking
+  cross-origin, exfiltration possible). Tu en parleras dans le
+  journal "apres".
+
+mission_en: |
+  Solve the "Bonus Payload" challenge by injecting a payload that
+  loads an iframe pointing to an external source (Soundcloud). The
+  pedagogical goal is to move beyond the bare alert(1) and
+  demonstrate what an XSS primitive really allows: DOM control,
+  exfiltration, redirection, external embed. Companion to the two
+  previous XSS challenges (DOM and Reflected).
+
+  Recommended method: use the same vector as the DOM XSS (search
+  field) or Reflected XSS (URL parameter), but swap the alert
+  payload for an iframe with a src pointing to a Soundcloud
+  fragment (the exact target is documented in hint N4 or
+  retrievable from the contextual tags on the score-board card).
+  The challenge solves when the Soundcloud iframe shows up.
+
+  Note the impact difference between alert(1) (cosmetic) and
+  loading a real external iframe (cross-origin tracking, possible
+  exfiltration). You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Au-dela d'alert(1) : ce qu'une primitive XSS permet vraiment"
+    title_en: "Beyond alert(1): what an XSS primitive really allows"
+    body_fr: |
+      Une primitive XSS = controle complet du navigateur de la
+      victime sur l'origine vulnerable. Concretement : appels API
+      authentifies au nom de la victime (vol de session via
+      operations metier), exfiltration de cookies/localStorage,
+      defacement de la page, redirection vers une page de phishing
+      identique, chargement de scripts externes (cryptominers,
+      trackers, beacons), enregistrement clavier dans un input
+      attire. alert(1) est un proof of concept, jamais l'objectif.
+    body_en: |
+      An XSS primitive = full control of the victim's browser on
+      the vulnerable origin. Concretely: authenticated API calls
+      on behalf of the victim (session theft via business
+      operations), cookie/localStorage exfiltration, page
+      defacement, redirect to an identical phishing page, external
+      script loading (cryptominers, trackers, beacons), keylogging
+      in a baited input. alert(1) is a proof of concept, never
+      the goal.
+
+  - title_fr: "CSP frame-src : controle des iframes injectees"
+    title_en: "CSP frame-src: controlling injected iframes"
+    body_fr: |
+      Content-Security-Policy expose des directives ciblees par
+      type de ressource. frame-src controle specifiquement les
+      iframes (ou child-src en CSP2 unifie). Une CSP avec
+      frame-src 'self' refuse toute iframe vers une origine
+      externe, meme si le payload XSS reussit a injecter le tag.
+      default-src est un fallback global, script-src cible les
+      scripts (JS), img-src les images : confondre les directives
+      revient a perdre la defense.
+    body_en: |
+      Content-Security-Policy exposes resource-typed directives.
+      frame-src specifically controls iframes (or child-src in CSP2
+      unified). A CSP with frame-src 'self' refuses any iframe to
+      an external origin, even if the XSS payload manages to inject
+      the tag. default-src is a global fallback, script-src targets
+      scripts (JS), img-src images: confusing the directives means
+      losing the defense.
+
+  - title_fr: "Iframe sandbox : limiter une iframe legitime"
+    title_en: "Iframe sandbox: limiting a legitimate iframe"
+    body_fr: |
+      Quand une iframe externe EST necessaire (widget paiement,
+      lecteur video tiers), l'attribut HTML sandbox restreint ses
+      capacites. Sans valeur : tout est interdit (pas de scripts,
+      pas de same-origin, pas de top-navigation, pas de forms).
+      Avec valeur partielle : sandbox="allow-scripts" permet les
+      scripts mais bloque le reste. Combinaison avec referrerpolicy
+      = no-referrer, allowfullscreen=false, et un container CSP
+      plus restrictif.
+    body_en: |
+      When an external iframe IS needed (payment widget,
+      third-party video player), the HTML sandbox attribute
+      restricts its capabilities. Without value: everything denied
+      (no scripts, no same-origin, no top navigation, no forms).
+      With partial value: sandbox="allow-scripts" enables scripts
+      but blocks the rest. Combine with referrerpolicy=no-referrer,
+      allowfullscreen=false, and a stricter container CSP.
+
+  - title_fr: "Bug bounty : XSS = paiements substantiels"
+    title_en: "Bug bounty: XSS = substantial payouts"
+    body_fr: |
+      Sur les programmes de bug bounty (HackerOne, Bugcrowd), un
+      XSS exploitable est typiquement paye entre 500$ et 5000$
+      selon l'impact (single-user vs widespread, authenticated vs
+      pre-auth, exfiltration possible vs cosmetique). Les bonnes
+      pratiques pour le rapport : payload reproductible, capture
+      reseau du POST/GET de l'exfiltration, demonstration d'un
+      vrai impact metier. La communaute red team moderne
+      enchaine XSS + autres vulns pour majorer la prime.
+    body_en: |
+      On bug bounty programs (HackerOne, Bugcrowd), an exploitable
+      XSS typically pays $500 to $5000 depending on impact
+      (single-user vs widespread, authenticated vs pre-auth,
+      exfiltration possible vs cosmetic). Best practices for the
+      report: reproducible payload, network capture of the
+      exfiltration POST/GET, demonstration of real business
+      impact. The modern red-team community chains XSS + other
+      vulns to escalate the payout.

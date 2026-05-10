@@ -1,0 +1,109 @@
+challenge_key: "scoreBoardChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Trouve la page /score-board cachee de Juice Shop. Elle existe et liste tous
+  les challenges, mais aucun lien dans le menu ne te la montre tant que tu
+  ne l'as pas decouverte une premiere fois. C'est un challenge de
+  RECONNAISSANCE, PAS un challenge de code.
+
+  Methode recommandee : ouvre les DevTools du navigateur (F12), onglet
+  "Sources" (Chrome) ou "Debugger" (Firefox), cherche dans les fichiers
+  main-XXX.js le mot "score". Variantes : URL guessing direct
+  (/score-board, /scoreboard, /admin/score, ...) ou lecture du code source
+  Juice Shop sur GitHub.
+
+  Note la methode que tu utilises, tu en parleras dans le journal "apres".
+  Quand tu navigueras sur /#/score-board, Juice Shop affichera une
+  notification avec le flag CTF a coller dans le Coach pour gagner +10.
+
+mission_en: |
+  Find the hidden /score-board page of Juice Shop. It exists and lists every
+  challenge, but no menu link reveals it until you have discovered it once.
+  This is a RECONNAISSANCE challenge, NOT a coding challenge.
+
+  Recommended method : open browser DevTools (F12), "Sources" tab (Chrome)
+  or "Debugger" tab (Firefox), look for the word "score" in the main-XXX.js
+  files. Alternatives : direct URL guessing (/score-board, /scoreboard,
+  /admin/score, ...) or reading the Juice Shop source on GitHub.
+
+  Remember which method you used, you will report it in the "after" logbook.
+  When you navigate to /#/score-board, Juice Shop will show a notification
+  with the CTF flag to paste in the Coach for the +10 bonus.
+
+concepts:
+  - title_fr: "Security through obscurity (anti-pattern OWASP)"
+    title_en: "Security through obscurity (OWASP anti-pattern)"
+    body_fr: |
+      Cacher une URL dans le menu ne la rend pas inaccessible. Le code client
+      d'une SPA est livre au navigateur, donc les routes sont publiques par
+      definition. Cacher = ralentir un attaquant motive de quelques minutes,
+      pas le bloquer.
+    body_en: |
+      Hiding a URL in the menu does not make it unreachable. The client code
+      of an SPA is shipped to the browser, so routes are public by design.
+      Hiding = slowing down a motivated attacker by a few minutes, not
+      blocking them.
+
+  - title_fr: "Authentification vs autorisation"
+    title_en: "Authentication vs authorization"
+    body_fr: |
+      Authentification = qui est l'utilisateur. Autorisation = quoi peut-il
+      faire. La SEULE defense efficace pour cacher une page sensible est un
+      controle d'autorisation cote serveur (middleware, JWT role check,
+      RBAC). Pas le menu.
+    body_en: |
+      Authentication = who the user is. Authorization = what they may do.
+      The only effective defense to protect a sensitive page is a
+      server-side authorization check (middleware, JWT role check, RBAC).
+      Not the menu.
+
+  - title_fr: "Reconnaissance white-box"
+    title_en: "White-box reconnaissance"
+    body_fr: |
+      Lire le bundle JavaScript ou le code source GitHub d'une cible est
+      legal sur ton propre lab. C'est la facon la plus rapide de cartographier
+      les routes. En pentest reel, on combine ca avec du URL guessing
+      (dirb, ffuf) sur des chemins metier classiques (/admin, /api,
+      /backup).
+    body_en: |
+      Reading the JavaScript bundle or the GitHub source of a target is
+      legal on your own lab. It is the fastest way to map the routes. In a
+      real pentest, you combine that with URL guessing (dirb, ffuf) on
+      common business paths (/admin, /api, /backup).
+
+  - title_fr: "Phase hack vs phase code analysis (deux boutons differents)"
+    title_en: "Hack phase vs code analysis phase (two different buttons)"
+    body_fr: |
+      Sur la carte du challenge dans /#/score-board, tu vois plusieurs
+      boutons. NE PAS confondre :
+
+        - Bouton bleu "TD" (icone ecole) = ouvre CE Coach. Brief, indices
+          gradues, journal, quiz, flag CTF. C'est ton point d'entree.
+
+        - Bouton "<>" (icone code) = "Code Analysis with Coding Challenge",
+          un challenge OPTIONNEL fourni par OWASP Juice Shop. Il s'active
+          UNIQUEMENT apres avoir resolu le hack. Te demande d'identifier la
+          ligne vulnerable dans le code source et de proposer un fix.
+          JuiceLab ne le note PAS dans le score TD, c'est un bonus de
+          comprehension defensive.
+
+      Ordre correct : (1) tu trouves /#/score-board via F12, (2) Juice Shop
+      marque le hack comme resolu, (3) si tu veux aller plus loin, tu cliques
+      "<>" pour le coding challenge en bonus.
+    body_en: |
+      On the challenge card in /#/score-board you see several buttons.
+      Don't confuse them :
+
+        - Blue "TD" button (school icon) = opens THIS Coach. Brief, hints,
+          logbook, quiz, CTF flag. This is your entry point.
+
+        - "<>" button (code icon) = "Code Analysis with Coding Challenge",
+          an OPTIONAL extra OWASP Juice Shop ships. It activates ONLY after
+          you solved the hack. Asks you to identify the vulnerable line in
+          the source code and propose a fix. JuiceLab does NOT count it in
+          the TD score, it is a bonus for defensive understanding.
+
+      Correct order : (1) you find /#/score-board via F12, (2) Juice Shop
+      flags the hack as solved, (3) if you want to go further, click "<>"
+      for the bonus coding challenge.

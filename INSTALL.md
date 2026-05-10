@@ -38,17 +38,21 @@ git clone https://github.com/mo0ogly/juicelab.git
 cd juicelab
 ```
 
-JuiceLab is the *overlay*. The OWASP Juice Shop sources live in their own repository. This installation script handles the merge :
+JuiceLab is the *overlay*. The OWASP Juice Shop sources live in their own repository. This repo ships an installer that copies the new files and applies the patches in a single command :
 
 ```bash
 # clone Juice Shop next to the JuiceLab overlay
 git clone https://github.com/juice-shop/juice-shop.git ../juice-shop
 
-# apply the overlay (copies juicelab files + applies patches)
-# (see CONTRIBUTING.md for the exact list of patched files)
+# apply the overlay (copies new files from overlay/ + applies patches/juicelab-core.patch)
+./scripts/apply-overlay.sh ../juice-shop          # Linux / macOS / WSL / Git Bash
+# OR
+.\scripts\apply-overlay.ps1 -JuiceShopDir ..\juice-shop   # Windows PowerShell 7+
 ```
 
-> **Until the apply-overlay script lands** (tracked in [#1](https://github.com/mo0ogly/juicelab/issues/1)), the `juice-shop/` directory must be a clone with the JuiceLab files manually merged. The maintained, pre-merged tree lives in the author's working directory and the patch list is documented in [`ARCHITECTURE.md`](./ARCHITECTURE.md#overlay-files-vs-upstream-juice-shop). A first-class `scripts/apply-overlay.sh` will replace the manual step.
+The installer is idempotent. Re-running it after upstream Juice Shop has been updated keeps your local overlay aligned with the patch (any conflict is reported by `git apply --check` and surfaced as a `.rej` file you resolve by hand).
+
+> **What the script does.** `scripts/apply-overlay.sh` copies every file under `overlay/` into the Juice Shop tree (the new Angular overlay, the Express route, the YAML packs, the assets), then runs `git apply --3way patches/juicelab-core.patch` to wire the JuiceLab additions into the existing Juice Shop core files (server route registration, navbar button, score-board card, i18n keys, config flag, FTP acquisitions data). Read [`overlay/README.md`](./overlay/README.md) for the full layout.
 
 ### 1.2 Configure secrets
 

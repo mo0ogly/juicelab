@@ -1,0 +1,82 @@
+challenge_key: "extraLanguageChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Trouver le fichier de langue "secret" present dans le shop mais absent du
+  selecteur de langues UI. Tag : Broken Anti Automation. Hint OWASP : "find
+  hidden language file". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/verify.ts:68 :
+  `solveIf(() => endsWith(url, '/tlh_AA.json'))`. Le fichier est
+  /assets/i18n/tlh_AA.json (Klingon trans-altaic). Le selecteur UI ne
+  l'expose pas mais il est servi en static. Workflow : (1) Lister les
+  fichiers /assets/i18n/. (2) Identifier ceux non dans le selecteur. (3)
+  Naviguer vers le fichier. Pattern reusable : enumerer les ressources
+  statiques.
+
+mission_en: |
+  Find the "secret" language file present in shop but absent from UI
+  language selector. Tag: Broken Anti Automation. OWASP hint: "find hidden
+  language file". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/verify.ts:68:
+  `solveIf(() => endsWith(url, '/tlh_AA.json'))`. File is
+  /assets/i18n/tlh_AA.json (Klingon trans-altaic). UI selector doesn't
+  expose it but it's served as static. Workflow: (1) List /assets/i18n/
+  files. (2) Identify those not in selector. (3) Navigate to file.
+  Reusable pattern: enumerate static resources.
+
+concepts:
+  - title_fr: "Enumeration de ressources statiques"
+    title_en: "Static resource enumeration"
+    body_fr: |
+      Les serveurs statiques (Express.static, nginx) servent souvent plus de
+      fichiers que ceux references dans le UI. Tools : ffuf, gobuster,
+      dirsearch sur /assets/. Pattern reusable : auditer le contenu reel du
+      dossier static, pas seulement ce que le UI reference. Cas reels :
+      backups oublies (.bak), logs server-status, .git directory expose.
+      Defense : (1) Audit periodique du dossier static. (2) Restriction
+      MIME types. (3) Allowlist explicite des fichiers servables.
+    body_en: |
+      Static servers (Express.static, nginx) often serve more files than
+      those referenced in UI. Tools: ffuf, gobuster, dirsearch on /assets/.
+      Reusable pattern: audit actual static folder content, not just what
+      UI references. Real cases: forgotten backups (.bak), server-status
+      logs, exposed .git directory. Defense: (1) Periodic static folder
+      audit. (2) MIME type restriction. (3) Explicit allowlist of servable
+      files.
+
+  - title_fr: "i18n : surface d'enumeration souvent oubliee"
+    title_en: "i18n: often forgotten enumeration surface"
+    body_fr: |
+      Les apps trilingual (Juice Shop fait FR/EN/etc) ont un dossier
+      /i18n/ avec des fichiers .json par langue. Pattern : `en.json`,
+      `fr_FR.json`, `de_DE.json`. Si une langue est en cours de
+      traduction (locale Klingon tlh_AA), le fichier existe mais n'est pas
+      dans le UI selector. Defense : (1) Build process supprime les
+      fichiers i18n incomplets en production. (2) Manifest explicite
+      `available_languages.json` que le selecteur UI utilise.
+    body_en: |
+      Multilingual apps (Juice Shop: FR/EN/etc) have /i18n/ folder with
+      .json files per language. Pattern: `en.json`, `fr_FR.json`,
+      `de_DE.json`. If a language is in-progress translation (Klingon
+      locale tlh_AA), file exists but not in UI selector. Defense: (1)
+      Build process removes incomplete i18n files in production. (2)
+      Explicit `available_languages.json` manifest that UI selector uses.
+
+  - title_fr: "Defense canonique : allowlist + audit"
+    title_en: "Canonical defense: allowlist + audit"
+    body_fr: |
+      (1) Au lieu de servir tout /assets/i18n/, definir un manifest
+      `i18n-available.json` listant les locales reellement publiques. (2)
+      Backend route GET /api/languages qui retourne ce manifest. (3) UI
+      selector consume cette liste. (4) Build CI : fail si /assets/i18n/
+      contient des fichiers non listes dans le manifest. Pattern reusable :
+      whitelist > blacklist pour ressources statiques.
+    body_en: |
+      (1) Instead of serving all /assets/i18n/, define a manifest
+      `i18n-available.json` listing actually public locales. (2) Backend
+      route GET /api/languages returning this manifest. (3) UI selector
+      consumes this list. (4) Build CI: fail if /assets/i18n/ contains
+      files not listed in manifest. Reusable pattern: whitelist > blacklist
+      for static resources.

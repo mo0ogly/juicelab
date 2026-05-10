@@ -1,0 +1,177 @@
+challenge_key: "forgedCouponChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Forger un coupon code qui te donne un discount de
+  80%+. Tags : Good for Demos, Code Analysis.
+  Description OWASP. Hints officiels : (1) "Try
+  either a) a knowledgeable brute force attack or b)
+  reverse engineering or c) some research in the
+  cloud". (2) "One viable solution would be to
+  reverse-engineer how coupon codes are generated
+  and craft your own 80% coupon". (3) "Another
+  possible solution might be harvesting as many
+  previous coupon as possible and look for patterns
+  for brute force". (4) "If all else fails, you
+  could still try to blindly brute force the coupon
+  code field". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/order.ts:185 (verifie source). Code exact :
+  `challengeUtils.solveIf(challenges.forgedCoupon
+  Challenge, () => { return (discount ?? 0) >= 80
+  })`. Donc le solve trigger si le discount calcule
+  >= 80%. La fonction `security.discountFromCoupon()`
+  (lib/insecurity.ts) gere la decryption du coupon
+  via z85 + symmetric crypto avec un format
+  date-discount-name. 3 approches : (a) Reverse
+  engineering : lire lib/insecurity.ts +
+  bundle Angular pour extraire la fonction
+  `generateCoupon()`, encoder un coupon avec
+  discount=80, today's date. (b) Brute force :
+  dicocoupons + harvest historique + tester via
+  POST /rest/basket/:id/coupon. (c) Cloud research
+  (z85 + Juice Shop coupons) - hint OWASP suggest
+  GitHub for similar implementations.
+
+mission_en: |
+  Forge a coupon code giving you 80%+ discount.
+  Tags: Good for Demos, Code Analysis. OWASP
+  description. Official hints: (1) "Try either a)
+  a knowledgeable brute force attack or b) reverse
+  engineering or c) some research in the cloud".
+  (2) "One viable solution would be to reverse-
+  engineer how coupon codes are generated and
+  craft your own 80% coupon". (3) "Another
+  possible solution might be harvesting as many
+  previous coupon as possible and look for
+  patterns for brute force". (4) "If all else
+  fails, you could still try to blindly brute
+  force the coupon code field". [KILL_CHAIN_
+  DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  order.ts:185 (verified source). Exact code:
+  `challengeUtils.solveIf(challenges.forgedCoupon
+  Challenge, () => { return (discount ?? 0) >=
+  80 })`. So solve triggers if computed
+  discount >= 80%. `security.discountFromCoupon()`
+  function (lib/insecurity.ts) handles coupon
+  decryption via z85 + symmetric crypto with
+  date-discount-name format. 3 approaches: (a)
+  Reverse engineering: read lib/insecurity.ts +
+  Angular bundle to extract `generateCoupon()`
+  function, encode coupon with discount=80,
+  today's date. (b) Brute force: coupon dict +
+  historical harvest + test via POST /rest/
+  basket/:id/coupon. (c) Cloud research (z85 +
+  Juice Shop coupons) - OWASP hint suggests
+  GitHub for similar implementations.
+
+concepts:
+  - title_fr: "Cryptographie maison : pattern dangereux"
+    title_en: "Homemade cryptography: dangerous pattern"
+    body_fr: |
+      Source canonique : OWASP Cryptographic Storage
+      Cheat Sheet (mitigationUrl du challenge).
+      Pattern racine : Juice Shop genere ses propres
+      coupon codes via une fonction custom (z85
+      encoding + symmetric XOR-like). C'est un
+      anti-pattern classique : "rolling your own
+      crypto". Les vraies cryptographic primitives
+      (AES, HMAC, Ed25519) sont peer-reviewed
+      depuis decennies et survive les audits. Une
+      crypto maison dans le bundle frontend est :
+      (a) inspectable (reverse engineering),
+      (b) bypass-able (l'attaquant a le code),
+      (c) souvent buggy (off-by-one, weak salt).
+      Defense canonique : utiliser HMAC-signed
+      tokens (JWT signe RS256) ou des UUIDs
+      tracked en DB plutot que coupon codes
+      crypto-encoded.
+    body_en: |
+      Canonical source: OWASP Cryptographic Storage
+      Cheat Sheet (challenge mitigationUrl). Root
+      pattern: Juice Shop generates own coupon
+      codes via custom function (z85 encoding +
+      XOR-like symmetric). Classic anti-pattern:
+      "rolling your own crypto". Real cryptographic
+      primitives (AES, HMAC, Ed25519) are peer-
+      reviewed for decades and survive audits.
+      Homemade crypto in frontend bundle is: (a)
+      inspectable (reverse engineering), (b)
+      bypassable (attacker has code), (c) often
+      buggy (off-by-one, weak salt). Canonical
+      defense: use HMAC-signed tokens (RS256-
+      signed JWT) or DB-tracked UUIDs rather than
+      crypto-encoded coupon codes.
+
+  - title_fr: "3 approches OWASP : reverse / brute / OSINT"
+    title_en: "3 OWASP approaches: reverse / brute / OSINT"
+    body_fr: |
+      Hint OWASP #1 enumere les 3 approaches : (a)
+      brute force knowledgeable - utiliser un
+      pattern observe dans les coupons valides
+      (ex. format MMM-YYYY-XX) pour reduire
+      l'espace de recherche. (b) Reverse
+      engineering - lire lib/insecurity.ts pour
+      extraire la fonction `generateCoupon` et
+      l'utiliser localement avec discount=80.
+      (c) Cloud research - chercher sur GitHub
+      "juice-shop coupon" + variations pour
+      trouver le code source ou des
+      implementations similaires. Pattern reusable
+      : pour les bug bounty, toujours considerer
+      multiple approaches. La approche la plus
+      efficace varie selon le contexte (prod
+      = OSINT cloud, lab/CTF = reverse, vague
+      target = brute).
+    body_en: |
+      OWASP hint #1 enumerates 3 approaches: (a)
+      knowledgeable brute force - use pattern
+      observed in valid coupons (e.g.,
+      MMM-YYYY-XX format) to reduce search space.
+      (b) Reverse engineering - read lib/
+      insecurity.ts to extract `generateCoupon`
+      function and use locally with discount=80.
+      (c) Cloud research - search GitHub
+      "juice-shop coupon" + variations to find
+      source code or similar implementations.
+      Reusable pattern: for bug bounty, always
+      consider multiple approaches. Most
+      effective approach varies by context (prod
+      = cloud OSINT, lab/CTF = reverse, vague
+      target = brute).
+
+  - title_fr: "Composition avec manipulateClock : meme couponData encoding"
+    title_en: "Composition with manipulateClock: same couponData encoding"
+    body_fr: |
+      Pattern reusable : forgedCoupon et
+      manipulateClock (Lot 7) cible des aspects
+      DIFFERENTS du meme system de coupons. (a)
+      manipulateClock = client-controlled
+      timestamp dans couponData base64. (b)
+      forgedCoupon = generation cryptographique du
+      coupon code lui-meme. La defense canonique
+      est COMPOSANTE : (1) coupon code = JWT
+      signed RS256 avec exp + discount claim. (2)
+      validation server-side du token. (3) DB
+      tracking pour idempotent redemption (un
+      coupon = un usage). (4) audit log + anomaly
+      detection. Source : routes/order.ts:185
+      (forgedCoupon) + 194 (manipulateClock).
+    body_en: |
+      Reusable pattern: forgedCoupon and
+      manipulateClock (Lot 7) target DIFFERENT
+      aspects of same coupon system. (a)
+      manipulateClock = client-controlled
+      timestamp in base64 couponData. (b)
+      forgedCoupon = cryptographic coupon code
+      generation itself. Canonical defense is
+      COMPOSITE: (1) coupon code = RS256-signed
+      JWT with exp + discount claim. (2) server-
+      side token validation. (3) DB tracking for
+      idempotent redemption (one coupon = one
+      use). (4) audit log + anomaly detection.
+      Source: routes/order.ts:185 (forgedCoupon)
+      + 194 (manipulateClock).

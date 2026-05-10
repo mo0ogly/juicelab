@@ -1,0 +1,205 @@
+challenge_key: "jwtForgedChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "explicitly not about
+      acquiring the RSA private key". Donc
+      l'attaquant n'a PAS la private key. Hint #3 :
+      "Instead of enforcing no encryption to be
+      applied, try to apply a more sophisticated
+      exploit". Donc PAS alg=none (different de
+      jwtUnsignedChallenge). C'est l'algorithm
+      confusion attack.
+    text_en: |
+      Official OWASP hint #1: "explicitly not about
+      acquiring the RSA private key". So attacker
+      does NOT have private key. Hint #3: "Instead
+      of enforcing no encryption to be applied, try
+      to apply a more sophisticated exploit". So
+      NOT alg=none (different from
+      jwtUnsignedChallenge). It's algorithm
+      confusion attack.
+    pedagogical_intent: |
+      Activate alg confusion attack reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #4 : "Getting your hands on the
+      public RSA key the application employs for its
+      JWTs is mandatory for this challenge". Donc tu
+      DOIS d'abord obtenir la public key. Sources :
+      (a) /encryptionkeys endpoint Juice Shop (visible
+      via /ftp/), (b) bundle Angular (DevTools
+      Sources, search 'BEGIN PUBLIC KEY'), (c) static
+      assets path direct.
+    text_en: |
+      OWASP hint #4: "Getting your hands on the
+      public RSA key the application employs for its
+      JWTs is mandatory for this challenge". So you
+      MUST first obtain public key. Sources: (a)
+      /encryptionkeys endpoint Juice Shop (visible
+      via /ftp/), (b) Angular bundle (DevTools
+      Sources, search 'BEGIN PUBLIC KEY'), (c)
+      direct static assets path.
+    pedagogical_intent: |
+      Spell public key sources.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Algorithm confusion mecanique : (1) Login pour
+      obtenir un valid JWT. (2) Decode header
+      (typiquement `{alg: "RS256", typ: "JWT"}`). (3)
+      Modifier en `{alg: "HS256", typ: "JWT"}`
+      (downgrade asymmetric -> symmetric). (4)
+      Modifier payload pour `data.email = "rsa_lord@
+      juice-sh.op"`. (5) Signer avec HS256 EN
+      UTILISANT LA PUBLIC KEY RSA (raw bytes ou PEM
+      encoded) comme HMAC secret. (6) Submit le
+      forged JWT. La library jwt.verify() lit alg=
+      HS256, utilise security.publicKey comme
+      "secret", verifie HMAC = success.
+    text_en: |
+      Algorithm confusion mechanic: (1) Login to
+      get valid JWT. (2) Decode header (typically
+      `{alg: "RS256", typ: "JWT"}`). (3) Modify to
+      `{alg: "HS256", typ: "JWT"}` (downgrade
+      asymmetric -> symmetric). (4) Modify payload
+      for `data.email = "rsa_lord@juice-sh.op"`. (5)
+      Sign with HS256 USING THE RSA PUBLIC KEY (raw
+      bytes or PEM encoded) as HMAC secret. (6)
+      Submit forged JWT. Library jwt.verify() reads
+      alg=HS256, uses security.publicKey as
+      "secret", verifies HMAC = success.
+    pedagogical_intent: |
+      Spell forge mechanic + key reuse.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Outils :
+      (a) Burp JWT Editor extension (interface
+      graphique, copier la public key dans "key
+      confusion attack" panel).
+      (b) PyJWT script :
+        ```python
+        import jwt
+        with open('public.pem','rb') as f:
+            pub_key = f.read()
+        payload = {"data":{"email":"rsa_lord@juice-sh.op","id":1}}
+        token = jwt.encode(payload, pub_key,
+            algorithm='HS256')
+        print(token)
+        ```
+      (c) jwt_tool (github.com/ticarpi/jwt_tool) :
+      `python jwt_tool.py <token> -X k -pk
+      public.pem` (mode key confusion automated).
+      Source serveur : routes/verify.ts:85-86 +
+      117 (jwt.verify avec security.publicKey sans
+      algorithms restriction).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Tools:
+      (a) Burp JWT Editor extension (graphical UI,
+      paste public key in "key confusion attack"
+      panel).
+      (b) PyJWT script:
+        ```python
+        import jwt
+        with open('public.pem','rb') as f:
+            pub_key = f.read()
+        payload = {"data":{"email":"rsa_lord@juice-sh.op","id":1}}
+        token = jwt.encode(payload, pub_key,
+            algorithm='HS256')
+        print(token)
+        ```
+      (c) jwt_tool (github.com/ticarpi/jwt_tool):
+      `python jwt_tool.py <token> -X k -pk
+      public.pem` (automated key confusion mode).
+      Server source: routes/verify.ts:85-86 + 117
+      (jwt.verify with security.publicKey without
+      algorithms restriction).
+    pedagogical_intent: |
+      Spell tooling for alg confusion forge.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Login Juice Shop, recup ton valid JWT.
+      2. Recup la public key Juice Shop. Methodes :
+         - GET /encryptionkeys (si visible sur le
+           directory listing)
+         - Bundle inspection (DevTools, search
+           'BEGIN PUBLIC KEY')
+         - File /encryptionkeys/jwt.pub (pattern
+           commun Juice Shop)
+      3. Save la public key en local (public.pem).
+      4. Lancer jwt_tool ou PyJWT script avec :
+         (a) header: {"alg":"HS256","typ":"JWT"},
+         (b) payload: {"data":{"email":"rsa_lord@
+         juice-sh.op","id":1,"role":"admin"}},
+         (c) signing key = public.pem raw bytes,
+         (d) algorithm = HS256.
+      5. Le tool produit le forged JWT.
+      6. Submit avec `Authorization: Bearer
+         <forged>` sur n'importe quel endpoint
+         authenticated.
+      7. Le serveur (express-jwt 0.1.3 vulnerable) :
+         (a) lit alg=HS256 du header,
+         (b) utilise security.publicKey comme HMAC
+             secret,
+         (c) HMAC verification reussit (meme key !),
+         (d) jwt.verify() retourne null err,
+         (e) routes/verify.ts:85-86 declenche solveIf
+             avec alg='HS256' && email~/rsa_lord@/
+             -> match -> challenge solve auto.
+      Source canonique : routes/verify.ts:85-86 +
+      117 + Auth0 alg confusion disclosure 2016 +
+      CVE-2016-10555.
+      Defense canonique : algorithms whitelist
+      explicit, library moderne, key type binding
+      (HMAC secret != RSA public key).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Login Juice Shop, retrieve your valid JWT.
+      2. Retrieve Juice Shop public key. Methods:
+         - GET /encryptionkeys (if visible on
+           directory listing)
+         - Bundle inspection (DevTools, search
+           'BEGIN PUBLIC KEY')
+         - File /encryptionkeys/jwt.pub (common
+           Juice Shop pattern)
+      3. Save public key locally (public.pem).
+      4. Run jwt_tool or PyJWT script with:
+         (a) header: {"alg":"HS256","typ":"JWT"},
+         (b) payload: {"data":{"email":"rsa_lord@
+         juice-sh.op","id":1,"role":"admin"}},
+         (c) signing key = public.pem raw bytes,
+         (d) algorithm = HS256.
+      5. Tool produces forged JWT.
+      6. Submit with `Authorization: Bearer
+         <forged>` on any authenticated endpoint.
+      7. Server (vulnerable express-jwt 0.1.3):
+         (a) reads alg=HS256 from header,
+         (b) uses security.publicKey as HMAC
+             secret,
+         (c) HMAC verification succeeds (same
+             key!),
+         (d) jwt.verify() returns null err,
+         (e) routes/verify.ts:85-86 triggers
+             solveIf with alg='HS256' && email~/
+             rsa_lord@/ -> match -> challenge auto
+             solves.
+      Canonical source: routes/verify.ts:85-86 +
+      117 + Auth0 alg confusion disclosure 2016 +
+      CVE-2016-10555.
+      Canonical defense: explicit algorithms
+      whitelist, modern library, key type binding
+      (HMAC secret != RSA public key).
+    pedagogical_intent: |
+      Quasi-solution : full workflow + tools +
+      defense.

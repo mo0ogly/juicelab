@@ -1,0 +1,110 @@
+challenge_key: "ephemeralAccountantChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la difference fondamentale entre la SQLi de Login
+      Bender (apostrophe + --) et la SQLi de ce challenge (UNION
+      SELECT) ?
+    question_en: |
+      What is the fundamental difference between the Login Bender
+      SQLi (single quote + --) and this challenge's SQLi (UNION
+      SELECT)?
+    options_fr:
+      - "Login Bender utilise SQLite, ce challenge utilise PostgreSQL"
+      - "Login Bender FILTRE un row reel existant en DB, ce challenge FABRIQUE un row qui n'existe pas en DB"
+      - "Login Bender necessite un compte admin prealable, ce challenge non"
+      - "Login Bender est detectable par WAF, ce challenge ne l'est pas"
+    options_en:
+      - "Login Bender uses SQLite, this challenge uses PostgreSQL"
+      - "Login Bender FILTERS an existing real row, this challenge FABRICATES a row that does not exist in DB"
+      - "Login Bender requires a prior admin account, this challenge doesn't"
+      - "Login Bender is detectable by a WAF, this challenge isn't"
+    correct: 1
+    explanation_fr: |
+      Distinction conceptuelle cle entre comment-based (modifie le
+      filtre, retourne un row reel) et UNION-based (ajoute un row
+      arbitraire au resultat). Les deux sont du SQL standard, le DB
+      moteur ne change rien, et un WAF moderne detecte les deux
+      patterns. La nature ephemere du user accountant decoule
+      directement de la fabrication.
+    explanation_en: |
+      Key conceptual distinction between comment-based (modifies
+      the filter, returns a real row) and UNION-based (appends an
+      arbitrary row to the result). Both are standard SQL, the DB
+      engine is irrelevant, and a modern WAF detects both patterns.
+      The ephemeral nature of the accountant user follows directly
+      from fabrication.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      La principale difficulte technique d'une UNION SELECT est
+      d'aligner les colonnes. Quelle methode l'attaquant utilise-t-il
+      pour deviner le nombre de colonnes de la requete originale ?
+    question_en: |
+      The main technical difficulty of UNION SELECT is column
+      alignment. Which method does the attacker use to guess the
+      original query's column count?
+    options_fr:
+      - "Lire le code source PHP exposé sur GitHub"
+      - "Test progressif : injecter UNION SELECT NULL, puis UNION SELECT NULL,NULL, puis NULL,NULL,NULL, jusqu'a ce que le serveur ne renvoie plus une erreur SQL — c'est le 'error-based hopping' du hint OWASP officiel"
+      - "Demander a la base de donnees son schema via une requete prealable"
+      - "Forcer une erreur 500 et lire le stack trace"
+    options_en:
+      - "Read the PHP source code exposed on GitHub"
+      - "Progressive testing: inject UNION SELECT NULL, then NULL,NULL, then NULL,NULL,NULL, until the server stops returning a SQL error — this is the 'error-based hopping' from the official OWASP hint"
+      - "Ask the database for its schema through a prior query"
+      - "Force a 500 error and read the stack trace"
+    correct: 1
+    explanation_fr: |
+      Hint OWASP officiel sur dbSchemaChallenge : "You might have to
+      tackle some query syntax issues step-by-step, basically hopping
+      from one error to the next". Methode universelle, pas
+      specifique a un langage backend. Lire le source ou demander le
+      schema sont possibles dans certains contextes mais ne sont pas
+      la methode generique.
+    explanation_en: |
+      Official OWASP hint on dbSchemaChallenge: "You might have to
+      tackle some query syntax issues step-by-step, basically
+      hopping from one error to the next". Universal method, not
+      language-specific. Reading source or asking schema are
+      possible in some contexts but not the generic method.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Au-dela des prepared statements, quelle defense SECONDAIRE
+      empecherait specifiquement la creation d'une session JWT pour
+      un user fabrique par UNION ?
+    question_en: |
+      Beyond prepared statements, which SECONDARY defense would
+      specifically prevent JWT session creation for a UNION-fabricated
+      user?
+    options_fr:
+      - "Augmenter la longueur du JWT secret a 256 bits"
+      - "Re-fetcher les claims (role, permissions) via une seconde requete parametree apres le SELECT initial : la SQLi sur le SELECT n'affecte plus que potentiellement l'user_id qui doit pointer vers un user reel pour la seconde query"
+      - "Forcer HTTPS sur l'endpoint /rest/login"
+      - "Logger toutes les tentatives de login dans un audit trail"
+    options_en:
+      - "Increase the JWT secret length to 256 bits"
+      - "Re-fetch claims (role, permissions) via a second parameterized query after the initial SELECT: SQLi on the SELECT can only potentially control the user_id, which must point to a real user for the second query"
+      - "Force HTTPS on the /rest/login endpoint"
+      - "Log every login attempt in an audit trail"
+    correct: 1
+    explanation_fr: |
+      Pattern de defense en profondeur : decoupler la verification
+      d'identite (SELECT) de la generation des claims (RE-FETCH avec
+      query parametree). Un row fabrique passe le premier filtre mais
+      echoue au second (user_id n'existe pas). Le JWT secret n'a
+      aucun lien, HTTPS protege le transport pas la logique, l'audit
+      log permet la detection apres coup pas la prevention.
+    explanation_en: |
+      Defense-in-depth pattern: decouple identity verification
+      (SELECT) from claims generation (RE-FETCH with parameterized
+      query). A fabricated row passes the first filter but fails
+      the second (user_id does not exist). JWT secret length is
+      unrelated, HTTPS protects transport not logic, audit log
+      enables detection not prevention.

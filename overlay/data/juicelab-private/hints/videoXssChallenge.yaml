@@ -1,0 +1,144 @@
+challenge_key: "videoXssChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 te previent IMMEDIATEMENT : "Without
+      utilizing the vulnerability behind another 6-star
+      challenge it is not possible to plant the XSS payload".
+      Donc tu DOIS avoir resolu un autre challenge difficulty 6
+      avant de tenter celui-ci. Identifie les 6-stars : SSRF,
+      SSTi, jwtForged, fileWrite, premiumPaywall,
+      rceOccupyChallenge, ssrfChallenge, sstiChallenge,
+      web3Wallet, easter, timing... Lequel donne une primitive
+      d'ecriture sur le filesystem ?
+    text_en: |
+      Official OWASP hint #1 IMMEDIATELY warns: "Without
+      utilizing the vulnerability behind another 6-star
+      challenge it is not possible to plant the XSS payload".
+      So you MUST have solved another difficulty-6 challenge
+      before attempting this. Identify 6-stars: SSRF, SSTi,
+      jwtForged, fileWrite, premiumPaywall, rceOccupyChallenge,
+      ssrfChallenge, sstiChallenge, web3Wallet, easter,
+      timing... Which gives a filesystem write primitive?
+    pedagogical_intent: |
+      Activate prerequisite reflex on 6-star challenges.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le candidat principal est rceOccupyChallenge (Successful
+      RCE DoS) qui donne primitive RCE pour ecrire des fichiers
+      sur le serveur. Avec cette primitive, tu peux overwrite la
+      file servant de promo video. Hint OWASP officiel #2 : "The
+      mentioned marketing collateral might have been publicly
+      advertised by the Juice Shop but is not necessarily part
+      of its sitemap yet". Donc la video promo n'est pas dans
+      le menu — il faut la decouvrir.
+    text_en: |
+      Main candidate is rceOccupyChallenge (Successful RCE DoS)
+      giving RCE primitive for writing server files. With this,
+      you can overwrite the promo-video file. Official OWASP
+      hint #2: "The mentioned marketing collateral might have
+      been publicly advertised by the Juice Shop but is not
+      necessarily part of its sitemap yet". So the promo video
+      isn't in the menu — must be discovered.
+    pedagogical_intent: |
+      Pin the prerequisite + signal hidden video.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Hint OWASP officiel #3 : "online searches for structurally
+      similar web projects". Le source de Juice Shop est public
+      (github.com/juice-shop/juice-shop). Le folder
+      frontend/src/assets/public/videos/ contient typiquement
+      la video promo (often juice-shop_video.mp4 ou
+      similar). L'URL servie est /assets/public/videos/<file>.
+      Note ce path — c'est l'asset que tu vas overwrite.
+    text_en: |
+      Official OWASP hint #3: "online searches for structurally
+      similar web projects". Juice Shop source is public
+      (github.com/juice-shop/juice-shop). The folder
+      frontend/src/assets/public/videos/ typically contains the
+      promo video (often juice-shop_video.mp4 or similar). The
+      served URL is /assets/public/videos/<file>. Note that
+      path — it's the asset you'll overwrite.
+    pedagogical_intent: |
+      Spell the asset path via source-code research.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le payload exact specifie par la description :
+      </script><script>alert(`xss`)</script>
+      Strategy : utiliser ta primitive RCE (depuis
+      rceOccupyChallenge) pour ECRIRE un fichier sous
+      /assets/public/videos/ qui n'est pas un .mp4 mais un .vtt
+      (subtitles WebVTT) avec le payload, OU pour modifier le
+      file path resolution pour servir une page HTML au lieu
+      d'une video. Hint OWASP officiel #4 : "this challenge will
+      always partially keep you blindfolded" — accept que tu vas
+      tatonner, c'est intentionnel par design.
+    text_en: |
+      Exact payload specified by description:
+      </script><script>alert(`xss`)</script>
+      Strategy: use your RCE primitive (from
+      rceOccupyChallenge) to WRITE a file under
+      /assets/public/videos/ that's not an .mp4 but a .vtt
+      (WebVTT subtitles) with the payload, OR to modify file
+      path resolution to serve an HTML page instead of a
+      video. Official OWASP hint #4: "this challenge will
+      always partially keep you blindfolded" — accept you'll
+      grope, it's intentional by design.
+    pedagogical_intent: |
+      Spell the file-write target + acknowledge intentional vagueness.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Cette quasi-solution depend de la version Juice Shop
+      installee. Forme generale :
+      1. Resoudre rceOccupyChallenge ou fileWriteChallenge pour
+         obtenir une primitive d'ecriture serveur-side (typique-
+         ment via /api/Complaint upload avec un name fichier
+         malicieux).
+      2. Ecrire un fichier .vtt sous /assets/public/videos/
+         contenant le payload :
+         WEBVTT
+
+         00:00.000 --> 00:05.000
+         </script><script>alert(`xss`)</script>
+      3. Le frontend Juice Shop charge la video promo avec une
+         <track> qui pointe vers ce .vtt. Le navigateur parse le
+         WebVTT et execute le HTML/JS si la lib video player
+         est mal configure (cue text injecte sans escape).
+      4. Le challenge se valide automatiquement quand le serveur
+         detecte le pattern dans la response du player.
+      Hint #4 le confirme : "always partially keep you
+      blindfolded". Ne sois pas surpris si tu dois iterer
+      plusieurs fois.
+    text_en: |
+      This quasi-solution depends on the installed Juice Shop
+      version. General form:
+      1. Solve rceOccupyChallenge or fileWriteChallenge for a
+         server-side write primitive (typically via
+         /api/Complaint upload with a malicious filename).
+      2. Write a .vtt file under /assets/public/videos/
+         containing the payload:
+         WEBVTT
+
+         00:00.000 --> 00:05.000
+         </script><script>alert(`xss`)</script>
+      3. Juice Shop frontend loads the promo video with a
+         <track> pointing to this .vtt. Browser parses WebVTT
+         and runs HTML/JS if the video player lib is
+         misconfigured (cue text injected without escape).
+      4. Challenge auto-solves when server detects the pattern
+         in the player's response.
+      Hint #4 confirms: "always partially keep you blindfolded".
+      Don't be surprised if you must iterate multiple times.
+    pedagogical_intent: |
+      Quasi-solution : full kill chain + intentional uncertainty acknowledgment.

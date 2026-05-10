@@ -1,0 +1,185 @@
+challenge_key: "manipulateClockChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "identify past special
+      event or holiday campaigns". Donc le challenge
+      cible une campagne EXPIREE. Hint #3 : "does
+      not require actual time traveling" - donc PAS
+      de manipulation systeme, l'attaque est
+      payload-based.
+    text_en: |
+      Official OWASP hint #1: "identify past special
+      event or holiday campaigns". So challenge
+      targets EXPIRED campaign. Hint #3: "does not
+      require actual time traveling" - so NO system
+      manipulation, attack is payload-based.
+    pedagogical_intent: |
+      Activate payload-based time-manipulation reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #2 : "Look for clues about the past
+      campaign or holiday event somewhere in the
+      application". Les codes de campagne sont
+      visibles dans le bundle Angular (DevTools
+      Sources, search "WMNSDY" pour Women's Day, ou
+      autres holidays). Une fois identifie, il faut
+      crafter un coupon redeem.
+    text_en: |
+      OWASP hint #2: "Look for clues about the past
+      campaign or holiday event somewhere in the
+      application". Campaign codes visible in
+      Angular bundle (DevTools Sources, search
+      "WMNSDY" for Women's Day, or other
+      holidays). Once identified, must craft coupon
+      redeem.
+    pedagogical_intent: |
+      Spell OSINT in-app for campaign codes.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (routes/order.ts:182-198) : le
+      serveur decode le couponData base64 :
+      `couponData = Buffer.from(req.body.couponData,
+      'base64').toString().split('-')`, puis prend
+      `couponCode = couponData[0]` et `couponDate
+      = Number(couponData[1])`. Si le couponDate
+      matche `campaign.validOn` (timestamp ms), la
+      campagne est valid. Donc l'attaquant doit
+      crafter `<CODE>-<TIMESTAMP>` en base64.
+    text_en: |
+      Server source (routes/order.ts:182-198):
+      server decodes couponData base64:
+      `couponData = Buffer.from(req.body.coupon
+      Data, 'base64').toString().split('-')`, then
+      takes `couponCode = couponData[0]` and
+      `couponDate = Number(couponData[1])`. If
+      couponDate matches `campaign.validOn`
+      (timestamp ms), campaign is valid. So
+      attacker must craft `<CODE>-<TIMESTAMP>` in
+      base64.
+    pedagogical_intent: |
+      Reveal exact decoding mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Construction du
+      couponData :
+      ```js
+      // Pour WMNSDY2019 (Mar 08, 2019 GMT+0100)
+      const validOn = new Date('Mar 08, 2019
+        00:00:00 GMT+0100').getTime();
+      // = 1551999600000
+      const couponData = `WMNSDY2019-${validOn}`;
+      const encoded = Buffer.from(couponData)
+        .toString('base64');
+      // = "V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw"
+      ```
+      Submit POST /api/Orders avec body contenant
+      `couponData: "V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw"`
+      (et un basket valid). Le serveur decode,
+      match WMNSDY2019.validOn -> apply 75%
+      discount + solve manipulateClock.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] couponData
+      construction:
+      ```js
+      // For WMNSDY2019 (Mar 08, 2019 GMT+0100)
+      const validOn = new Date('Mar 08, 2019
+        00:00:00 GMT+0100').getTime();
+      // = 1551999600000
+      const couponData = `WMNSDY2019-${validOn}`;
+      const encoded = Buffer.from(couponData)
+        .toString('base64');
+      // = "V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw"
+      ```
+      Submit POST /api/Orders with body
+      containing `couponData: "V01OU0RZMjAxOS0
+      xNTUxOTk5NjAwMDAw"` (and valid basket).
+      Server decodes, matches WMNSDY2019.validOn
+      -> applies 75% discount + solves
+      manipulateClock.
+    pedagogical_intent: |
+      Spell exact payload + base64 encoding.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Login + add product au basket via UI.
+      2. Inspecter le bundle Angular pour trouver
+         WMNSDY2019 (ou WMNSDY2020 / WMNSDY2021,
+         tous expired aujourd'hui).
+      3. Calculer le timestamp validOn (ex. Mar
+         08, 2019 GMT+0100 = 1551999600000).
+      4. Crafter `couponData = "WMNSDY2019-
+         1551999600000"`. Encode en base64 ->
+         `V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw`.
+      5. Apply le coupon : POST /rest/basket/:id/
+         coupon avec body `{coupon: "WMNSDY2019"}`
+         (le frontend rejette si coupon expired,
+         mais le backend le store quand meme).
+         Alternative : passer `couponData`
+         directement au checkout.
+      6. Checkout : POST /api/Orders avec
+         couponData base64-encoded dans body.
+      7. Le serveur :
+         (a) decode couponData base64
+         (b) split('-') -> [code, date]
+         (c) campaign.validOn === couponDate ->
+             apply discount + solveIf
+             (campaign.validOn < now())
+         (d) match -> challenge solve auto.
+      Source canonique : routes/order.ts:182-198 +
+      analyse decodage Buffer.
+      Defense canonique : (a) le coupon code
+      uniquement, validOn FETCHED server-side
+      depuis la DB. (b) verifier `now()` est dans
+      la window (validOn <= now() <= validOn +
+      duration). (c) idempotent redemption (un
+      user ne peut pas redeem 2 fois le meme
+      coupon). (d) coupon revocation API si
+      besoin.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Login + add product to basket via UI.
+      2. Inspect Angular bundle to find WMNSDY
+         2019 (or WMNSDY2020 / WMNSDY2021, all
+         expired today).
+      3. Calculate validOn timestamp (e.g., Mar
+         08, 2019 GMT+0100 = 1551999600000).
+      4. Craft `couponData = "WMNSDY2019-
+         1551999600000"`. Encode in base64 ->
+         `V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw`.
+      5. Apply coupon: POST /rest/basket/:id/
+         coupon with body `{coupon: "WMNSDY2019"}`
+         (frontend rejects if expired, but
+         backend stores anyway). Alternative:
+         pass `couponData` directly at checkout.
+      6. Checkout: POST /api/Orders with
+         couponData base64-encoded in body.
+      7. Server:
+         (a) decodes couponData base64
+         (b) split('-') -> [code, date]
+         (c) campaign.validOn === couponDate ->
+             applies discount + solveIf
+             (campaign.validOn < now())
+         (d) match -> challenge auto solves.
+      Canonical source: routes/order.ts:182-198
+      + Buffer decoding analysis.
+      Canonical defense: (a) coupon code only,
+      validOn FETCHED server-side from DB. (b)
+      verify `now()` is in window (validOn <=
+      now() <= validOn + duration). (c)
+      idempotent redemption (user can't redeem
+      same coupon twice). (d) coupon revocation
+      API if needed.
+    pedagogical_intent: |
+      Solution complete + defense canonique.

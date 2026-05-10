@@ -1,0 +1,89 @@
+challenge_key: "exposedMetricsChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi /metrics est-il un FIRST-TARGET
+      pour les pentesters en recon phase ?
+    question_en: |
+      Why is /metrics a FIRST-TARGET for
+      pentesters in recon phase?
+    options_fr:
+      - "Parce que /metrics est obligatoire"
+      - "Parce que c'est une CONVENTION INDUSTRY (Prometheus, gRPC, OpenAPI, GraphQL utilisent des paths standards). Pour les pentesters, ces paths sont well-known et reveletent souvent : (a) software version, (b) database stats, (c) request patterns, (d) memory/CPU. Pattern : connaitre les conventions = recon efficient. Tools : nuclei, gobuster avec wordlist common-paths"
+      - "Parce que metrics sont anonymes"
+      - "Parce que /metrics est sandbox"
+    options_en:
+      - "Because /metrics is mandatory"
+      - "Because it's INDUSTRY CONVENTION (Prometheus, gRPC, OpenAPI, GraphQL use standard paths). For pentesters, these paths are well-known and often reveal: (a) software version, (b) database stats, (c) request patterns, (d) memory/CPU. Pattern: know conventions = efficient recon. Tools: nuclei, gobuster with common-paths wordlist"
+      - "Because metrics are anonymous"
+      - "Because /metrics is sandboxed"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : recon = systematic
+      check des standard paths. Source :
+      OSINT methodology + Prometheus docs.
+    explanation_en: |
+      Reusable pattern: recon = systematic
+      check of standard paths. Source:
+      OSINT methodology + Prometheus docs.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi exposer /metrics sans auth est
+      un anti-pattern security ?
+    question_en: |
+      Why is exposing /metrics without auth
+      a security anti-pattern?
+    options_fr:
+      - "Metrics sont publics"
+      - "Information disclosure : metrics revelent (a) software stack + version exacte (allows CVE matching), (b) database stats (size, connection pool), (c) request patterns (rate, errors), (d) memory/CPU (capacity planning attack). Cas reels : exposed Kubernetes /metrics revealed cluster topology, breach 2020. Defense : auth + network segmentation"
+      - "/metrics est cosmetique"
+      - "Aucun risque"
+    options_en:
+      - "Metrics are public"
+      - "Information disclosure: metrics reveal (a) software stack + exact version (allows CVE matching), (b) database stats (size, connection pool), (c) request patterns (rate, errors), (d) memory/CPU (capacity planning attack). Real cases: exposed Kubernetes /metrics revealed cluster topology, 2020 breach. Defense: auth + network segmentation"
+      - "/metrics is cosmetic"
+      - "No risk"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : info disclosure
+      facilite la kill chain (CVE matching,
+      capacity attack). Source : analyse
+      Prometheus docs + breach reports.
+    explanation_en: |
+      Reusable pattern: info disclosure
+      eases kill chain (CVE matching,
+      capacity attack). Source: Prometheus
+      docs analysis + breach reports.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour /metrics en
+      production ?
+    question_en: |
+      Canonical defense for /metrics in
+      production?
+    options_fr:
+      - "Disabler /metrics"
+      - "(1) Authentication required (basic auth ou client TLS cert specifique pour Prometheus server). (2) Network segmentation (Prometheus accessible uniquement par IP du Prometheus server). (3) Reverse proxy avec ACL strict. (4) Sanitize metrics (no PII, no precise version, no internal paths). Combine = defense en profondeur"
+      - "Mots de passe forts"
+      - "Encrypter les metrics"
+    options_en:
+      - "Disable /metrics"
+      - "(1) Authentication required (basic auth or specific client TLS cert for Prometheus server). (2) Network segmentation (Prometheus accessible only by Prometheus server IP). (3) Reverse proxy with strict ACL. (4) Sanitize metrics (no PII, no precise version, no internal paths). Combine = defense in depth"
+      - "Strong passwords"
+      - "Encrypt metrics"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : defense en profondeur
+      pour les internal endpoints. Source :
+      Prometheus security docs + OWASP.
+    explanation_en: |
+      Reusable pattern: defense in depth for
+      internal endpoints. Source: Prometheus
+      security docs + OWASP.

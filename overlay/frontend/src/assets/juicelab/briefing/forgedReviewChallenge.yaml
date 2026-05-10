@@ -1,0 +1,127 @@
+challenge_key: "forgedReviewChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Poste un product review en utilisant l'identite d'un autre
+  utilisateur, OU edite un review existant qui ne t'appartient pas.
+  Description OWASP officielle : "Post a product review as another
+  user or edit any user's existing review". Le hint #4 fait le
+  rapprochement direct : "This challenge is pretty similar to Post
+  some feedback in another user's name" (forgedFeedback). Mais la
+  surface est differente : MongoDB reviews vs SQL feedbacks.
+
+  Methode recommandee : sur Juice Shop, les reviews produit sont
+  stockes dans MongoDB. L'endpoint PATCH /rest/products/reviews est
+  l'angle. Le codefixes/forgedReviewChallenge fix #2 (correct) dit
+  : "Setting the author on server-side based on the user retrieved
+  from the authentication token in the HTTP request is the right
+  call". Donc le bug : le code utilise le author venant du body,
+  pas le JWT. Tu peux soit poster un nouveau review en specifiant
+  un author email different, soit editer un review existant en
+  changeant son author.
+
+  Note la difference avec forgedFeedback (SQL hidden field vs
+  MongoDB body author) et la similarite conceptuelle (broken
+  access via trust client). Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Post a product review using another user's identity, OR edit an
+  existing review that isn't yours. Official OWASP description:
+  "Post a product review as another user or edit any user's
+  existing review". Hint #4 directly relates this: "This
+  challenge is pretty similar to Post some feedback in another
+  user's name" (forgedFeedback). But the surface differs: MongoDB
+  reviews vs SQL feedbacks.
+
+  Recommended method: on Juice Shop, product reviews are stored
+  in MongoDB. The PATCH /rest/products/reviews endpoint is the
+  angle. codefixes/forgedReviewChallenge fix #2 (correct) says:
+  "Setting the author on server-side based on the user retrieved
+  from the authentication token in the HTTP request is the right
+  call". So the bug: the code uses the author from the body, not
+  the JWT. You can either post a new review specifying a
+  different author email, or edit an existing review by changing
+  its author.
+
+  Note the difference with forgedFeedback (SQL hidden field vs
+  MongoDB body author) and the conceptual similarity (broken
+  access via trust client). You will report it in the "after"
+  logbook.
+
+concepts:
+  - title_fr: "Forged Feedback vs Forged Review : meme bug, surfaces differentes"
+    title_en: "Forged Feedback vs Forged Review: same bug, different surfaces"
+    body_fr: |
+      Hint OWASP officiel #4 explicite la similarite. Mais
+      surfaces differentes. forgedFeedback : SQL Feedbacks table,
+      hidden input userId dans le HTML form, vecteur tampering
+      DOM. forgedReview : MongoDB Reviews collection, champ
+      author dans le body JSON, vecteur tampering Burp/Postman.
+      Meme racine : trust client. Distinction pratique : on
+      n'attaque pas le DOM pour MongoDB, on attaque le body
+      JSON via outil intercepteur. Defense identique : deduire
+      l'identite du JWT serveur-side.
+    body_en: |
+      Official OWASP hint #4 spells out the similarity. But
+      different surfaces. forgedFeedback: SQL Feedbacks table,
+      hidden userId in HTML form, DOM-tampering vector.
+      forgedReview: MongoDB Reviews collection, author field in
+      JSON body, Burp/Postman-tampering vector. Same root: trust
+      client. Practical distinction: we don't attack the DOM for
+      MongoDB, we attack the JSON body via interceptor tools.
+      Identical defense: derive identity from server-side JWT.
+
+  - title_fr: "PATCH semantique : update operation = ownership obligatoire"
+    title_en: "PATCH semantics: update operation = mandatory ownership"
+    body_fr: |
+      L'API utilise PATCH /rest/products/reviews pour update un
+      review. PATCH = idempotent, partial update. Pour une
+      operation update, deux verifications minimum sont requises :
+      (1) authentication (qui est-tu ?). (2) ownership (cet objet
+      t'appartient-il ?). Le bug du challenge : seule (1) est
+      verifiee, (2) est manquante. Le code execute Reviews.
+      update({ _id: reviewId }, { $set: { ...body } }) sans
+      filter par author. N'importe quel user authentifie peut
+      modifier n'importe quel review.
+    body_en: |
+      The API uses PATCH /rest/products/reviews to update a
+      review. PATCH = idempotent, partial update. For an update
+      operation, two checks are minimum required: (1)
+      authentication (who are you?). (2) ownership (does this
+      object belong to you?). Bug of the challenge: only (1) is
+      checked, (2) is missing. Code runs Reviews.update({ _id:
+      reviewId }, { $set: { ...body } }) without filtering by
+      author. Any authenticated user can modify any review.
+
+  - title_fr: "Defense canonique : codefixes fix #2 = JWT-derived author"
+    title_en: "Canonical defense: codefixes fix #2 = JWT-derived author"
+    body_fr: |
+      Source officielle : codefixes/forgedReviewChallenge.info.yml
+      fix #2 (correct) : "Setting the author on server-side based
+      on the user retrieved from the authentication token in the
+      HTTP request is the right call. It prevents users from
+      just passing any author email they like along with the
+      request". Code Express type :
+      router.patch('/reviews', auth, (req, res) => {
+        Reviews.updateOne(
+          { _id: req.body.id, author: req.user.email },  // OWNERSHIP
+          { $set: { message: req.body.message } }         // EXPLICIT FIELDS
+        )
+      })
+      Le filter par author = JWT garantit que seul le
+      proprietaire peut update.
+    body_en: |
+      Official source: codefixes/forgedReviewChallenge.info.yml
+      fix #2 (correct): "Setting the author on server-side based
+      on the user retrieved from the authentication token in the
+      HTTP request is the right call. It prevents users from
+      just passing any author email they like along with the
+      request". Sample Express code:
+      router.patch('/reviews', auth, (req, res) => {
+        Reviews.updateOne(
+          { _id: req.body.id, author: req.user.email },  // OWNERSHIP
+          { $set: { message: req.body.message } }         // EXPLICIT FIELDS
+        )
+      })
+      Filter by author = JWT guarantees only the owner can
+      update.

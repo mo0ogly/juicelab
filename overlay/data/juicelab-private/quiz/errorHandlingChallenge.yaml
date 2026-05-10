@@ -1,0 +1,88 @@
+challenge_key: "errorHandlingChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi improper error handling est-il
+      un info disclosure risk ?
+    question_en: |
+      Why is improper error handling an info
+      disclosure risk?
+    options_fr:
+      - "Errors sont volumineux"
+      - "Stack traces revelent (a) internal file paths (server topology), (b) library versions (CVE matching), (c) DB structure (table/column names), (d) parfois credentials dans error messages. Cas reels : Equifax 2017 (Apache Struts stack trace revealed CVE-2017-5638). Defense : generic 500 response + detailed backend logs"
+      - "Errors crashent le serveur"
+      - "Errors empechent l'acces"
+    options_en:
+      - "Errors are voluminous"
+      - "Stack traces reveal (a) internal file paths (server topology), (b) library versions (CVE matching), (c) DB structure (table/column names), (d) sometimes credentials in error messages. Real cases: Equifax 2017 (Apache Struts stack trace revealed CVE-2017-5638). Defense: generic 500 response + detailed backend logs"
+      - "Errors crash server"
+      - "Errors prevent access"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : info disclosure via
+      errors = recon facility. Source : OWASP
+      Error Handling Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: info disclosure via
+      errors = recon facilitation. Source:
+      OWASP Error Handling Cheat Sheet.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le tag "Prerequisite" indique que ce
+      challenge est pre-requis pour d'autres.
+      Pourquoi ?
+    question_en: |
+      "Prerequisite" tag indicates challenge
+      is prerequisite for others. Why?
+    options_fr:
+      - "OWASP rare"
+      - "Plusieurs autres challenges OWASP Juice Shop necessitent de OBSERVER un 500 error response (ex. SQLi blind via timing/error, fuzzing-based discoveries). Si error handling masque les errors, les autres bugs sont indetectables. Pattern reusable : un bug 'simple' (info disclosure) est souvent enabling pour des bugs plus profonds"
+      - "Tous les challenges sont prerequis"
+      - "Random tag"
+    options_en:
+      - "OWASP is rare"
+      - "Several other OWASP Juice Shop challenges require OBSERVING 500 error response (e.g., blind SQLi via timing/error, fuzzing-based discoveries). If error handling masks errors, other bugs undetectable. Reusable pattern: 'simple' bug (info disclosure) often enabling for deeper bugs"
+      - "All challenges are prerequisites"
+      - "Random tag"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : threat modeling
+      identifie les enabling bugs. Source :
+      OWASP Juice Shop architecture.
+    explanation_en: |
+      Reusable pattern: threat modeling
+      identifies enabling bugs. Source:
+      OWASP Juice Shop architecture.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour error handling
+      en production ?
+    question_en: |
+      Canonical defense for production error
+      handling?
+    options_fr:
+      - "Disabler tous les errors"
+      - "(1) Express global error handler: status 500 + generic message. (2) Detailed logs backend uniquement (Datadog, ELK, Splunk avec correlation IDs). (3) Sentry/Bugsnag avec automatic sanitization. (4) Environment-aware: NODE_ENV=production hide stack traces, dev shows them. (5) Fuzzing en CI pour detecter unhandled errors avant prod. Pattern : separer client-facing et backend-internal error info"
+      - "Stack traces partout"
+      - "Errors en clair"
+    options_en:
+      - "Disable all errors"
+      - "(1) Express global error handler: 500 status + generic message. (2) Detailed logs backend only (Datadog, ELK, Splunk with correlation IDs). (3) Sentry/Bugsnag with automatic sanitization. (4) Environment-aware: NODE_ENV=production hides stack traces, dev shows them. (5) CI fuzzing to detect unhandled errors before prod. Pattern: separate client-facing and backend-internal error info"
+      - "Stack traces everywhere"
+      - "Errors in plain"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : separation
+      client/backend pour error info. Source :
+      OWASP Error Handling Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: client/backend
+      separation for error info. Source:
+      OWASP Error Handling Cheat Sheet.

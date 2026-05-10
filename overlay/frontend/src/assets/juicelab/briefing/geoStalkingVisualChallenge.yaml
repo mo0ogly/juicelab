@@ -1,0 +1,132 @@
+challenge_key: "geoStalkingVisualChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Determine la reponse a la security question d'Emma en
+  inspectant VISUELLEMENT (pas EXIF) la photo qu'elle a
+  uploadee sur le Photo Wall, puis utilise cette reponse pour
+  reset son password. Description OWASP officielle. Hint
+  unique : "Take a look at the details in the photo to
+  determine the location of where it was taken".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : pendant que geoStalkingMeta utilise
+  EXIF (lat/lng), geoStalkingVisual demande de l'OSINT
+  VISUEL — identifier le lieu d'une photo SANS metadata, juste
+  par les details visibles (panneaux, architecture, vegetation,
+  signs commerciaux, plaques d'immatriculation,
+  monuments). Cette technique est connue sous le nom de
+  GEOGUESSR (jeu en ligne) ou en pentest reel sous "geo OSINT".
+  Workflow : analyser la photo, identifier des elements
+  identifiables (un nom de boutique, un monument, un type de
+  poste de police), reverse search image (Google Lens, Yandex,
+  TinEye), utiliser le resultat comme answer.
+
+  Note la lecon : meme SANS EXIF, une photo peut leak la
+  localisation. La defense est plus difficile que strip EXIF
+  — il faut detecter les details identifiables. Tu en parleras
+  dans le journal "apres".
+
+mission_en: |
+  Determine Emma's security question answer by VISUALLY (not
+  EXIF) inspecting the photo she uploaded to the Photo Wall,
+  then use that answer to reset her password. Official OWASP
+  description. Single hint: "Take a look at the details in the
+  photo to determine the location of where it was taken".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: while geoStalkingMeta uses EXIF (lat/
+  lng), geoStalkingVisual demands VISUAL OSINT — identify a
+  photo's location WITHOUT metadata, only via visible details
+  (signs, architecture, vegetation, commercial signs, license
+  plates, monuments). This technique is known as GEOGUESSR
+  (online game) or in real pentests as "geo OSINT". Workflow:
+  analyze the photo, identify identifiable elements (shop
+  name, monument, police-station style), reverse image search
+  (Google Lens, Yandex, TinEye), use result as answer.
+
+  Note the lesson: even WITHOUT EXIF, a photo can leak
+  location. Defense is harder than strip EXIF — must detect
+  identifiable details. You will report it in the "after"
+  logbook.
+
+concepts:
+  - title_fr: "Geo OSINT visuel : identifier un lieu sans metadata"
+    title_en: "Visual geo OSINT: identify a location without metadata"
+    body_fr: |
+      Discipline tres developpee depuis le rise de Bellingcat
+      (collectif d'investigation OSINT). Methode : analyser
+      les details visuels d'une photo pour identifier le lieu.
+      Indices typiques : (1) langue des panneaux (cyrillique
+      = Russie/Ukraine, arabe = MENA, hangul = Coree),
+      (2) architecture (toits rouges = Mediterranee,
+      brownstones = NYC, half-timbered = Bavaria), (3)
+      vegetation (palmiers, chenes, eucalyptus geographique),
+      (4) plaques d'immatriculation (codes pays + format),
+      (5) monuments uniques. Outils : Google Lens (reverse
+      image), Yandex (meilleur en Europe), TinEye, et la
+      methode manuelle "9 zones du cadre" (croquis chaque
+      detail systematiquement).
+    body_en: |
+      Highly developed discipline since Bellingcat (OSINT
+      investigation collective) rose. Method: analyze visual
+      photo details to identify location. Typical clues: (1)
+      sign language (Cyrillic = Russia/Ukraine, Arabic =
+      MENA, Hangul = Korea), (2) architecture (red roofs =
+      Mediterranean, brownstones = NYC, half-timbered =
+      Bavaria), (3) vegetation (palms, oaks, eucalyptus by
+      region), (4) license plates (country codes + format),
+      (5) unique monuments. Tools: Google Lens (reverse
+      image), Yandex (best in Europe), TinEye, and the manual
+      "9 frame zones" method (sketch each detail
+      systematically).
+
+  - title_fr: "Difference avec geoStalkingMeta : EXIF strip n'aide pas ici"
+    title_en: "Difference from geoStalkingMeta: EXIF strip doesn't help"
+    body_fr: |
+      Pour geoStalkingMeta, la defense canonique etait strip
+      EXIF server-side. Pour geoStalkingVisual, ca ne sert a
+      RIEN — l'attaquant n'utilise pas les metadata mais les
+      DETAILS VISIBLES. Defense difficile : (1) education du
+      user (eviter de poster des photos avec landmarks
+      identifiables), (2) flou automatique des elements
+      identifiables (numero de plaque, panneaux),
+      cher en compute, (3) reduction de resolution avant
+      affichage public (les details deviennent invisibles).
+      Mais il n'y a pas de defense parfaite cote app — la
+      donnee est dans le PIXEL, pas dans la metadata.
+    body_en: |
+      For geoStalkingMeta, canonical defense was server-side
+      EXIF strip. For geoStalkingVisual, it does NOTHING —
+      attacker uses VISIBLE DETAILS, not metadata. Hard
+      defense: (1) user education (avoid posting photos with
+      identifiable landmarks), (2) automatic blurring of
+      identifiable elements (license plates, signs),
+      compute-expensive, (3) resolution reduction before
+      public display (details become invisible). But no
+      perfect app-side defense — data is in the PIXEL, not
+      metadata.
+
+  - title_fr: "Reverse image search : la defense moderne contre geo-stalking ?"
+    title_en: "Reverse image search: modern defense against geo-stalking?"
+    body_fr: |
+      Outils comme Google Lens, Yandex, TinEye permettent de
+      retrouver le SOURCE original d'une photo si elle a deja
+      ete postee. Defense paradoxale : si l'image est UNIQUE
+      (jamais postee ailleurs), reverse search ne donne rien
+      mais l'OSINT visuel manuel reste possible. Si l'image
+      est REPRISE d'un site connu (Wikipedia, Tripadvisor),
+      le reverse search la retrouve trivialement avec son
+      contexte. Pour ce challenge, Emma a probablement
+      uploade sa propre photo unique — il faut utiliser
+      l'OSINT visuel manuel.
+    body_en: |
+      Tools like Google Lens, Yandex, TinEye let you find a
+      photo's original SOURCE if it's been posted elsewhere.
+      Paradoxical defense: if the image is UNIQUE (never
+      posted elsewhere), reverse search gives nothing but
+      manual visual OSINT remains possible. If the image is
+      TAKEN from a known site (Wikipedia, Tripadvisor),
+      reverse search finds it trivially with context. For
+      this challenge, Emma probably uploaded her own unique
+      photo — must use manual visual OSINT.

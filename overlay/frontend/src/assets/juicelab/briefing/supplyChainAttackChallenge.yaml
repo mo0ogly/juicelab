@@ -1,0 +1,170 @@
+challenge_key: "supplyChainAttackChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Informe l'equipe de developpement (via /#/contact) d'un
+  danger pour CERTAINES de leurs credentials. Mentionne
+  l'URL du report ORIGINAL ou un CVE assigne ou autre
+  identifier de cette vulnerabilite. Description OWASP.
+  Hints officiels : (1) "This vulnerability will not
+  affect any customer of the shop. It is aimed
+  exclusively at its developers". (2) "This is a
+  research-heavy challenge which does not involve any
+  actual hacking". (3) "Solving 'Access a developer's
+  forgotten backup file' before attempting this
+  challenge will save you from a lot of frustration".
+  Tag : OSINT. [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans routes/
+  verify.ts:291-303 (verifie source). Code exact :
+  `checkPatternInFeedbackAndComplaints(challenges.
+  supplyChainAttackChallenge, { [Op.or]: [
+  { [Op.like]: '%eslint-scope/issues/39%' },
+  { [Op.like]: '%npm:eslint-scope:20180712%' } ] })`.
+  Donc 2 reponses acceptees : URL GitHub issue
+  (eslint-scope/issues/39) OU CVE-style identifier
+  (npm:eslint-scope:20180712 = Snyk identifier de la
+  compromission eslint-scope du 12 juillet 2018).
+  Workflow : (1) Pre-requis forgottenDevBackup pour
+  identifier les dependencies. (2) Researcher
+  l'incident eslint-scope juillet 2018. (3) Submit
+  feedback /#/contact avec l'URL ou CVE.
+
+mission_en: |
+  Inform development team (via /#/contact) about
+  danger to SOME of their credentials. Mention URL of
+  ORIGINAL report or assigned CVE or other identifier
+  of this vulnerability. OWASP description. Official
+  hints: (1) "This vulnerability will not affect any
+  customer of the shop. It is aimed exclusively at its
+  developers". (2) "This is a research-heavy challenge
+  which does not involve any actual hacking". (3)
+  "Solving 'Access a developer's forgotten backup
+  file' before attempting this challenge will save
+  you from a lot of frustration". Tag: OSINT.
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/verify.ts:
+  291-303 (verified source). Exact code:
+  `checkPatternInFeedbackAndComplaints(challenges.
+  supplyChainAttackChallenge, { [Op.or]: [
+  { [Op.like]: '%eslint-scope/issues/39%' },
+  { [Op.like]: '%npm:eslint-scope:20180712%' } ] })`.
+  So 2 accepted answers: GitHub issue URL
+  (eslint-scope/issues/39) OR CVE-style identifier
+  (npm:eslint-scope:20180712 = Snyk identifier of
+  eslint-scope compromise July 12, 2018). Workflow:
+  (1) Prerequisite forgottenDevBackup to identify
+  dependencies. (2) Research eslint-scope July 2018
+  incident. (3) Submit feedback /#/contact with URL
+  or CVE.
+
+concepts:
+  - title_fr: "Incident eslint-scope (12 juillet 2018) : un cas reel canonique"
+    title_en: "eslint-scope incident (July 12, 2018): canonical real case"
+    body_fr: |
+      Source canonique : github.com/eslint/eslint-scope/
+      issues/39 (l'issue ORIGINAL report). Resume :
+      le 12 juillet 2018, un attaquant compromet le
+      compte npm d'un mainteneur eslint-scope (via
+      credential stuffing / phishing). Il publie une
+      version malveillante 3.7.2 (puis 3.7.3 apres
+      detection partielle) qui execute un postinstall
+      script exfiltrant les `~/.npmrc` du developer
+      (qui contient typiquement les npm tokens) vers
+      un serveur attaquant via Pastebin. La
+      vulnerabilite affecte des dizaines de millions
+      d'installs (eslint-scope est une dependency
+      indirecte de babel, eslint, webpack, etc.). Le
+      challenge cible explicitement les DEVELOPERS
+      (ceux qui font npm install) PAS les end-users
+      (les end-users de Juice Shop ne sont pas
+      affectes). Ref : Snyk SNYK-JS-ESLINTSCOPE-540931.
+    body_en: |
+      Canonical source: github.com/eslint/eslint-
+      scope/issues/39 (ORIGINAL report issue).
+      Summary: July 12, 2018, attacker compromises
+      npm account of eslint-scope maintainer (via
+      credential stuffing / phishing). Publishes
+      malicious version 3.7.2 (then 3.7.3 after
+      partial detection) executing postinstall script
+      exfiltrating developer's `~/.npmrc` (typically
+      contains npm tokens) to attacker server via
+      Pastebin. Vulnerability affects tens of
+      millions of installs (eslint-scope is indirect
+      dependency of babel, eslint, webpack, etc.).
+      Challenge explicitly targets DEVELOPERS (npm
+      install runners) NOT end-users (Juice Shop
+      end-users unaffected). Ref: Snyk SNYK-JS-
+      ESLINTSCOPE-540931.
+
+  - title_fr: "Tag OSINT : research-heavy, no actual hacking"
+    title_en: "OSINT tag: research-heavy, no actual hacking"
+    body_fr: |
+      Hint OWASP #2 : "This is a research-heavy
+      challenge which does not involve any actual
+      hacking". Specificite : ce challenge est purement
+      OSINT/recherche. Pas de payload. Pas de SQLi.
+      Pas de XSS. Le student doit (a) identifier
+      eslint-scope dans les transitive dependencies
+      (via package.json.bak ou npm ls), (b) googler
+      "eslint-scope incident" / "eslint-scope hijack"
+      / "eslint-scope security", (c) trouver la
+      reference canonique (GitHub issue #39 ou Snyk
+      ID), (d) submit cette reference. Pattern
+      reusable : la security work est souvent 80%
+      OSINT et 20% exploitation.
+    body_en: |
+      OWASP hint #2: "This is a research-heavy
+      challenge which does not involve any actual
+      hacking". Specificity: pure OSINT/research
+      challenge. No payload. No SQLi. No XSS.
+      Student must (a) identify eslint-scope in
+      transitive dependencies (via package.json.bak
+      or npm ls), (b) google "eslint-scope incident"
+      / "eslint-scope hijack" / "eslint-scope
+      security", (c) find canonical reference
+      (GitHub issue #39 or Snyk ID), (d) submit this
+      reference. Reusable pattern: security work is
+      often 80% OSINT and 20% exploitation.
+
+  - title_fr: "Defense canonique : multi-layered supply chain protection"
+    title_en: "Canonical defense: multi-layered supply chain protection"
+    body_fr: |
+      L'incident eslint-scope a ete decisif pour
+      l'ecosysteme npm : il a accelere l'adoption de
+      (1) 2FA OBLIGATOIRE pour les top 1000 npm
+      maintainers (depuis 2022, via npm-cli config
+      `2fa: required`), (2) automated malicious
+      package detection (npm install-time scanning),
+      (3) lockfile integrity checks par defaut
+      (`npm ci` v6+), (4) Sigstore-based provenance
+      attestation (npm v9+), (5) supply chain
+      observability tools (Socket.dev, Snyk, Sonatype).
+      Pour un developer individuel : (a) lire les
+      changelogs avant update, (b) utiliser un
+      private mirror avec pre-validation, (c) audit
+      des transitive deps periodique, (d) container
+      isolation pour npm install (Docker non-root,
+      no internet egress). Source :
+      mitigationUrl ~ (vide), mais reference forte :
+      OWASP Vulnerable Dependency Management +
+      eslint-scope post-mortem npm blog.
+    body_en: |
+      eslint-scope incident was decisive for npm
+      ecosystem: accelerated adoption of (1)
+      MANDATORY 2FA for top 1000 npm maintainers
+      (since 2022, via npm-cli config `2fa: required`),
+      (2) automated malicious package detection (npm
+      install-time scanning), (3) default lockfile
+      integrity checks (`npm ci` v6+), (4) Sigstore-
+      based provenance attestation (npm v9+), (5)
+      supply chain observability tools (Socket.dev,
+      Snyk, Sonatype). For individual developer: (a)
+      read changelogs before update, (b) use private
+      mirror with pre-validation, (c) periodic
+      transitive deps audit, (d) container isolation
+      for npm install (non-root Docker, no internet
+      egress). Source: mitigationUrl ~ (empty), but
+      strong reference: OWASP Vulnerable Dependency
+      Management + eslint-scope post-mortem npm blog.

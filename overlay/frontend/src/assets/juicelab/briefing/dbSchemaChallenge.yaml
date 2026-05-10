@@ -1,0 +1,134 @@
+challenge_key: "dbSchemaChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Exfiltre le schema complet de la base de donnees via SQL Injection.
+  La description OWASP officielle est claire : "Exfiltrate the entire
+  DB schema definition via SQL Injection". Le hint #5 precise que
+  "this cannot be achieved through the application frontend" — il
+  faut donc trouver un endpoint API et taper une requete avec un
+  outil (curl, navigateur barre URL, Burp).
+
+  Methode recommandee : l'endpoint /rest/products/search?q=... est
+  l'angle classique de Juice Shop. Le backend construit une requete
+  SQL avec concatenation directe du parametre q (codefixes/
+  dbSchemaChallenge_1.ts montre le code vulnerable). Tu peux y
+  injecter une UNION SELECT vers la table sqlite_master (Juice Shop
+  utilise SQLite). Methode error-based hopping : aligner le nombre
+  de colonnes en testant NULL,NULL,... jusqu'a passer.
+
+  Note l'endpoint exact, le payload UNION final, et le contenu du
+  schema exfiltre. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Exfiltrate the full database schema via SQL Injection. The
+  official OWASP description is clear: "Exfiltrate the entire DB
+  schema definition via SQL Injection". Hint #5 states that "this
+  cannot be achieved through the application frontend" — so you
+  must find an API endpoint and craft a request with a tool (curl,
+  browser address bar, Burp).
+
+  Recommended method: the /rest/products/search?q=... endpoint is
+  the classic Juice Shop angle. The backend builds the SQL query
+  via direct concatenation of the q parameter (codefixes/
+  dbSchemaChallenge_1.ts shows the vulnerable code). You can inject
+  a UNION SELECT to the sqlite_master table (Juice Shop uses
+  SQLite). Method: error-based hopping to align column count by
+  testing NULL,NULL,... until it passes.
+
+  Note the exact endpoint, the final UNION payload, and the
+  exfiltrated schema content. You will report it in the "after"
+  logbook.
+
+concepts:
+  - title_fr: "SQLi sur search endpoint : la classe d'attaque par filtre"
+    title_en: "SQLi on a search endpoint: the filter-attack class"
+    body_fr: |
+      Distinction avec login : sur le login, la SQLi fait passer ou
+      escalader une auth ; sur un search, elle EXFILTRE des donnees
+      via le resultat affiche. L'endpoint vulnerable construit
+      typiquement WHERE name LIKE '%<input>%' OR description LIKE
+      '%<input>%'. Le frontend Juice Shop appelle /rest/products/
+      search?q=apple. Quand on tape directement le payload dans
+      l'URL (apres URL-encoding), le filtre devient un canal
+      d'exfiltration. Reference codefixes/dbSchemaChallenge_1.ts
+      explanation : "spot a place where a SQL query is being
+      cobbled together in an unsafe way".
+    body_en: |
+      Distinction from login: on login, SQLi bypasses or escalates
+      auth; on search, it EXFILTRATES data via the displayed
+      result. The vulnerable endpoint typically builds WHERE name
+      LIKE '%<input>%' OR description LIKE '%<input>%'. The Juice
+      Shop frontend calls /rest/products/search?q=apple. When you
+      type the payload directly in the URL (URL-encoded), the
+      filter becomes an exfiltration channel. Reference codefixes/
+      dbSchemaChallenge_1.ts explanation: "spot a place where a
+      SQL query is being cobbled together in an unsafe way".
+
+  - title_fr: "sqlite_master : la table systeme SQLite des schemas"
+    title_en: "sqlite_master: SQLite's system schema table"
+    body_fr: |
+      Chaque moteur SQL a une table systeme qui liste les tables et
+      leurs schemas. SQLite utilise sqlite_master avec colonnes
+      type, name, tbl_name, rootpage, sql. La column sql contient
+      le CREATE TABLE complet. Pour Juice Shop : SELECT sql FROM
+      sqlite_master WHERE type='table'. Equivalents : MySQL/MariaDB
+      utilise information_schema.tables et information_schema.
+      columns ; PostgreSQL utilise pg_catalog.pg_tables ; SQL
+      Server utilise sys.objects. Hint OWASP #2 : "find out which
+      database system is in use".
+    body_en: |
+      Every SQL engine has a system table listing tables and their
+      schemas. SQLite uses sqlite_master with columns type, name,
+      tbl_name, rootpage, sql. The sql column holds the full
+      CREATE TABLE. For Juice Shop: SELECT sql FROM sqlite_master
+      WHERE type='table'. Equivalents: MySQL/MariaDB use
+      information_schema.tables and information_schema.columns;
+      PostgreSQL uses pg_catalog.pg_tables; SQL Server uses
+      sys.objects. OWASP hint #2: "find out which database system
+      is in use".
+
+  - title_fr: "Error-based column hopping : aligner le UNION"
+    title_en: "Error-based column hopping: aligning the UNION"
+    body_fr: |
+      Pour qu'un UNION soit valide, le SELECT injecte doit retourner
+      le meme nombre de colonnes que le SELECT original. La
+      methode universelle (hint OWASP #4) : tester
+      ?q=apple')) UNION SELECT NULL-- puis NULL,NULL puis NULL,
+      NULL,NULL... jusqu'a ce que l'API ne renvoie plus une 500
+      avec erreur SQL, mais une 200 avec un resultat vide ou
+      enrichi. Le nombre de NULL ou la requete passe = le nombre
+      de colonnes du SELECT original. On remplace alors les NULL
+      par les valeurs de sqlite_master qu'on veut exfiltrer.
+    body_en: |
+      For a UNION to be valid, the injected SELECT must return the
+      same column count as the original. The universal method
+      (OWASP hint #4): try ?q=apple')) UNION SELECT NULL-- then
+      NULL,NULL then NULL,NULL,NULL... until the API stops
+      returning a 500 with a SQL error, and instead returns a 200
+      with an empty or augmented result. The NULL count where the
+      query passes = the original SELECT's column count. Then
+      replace NULLs with the sqlite_master values to exfiltrate.
+
+  - title_fr: "Defense canonique + pourquoi le blocklist regex echoue"
+    title_en: "Canonical defense + why regex blocklist fails"
+    body_fr: |
+      codefixes/dbSchemaChallenge.info.yml fix #2 (correct) : le
+      mecanisme de binding de Sequelize est equivalent a un Prepared
+      Statement, donc la valeur du parametre q est figee avant
+      l'execution. Fix #3 (incorrect) : "trying to prevent any
+      injection attacks with a custom-built blocklist mechanism is
+      doomed to fail. It might work for some simpler attack
+      payloads but an attacker with time and skills can likely
+      bypass it at some point". Source officielle confirmant que
+      le filtrage par regex est une fausse defense.
+    body_en: |
+      codefixes/dbSchemaChallenge.info.yml fix #2 (correct): the
+      Sequelize binding mechanism is equivalent to a Prepared
+      Statement, so the q parameter value is set in stone before
+      execution. Fix #3 (incorrect): "trying to prevent any
+      injection attacks with a custom-built blocklist mechanism is
+      doomed to fail. It might work for some simpler attack
+      payloads but an attacker with time and skills can likely
+      bypass it at some point". Official source confirming that
+      regex filtering is a false defense.

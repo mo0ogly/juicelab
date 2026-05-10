@@ -1,0 +1,81 @@
+challenge_key: "securityPolicyChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quel standard regit security.txt et son
+      emplacement ?
+    question_en: |
+      Which standard governs security.txt and its
+      location?
+    options_fr:
+      - "ISO 27001"
+      - "RFC 9116 (April 2022) definit security.txt + RFC 8615 definit le namespace /.well-known/. Emplacement canonique : /.well-known/security.txt. Champs requis : Contact, Expires, Canonical. Recommandes : Encryption (PGP), Policy, Acknowledgments, Hiring. Tools : securitytxt.org"
+      - "GDPR Article 32"
+      - "PCI-DSS 4.0"
+    options_en:
+      - "ISO 27001"
+      - "RFC 9116 (April 2022) defines security.txt + RFC 8615 defines /.well-known/ namespace. Canonical location: /.well-known/security.txt. Required fields: Contact, Expires, Canonical. Recommended: Encryption (PGP), Policy, Acknowledgments, Hiring. Tools: securitytxt.org"
+      - "GDPR Article 32"
+      - "PCI-DSS 4.0"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : connaitre les RFC well-known.
+      Source : RFC 9116.
+    explanation_en: |
+      Reusable pattern: know well-known RFCs. Source:
+      RFC 9116.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quels endpoints /.well-known/* interessent un
+      pentester ?
+    question_en: |
+      Which /.well-known/* endpoints interest a
+      pentester?
+    options_fr:
+      - "Aucun, c'est public"
+      - "(1) security.txt (RFC 9116). (2) openid-configuration (OIDC discovery -> endpoints OAuth, JWKS URL, signing keys). (3) change-password (RFC 8615 - URL password change pour password managers). (4) acme-challenge (Let's Encrypt validation). (5) host-meta (XRD, RFC 6415). Pattern : enumeration discovery"
+      - "Tous sont obsoletes"
+      - "Seul security.txt"
+    options_en:
+      - "None, it's public"
+      - "(1) security.txt (RFC 9116). (2) openid-configuration (OIDC discovery -> OAuth endpoints, JWKS URL, signing keys). (3) change-password (RFC 8615 - password change URL for password managers). (4) acme-challenge (Let's Encrypt validation). (5) host-meta (XRD, RFC 6415). Pattern: discovery enumeration"
+      - "All obsolete"
+      - "Only security.txt"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : surface enumeration. Source :
+      RFC 8615 + IANA Well-Known URIs Registry.
+    explanation_en: |
+      Reusable pattern: surface enumeration. Source:
+      RFC 8615 + IANA Well-Known URIs Registry.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique : security.txt c'est good
+      practice ou faille ?
+    question_en: |
+      Canonical defense: is security.txt good
+      practice or vulnerability?
+    options_fr:
+      - "C'est une faille"
+      - "GOOD PRACTICE - DEPLOYER security.txt (transparency > obscurity). Facilite responsible disclosure, evite ghost emails, donne PGP key, definit Acknowledgments. Champs requis : Contact, Expires (max 1 an), Canonical. Cas reels : Google, GitHub, Cloudflare ont tous security.txt"
+      - "Optionnel"
+      - "Interdit en EU"
+    options_en:
+      - "It's a vulnerability"
+      - "GOOD PRACTICE - DEPLOY security.txt (transparency > obscurity). Facilitates responsible disclosure, avoids ghost emails, gives PGP key, defines Acknowledgments. Required fields: Contact, Expires (max 1 year), Canonical. Real cases: Google, GitHub, Cloudflare all have security.txt"
+      - "Optional"
+      - "Forbidden in EU"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : transparency > obscurity pour
+      security policy. Source : RFC 9116.
+    explanation_en: |
+      Reusable pattern: transparency > obscurity for
+      security policy. Source: RFC 9116.

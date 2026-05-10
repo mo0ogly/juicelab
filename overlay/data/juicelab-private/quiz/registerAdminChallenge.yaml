@@ -1,0 +1,126 @@
+challenge_key: "registerAdminChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la mecanique technique de la mass
+      assignment vulnerability exploitee dans ce
+      challenge ?
+    question_en: |
+      What's the technical mechanic of mass
+      assignment vulnerability exploited in this
+      challenge?
+    options_fr:
+      - "Le serveur fait du SQL injection sur le role"
+      - "L'endpoint POST /api/Users prend `req.body` (JSON parse complet) et le passe a Sequelize Model.create() sans filter. Si le body contient un champ NON-attendu comme `role`, il est enregistre tel quel dans la table Users. L'attaquant ajoute simplement `\"role\": \"admin\"` au JSON. Pattern : naive object spread = mass assignment vulnerability"
+      - "Le serveur a un bug dans bcrypt"
+      - "L'admin password est en clair"
+    options_en:
+      - "Server does SQL injection on role"
+      - "POST /api/Users endpoint takes `req.body` (full JSON parse) and passes to Sequelize Model.create() without filter. If body contains UNEXPECTED field like `role`, it's stored as-is in Users table. Attacker simply adds `\"role\": \"admin\"` to JSON. Pattern: naive object spread = mass assignment vulnerability"
+      - "Server has bug in bcrypt"
+      - "Admin password is in clear"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : NEVER spread `req.body`
+      directement dans Model.create. Toujours
+      ALLOWLIST les fields autorises. Cas reels :
+      Rails Mass Assignment 2012 (CVE-2012-2660),
+      GitHub default Rails Devise 2014 (CVE-2014-XXX).
+      Defense : attribute_allowlist (Rails),
+      Sequelize fields option, joi/zod schema. Source
+      : routes/verify.ts:50-55 + OWASP Mass
+      Assignment Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: NEVER spread `req.body`
+      directly in Model.create. Always ALLOWLIST
+      authorized fields. Real cases: Rails Mass
+      Assignment 2012 (CVE-2012-2660), GitHub
+      default Rails Devise 2014 (CVE-2014-XXX).
+      Defense: attribute_allowlist (Rails), Sequelize
+      fields option, joi/zod schema. Source: routes/
+      verify.ts:50-55 + OWASP Mass Assignment Cheat
+      Sheet.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Codefixes #1 propose : "check if a role is
+      already defined on the user entity. If so, keep
+      it. If not, set 'customer' as fallback".
+      Pourquoi cette defense est-elle INSUFFISANTE ?
+    question_en: |
+      Codefixes #1 proposes: "check if a role is
+      already defined on the user entity. If so, keep
+      it. If not, set 'customer' as fallback". Why is
+      this defense INSUFFICIENT?
+    options_fr:
+      - "Parce que customer n'existe pas"
+      - "Parce que la condition 'if role is defined' s'evalue a TRUE quand l'attaquant injecte explicitly role='admin'. Le code 'keep it' preserves donc l'injection. Le fix correct (codefixes #3) OVERRIDE TOUJOURS le role a 'customer' independamment du body. Pattern : la defense doit etre fail-CLOSED (refuse l'input attaquant) pas fail-OPEN (accept l'input s'il est present)"
+      - "Parce que customer est deja admin"
+      - "Parce que les fallback sont insufficient"
+    options_en:
+      - "Because customer doesn't exist"
+      - "Because 'if role is defined' condition evaluates to TRUE when attacker explicitly injects role='admin'. The 'keep it' code preserves the injection. Correct fix (codefixes #3) ALWAYS OVERRIDES role to 'customer' regardless of body. Pattern: defense must be fail-CLOSED (refuse attacker input) not fail-OPEN (accept input if present)"
+      - "Because customer is already admin"
+      - "Because fallbacks are insufficient"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la defense doit etre
+      DEFAULT-DENY (allowlist) pas DEFAULT-ALLOW
+      (blocklist conditional). Codefixes #1 fait du
+      conditional accept = vulnerable. Codefixes #3
+      fait du DEFAULT-DENY = secure. Source :
+      codefixes/registerAdminChallenge.info.yml
+      analysis + OWASP defense in depth principles.
+    explanation_en: |
+      Reusable pattern: defense must be DEFAULT-DENY
+      (allowlist) not DEFAULT-ALLOW (conditional
+      blocklist). Codefixes #1 does conditional
+      accept = vulnerable. Codefixes #3 does
+      DEFAULT-DENY = secure. Source: codefixes/
+      registerAdminChallenge.info.yml analysis +
+      OWASP defense in depth principles.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la defense MODERNE la plus
+      EFFECTIVE pour empecher mass assignment dans
+      les endpoints REST ?
+    question_en: |
+      What's the MOST EFFECTIVE MODERN defense to
+      prevent mass assignment in REST endpoints?
+    options_fr:
+      - "Forcer HTTPS"
+      - "DTO (Data Transfer Object) explicit avec schema validation : (1) Definir un schema joi/zod/yup pour le request body. (2) Whitelist EXPLICITLY les fields acceptables (email, password, securityQuestion, etc.) (3) STRIP automatiquement tout autre field. (4) Validate types + ranges + formats. Combine avec ORM allowlist (Sequelize attributes filter, Mongoose select). Multi-layered defense. Source : OWASP Mass Assignment + zod docs"
+      - "Hashher tous les fields"
+      - "Disabler POST /api/Users"
+    options_en:
+      - "Force HTTPS"
+      - "Explicit DTO (Data Transfer Object) with schema validation: (1) Define joi/zod/yup schema for request body. (2) EXPLICITLY whitelist acceptable fields (email, password, securityQuestion, etc.) (3) Automatically STRIP any other field. (4) Validate types + ranges + formats. Combined with ORM allowlist (Sequelize attributes filter, Mongoose select). Multi-layered defense. Source: OWASP Mass Assignment + zod docs"
+      - "Hash all fields"
+      - "Disable POST /api/Users"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : DTO + schema validation est
+      le pattern moderne pour API REST. Frameworks
+      modernes (NestJS class-validator, FastAPI
+      Pydantic, Spring Boot @Valid) le font
+      automatiquement. Pour Express + Sequelize
+      (Juice Shop), il faut manually adopter joi/
+      zod ou utiliser Sequelize attributes filter.
+      Source : OWASP Mass Assignment Cheat Sheet +
+      zod / joi best practices.
+    explanation_en: |
+      Reusable pattern: DTO + schema validation is
+      modern REST API pattern. Modern frameworks
+      (NestJS class-validator, FastAPI Pydantic,
+      Spring Boot @Valid) do it automatically. For
+      Express + Sequelize (Juice Shop), must
+      manually adopt joi/zod or use Sequelize
+      attributes filter. Source: OWASP Mass
+      Assignment Cheat Sheet + zod / joi best
+      practices.

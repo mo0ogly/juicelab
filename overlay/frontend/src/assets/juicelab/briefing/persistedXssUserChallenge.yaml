@@ -1,0 +1,158 @@
+challenge_key: "persistedXssUserChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Realise un XSS persiste avec le payload <iframe src="javascript:
+  alert(`xss`)"> en bypassant un mecanisme de securite COTE
+  CLIENT. Description OWASP officielle. Hint #3 : "Bypassing
+  client-side security can typically be done by either disabling
+  it on the client (i.e. in the browser by manipulating the DOM
+  tree) or by ignoring it completely and interacting with the
+  backend instead". Donc deux voies : DOM manipulation pour casser
+  la validation, ou attaquer l'API directement.
+
+  Methode recommandee : trouve un champ user-attribut qui (a) a
+  une validation cote client (regex, mat-error, formControl
+  validators), (b) est PERSISTE en DB, (c) est REAFFICHE sur un
+  autre ecran. Hint #1 : "There are only some input fields in the
+  Juice Shop forms that validate their input". Hint #2 : "Even
+  less of these fields are persisted in a way where their content
+  is shown on another screen". Reflexion : le champ Address est un
+  bon candidat (validation regex cote frontend, persiste en DB,
+  re-affiche dans My Saved Addresses). Bypass via API direct.
+
+  Note la lecon fondamentale : la validation cote client n'est
+  qu'un GUIDE UX, pas une defense. Tu en parleras dans le journal
+  "apres".
+
+mission_en: |
+  Perform a persisted XSS with payload <iframe src="javascript:
+  alert(`xss`)"> bypassing a CLIENT-SIDE security mechanism.
+  Official OWASP description. Hint #3: "Bypassing client-side
+  security can typically be done by either disabling it on the
+  client (i.e. in the browser by manipulating the DOM tree) or
+  by ignoring it completely and interacting with the backend
+  instead". Two ways: DOM manipulation to break validation, or
+  attack the API directly.
+
+  Recommended method: find a user-attribute field that (a) has
+  client-side validation (regex, mat-error, formControl
+  validators), (b) is PERSISTED in DB, (c) is RE-DISPLAYED on
+  another screen. Hint #1: "There are only some input fields in
+  the Juice Shop forms that validate their input". Hint #2:
+  "Even less of these fields are persisted in a way where their
+  content is shown on another screen". Reflection: the Address
+  field is a good candidate (frontend regex validation,
+  persisted in DB, re-displayed in My Saved Addresses). Bypass
+  via direct API.
+
+  Note the fundamental lesson: client-side validation is just a
+  UX GUIDE, not a defense. You will report it in the "after"
+  logbook.
+
+concepts:
+  - title_fr: "Validation client-side : guide UX, pas defense"
+    title_en: "Client-side validation: UX guide, not defense"
+    body_fr: |
+      Pattern fondamental que tout developpeur doit interioriser.
+      La validation cote client (Angular FormControl, HTML5 input
+      pattern, regex en TypeScript) sert a (1) UX immediate (rouge
+      sur le champ avant submit), (2) reduire les requetes
+      inutiles. JAMAIS de defense. L'attaquant peut (a) ouvrir
+      DevTools, modifier le DOM/code TypeScript, (b) skip
+      l'application Angular et POSTer directement avec curl. La
+      validation server-side est OBLIGATOIRE EN PLUS pour toute
+      regle de securite. Source : OWASP Input Validation Cheat
+      Sheet.
+    body_en: |
+      Fundamental pattern every developer must internalize.
+      Client-side validation (Angular FormControl, HTML5 input
+      pattern, regex in TypeScript) serves to (1) immediate UX
+      (red on field before submit), (2) reduce useless requests.
+      NEVER for defense. Attacker can (a) open DevTools, modify
+      DOM/TS code, (b) skip Angular and POST directly via curl.
+      Server-side validation is MANDATORY IN ADDITION for any
+      security rule. Source: OWASP Input Validation Cheat Sheet.
+
+  - title_fr: "Persisted XSS via field user-attribute : impact viral"
+    title_en: "Persisted XSS via user-attribute field: viral impact"
+    body_fr: |
+      Le challenge cible un field qui est : valide cote client +
+      persiste en DB + reaffiche ailleurs. Sur Juice Shop, cela
+      inclut typiquement Address (saved addresses), Email
+      (whoami), Profile Image URL (deja vu en SSRF). Quand
+      l'attaquant injecte un XSS dans son propre Address, c'est
+      DEJA un persisted XSS sur SA session. Mais cela peut etre
+      affiche aussi a l'admin (qui voit TOUTES les addresses
+      pour modere) ou a un support engineer. Defense : sanitize
+      tout output user-controlled, par defaut, partout.
+    body_en: |
+      The challenge targets a field that is: client-validated +
+      persisted in DB + re-displayed elsewhere. On Juice Shop,
+      this typically includes Address (saved addresses), Email
+      (whoami), Profile Image URL (seen in SSRF). When the
+      attacker injects XSS in their own Address, it's ALREADY
+      a persisted XSS on THEIR session. But it can also be
+      displayed to admin (viewing ALL addresses for moderation)
+      or to a support engineer. Defense: sanitize all
+      user-controlled output, by default, everywhere.
+
+  - title_fr: "Bypass technique : DOM manipulation vs API direct"
+    title_en: "Bypass technique: DOM manipulation vs direct API"
+    body_fr: |
+      Hint OWASP officiel #3 explique les 2 voies. (1) DOM
+      manipulation : ouvrir DevTools Console, taper
+      document.querySelector('input[name=address]').setAttribute(
+      'pattern','.*') pour disable la regex pattern. Puis remplir
+      le field avec le payload XSS et submit. (2) API direct :
+      POST /api/Addresses avec body { "streetAddress": "<iframe>" }.
+      Aucune validation Angular ne s'execute, le serveur reçoit
+      le payload brut. Methode 2 plus rapide en pratique, methode
+      1 plus pedagogique pour comprendre que la validation
+      client est un cosmetique.
+    body_en: |
+      Official OWASP hint #3 explains the 2 ways. (1) DOM
+      manipulation: open DevTools Console, type
+      document.querySelector('input[name=address]').setAttribute(
+      'pattern','.*') to disable the regex pattern. Then fill
+      the field with the XSS payload and submit. (2) Direct
+      API: POST /api/Addresses with body { "streetAddress":
+      "<iframe>" }. No Angular validation runs, server receives
+      raw payload. Method 2 faster in practice, method 1 more
+      pedagogical to understand that client validation is
+      cosmetic.
+
+  - title_fr: "Defense canonique : validation server-side OBLIGATOIRE"
+    title_en: "Canonical defense: MANDATORY server-side validation"
+    body_fr: |
+      Le code Express type qui aurait empeche ce bug :
+      router.post('/Addresses', auth, (req, res) => {
+        const schema = Joi.object({
+          streetAddress: Joi.string().pattern(/^[a-zA-Z0-9
+          \-,'.]+$/).max(200).required(),
+          // ... autres champs
+        })
+        const { error } = schema.validate(req.body)
+        if (error) return res.status(400).json({error})
+        Address.create({...req.body, UserId: req.user.id})
+      })
+      Joi/Zod/class-validator au niveau API rejette le payload
+      avant la persist. Combine a un sanitizer DOMPurify au
+      moment de l'affichage, l'XSS persiste devient
+      structurellement impossible.
+    body_en: |
+      Sample Express code that would have prevented this bug:
+      router.post('/Addresses', auth, (req, res) => {
+        const schema = Joi.object({
+          streetAddress: Joi.string().pattern(/^[a-zA-Z0-9
+          \-,'.]+$/).max(200).required(),
+          // ... other fields
+        })
+        const { error } = schema.validate(req.body)
+        if (error) return res.status(400).json({error})
+        Address.create({...req.body, UserId: req.user.id})
+      })
+      Joi/Zod/class-validator at the API level rejects the
+      payload before persist. Combined with a DOMPurify
+      sanitizer at display time, persisted XSS becomes
+      structurally impossible.

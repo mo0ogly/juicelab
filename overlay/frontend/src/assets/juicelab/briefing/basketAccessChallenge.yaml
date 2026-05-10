@@ -1,0 +1,108 @@
+challenge_key: "basketAccessChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Affiche le contenu du panier d'un AUTRE utilisateur. Juice Shop
+  identifie les paniers par un identifiant numerique stocke cote
+  client (sessionStorage), et l'API /rest/basket/:id ne verifie pas
+  que ce :id appartient bien a l'utilisateur authentifie. C'est un
+  IDOR (Insecure Direct Object Reference) classique.
+
+  Methode recommandee : connecte-toi avec ton compte, ouvre les
+  DevTools et regarde la cle bid dans sessionStorage (Application tab).
+  Note la valeur (par exemple 6). Modifie-la (par exemple en 1, 2, 3),
+  recharge ou clique sur l'icone panier. Le panier d'un autre
+  utilisateur s'affiche : tu n'as fourni QUE l'id, jamais une preuve
+  d'ownership. Variante : interceptes l'URL /rest/basket/<id> dans
+  Network et change l'id directement.
+
+  Note la difference entre IDOR et URL devinable, et reflechis au
+  pattern qui aurait empeche cette vulnerabilite par construction. Tu
+  en parleras dans le journal "apres".
+
+mission_en: |
+  Display the basket content of ANOTHER user. Juice Shop identifies
+  baskets by a numeric ID stored client-side (sessionStorage), and
+  the /rest/basket/:id API does not verify that the :id belongs to
+  the authenticated user. This is a classic IDOR (Insecure Direct
+  Object Reference).
+
+  Recommended method: log in with your account, open DevTools and
+  look at the bid key in sessionStorage (Application tab). Note the
+  value (e.g. 6). Change it (e.g. to 1, 2, 3), reload or click the
+  basket icon. Another user's basket displays: you only provided the
+  id, never proof of ownership. Variant: intercept the
+  /rest/basket/<id> URL in Network and change the id directly.
+
+  Note the difference between IDOR and a guessable URL, and think
+  about the pattern that would have prevented this vulnerability by
+  construction. You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "IDOR : la confusion entre devinette et autorisation"
+    title_en: "IDOR: the confusion between guessing and authorization"
+    body_fr: |
+      Une URL devinable (id sequentiel 1, 2, 3) n'est PAS le probleme.
+      Le probleme est l'absence de verification d'ownership cote
+      serveur : "ce basket appartient-il bien a l'utilisateur du JWT
+      qui le demande ?". Remplacer un id sequentiel par un UUIDv4
+      ralentit l'enumeration mais ne corrige PAS l'IDOR : si
+      l'attaquant obtient un UUID legitime (lien partage, log fuite),
+      il acces toujours a la ressource.
+    body_en: |
+      A guessable URL (sequential id 1, 2, 3) is NOT the problem.
+      The problem is the missing server-side ownership check: "does
+      this basket belong to the user of the requesting JWT?".
+      Replacing a sequential id with a UUIDv4 slows enumeration but
+      does NOT fix the IDOR: if the attacker obtains a legitimate
+      UUID (shared link, log leak), they still access the resource.
+
+  - title_fr: "Pattern preferable : /api/me/<resource>"
+    title_en: "Preferred pattern: /api/me/<resource>"
+    body_fr: |
+      Au lieu de /api/basket/:id qui demande au client de specifier
+      la ressource, utiliser /api/me/basket sans parametre. Le serveur
+      deduit le basket de l'utilisateur du JWT lui-meme. Par
+      construction, l'utilisateur ne peut pas demander la ressource
+      d'un autre. Le meme pattern s'applique a /api/me/orders,
+      /api/me/profile, /api/me/payment-methods.
+    body_en: |
+      Instead of /api/basket/:id which asks the client to specify the
+      resource, use /api/me/basket with no parameter. The server
+      deduces the basket from the JWT itself. By construction, the
+      user cannot request another's resource. The same pattern fits
+      /api/me/orders, /api/me/profile, /api/me/payment-methods.
+
+  - title_fr: "Si on garde /api/<resource>/:id : ownership check obligatoire"
+    title_en: "If keeping /api/<resource>/:id: mandatory ownership check"
+    body_fr: |
+      Quand l'API expose un :id (necessaire dans certains contextes :
+      partage, admin), le handler DOIT verifier basket.userId ===
+      JWT.user.id avant de retourner l'objet, sinon 403 Forbidden.
+      Cette verification doit etre dans un middleware reutilisable ou
+      un decorateur, pas un if oublie dans un handler. Audit log de
+      chaque 403 pour detecter les tentatives.
+    body_en: |
+      When the API exposes an :id (sometimes needed: sharing,
+      admin), the handler MUST verify basket.userId === JWT.user.id
+      before returning the object, otherwise 403 Forbidden. This
+      check must live in a reusable middleware or decorator, not a
+      forgotten if in a handler. Audit log every 403 to detect
+      attempts.
+
+  - title_fr: "OWASP API1:2023 — Broken Object Level Authorization"
+    title_en: "OWASP API1:2023 — Broken Object Level Authorization"
+    body_fr: |
+      Numero 1 du top OWASP API Security 2023. C'est l'IDOR canonique :
+      l'API expose une ressource via un id, mais ne verifie pas que
+      l'utilisateur a le droit de la voir. Tres frequent dans les API
+      REST modernes ou chaque endpoint /resource/:id necessite un
+      check explicite. Les outils de scan automatique le detectent en
+      enumerant des ids et observant le code retour.
+    body_en: |
+      Number 1 of the OWASP API Security 2023 top. The canonical
+      IDOR: the API exposes a resource via an id but does not verify
+      the user has the right to see it. Very frequent in modern REST
+      APIs where every /resource/:id endpoint needs an explicit
+      check. Automated scanners detect it by enumerating ids and
+      observing the response code.

@@ -1,0 +1,154 @@
+challenge_key: "typosquattingAngularChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Informe le shop (via /#/contact) d'un imposter
+  typosquatting qui s'est creuse dans le frontend.
+  Mentionne le nom EXACT du culprit dans le commentaire
+  feedback. Description OWASP. Hints officiels : (1)
+  "This challenge has nothing to do with mistyping web
+  domains. There is no conveniently misplaced file
+  helping you with this one either. Or is there?". (2)
+  "This challenge has nothing to do with URLs or
+  domains". (3) "Other than for its legacy companion,
+  combing through the package.json.bak does not help
+  for this challenge". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans routes/
+  verify.ts:277-282 (verifie source). Code exact :
+  `checkPatternInFeedbackAndComplaints(challenges.
+  typosquattingAngularChallenge, { [Op.like]:
+  '%ngy-cookie%' })`. Donc le culprit cherche est
+  `ngy-cookie` (typosquat de `ngx-cookie`, library
+  Angular legitime). Difference cruciale avec
+  typosquattingNpm : hint #3 dit explicitement que
+  package.json.bak NE PAS aider. Le typosquat est dans
+  le frontend RUNTIME. Workflow : (1) Inspecter le
+  bundle Angular (DevTools Sources, search ngx-cookie /
+  ngy-cookie). (2) Inspecter le current package.json
+  frontend (visible si exposed). (3) Submit feedback
+  /#/contact avec "ngy-cookie".
+
+mission_en: |
+  Inform shop (via /#/contact) about typosquatting
+  imposter that dug deep into frontend. Mention EXACT
+  culprit name in feedback comment. OWASP description.
+  Official hints: (1) "This challenge has nothing to do
+  with mistyping web domains. There is no conveniently
+  misplaced file helping you with this one either. Or
+  is there?". (2) "This challenge has nothing to do
+  with URLs or domains". (3) "Other than for its legacy
+  companion, combing through the package.json.bak does
+  not help for this challenge". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/verify.ts:
+  277-282 (verified source). Exact code:
+  `checkPatternInFeedbackAndComplaints(challenges.
+  typosquattingAngularChallenge, { [Op.like]:
+  '%ngy-cookie%' })`. So sought culprit is `ngy-cookie`
+  (typosquat of `ngx-cookie`, legitimate Angular
+  library). Crucial difference from typosquattingNpm:
+  hint #3 explicitly says package.json.bak does NOT
+  help. Typosquat is in frontend RUNTIME. Workflow: (1)
+  Inspect Angular bundle (DevTools Sources, search
+  ngx-cookie / ngy-cookie). (2) Inspect current
+  frontend package.json (visible if exposed). (3)
+  Submit feedback /#/contact with "ngy-cookie".
+
+concepts:
+  - title_fr: "Frontend typosquatting : surface differente du backend"
+    title_en: "Frontend typosquatting: surface different from backend"
+    body_fr: |
+      Hint OWASP #3 explicite : "Other than for its
+      legacy companion, combing through the
+      package.json.bak does not help for this challenge".
+      Pourquoi ? Parce que le frontend Angular a son
+      PROPRE package.json (`/frontend/package.json`)
+      different du backend root. Le typosquat est dans
+      les frontend dependencies, visibles soit dans le
+      bundle Angular (chunks Webpack avec import
+      statements) soit dans le current package.json
+      frontend (exposed dans certaines deployments).
+      Pattern reusable : un projet hybride a souvent
+      DEUX package.json (backend + frontend), il faut
+      auditer LES DEUX.
+    body_en: |
+      OWASP hint #3 explicit: "Other than for its
+      legacy companion, combing through the
+      package.json.bak does not help for this
+      challenge". Why? Because Angular frontend has
+      OWN package.json (`/frontend/package.json`)
+      different from backend root. Typosquat is in
+      frontend dependencies, visible either in Angular
+      bundle (Webpack chunks with import statements)
+      or in current frontend package.json (exposed in
+      some deployments). Reusable pattern: hybrid
+      project often has TWO package.json (backend +
+      frontend), must audit BOTH.
+
+  - title_fr: "Investigation via bundle inspection : code analysis runtime"
+    title_en: "Investigation via bundle inspection: runtime code analysis"
+    body_fr: |
+      Methode d'investigation : (1) Open DevTools
+      Sources tab. (2) Search dans tous les .js
+      bundles : `import.*cookie` ou `from.*cookie`. (3)
+      Identifier les import statements suspects (ex.
+      `import {...} from 'ngy-cookie'` au lieu de
+      `'ngx-cookie'`). (4) Cross-check avec npm.js : le
+      package legitime ngx-cookie existe, ngy-cookie est
+      le typosquat. Source serveur verifie : routes/
+      verify.ts:277-282 confirme `%ngy-cookie%` comme
+      pattern cherche. Pattern reusable : bundle
+      inspection est la surface OSINT runtime accessible
+      sans access serveur. Tools : Chrome DevTools, Burp
+      Bundle Analyzer, webpack-bundle-analyzer reverse-
+      engineering.
+    body_en: |
+      Investigation method: (1) Open DevTools Sources
+      tab. (2) Search in all .js bundles: `import.*
+      cookie` or `from.*cookie`. (3) Identify suspect
+      import statements (e.g., `import {...} from
+      'ngy-cookie'` instead of `'ngx-cookie'`). (4)
+      Cross-check with npm.js: legitimate ngx-cookie
+      package exists, ngy-cookie is typosquat.
+      Verified server source: routes/verify.ts:
+      277-282 confirms `%ngy-cookie%` as sought
+      pattern. Reusable pattern: bundle inspection is
+      runtime OSINT surface accessible without server
+      access. Tools: Chrome DevTools, Burp Bundle
+      Analyzer, webpack-bundle-analyzer reverse-
+      engineering.
+
+  - title_fr: "Defense canonique : SBOM et build provenance"
+    title_en: "Canonical defense: SBOM and build provenance"
+    body_fr: |
+      mitigationUrl : OWASP Vulnerable Dependency
+      Management Cheat Sheet. Mais aussi specifique
+      frontend : (1) Generer un SBOM (Software Bill of
+      Materials) au build time (CycloneDX, SPDX), (2)
+      audit ce SBOM contre une allowlist de packages
+      approuves, (3) sub-resource integrity (SRI) sur
+      les CDN imports, (4) Content Security Policy
+      stricte qui empeche les load externes non-
+      attendus, (5) build reproducibility (npm
+      provenance attestation v9+). Pour les frontend
+      bundles, l'integrity check est CRITIQUE car le
+      bundle est shipped au browser de chaque user (un
+      typosquat malveillant compromet TOUS les
+      visitors). Source : OWASP Vulnerable Dependency
+      Management + NPM Best Practices.
+    body_en: |
+      mitigationUrl: OWASP Vulnerable Dependency
+      Management Cheat Sheet. Plus frontend-specific:
+      (1) Generate SBOM (Software Bill of Materials) at
+      build time (CycloneDX, SPDX), (2) audit this SBOM
+      against approved-packages allowlist, (3) sub-
+      resource integrity (SRI) on CDN imports, (4)
+      strict Content Security Policy preventing
+      unexpected external loads, (5) build
+      reproducibility (npm provenance attestation v9+).
+      For frontend bundles, integrity check is
+      CRITICAL since bundle is shipped to every user's
+      browser (malicious typosquat compromises ALL
+      visitors). Source: OWASP Vulnerable Dependency
+      Management + NPM Best Practices.

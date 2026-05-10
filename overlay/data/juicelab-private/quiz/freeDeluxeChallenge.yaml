@@ -1,0 +1,138 @@
+challenge_key: "freeDeluxeChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le bug racine est l'ORDRE des operations
+      dans routes/deluxe.ts. Quel est le concept
+      defensif viole ?
+    question_en: |
+      Root bug is ORDER of operations in
+      routes/deluxe.ts. What defensive concept
+      violated?
+    options_fr:
+      - "HTTPS doit etre force"
+      - "ATOMIC TRANSACTION : la payment validation et le state change (user.update -> deluxe) doivent etre dans une SAME transaction. Le code actuel : (1) ifs validation (skip si paymentMode unknown), (2) user.update execute INCONDITIONNELLEMENT. Defense : (a) Sequelize transaction wrapping, (b) explicit reject avant update si paymentMode invalid, (c) enum validation par defaut. Pattern : state changes must be ATOMIC + ROLLBACK-SAFE"
+      - "Forcer 2FA"
+      - "Encrypter le paymentMode"
+    options_en:
+      - "Force HTTPS"
+      - "ATOMIC TRANSACTION: payment validation and state change (user.update -> deluxe) must be in SAME transaction. Current code: (1) ifs validation (skip if paymentMode unknown), (2) user.update executes UNCONDITIONALLY. Defense: (a) Sequelize transaction wrapping, (b) explicit reject before update if paymentMode invalid, (c) enum validation by default. Pattern: state changes must be ATOMIC + ROLLBACK-SAFE"
+      - "Force 2FA"
+      - "Encrypt paymentMode"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour les business
+      operations critiques (upgrade, payment,
+      transfer, refund), les state changes
+      doivent etre dans une transaction qui
+      rollback si TOUS les invariants ne sont
+      pas satisfies. Sequelize.transaction()
+      ou DB-level transaction garantit l'
+      atomicity. Cas reels : double-spend bugs
+      en blockchain, race condition payment
+      bugs. Source : routes/deluxe.ts:24-46 +
+      ACID principles.
+    explanation_en: |
+      Reusable pattern: for critical business
+      operations (upgrade, payment, transfer,
+      refund), state changes must be in
+      transaction rolling back if ALL
+      invariants not satisfied.
+      Sequelize.transaction() or DB-level
+      transaction guarantees atomicity. Real
+      cases: blockchain double-spend bugs,
+      race condition payment bugs. Source:
+      routes/deluxe.ts:24-46 + ACID principles.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #4 invite a "playing around with
+      the parameters". Quelle methodologie
+      systematique cela represente-t-il ?
+    question_en: |
+      OWASP hint #4 invites "playing around with
+      the parameters". What systematic
+      methodology does this represent?
+    options_fr:
+      - "Random clicks"
+      - "Parameter fuzzing systematique : pour CHAQUE parameter d'une requete, tester (a) missing, (b) empty, (c) null, (d) other type (string vs int), (e) other string (free, test, foo), (f) very long, (g) special chars, (h) negative. Observer les responses. Tools : Burp Intruder (payload sets), ffuf (CLI), ZAP fuzzer. Pattern : parameter fuzzing = base de tout API pentest"
+      - "Random integer guesses"
+      - "URL bruteforce"
+    options_en:
+      - "Random clicks"
+      - "Systematic parameter fuzzing: for EACH parameter of request, test (a) missing, (b) empty, (c) null, (d) other type (string vs int), (e) other string (free, test, foo), (f) very long, (g) special chars, (h) negative. Observe responses. Tools: Burp Intruder (payload sets), ffuf (CLI), ZAP fuzzer. Pattern: parameter fuzzing = base of all API pentest"
+      - "Random integer guesses"
+      - "URL bruteforce"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la pentesting
+      systematique d'API utilise des fuzzing
+      lists standards (SecLists). Pour les
+      parameters, l'objectif est de detecter
+      les unhandled cases (default-allow
+      bypasses, null deref, integer overflow,
+      type confusion). Cas reels : Stripe bug
+      bounty 2019 ($XXX) via parameter
+      manipulation. Source : OWASP API
+      Security Testing Guide.
+    explanation_en: |
+      Reusable pattern: systematic API
+      pentesting uses standard fuzzing lists
+      (SecLists). For parameters, objective is
+      detecting unhandled cases (default-allow
+      bypasses, null deref, integer overflow,
+      type confusion). Real cases: Stripe bug
+      bounty 2019 ($XXX) via parameter
+      manipulation. Source: OWASP API Security
+      Testing Guide.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense moderne est la plus
+      EFFECTIVE pour empecher freeDeluxe ET
+      similar bugs (state change before
+      validation) ?
+    question_en: |
+      Most EFFECTIVE modern defense to prevent
+      freeDeluxe AND similar bugs (state change
+      before validation)?
+    options_fr:
+      - "Disabler /rest/deluxe-membership"
+      - "Combine 3-layers : (1) Schema validation EXHAUSTIVE (joi/zod) avec enum sur paymentMode + reject 400 avant logic. (2) Sequelize transaction wrapping atomic la payment validation + user.update. (3) Audit logs sur chaque upgrade pour anomaly detection (un user qui devient deluxe sans wallet decrement = anomaly flag). Pattern : multi-layer defense systematique"
+      - "Stocker le paymentMode en clair"
+      - "Supprimer la deluxe option"
+    options_en:
+      - "Disable /rest/deluxe-membership"
+      - "Combine 3-layers: (1) EXHAUSTIVE schema validation (joi/zod) with enum on paymentMode + reject 400 before logic. (2) Sequelize transaction wrapping atomic payment validation + user.update. (3) Audit logs on each upgrade for anomaly detection (user becoming deluxe without wallet decrement = anomaly flag). Pattern: systematic multi-layer defense"
+      - "Store paymentMode in clear"
+      - "Remove deluxe option"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour les business
+      logic vulnerabilities, la defense doit
+      etre layered. Aucune couche unique ne
+      suffit. Schema validation (Layer 1)
+      pour fail-fast. Atomic transaction
+      (Layer 2) pour fail-CLOSED if any
+      invariant breaks. Audit log + monitoring
+      (Layer 3) pour detecter ce qui passe les
+      Layers 1 et 2. Source : analyse routes/
+      deluxe.ts + financial systems best
+      practices.
+    explanation_en: |
+      Reusable pattern: for business logic
+      vulnerabilities, defense must be
+      layered. No single layer suffices.
+      Schema validation (Layer 1) for
+      fail-fast. Atomic transaction (Layer 2)
+      for fail-CLOSED if any invariant
+      breaks. Audit log + monitoring (Layer
+      3) to detect what bypasses Layers 1
+      and 2. Source: routes/deluxe.ts
+      analysis + financial systems best
+      practices.

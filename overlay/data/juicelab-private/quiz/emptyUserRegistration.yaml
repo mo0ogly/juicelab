@@ -1,0 +1,126 @@
+challenge_key: "emptyUserRegistration"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi la client-side validation Angular
+      (Validators.required + Validators.email)
+      ne PROTEGE PAS contre ce challenge ?
+    question_en: |
+      Why does Angular client-side validation
+      (Validators.required + Validators.email) NOT
+      PROTECT against this challenge?
+    options_fr:
+      - "Parce que Angular est lent"
+      - "Parce que la validation cote CLIENT est UX uniquement, JAMAIS une defense de securite. L'attaquant envoie son request via curl/Burp/fetch() de console, et les Angular Validators NE TOURNENT QUE dans le browser legitime. Le serveur recoit la requete sans avoir aucune trace que les validators existaient. Defense correcte = validation OBLIGATOIRE cote SERVEUR (Sequelize allowNull, joi/zod schema)"
+      - "Parce que Validators.email est buggy"
+      - "Parce que required ne fonctionne pas"
+    options_en:
+      - "Because Angular is slow"
+      - "Because CLIENT-side validation is UX only, NEVER a security defense. Attacker sends request via curl/Burp/console fetch(), and Angular Validators ONLY RUN in legitimate browser. Server receives request without any trace validators existed. Correct defense = MANDATORY SERVER-side validation (Sequelize allowNull, joi/zod schema)"
+      - "Because Validators.email is buggy"
+      - "Because required doesn't work"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la securite ne PEUT PAS
+      etre cote CLIENT. Le client est UNTRUSTED par
+      definition (sous le controle de
+      l'attaquant). Toute validation visible cote
+      client doit etre DUPLIQUEE cote serveur. Cas
+      reels : 99% des bugs SQL injection
+      proviennent du fait que le frontend faisait
+      la validation. Source : OWASP Input
+      Validation Cheat Sheet + analyse Juice Shop.
+    explanation_en: |
+      Reusable pattern: security CANNOT be
+      CLIENT-side. Client is UNTRUSTED by
+      definition (under attacker control). All
+      visible client-side validation must be
+      DUPLICATED server-side. Real cases: 99% of
+      SQL injection bugs come from frontend doing
+      validation. Source: OWASP Input Validation
+      Cheat Sheet + Juice Shop analysis.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la defense canonique au niveau
+      Sequelize ORM pour empecher empty user
+      registration ?
+    question_en: |
+      What's the canonical defense at Sequelize ORM
+      level to prevent empty user registration?
+    options_fr:
+      - "Stocker les passwords en plaintext"
+      - "Sequelize model validators : `email: { type: STRING, allowNull: false, validate: { notEmpty: true, isEmail: true }}` + `password: { type: STRING, allowNull: false, validate: { len: [8, 100], notEmpty: true }}`. Avec cela, User.create({email: \"\"}) throw avant l'insert. Combine avec middleware joi/zod schema pour double-check. Defense en profondeur ORM + middleware + DB constraints"
+      - "Encrypter les emails"
+      - "Disabler /api/Users"
+    options_en:
+      - "Store passwords in plaintext"
+      - "Sequelize model validators: `email: { type: STRING, allowNull: false, validate: { notEmpty: true, isEmail: true }}` + `password: { type: STRING, allowNull: false, validate: { len: [8, 100], notEmpty: true }}`. With this, User.create({email: \"\"}) throws before insert. Combined with middleware joi/zod schema for double-check. Defense in depth ORM + middleware + DB constraints"
+      - "Encrypt emails"
+      - "Disable /api/Users"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : defense en profondeur
+      multi-layered. Sequelize validators sont
+      DECLARATIVE (definis dans le model schema)
+      donc difficile a oublier. Combine avec
+      middleware schema validation (joi/zod) pour
+      validation pre-DB-call. DB constraints (NOT
+      NULL, CHECK email LIKE '%@%') comme last
+      resort. Source : Sequelize docs validate +
+      OWASP Input Validation.
+    explanation_en: |
+      Reusable pattern: multi-layered defense in
+      depth. Sequelize validators are DECLARATIVE
+      (defined in model schema) so hard to forget.
+      Combined with middleware schema validation
+      (joi/zod) for pre-DB-call validation. DB
+      constraints (NOT NULL, CHECK email LIKE
+      '%@%') as last resort. Source: Sequelize
+      docs validate + OWASP Input Validation.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP unique : "Consider intercepting
+      and playing with the request payload".
+      Quelle methodologie de pentest cela
+      represente-t-il ?
+    question_en: |
+      Single OWASP hint: "Consider intercepting and
+      playing with the request payload". What
+      pentest methodology does this represent?
+    options_fr:
+      - "Forcer SQL injection"
+      - "Le manual fuzzing du request body : (1) Capture une requete legitime via Burp Proxy ou DevTools Network. (2) Modifier les fields un par un avec des payloads weird (empty, NULL, special chars, oversized strings, integer overflows). (3) Observer la response (status code, body, error messages, response time). (4) Categoriser les findings (vulns, info leaks, robust). Pattern reusable pour TOUS les API endpoints"
+      - "Brute force du captcha"
+      - "Cracking de password"
+    options_en:
+      - "Force SQL injection"
+      - "Manual fuzzing of request body: (1) Capture legitimate request via Burp Proxy or DevTools Network. (2) Modify fields one-by-one with weird payloads (empty, NULL, special chars, oversized strings, integer overflows). (3) Observe response (status code, body, error messages, response time). (4) Categorize findings (vulns, info leaks, robust). Reusable pattern for ALL API endpoints"
+      - "Brute force captcha"
+      - "Password cracking"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : le manual fuzzing est la
+      base de tout API pentest. Tools : Burp
+      Repeater (manual), Burp Intruder (semi-
+      automated), ZAP fuzzer, ffuf (CLI),
+      Postman + Newman (scripted). La fuzzing
+      list standard : SecLists/Fuzzing/
+      special-chars.txt, big-numbers.txt,
+      special-strings.txt. Source : OWASP API
+      Security Testing Guide.
+    explanation_en: |
+      Reusable pattern: manual fuzzing is base of
+      all API pentest. Tools: Burp Repeater
+      (manual), Burp Intruder (semi-automated),
+      ZAP fuzzer, ffuf (CLI), Postman + Newman
+      (scripted). Standard fuzzing list:
+      SecLists/Fuzzing/special-chars.txt,
+      big-numbers.txt, special-strings.txt.
+      Source: OWASP API Security Testing Guide.

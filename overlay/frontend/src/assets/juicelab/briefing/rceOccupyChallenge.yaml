@@ -1,0 +1,90 @@
+challenge_key: "rceOccupyChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Provoquer un timeout du sandbox notevil (script execution > 2s) sur le
+  B2B endpoint pour declencher la detection RCE Occupy. Tag : Insecure
+  Deserialization (DoS). Hint OWASP : "occupy CPU 2 seconds".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/b2bOrder.ts:27 :
+  `if (getErrorMessage(err).match(/Script execution timed out.*/)) solveIf
+  (rceOccupyChallenge, () => true)`. Le serveur execute le code avec
+  `vm.runInContext(..., { timeout: 2000 })`. Si le code execute > 2s sans
+  trigger max iterations, le timeout fire. Workflow : differencier de
+  rceChallenge (boucle simple finie en max iterations) - ici besoin d'un
+  long-running computation qui depasse 2s (ex. boucle for avec gros N).
+
+mission_en: |
+  Trigger notevil sandbox timeout (script execution > 2s) on B2B endpoint
+  to fire RCE Occupy detection. Tag: Insecure Deserialization (DoS).
+  OWASP hint: "occupy CPU 2 seconds". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/b2bOrder.ts:27:
+  `if (getErrorMessage(err).match(/Script execution timed out.*/)) solveIf
+  (rceOccupyChallenge, () => true)`. Server executes code with
+  `vm.runInContext(..., { timeout: 2000 })`. If code executes > 2s without
+  triggering max iterations, timeout fires. Workflow: differentiate from
+  rceChallenge (simple loop finished by max iterations) - here need a
+  long-running computation exceeding 2s (e.g. for loop with big N).
+
+concepts:
+  - title_fr: "DoS via expensive computation : occupy CPU"
+    title_en: "DoS via expensive computation: occupy CPU"
+    body_fr: |
+      Source canonique : OWASP A04:2021 Insecure Design + CWE-1333
+      Inefficient Regular Expression Complexity (ReDoS) + CWE-407
+      Inefficient Algorithmic Complexity. Pattern : un attaquant occupe le
+      CPU avec un calcul couteux (regex catastrophic backtracking, gros N
+      arithmetique, hash chains). En multi-tenant, occupe le node entier.
+      Cas reels : ReDoS Cloudflare 2019 (1h downtime), ReDoS Stack
+      Overflow 2016 (34 minutes). Defense : timeouts + memory limits +
+      isolated-vm avec cpu_time limit.
+    body_en: |
+      Canonical source: OWASP A04:2021 Insecure Design + CWE-1333
+      Inefficient Regular Expression Complexity (ReDoS) + CWE-407
+      Inefficient Algorithmic Complexity. Pattern: attacker occupies CPU
+      with expensive computation (regex catastrophic backtracking, big N
+      arithmetic, hash chains). In multi-tenant, occupies entire node.
+      Real cases: ReDoS Cloudflare 2019 (1h downtime), ReDoS Stack
+      Overflow 2016 (34 minutes). Defense: timeouts + memory limits +
+      isolated-vm with cpu_time limit.
+
+  - title_fr: "Timeout vs max iterations : 2 mecanismes notevil"
+    title_en: "Timeout vs max iterations: 2 notevil mechanisms"
+    body_fr: |
+      notevil + vm.runInContext combine 2 protections : (1) max iterations
+      (compteur d'instructions du sandbox) - throw "Infinite loop
+      detected". (2) timeout (vm option) - throw "Script execution timed
+      out". Le rceChallenge cherche (1), rceOccupyChallenge cherche (2).
+      Difference : (1) detect une boucle simple, (2) detect un calcul long
+      mais avec progress. Donc il faut un code qui FAIT des choses (avoid
+      max iterations) mais lent (CPU-bound). Exemple : `for(let i=0;
+      i<1e9; i++) {}` - calcule 1e9 iterations.
+    body_en: |
+      notevil + vm.runInContext combines 2 protections: (1) max iterations
+      (sandbox instruction counter) - throw "Infinite loop detected". (2)
+      timeout (vm option) - throw "Script execution timed out". rceChallenge
+      seeks (1), rceOccupyChallenge seeks (2). Difference: (1) detects
+      simple loop, (2) detects long computation but with progress. So need
+      code that DOES things (avoid max iterations) but slow (CPU-bound).
+      Example: `for(let i=0; i<1e9; i++) {}` - computes 1e9 iterations.
+
+  - title_fr: "Defense canonique : isolation + quotas CPU"
+    title_en: "Canonical defense: isolation + CPU quotas"
+    body_fr: |
+      (1) Si VRAIMENT besoin d'executor user JS : isolated-vm avec
+      cpu_time_limit. (2) Quotas par tenant (rate limit + concurrency
+      limit). (3) Process separe (fork) pour isolation memoire/CPU. (4)
+      Monitoring + alerting sur high CPU per request. (5) Circuit breaker
+      qui detect tenant abusing -> ban temporaire. (6) Pattern reusable :
+      isolation > sandbox. Defense en profondeur : auth + rate limit +
+      timeout + isolation + monitoring.
+    body_en: |
+      (1) If REALLY need to execute user JS: isolated-vm with
+      cpu_time_limit. (2) Per-tenant quotas (rate limit + concurrency
+      limit). (3) Separate process (fork) for memory/CPU isolation. (4)
+      Monitoring + alerting on high CPU per request. (5) Circuit breaker
+      detecting abusing tenant -> temporary ban. (6) Reusable pattern:
+      isolation > sandbox. Defense in depth: auth + rate limit + timeout
+      + isolation + monitoring.

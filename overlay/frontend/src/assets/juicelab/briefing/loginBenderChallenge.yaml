@@ -1,0 +1,127 @@
+challenge_key: "loginBenderChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Connecte-toi sous le compte de Bender SANS connaitre son mot de passe
+  ni hacker son compte Google. La description OWASP officielle stipule
+  "without previously changing his password, applying SQL Injection on
+  another user, or hacking his Google account" — donc une SQLi sur le
+  formulaire de login est l'angle attendu. Pre-requis pedagogique :
+  avoir resolu Login Admin (meme mecanique).
+
+  Methode recommandee (suit le tutoriel hacking-instructor OWASP) :
+  trouve d'abord l'email de Bender via OSINT sur la page About Us — la
+  carousel de user feedbacks fait fuiter assez de l'email pour le
+  deduire (pattern firstName@juice-sh.op). Sur le formulaire de login,
+  utilise l'email + apostrophe + double tiret pour commenter la clause
+  AND password = ... du SQL backend. Le mot de passe en clair est
+  ignore.
+
+  Note la source OSINT exacte (quel feedback ?) et le payload final.
+  Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Log in under Bender's account WITHOUT knowing his password and
+  WITHOUT hacking his Google account. The official OWASP description
+  states "without previously changing his password, applying SQL
+  Injection on another user, or hacking his Google account" — so
+  SQLi on the login form is the expected angle. Pedagogical
+  prerequisite: solved Login Admin (same mechanic).
+
+  Recommended method (follows the OWASP hacking-instructor tutorial):
+  first find Bender's email via OSINT on the About Us page — the user
+  feedback carousel leaks enough of the email to deduce it (pattern
+  firstName@juice-sh.op). On the login form, use email + single quote
+  + double dash to comment out the AND password = ... clause of the
+  backend SQL. The cleartext password is ignored.
+
+  Note the exact OSINT source (which feedback?) and the final payload.
+  You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "OSINT institutionnelle : feedback carousel comme leak d'emails"
+    title_en: "Institutional OSINT: feedback carousel as email leak"
+    body_fr: |
+      Le tutoriel OWASP officiel (frontend/src/hacking-instructor/
+      challenges/loginBender.ts ligne 56-66) pointe explicitement la
+      carousel de feedbacks de la page About Us comme source d'OSINT.
+      Les developpeurs affichent fierement "Bender said : ..." en
+      laissant le prefix de l'email visible. C'est un pattern de fuite
+      par attribution honoraire : le marketing veut nommer ses
+      ambassadeurs, la securite veut anonymiser. Defense : tronquer
+      l'email a 2 caracteres + asterisques, ou n'afficher que le
+      prenom.
+    body_en: |
+      The official OWASP tutorial (frontend/src/hacking-instructor/
+      challenges/loginBender.ts line 56-66) explicitly points to the
+      About Us feedback carousel as OSINT source. Developers proudly
+      show "Bender said: ..." leaving the email prefix visible. This
+      is a leak-by-honor-attribution pattern: marketing wants to name
+      ambassadors, security wants to anonymize. Defense: truncate
+      the email to 2 chars + asterisks, or display only the first
+      name.
+
+  - title_fr: "SQLi auth : commenter le AND password avec apostrophe + dash"
+    title_en: "Auth SQLi: comment out the AND password with quote + dash"
+    body_fr: |
+      Backend vulnerable type : "SELECT * FROM users WHERE email='" +
+      input + "' AND password='" + hash + "'". Payload :
+      bender@juice-sh.op'-- (apostrophe ferme la chaine email,
+      double tiret commente le reste). Le AND password = '...'
+      disparait dans le commentaire SQL. La requete devient SELECT
+      * FROM users WHERE email='bender@juice-sh.op' qui retourne
+      Bender. Source : tutoriel OWASP ligne 98-101 du fichier
+      hacking-instructor.
+    body_en: |
+      Vulnerable backend type: "SELECT * FROM users WHERE email='" +
+      input + "' AND password='" + hash + "'". Payload:
+      bender@juice-sh.op'-- (single quote closes the email string,
+      double dash comments the rest). The AND password = '...'
+      vanishes in the SQL comment. The query becomes SELECT * FROM
+      users WHERE email='bender@juice-sh.op' which returns Bender.
+      Source: OWASP tutorial line 98-101 of the hacking-instructor
+      file.
+
+  - title_fr: "Pattern d'email business : firstName@domain"
+    title_en: "Business email pattern: firstName@domain"
+    body_fr: |
+      90% des entreprises utilisent firstName@company.tld ou
+      firstName.lastName@company.tld pour leurs emails internes.
+      Connaissant le prenom (Bender), un attaquant teste
+      bender@juice-sh.op en premier. Cette convention rend l'OSINT
+      par feedback redondante : meme sans la fuite, le pattern
+      firstName@domain offre une attaque par enumeration sur les
+      noms d'employes (LinkedIn, About page, signatures email).
+      Defense : email aliases obscurs ou preferer un identifiant
+      separe de l'email (loginId).
+    body_en: |
+      90% of companies use firstName@company.tld or
+      firstName.lastName@company.tld for internal email. Knowing
+      the first name (Bender), an attacker tries bender@juice-sh.op
+      first. This convention makes feedback OSINT redundant: even
+      without the leak, the firstName@domain pattern enables
+      enumeration on employee names (LinkedIn, About page, email
+      signatures). Defense: obscure email aliases or prefer a
+      loginId separate from the email.
+
+  - title_fr: "Defense canonique : prepared statement + erreur uniforme"
+    title_en: "Canonical defense: prepared statement + uniform error"
+    body_fr: |
+      Defense double couche. (1) Prepared statement : la requete
+      est compilee avec des placeholders, le driver passe les
+      valeurs separement, une apostrophe injectee est echappee
+      mecaniquement. Toute API moderne (Sequelize binding, PDO,
+      JDBC) le fait. (2) Erreur de login uniforme : "Invalid
+      credentials" qu'il s'agisse d'un mauvais email ou d'un
+      mauvais password. Empeche l'enumeration de comptes. La
+      combinaison rend l'attaque "deviner email + SQLi" impossible
+      a l'echelle.
+    body_en: |
+      Double-layer defense. (1) Prepared statement: the query is
+      compiled with placeholders, the driver passes values
+      separately, an injected single quote is escaped
+      mechanically. Every modern API (Sequelize binding, PDO,
+      JDBC) does this. (2) Uniform login error: "Invalid
+      credentials" whether the email or the password is wrong.
+      Prevents account enumeration. Combined, the "guess email +
+      SQLi" attack becomes infeasible at scale.

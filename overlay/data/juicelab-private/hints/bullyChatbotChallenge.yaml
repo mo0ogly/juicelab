@@ -1,0 +1,104 @@
+challenge_key: "bullyChatbotChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Une grande tendance actuelle des sites marchands consiste a integrer
+      un assistant conversationnel pour repondre aux clients. Juice Shop
+      en a un. La plupart de ces chatbots ont des regles : par exemple,
+      ne pas distribuer de coupons. Mais ces regles sont gerees par des
+      heuristiques, qui peuvent etre fragiles face a un comportement
+      humain insistant. Que ferait un enfant qui veut absolument une
+      reduction ?
+    text_en: |
+      A big trend on commerce sites today is integrating a chatbot to
+      answer customers. Juice Shop has one. Most chatbots have rules:
+      for example, do not give out coupons. But those rules are
+      heuristics that can be fragile in the face of insistent human
+      behavior. What would a kid who really wants a discount do?
+    pedagogical_intent: |
+      Activate the social-engineering reflex: insistence as a vector against heuristics.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le chatbot Juice Shop est accessible via /#/chatbot. Quand tu lui
+      demandes un coupon, il refuse. Ses refus sont des reponses
+      pre-ecrites dans une liste, pigees au hasard. Si tu redemandes la
+      meme chose plusieurs fois, le bot finit par puiser dans une autre
+      liste de reponses qui contient... une reponse positive.
+    text_en: |
+      The Juice Shop chatbot is at /#/chatbot. When you ask for a
+      coupon, it refuses. Its refusals are pre-written replies in a
+      list, picked at random. If you re-ask the same thing several
+      times, the bot eventually pulls from another list of replies
+      which contains... a positive answer.
+    pedagogical_intent: |
+      Localize the surface (chatbot) and the mechanism (random reply pool).
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Le bot est entraine sur un dataset (botDefaultTrainingData.json)
+      qui contient des paires intent / response. L'intent "ask_coupon"
+      a plusieurs reponses, dont la majorite refusent et une donne
+      effectivement un coupon. C'est donc un probleme de probabilite :
+      a force de demander, tu vas tomber sur la bonne reponse. Pas
+      besoin de payload sophistique, juste de la patience.
+    text_en: |
+      The bot is trained on a dataset (botDefaultTrainingData.json)
+      with intent / response pairs. The "ask_coupon" intent has multiple
+      responses, most refuse and one effectively gives a coupon. So it
+      is a probability game: by asking enough times, you hit the right
+      reply. No sophisticated payload, just patience.
+    pedagogical_intent: |
+      Reveal the probabilistic mechanism: brute force a random pool.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Variantes a essayer (toutes equivalentes pour le bot) : "give me a
+      coupon", "I want a coupon", "discount please", "coupon please",
+      "can I have a coupon". Le bot accepte aussi des formulations en
+      anglais courantes. Tape la meme phrase ou des variantes pendant
+      au moins une dizaine de tours. Quand le bot envoie un code de
+      reduction (chaine encodee en base64), le challenge est resolu.
+    text_en: |
+      Variants to try (all equivalent for the bot): "give me a coupon",
+      "I want a coupon", "discount please", "coupon please", "can I
+      have a coupon". The bot also accepts common English phrasings.
+      Type the same sentence or variants for at least ten turns. When
+      the bot returns a discount code (a base64-encoded string), the
+      challenge is solved.
+    pedagogical_intent: |
+      Give the formulation patterns and the success signal (base64 code).
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      1. Connecte-toi avec un compte (le bot ignore les anonymes).
+      2. Va sur /#/chatbot.
+      3. Tape "I want a coupon" (ou variante anglaise) et Entree.
+      4. Tant que le bot refuse, retape la meme phrase. Tu verras
+         passer "Sorry...", "I cannot...", etc. (refus piges
+         aleatoirement).
+      5. Au bout de 5 a 15 tours en moyenne, le bot finit par renvoyer
+         un coupon (chaine du genre "Hier ist dein 25%-Gutschein:
+         <base64>"). Le challenge Bully the chatbot est valide
+         automatiquement par Juice Shop des que la reponse du bot
+         contient une chaine reconnaissable comme code de reduction.
+    text_en: |
+      1. Log in with an account (the bot ignores anonymous users).
+      2. Go to /#/chatbot.
+      3. Type "I want a coupon" (or any English variant) and Enter.
+      4. While the bot refuses, retype the same sentence. You will see
+         "Sorry...", "I cannot..." etc. (refusals picked at random).
+      5. After 5 to 15 rounds on average, the bot eventually returns a
+         coupon (string like "Hier ist dein 25%-Gutschein: <base64>").
+         The Bully the chatbot challenge is auto-validated by Juice
+         Shop as soon as the bot reply contains a recognizable
+         discount code.
+    pedagogical_intent: |
+      Quasi-solution: full repetition workflow with success signal.

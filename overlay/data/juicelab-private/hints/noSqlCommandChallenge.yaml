@@ -1,0 +1,114 @@
+challenge_key: "noSqlCommandChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Le hint OWASP officiel #1 dit : "This challenge is essentially a
+      stripped-down Denial of Service (DoS) attack". Mais le hint #4
+      precise : "flooding the application with requests will not
+      solve this challenge. That would probably just kill your
+      server instance". Donc UN seul payload, pas du flooding. La
+      categorie est NoSQL Injection (hint #3) — sur quel endpoint
+      Juice Shop traite des donnees NoSQL ?
+    text_en: |
+      Official OWASP hint #1: "This challenge is essentially a
+      stripped-down Denial of Service (DoS) attack". But hint #4
+      adds: "flooding the application with requests will not solve
+      this challenge. That would probably just kill your server
+      instance". So ONE single payload, no flooding. The category
+      is NoSQL Injection (hint #3) — on which Juice Shop endpoint
+      is NoSQL data handled?
+    pedagogical_intent: |
+      Activate the single-payload DoS reflex on the NoSQL surface.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP officiel #2 : "OWASP Juice Shop uses a MongoDB
+      derivate as its NoSQL database". MongoDB stocke les reviews
+      produit (visibles sous chaque produit). L'endpoint qui les
+      lit/cherche est /rest/products/reviews. Quel operateur MongoDB
+      permet d'executer du JavaScript COTE SERVEUR pour chaque
+      document analyse ?
+    text_en: |
+      Official OWASP hint #2: "OWASP Juice Shop uses a MongoDB
+      derivate as its NoSQL database". MongoDB stores product
+      reviews (visible under each product). The endpoint reading/
+      searching them is /rest/products/reviews. Which MongoDB
+      operator runs JavaScript SERVER-SIDE for each scanned
+      document?
+    pedagogical_intent: |
+      Localize the surface and hint $where.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Operateur $where. Il prend une string JavaScript et l'execute
+      sur le serveur MongoDB pour CHAQUE document de la collection.
+      C'est concu pour des conditions complexes mais offre
+      litteralement un moteur d'execution arbitraire. Pour ce
+      challenge, tu veux faire dormir le worker — quelle fonction
+      JavaScript du runtime MongoDB consomme du temps sans crasher ?
+    text_en: |
+      $where operator. Takes a JavaScript string and runs it on the
+      MongoDB server for EACH document in the collection. Designed
+      for complex conditions but literally offers an arbitrary
+      execution engine. For this challenge, you want to make the
+      worker sleep — which JavaScript function in the MongoDB
+      runtime consumes time without crashing?
+    pedagogical_intent: |
+      Connect $where to a sleep-style function.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      sleep(milliseconds) est exposee dans le runtime MongoDB. Sur
+      l'endpoint /rest/products/reviews, le body attendu est un POST
+      avec { id: "<productId>" }. Si tu remplaces id par un objet
+      avec $where, MongoDB execute la string JavaScript serveur-
+      side. Squelette du body :
+      { "id": { "$where": "sleep(5000)" } }
+      Le serveur dort 5 secondes par document de reviews scanne, ce
+      qui multiplie la duree. Outil : Burp ou curl avec
+      Content-Type: application/json.
+    text_en: |
+      sleep(milliseconds) is exposed in the MongoDB runtime. On
+      /rest/products/reviews, the expected body is POST with
+      { id: "<productId>" }. If you replace id with an object
+      bearing $where, MongoDB runs the JavaScript string server-
+      side. Body skeleton:
+      { "id": { "$where": "sleep(5000)" } }
+      The server sleeps 5 seconds per scanned review document,
+      which multiplies the duration. Tool: Burp or curl with
+      Content-Type: application/json.
+    pedagogical_intent: |
+      Spell exact body and explain the multiplier effect.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Payload complet via curl :
+      curl -X POST http://127.0.0.1:3000/rest/products/reviews
+        -H "Authorization: Bearer <ton_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"id":{"$where":"sleep(5000)"}}'
+      La response prend > 5 secondes (visible avec time curl ...).
+      Le challenge se valide automatiquement quand le serveur
+      detecte une requete avec $where + sleep. Important : ne PAS
+      mettre une valeur tres elevee (ex 60000), tu pourrais
+      vraiment tuer ton instance — 5000 suffit a valider.
+    text_en: |
+      Full payload via curl:
+      curl -X POST http://127.0.0.1:3000/rest/products/reviews
+        -H "Authorization: Bearer <your_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"id":{"$where":"sleep(5000)"}}'
+      The response takes > 5 seconds (visible with time curl ...).
+      The challenge solves automatically when the server detects a
+      request with $where + sleep. Important: do NOT set a very
+      high value (e.g. 60000), you could actually kill your
+      instance — 5000 is enough to validate.
+    pedagogical_intent: |
+      Quasi-solution : full curl command + safety warning.

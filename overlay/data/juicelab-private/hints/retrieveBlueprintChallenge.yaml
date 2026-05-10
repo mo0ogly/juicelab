@@ -1,0 +1,117 @@
+challenge_key: "retrieveBlueprintChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Check for products which seem
+      like a natural fit for being based on a blueprint".
+      Donc parcours le catalogue produits (/#/search) et
+      identifie celui qui pourrait avoir un blueprint
+      (typiquement un produit physique manufacture, comme un
+      OWASP Juice Shop logo 3D ou un objet 3D-printed).
+    text_en: |
+      Official OWASP hint #1: "Check for products which seem
+      like a natural fit for being based on a blueprint". So
+      browse the catalog (/#/search) and identify the one
+      that might have a blueprint (typically a physical
+      manufactured product, like an OWASP Juice Shop logo 3D
+      or a 3D-printed object).
+    pedagogical_intent: |
+      Direct toward physical-product candidates.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP officiel #2 : "pay attention to the images of
+      the identified product candidates". Donc l'IMAGE
+      contient un indice. Telecharge l'image du produit
+      candidat (right-click + Save As ou inspecter via
+      DevTools Network), puis inspecte ses metadata.
+    text_en: |
+      Official OWASP hint #2: "pay attention to the images of
+      the identified product candidates". So the IMAGE has a
+      clue. Download the candidate's image (right-click +
+      Save As or inspect via DevTools Network), then inspect
+      its metadata.
+    pedagogical_intent: |
+      Direct toward image inspection.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Inspecte les metadata avec exiftool ou similaire.
+      Au-dela des classiques EXIF GPS, regarde le champ
+      Comment ou Description, ou tout champ libre. Les
+      developpeurs y stockent parfois des paths internes ou
+      des notes laissees par mecanisme. Le path d'un fichier
+      .stl ou .pdf blueprint pourrait y figurer.
+    text_en: |
+      Inspect metadata with exiftool or similar. Beyond
+      classic EXIF GPS, look at Comment or Description
+      fields, or any free field. Devs sometimes store
+      internal paths or notes left by mechanism. A .stl or
+      .pdf blueprint path could be there.
+    pedagogical_intent: |
+      Spell metadata-inspection workflow.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_PROBABLE] Le path exact varie selon la
+      version Juice Shop. Strategie :
+      1. Telecharge l'image du produit candidat.
+      2. exiftool -a -G1 image.jpg (lit tous les fields).
+      3. Cherche un champ contenant un path .stl ou .pdf.
+      4. Hint #3 dit que ce n'est pas dans /ftp/ — donc
+         probablement /assets/<...>/blueprint.stl.
+      5. Telecharge l'URL trouvee. Le challenge se valide
+         automatiquement quand le serveur detecte le download.
+    text_en: |
+      [KILL_CHAIN_PROBABLE] Exact path varies by Juice Shop
+      version. Strategy:
+      1. Download candidate product image.
+      2. exiftool -a -G1 image.jpg (reads all fields).
+      3. Look for a field with .stl or .pdf path.
+      4. Hint #3 says NOT in /ftp/ — so probably
+         /assets/<...>/blueprint.stl.
+      5. Download found URL. Challenge auto-solves when
+         server detects download.
+    pedagogical_intent: |
+      Spell version-dependent strategy.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_PROBABLE] Workflow general (path exact a
+      verifier avec ton instance Juice Shop) :
+      1. /#/search : trouve "OWASP Juice Shop Logo (3D-printed)"
+         ou produit similar.
+      2. Right-click image -> Save As -> juiceshop_logo.jpg.
+      3. Terminal : exiftool juiceshop_logo.jpg
+         -> regarde le field "Comment" ou "Description" qui
+         contient typiquement "JuiceShop.stl" ou similar.
+      4. URL : http://127.0.0.1:3000/assets/public/images/
+         products/JuiceShop.stl
+         (ou un path similar revele par le metadata)
+      5. Telecharge le .stl. Le challenge se valide.
+      Source : pattern documente dans hints OWASP officiels +
+      anti-pattern OWASP A05 Security Misconfiguration.
+    text_en: |
+      [KILL_CHAIN_PROBABLE] General workflow (exact path to
+      verify on your Juice Shop instance):
+      1. /#/search: find "OWASP Juice Shop Logo (3D-printed)"
+         or similar product.
+      2. Right-click image -> Save As -> juiceshop_logo.jpg.
+      3. Terminal: exiftool juiceshop_logo.jpg
+         -> look at "Comment" or "Description" field
+         typically containing "JuiceShop.stl" or similar.
+      4. URL: http://127.0.0.1:3000/assets/public/images/
+         products/JuiceShop.stl
+         (or similar path revealed by metadata)
+      5. Download .stl. Challenge solves.
+      Source: pattern documented in official OWASP hints +
+      OWASP A05 Security Misconfiguration anti-pattern.
+    pedagogical_intent: |
+      Quasi-solution : workflow + version-dependency note.

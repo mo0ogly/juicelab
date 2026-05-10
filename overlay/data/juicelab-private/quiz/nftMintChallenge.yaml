@@ -1,0 +1,139 @@
+challenge_key: "nftMintChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le smart contract Honey Pot est sur Sepolia
+      testnet (Ethereum). Pourquoi tester sur
+      testnet plutot que mainnet ?
+    question_en: |
+      Honey Pot smart contract is on Sepolia
+      testnet (Ethereum). Why test on testnet
+      rather than mainnet?
+    options_fr:
+      - "Testnet est plus rapide"
+      - "Sepolia testnet permet de tester smart contracts SANS REAL MONEY (les ETH testnet sont gratuits via faucet, no real value). Avantages : (a) pas de risque financier en cas de bug, (b) rapid prototyping (deploy + iterate), (c) educational : students touchent le Web3 sans investir. Pattern reusable : tout developpement smart contract DOIT passer par testnet (Sepolia, Goerli, Holesky) avant mainnet"
+      - "Sepolia est plus securise"
+      - "Mainnet n'existe pas"
+    options_en:
+      - "Testnet is faster"
+      - "Sepolia testnet allows testing smart contracts WITHOUT REAL MONEY (testnet ETH free via faucet, no real value). Advantages: (a) no financial risk in case of bug, (b) rapid prototyping (deploy + iterate), (c) educational: students touch Web3 without investing. Reusable pattern: all smart contract development MUST go through testnet (Sepolia, Goerli, Holesky) before mainnet"
+      - "Sepolia is more secure"
+      - "Mainnet doesn't exist"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la separation
+      testnet/mainnet est essentielle pour les
+      systemes financiels. Cas reels : Parity
+      Multi-Sig 2017 ($300M frozen) deployed
+      directly to mainnet sans testnet
+      validation. Solidity bugs (DAO 2016,
+      bZx 2020) auraient ete detectables sur
+      testnet. Source : Ethereum Foundation
+      development best practices.
+    explanation_en: |
+      Reusable pattern: testnet/mainnet
+      separation essential for financial
+      systems. Real cases: Parity Multi-Sig
+      2017 ($300M frozen) deployed directly to
+      mainnet without testnet validation.
+      Solidity bugs (DAO 2016, bZx 2020)
+      detectable on testnet. Source: Ethereum
+      Foundation development best practices.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Codefixes #4 (correct fix) propose
+      "SafeMath's sub() function fixes any
+      potential underflow attack against
+      tokenId variable of type uint256".
+      Quelle est la mecanique de l'integer
+      underflow attack ?
+    question_en: |
+      Codefixes #4 (correct fix) proposes
+      "SafeMath's sub() function fixes any
+      potential underflow attack against
+      tokenId variable of type uint256". What's
+      the integer underflow attack mechanic?
+    options_fr:
+      - "Buffer overflow standard"
+      - "uint256 (unsigned 256-bit integer) Solidity ne peut pas etre negatif. Si tu fais 0 - 1 sur uint256 (avant Solidity 0.8.0 qui ajoute overflow checks par default), le resultat WRAP a 2^256 - 1 (max uint256). Cela permet a un attaquant de obtenir un tokenId enormous en faisant arithmetic underflow, bypassant les business limits (ex. \"max 100 NFT minted\"). Defense : SafeMath library OU Solidity >= 0.8.0 (built-in checks)"
+      - "SQL injection sur tokenId"
+      - "Cross-site scripting"
+    options_en:
+      - "Standard buffer overflow"
+      - "uint256 (unsigned 256-bit integer) Solidity can't be negative. If you do 0 - 1 on uint256 (before Solidity 0.8.0 adding default overflow checks), result WRAPS to 2^256 - 1 (max uint256). Allows attacker to obtain enormous tokenId via arithmetic underflow, bypassing business limits (e.g., \"max 100 NFTs minted\"). Defense: SafeMath library OR Solidity >= 0.8.0 (built-in checks)"
+      - "SQL injection on tokenId"
+      - "Cross-site scripting"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : les bugs Solidity
+      arithmetic sont historiques. Cas reels :
+      BeautyChain 2018 (BEC token underflow,
+      multi-billion USD), MUTC integer
+      overflow 2017. Solidity 0.8.0 (Dec 2020)
+      a ajoute overflow checks par defaut.
+      Pour les contracts pre-0.8, OBLIGATOIRE
+      d'utiliser SafeMath library
+      (OpenZeppelin). Source : codefixes/
+      nftMintChallenge.info.yml + Solidity
+      versioning.
+    explanation_en: |
+      Reusable pattern: Solidity arithmetic
+      bugs are historic. Real cases:
+      BeautyChain 2018 (BEC token underflow,
+      multi-billion USD), MUTC integer
+      overflow 2017. Solidity 0.8.0 (Dec 2020)
+      added default overflow checks. For
+      pre-0.8 contracts, MANDATORY to use
+      SafeMath library (OpenZeppelin). Source:
+      codefixes/nftMintChallenge.info.yml +
+      Solidity versioning.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      L'architecture Juice Shop ecoute via
+      WebSocket le smart contract Sepolia.
+      Quel est le risque securite de cette
+      architecture ?
+    question_en: |
+      Juice Shop architecture listens via
+      WebSocket to Sepolia smart contract.
+      Security risk of this architecture?
+    options_fr:
+      - "Aucun risque"
+      - "Architecture event-listener-based : (a) Si le WebSocket connection drops, les events miss = challenges impossible a solve (rely sur Alchemy availability). (b) Le Set in-memory (addressesMinted) est NON-PERSISTENT - server restart = perte des state. (c) Replay attacks : si le WebSocket relives un old event, faux solves. Defense : checkpointing on-chain blocks, idempotent solve verification, persistance externe (Redis/DB) pour les Set states"
+      - "WebSocket est obsolete"
+      - "Sepolia est insecure"
+    options_en:
+      - "No risk"
+      - "Event-listener-based architecture: (a) If WebSocket connection drops, events miss = challenges impossible to solve (rely on Alchemy availability). (b) In-memory Set (addressesMinted) is NON-PERSISTENT - server restart = state loss. (c) Replay attacks: if WebSocket replays old event, false solves. Defense: checkpointing on-chain blocks, idempotent solve verification, external persistence (Redis/DB) for Set states"
+      - "WebSocket is obsolete"
+      - "Sepolia is insecure"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : les architectures
+      event-driven Web3 (avec WebSocket /
+      polling) ont des risques specifiques de
+      reliability et state management. Pour
+      production, utiliser des indexers
+      dedicated (TheGraph, Dune Analytics) +
+      checkpointing on-chain blocks pour
+      ensure no events miss. Source : analyse
+      routes/nftMint.ts + Web3 architecture
+      best practices.
+    explanation_en: |
+      Reusable pattern: event-driven Web3
+      architectures (with WebSocket /
+      polling) have specific reliability and
+      state management risks. For production,
+      use dedicated indexers (TheGraph, Dune
+      Analytics) + on-chain block
+      checkpointing to ensure no events
+      missed. Source: routes/nftMint.ts
+      analysis + Web3 architecture best
+      practices.

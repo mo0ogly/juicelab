@@ -1,0 +1,106 @@
+challenge_key: "dbSchemaChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Tu as exfiltre le schema via /rest/products/search?q=...
+      Quelle propriete de cet endpoint le rend particulierement
+      vulnerable, par opposition a un endpoint /rest/products/:id ?
+    question_en: |
+      You exfiltrated the schema via /rest/products/search?q=...
+      Which property of this endpoint makes it particularly
+      vulnerable, compared to /rest/products/:id?
+    options_fr:
+      - "Il est plus rapide qu'un endpoint :id"
+      - "Le parametre q est en TEXTE LIBRE et alimente un LIKE pattern : aucune validation de schema possible (numerique, UUID), donc aucun filtre prealable au SQL"
+      - "Il est appele en POST plutot qu'en GET"
+      - "Il n'utilise pas le JWT, donc le rate limiter est moins strict"
+    options_en:
+      - "It is faster than an :id endpoint"
+      - "The q parameter is FREE TEXT feeding a LIKE pattern: no schema validation possible (numeric, UUID), so no pre-SQL filter"
+      - "It is called via POST rather than GET"
+      - "It does not use JWT, so the rate limiter is less strict"
+    correct: 1
+    explanation_fr: |
+      Distinction structurelle. Un endpoint :id peut etre valide en
+      schema (UUID, integer positif). Un endpoint search avec q=...
+      ne peut pas l'etre puisque q est par definition arbitraire.
+      C'est pourquoi le defense vector difere : pour :id =
+      validation schema au router, pour search = SEULEMENT prepared
+      statements.
+    explanation_en: |
+      Structural distinction. An :id endpoint can be schema-validated
+      (UUID, positive integer). A search endpoint with q=... cannot,
+      since q is arbitrary by definition. Hence the defense vector
+      differs: for :id = router schema validation, for search =
+      ONLY prepared statements.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi cibler la table sqlite_master plutot que tenter de
+      lire directement les tables Users, Products etc. ?
+    question_en: |
+      Why target the sqlite_master table rather than directly
+      reading the Users, Products etc. tables?
+    options_fr:
+      - "sqlite_master est en clair, les autres sont chiffrees"
+      - "sqlite_master donne le SCHEMA (CREATE TABLE) de toutes les tables d'un coup, ce qui permet a l'attaquant de cartographier la base avant d'attaquer chaque table individuellement"
+      - "sqlite_master est plus petit donc plus rapide a lire"
+      - "Lire les autres tables necessite des privileges admin"
+    options_en:
+      - "sqlite_master is in cleartext, the others are encrypted"
+      - "sqlite_master gives the SCHEMA (CREATE TABLE) of every table at once, letting the attacker map the database before attacking each individual table"
+      - "sqlite_master is smaller hence faster to read"
+      - "Reading the other tables requires admin privileges"
+    correct: 1
+    explanation_fr: |
+      Strategy red team : reconnaissance avant exploitation. Avoir
+      le schema complet permet de cibler precisement les tables et
+      colonnes valeur (users.password, payment_methods.cc_number)
+      au lieu d'enumerer aveuglement. Equivalent du dump des
+      header files avant d'attaquer un binaire.
+    explanation_en: |
+      Red-team strategy: reconnaissance before exploitation. Having
+      the full schema lets you precisely target valuable tables
+      and columns (users.password, payment_methods.cc_number)
+      instead of blind enumeration. Equivalent to dumping header
+      files before attacking a binary.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Le fix #3 propose pour ce challenge dans codefixes officiels
+      OWASP est etiquette comme INCORRECT : "Trying to prevent
+      injection attacks with a custom-built blocklist mechanism is
+      doomed to fail". Pourquoi ?
+    question_en: |
+      Fix #3 proposed for this challenge in the official OWASP
+      codefixes is labeled INCORRECT: "Trying to prevent injection
+      attacks with a custom-built blocklist mechanism is doomed to
+      fail". Why?
+    options_fr:
+      - "Parce qu'un blocklist necessite trop de memoire"
+      - "Parce que l'espace des payloads SQLi est combinatoire (encodings, casing, char alternatifs) et un blocklist regex ne peut couvrir tous les variants — un attaquant avec du temps trouvera toujours un bypass"
+      - "Parce que les regex sont trop lentes en Node.js"
+      - "Parce que le blocklist invalide les autres endpoints"
+    options_en:
+      - "Because a blocklist needs too much memory"
+      - "Because the SQLi payload space is combinatorial (encodings, casing, alternative chars) and a regex blocklist cannot cover all variants — an attacker with time will always find a bypass"
+      - "Because regexes are too slow in Node.js"
+      - "Because the blocklist invalidates other endpoints"
+    correct: 1
+    explanation_fr: |
+      Source : codefixes/dbSchemaChallenge.info.yml fix id 3 (in
+      extenso) : "It might work for some simpler attack payloads
+      but an attacker with time and skills can likely bypass it at
+      some point". Le defense correct (fix #2) est le binding
+      Sequelize, pas le blocklist.
+    explanation_en: |
+      Source: codefixes/dbSchemaChallenge.info.yml fix id 3 (in
+      full): "It might work for some simpler attack payloads but
+      an attacker with time and skills can likely bypass it at
+      some point". The correct defense (fix #2) is Sequelize
+      binding, not a blocklist.

@@ -1,0 +1,163 @@
+challenge_key: "missingEncodingChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Retrouver la photo du chat de Bjoern en mode
+  "melee combat-mode". Tag : Shenanigans.
+  Description OWASP. Hints officiels : (1) "Check
+  the Photo Wall for an image that could not be
+  loaded correctly". (2) "You just have to
+  (literally) inspect the problem to understand the
+  basic issue". (3) "It can also help to try out
+  the Tweet-button of the entry and observe what
+  happens". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/verify.ts:71 (verifie source). Code
+  exact : `challengeUtils.solveIf(challenges.
+  missingEncodingChallenge, () => { return
+  utils.endsWith(url.toLowerCase(), '%e1%93%9a%e1
+  %98%8f%e1%97%a2-%23zatschi-%23whoneedsfourlegs-
+  1572600969477.jpg') })`. Donc le solve trigger
+  quand on GET une URL qui finit avec un
+  filename specifique encoded URL-safe. Le
+  filename : `<some unicode>-#zatschi-
+  #whoneedsfourlegs-1572600969477.jpg`. Bug : le
+  filename contient des `#` qui sont des fragment
+  separators URL ; le frontend Photo Wall les
+  laisse non-encoded, donc le browser interprete
+  comme fragment et la photo ne load PAS. La
+  solution : (1) trouver le filename dans le HTML
+  source (View Source ou DevTools), (2) URL-encode
+  le `#` en `%23`, (3) GET cette URL via le
+  browser ou curl directement. Le solve declenche
+  quand le serveur recoit le GET avec %23.
+
+mission_en: |
+  Retrieve photo of Bjoern's cat in "melee
+  combat-mode". Tag: Shenanigans. OWASP
+  description. Official hints: (1) "Check the
+  Photo Wall for an image that could not be
+  loaded correctly". (2) "You just have to
+  (literally) inspect the problem to understand
+  the basic issue". (3) "It can also help to try
+  out the Tweet-button of the entry and observe
+  what happens". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  verify.ts:71 (verified source). Exact code:
+  `challengeUtils.solveIf(challenges.
+  missingEncodingChallenge, () => { return
+  utils.endsWith(url.toLowerCase(), '%e1%93%9a
+  %e1%98%8f%e1%97%a2-%23zatschi-%23whoneedsfour
+  legs-1572600969477.jpg') })`. So solve
+  triggers when GET-ing URL ending with specific
+  URL-safe encoded filename. Filename: `<some
+  unicode>-#zatschi-#whoneedsfourlegs-
+  1572600969477.jpg`. Bug: filename contains
+  `#` which are URL fragment separators; Photo
+  Wall frontend leaves them non-encoded, so
+  browser interprets as fragment and photo
+  DOESN'T load. Solution: (1) find filename in
+  HTML source (View Source or DevTools), (2)
+  URL-encode `#` as `%23`, (3) GET this URL via
+  browser or curl directly. Solve triggers when
+  server receives GET with %23.
+
+concepts:
+  - title_fr: "Hashtag # dans URLs : fragment separator"
+    title_en: "Hashtag # in URLs: fragment separator"
+    body_fr: |
+      Source canonique : RFC 3986 (URI Generic
+      Syntax). Le caractere `#` dans une URL est
+      le FRAGMENT SEPARATOR : tout ce qui est
+      apres le `#` est traite comme fragment
+      (anchor) et NE PAS envoye au serveur. Donc
+      `https://shop.com/photos/cat-#tag1.jpg`
+      sera vu par le serveur comme GET
+      `/photos/cat-` (apres le `#` est strippe).
+      Pour inclure un `#` litteral dans le path
+      d'une URL, il faut l'encoder en `%23` (URL
+      percent-encoding). C'est le bug : le
+      filename de la photo contient des `#`
+      littéraux non-encodes, le browser les
+      interprete comme fragments, la photo ne
+      charge pas.
+    body_en: |
+      Canonical source: RFC 3986 (URI Generic
+      Syntax). `#` character in URL is FRAGMENT
+      SEPARATOR: everything after `#` treated as
+      fragment (anchor) and NOT sent to server.
+      So `https://shop.com/photos/cat-#tag1.
+      jpg` is seen by server as GET `/photos/
+      cat-` (after `#` is stripped). To include
+      literal `#` in URL path, encode as `%23`
+      (URL percent-encoding). It's the bug:
+      photo filename contains literal
+      non-encoded `#`, browser interprets as
+      fragments, photo doesn't load.
+
+  - title_fr: "Tweet-button comme indice : encode automatique"
+    title_en: "Tweet-button as clue: automatic encoding"
+    body_fr: |
+      Hint OWASP #3 : "It can also help to try
+      out the Tweet-button of the entry and
+      observe what happens". Twitter's web intent
+      URL (`twitter.com/intent/tweet?text=...&
+      url=...`) URL-encode automatiquement les
+      special characters dans le `url` parameter,
+      y compris les `#`. Donc cliquer le
+      Tweet-button reveal l'URL encodee
+      correctement avec `%23`. Le student peut
+      voir cette URL dans la new tab Twitter,
+      la copy-paste dans son browser, et le
+      photo charge. Pattern reusable : observer
+      les comportements automatiques (encoding,
+      escaping) reveal souvent le pattern
+      attendu.
+    body_en: |
+      OWASP hint #3: "It can also help to try
+      out the Tweet-button of the entry and
+      observe what happens". Twitter's web
+      intent URL (`twitter.com/intent/tweet?
+      text=...&url=...`) automatically URL-
+      encodes special characters in `url`
+      parameter, including `#`. So clicking
+      Tweet-button reveals correctly encoded
+      URL with `%23`. Student can see this URL
+      in Twitter new tab, copy-paste to
+      browser, photo loads. Reusable pattern:
+      observing automatic behaviors (encoding,
+      escaping) often reveals expected pattern.
+
+  - title_fr: "Defense canonique : filename sanitization au upload"
+    title_en: "Canonical defense: filename sanitization at upload"
+    body_fr: |
+      Defense canonique : sanitize les filenames
+      au moment du UPLOAD (pas au moment du
+      serve). (a) Allowlist characters [a-zA-Z0-
+      9._-] uniquement. (b) Replace special
+      chars par underscore ou les remove. (c)
+      Generate UUID-based filenames pour
+      eviter les conflicts/special chars
+      entirely. (d) Stocker le original
+      filename dans la DB metadata (NULL au
+      filesystem level). Pattern reusable : ne
+      JAMAIS trust user-provided filenames pour
+      le filesystem. Cas reels : Path Traversal
+      (../../etc/passwd), null byte attacks,
+      unicode normalization attacks.
+    body_en: |
+      Canonical defense: sanitize filenames at
+      UPLOAD time (not serve time). (a)
+      Allowlist characters [a-zA-Z0-9._-] only.
+      (b) Replace special chars with underscore
+      or remove. (c) Generate UUID-based
+      filenames to avoid conflicts/special
+      chars entirely. (d) Store original
+      filename in DB metadata (NULL at
+      filesystem level). Reusable pattern:
+      NEVER trust user-provided filenames for
+      filesystem. Real cases: Path Traversal
+      (../../etc/passwd), null byte attacks,
+      unicode normalization attacks.

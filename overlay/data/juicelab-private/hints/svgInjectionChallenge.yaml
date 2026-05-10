@@ -1,0 +1,159 @@
+challenge_key: "svgInjectionChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP #1 : "multiple gaffes".
+      Hint #2 : "delivery box image is made
+      of [SVG]". Donc cible = remplacer le
+      SVG default par cataas.com kitten.
+    text_en: |
+      OWASP hint #1: "multiple gaffes".
+      Hint #2: "delivery box image is made
+      of [SVG]". So target = replace
+      default SVG with cataas.com kitten.
+    pedagogical_intent: |
+      Activate SVG + multi-vuln reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #4 : "exploit another
+      vulnerability with own two challenges".
+      Indique Unvalidated Redirects. Hint
+      #5 : "strict use of cross-domain
+      kittens" - cataas.com URL specifique.
+    text_en: |
+      OWASP hint #4: "exploit another
+      vulnerability with own two challenges".
+      Indicates Unvalidated Redirects. Hint
+      #5: "strict use of cross-domain
+      kittens" - specific cataas.com URL.
+    pedagogical_intent: |
+      Spell composition + target.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (lib/startup/
+      registerWebsocketEvents.ts:47) :
+      `solveIf(() => data?.match(/...\/
+      redirect?to=https?:\/\/placecats.com
+      \/.../) && isRedirectAllowed(data))`.
+      Donc le payload doit contenir une
+      path traversal SVG qui redirect vers
+      placecats.com (anciennement cataas).
+    text_en: |
+      Server source (lib/startup/
+      registerWebsocketEvents.ts:47):
+      `solveIf(() => data?.match(/...\/
+      redirect?to=https?:\/\/placecats.com
+      \/.../) && isRedirectAllowed(data))`.
+      So payload must contain SVG path
+      traversal redirecting to placecats.
+      com (formerly cataas).
+    pedagogical_intent: |
+      Reveal exact regex.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Construction : un SVG avec image src
+      path-traversal :
+      ```svg
+      <svg>
+        <image href="../../../redirect?to=
+          https://placecats.com/g/200/200">
+        </image>
+      </svg>
+      ```
+      Le path-traversal `../../../` remonte
+      au root, le redirect endpoint
+      Juice Shop accepte placecats.com
+      via isRedirectAllowed.
+    text_en: |
+      Construction: SVG with path-traversal
+      image src:
+      ```svg
+      <svg>
+        <image href="../../../redirect?to=
+          https://placecats.com/g/200/200">
+        </image>
+      </svg>
+      ```
+      `../../../` path-traversal climbs to
+      root, Juice Shop redirect endpoint
+      accepts placecats.com via
+      isRedirectAllowed.
+    pedagogical_intent: |
+      Spell exact payload.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow :
+      1. Pre-requis : redirectChallenge OR
+         redirectCryptoCurrencyChallenge
+         (Lot 10) pour comprendre le
+         redirect allowlist + bypass.
+      2. Identifier le SVG default des
+         delivery boxes (DevTools, inspect
+         delivery image element).
+      3. Construire un SVG payload avec
+         image src `../../../redirect?to=
+         https://placecats.com/g/200/200`.
+      4. Trigger le upload via le
+         delivery flow (probablement via
+         WebSocket message lors du place
+         order ; lib/startup/
+         registerWebsocketEvents.ts:47
+         hint).
+      5. Le serveur :
+         (a) WebSocket recoit le SVG
+             payload
+         (b) regex match path traversal +
+             placecats.com URL
+         (c) isRedirectAllowed pass
+             (cataas.com whitelisted)
+         (d) solveIf trigger -> challenge
+             solve auto.
+      Source : lib/startup/
+      registerWebsocketEvents.ts:47.
+      Defense : sanitize SVG avec dompurify
+      + redirect allowlist exhaustif +
+      WebSocket payload validation.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow:
+      1. Prerequisites: redirectChallenge
+         OR redirectCryptoCurrencyChallenge
+         (Lot 10) to understand redirect
+         allowlist + bypass.
+      2. Identify default SVG of delivery
+         boxes (DevTools, inspect delivery
+         image element).
+      3. Build SVG payload with image src
+         `../../../redirect?to=https://
+         placecats.com/g/200/200`.
+      4. Trigger upload via delivery flow
+         (likely via WebSocket message on
+         place order; lib/startup/
+         registerWebsocketEvents.ts:47
+         hint).
+      5. Server:
+         (a) WebSocket receives SVG
+             payload
+         (b) regex matches path traversal
+             + placecats.com URL
+         (c) isRedirectAllowed passes
+             (cataas.com whitelisted)
+         (d) solveIf triggers -> challenge
+             auto solves.
+      Source: lib/startup/
+      registerWebsocketEvents.ts:47.
+      Defense: sanitize SVG with dompurify
+      + exhaustive redirect allowlist +
+      WebSocket payload validation.
+    pedagogical_intent: |
+      Solution + composition + defense.

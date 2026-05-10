@@ -1,0 +1,110 @@
+challenge_key: "noSqlReviewsChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Une commande update MongoDB a deux arguments : un FILTER et
+      un UPDATE. Pourquoi NoSQLi sur un endpoint update est-elle
+      potentiellement plus dangereuse qu'un NoSQLi sur un find ?
+    question_en: |
+      A MongoDB update command has two arguments: a FILTER and an
+      UPDATE. Why is NoSQLi on an update endpoint potentially
+      more dangerous than NoSQLi on a find?
+    options_fr:
+      - "Parce qu'un update consomme plus de RAM"
+      - "Parce qu'on peut frapper LES DEUX vecteurs : (1) operateur dans le filter pour cibler plusieurs rows, (2) $set sur des champs autres que prevus (ex isAdmin) pour escalader privilege. Find est read-only, update est read-write — l'impact est non recuperable"
+      - "Parce qu'un update genere des logs detailles"
+      - "Parce qu'un update echappe automatiquement les operateurs"
+    options_en:
+      - "Because an update consumes more RAM"
+      - "Because you can hit BOTH vectors: (1) operator in the filter to target multiple rows, (2) $set on unintended fields (e.g. isAdmin) to escalate privilege. Find is read-only, update is read-write — non-recoverable impact"
+      - "Because an update generates detailed logs"
+      - "Because an update auto-escapes operators"
+    correct: 1
+    explanation_fr: |
+      Distinction read/write fondamentale. Une SQLi en read leak
+      des donnees (mauvais mais reversible : changer les passwords).
+      Une SQLi en write modifie l'etat persistant (mauvais ET non
+      reversible sans backup). C'est pourquoi les endpoints write
+      meritent une attention specifique.
+    explanation_en: |
+      Fundamental read/write distinction. A read SQLi leaks data
+      (bad but reversible: rotate passwords). A write SQLi
+      modifies persistent state (bad AND irreversible without
+      backup). Why write endpoints deserve specific attention.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Sur Mongoose, .updateOne() ne modifie qu'un seul document
+      meme si le filter en match plusieurs. Pourquoi ce challenge
+      reussit-il quand meme a updater MULTIPLE reviews ?
+    question_en: |
+      On Mongoose, .updateOne() modifies only one doc even if the
+      filter matches several. Why does this challenge still succeed
+      in updating MULTIPLE reviews?
+    options_fr:
+      - "Parce que le serveur execute la requete en boucle automatiquement"
+      - "Parce que l'API utilise probablement .update() (ancien style) avec une option multi: true ou spread l'input dans les options Mongoose, permettant a l'attaquant d'injecter multi via le body"
+      - "Parce que MongoDB ignore l'option singleDocument"
+      - "Parce que l'index unique est desactive sur la collection reviews"
+    options_en:
+      - "Because the server auto-runs the query in a loop"
+      - "Because the API probably uses .update() (old style) with a multi: true option or spreads the input into Mongoose options, letting the attacker inject multi via the body"
+      - "Because MongoDB ignores singleDocument option"
+      - "Because the unique index is disabled on the reviews collection"
+    correct: 1
+    explanation_fr: |
+      Le veritable angle de ce challenge. Mongoose .update() (avant
+      v6) acceptait un objet d'options spreadable. Si le code fait
+      Reviews.update({ id }, { $set: ... }, options) ou options =
+      { ...req.body }, l'attaquant injecte multi: true via le
+      body. Mongoose v6+ deprecate .update() au profit de
+      updateOne/updateMany explicites pour fermer cet angle.
+    explanation_en: |
+      Real angle of this challenge. Mongoose .update() (pre-v6)
+      accepted a spreadable options object. If code does
+      Reviews.update({ id }, { $set: ... }, options) where
+      options = { ...req.body }, the attacker injects multi: true
+      via the body. Mongoose v6+ deprecates .update() in favor of
+      explicit updateOne/updateMany to close this angle.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Les codefixes officiels OWASP pour ce challenge listent 3
+      fixes. Le fix CORRECT est le #3 : binding Sequelize/Mongoose.
+      Le fix #2 (incorrect) propose un blocklist regex. Pourquoi
+      le blocklist est-il insuffisant pour NoSQLi ?
+    question_en: |
+      Official OWASP codefixes for this challenge list 3 fixes.
+      Correct fix is #3: Sequelize/Mongoose binding. Fix #2
+      (incorrect) proposes a regex blocklist. Why is blocklist
+      insufficient for NoSQLi?
+    options_fr:
+      - "Parce qu'un blocklist consomme trop de RAM"
+      - "Parce que l'espace des operateurs MongoDB est combinatoire ($ne, $gt, $lt, $in, $nin, $where, $expr, $regex, $type...) et chaque nouvelle version ajoute des operateurs — un blocklist ferme une porte mais en laisse 20 ouvertes"
+      - "Parce que les regex sont incompatibles avec NoSQL"
+      - "Parce que le blocklist est synchrone et bloque l'event loop"
+    options_en:
+      - "Because a blocklist uses too much RAM"
+      - "Because the MongoDB operator space is combinatorial ($ne, $gt, $lt, $in, $nin, $where, $expr, $regex, $type...) and every new release adds operators — a blocklist closes one door but leaves 20 open"
+      - "Because regexes are incompatible with NoSQL"
+      - "Because blocklist is synchronous and blocks the event loop"
+    correct: 1
+    explanation_fr: |
+      Le blocklist est une defense par enumeration des mauvais cas
+      connus. La validation de schema (allowlist) est une defense
+      par enumeration des bons cas attendus. La seconde est
+      structurelle, la premiere est rattrapage permanent.
+      Reference codefixes/noSqlReviewsChallenge fix #1 incorrect
+      ("custom-built blocklist mechanism doomed to fail").
+    explanation_en: |
+      Blocklist defends by enumerating known-bad cases. Schema
+      validation (allowlist) defends by enumerating expected-good
+      cases. The second is structural, the first is permanent
+      catch-up. Reference codefixes/noSqlReviewsChallenge fix #1
+      incorrect ("custom-built blocklist mechanism doomed to
+      fail").

@@ -1,0 +1,79 @@
+challenge_key: "web3WalletChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quels sont les top vulnerabilites smart contract
+      en 2025 ?
+    question_en: |
+      What are top smart contract vulnerabilities in
+      2025?
+    options_fr:
+      - "Aucune"
+      - "OWASP Top 10 Smart Contract 2025 : (1) Reentrancy (CWE-841, DAO 2016 $30M, Compound 2023 $200M). (2) Integer Overflow/Underflow (Solidity <0.8.0). (3) Access Control (onlyOwner missing). (4) Front-running (MEV bots). (5) Oracle manipulation (Mango Markets $116M 2022). (6) Flash loan attacks"
+      - "Standards"
+      - "Bug rare"
+    options_en:
+      - "None"
+      - "OWASP Top 10 Smart Contract 2025: (1) Reentrancy (CWE-841, DAO 2016 $30M, Compound 2023 $200M). (2) Integer Overflow/Underflow (Solidity <0.8.0). (3) Access Control (missing onlyOwner). (4) Front-running (MEV bots). (5) Oracle manipulation (Mango Markets $116M 2022). (6) Flash loan attacks"
+      - "Standards"
+      - "Rare bug"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : audit smart contract.
+      Source : OWASP Top 10 Smart Contract.
+    explanation_en: |
+      Reusable pattern: smart contract audit. Source:
+      OWASP Top 10 Smart Contract.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quels outils pour audit smart contract ?
+    question_en: |
+      Which tools for smart contract audit?
+    options_fr:
+      - "Aucun"
+      - "(1) Slither - static analyzer Solidity (Trail of Bits). (2) Mythril - symbolic execution + concolic. (3) Echidna - property-based fuzzer. (4) Manticore - dynamic symbolic execution. (5) Foundry/Hardhat - testing frameworks. (6) OpenZeppelin Defender - monitoring + automation"
+      - "Trop secrets"
+      - "Standard ISO"
+    options_en:
+      - "None"
+      - "(1) Slither - Solidity static analyzer (Trail of Bits). (2) Mythril - symbolic execution + concolic. (3) Echidna - property-based fuzzer. (4) Manticore - dynamic symbolic execution. (5) Foundry/Hardhat - testing frameworks. (6) OpenZeppelin Defender - monitoring + automation"
+      - "Too secret"
+      - "ISO standard"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : multi-tool audit. Source :
+      Trail of Bits + ConsenSys.
+    explanation_en: |
+      Reusable pattern: multi-tool audit. Source:
+      Trail of Bits + ConsenSys.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour deploy smart contract en
+      production ?
+    question_en: |
+      Canonical defense for deploying smart contract
+      in production?
+    options_fr:
+      - "Confiance"
+      - "(1) Audit formel pre-deployment (Slither/Mythril/Echidna). (2) OpenZeppelin libraries (ReentrancyGuard, Ownable, SafeMath). (3) Bounty programme actif (Immunefi, HackerOne). (4) Multi-sig wallet pour fonds. (5) Time lock sur upgrades. (6) EIP-712 typed signature pour auth integration. (7) Multi-source event verification"
+      - "Plus de Web3"
+      - "Encrypt all"
+    options_en:
+      - "Trust"
+      - "(1) Pre-deployment formal audit (Slither/Mythril/Echidna). (2) OpenZeppelin libraries (ReentrancyGuard, Ownable, SafeMath). (3) Active bounty programme (Immunefi, HackerOne). (4) Multi-sig wallet for funds. (5) Upgrade time lock. (6) EIP-712 typed signature for integration auth. (7) Multi-source event verification"
+      - "No more Web3"
+      - "Encrypt all"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : defense en profondeur Web3.
+      Source : Trail of Bits + OpenZeppelin.
+    explanation_en: |
+      Reusable pattern: Web3 defense in depth. Source:
+      Trail of Bits + OpenZeppelin.

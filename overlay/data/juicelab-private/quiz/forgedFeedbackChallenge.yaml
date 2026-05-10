@@ -1,0 +1,104 @@
+challenge_key: "forgedFeedbackChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le hidden input userId etait pre-rempli par le frontend avec
+      ton vrai id, et le backend l'utilisait tel quel. Pourquoi ce
+      pattern est-il un anti-pattern ?
+    question_en: |
+      The hidden userId input was pre-filled by the frontend with
+      your real id, and the backend used it as-is. Why is this
+      pattern an anti-pattern?
+    options_fr:
+      - "Parce que les hidden inputs sont mal supportes par certains navigateurs"
+      - "Parce que TOUT input client est manipulable, hidden ou non. Faire confiance a une valeur cliente pour determiner l'identite revient a laisser l'utilisateur choisir qui il est cote serveur"
+      - "Parce que les hidden inputs ne sont pas envoyes en HTTPS"
+      - "Parce que les hidden inputs sont detectes par les WAF comme malveillants"
+    options_en:
+      - "Because hidden inputs are poorly supported by some browsers"
+      - "Because ANY client input is tamper-able, hidden or not. Trusting a client value to determine identity lets the user choose who they are server-side"
+      - "Because hidden inputs aren't sent over HTTPS"
+      - "Because hidden inputs are flagged as malicious by WAFs"
+    correct: 1
+    explanation_fr: |
+      Reflexe fondamental : le serveur ne doit JAMAIS faire confiance
+      au client pour des decisions d'identite ou d'autorisation.
+      Hidden vs visible n'a aucune importance — tout transit en clair
+      dans le body HTTP, manipulable par F12 ou Burp. La defense
+      canonique : deduire l'identite du JWT verifie.
+    explanation_en: |
+      Fundamental reflex: the server must NEVER trust the client
+      for identity or authorization decisions. Hidden vs visible
+      doesn't matter — everything transits in cleartext in the
+      HTTP body, manipulable via F12 or Burp. Canonical defense:
+      derive identity from the verified JWT.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quel est le pattern serveur-side correct pour ecrire le
+      userId d'un feedback ?
+    question_en: |
+      What is the correct server-side pattern to write the userId
+      of a feedback?
+    options_fr:
+      - "Spread req.body directement dans Feedback.create({ ...req.body }) — c'est concis"
+      - "Override explicite : Feedback.create({ ...req.body, UserId: req.user.id }) — le serveur ignore tout userId venant du body et utilise celui du JWT verifie"
+      - "Chiffrer le userId cote client avec AES avant envoi"
+      - "Utiliser un POST plutot qu'un PUT"
+    options_en:
+      - "Spread req.body directly into Feedback.create({ ...req.body }) — concise"
+      - "Explicit override: Feedback.create({ ...req.body, UserId: req.user.id }) — server ignores any userId from body and uses the verified JWT one"
+      - "Encrypt userId client-side with AES before sending"
+      - "Use POST rather than PUT"
+    correct: 1
+    explanation_fr: |
+      Pattern canonique. Le spread est efficient pour copier les
+      champs business (comment, rating) mais le userId DOIT etre
+      ecrit par le serveur en derniere position pour ecraser tout
+      userId malicieusement injecte. Frameworks d'auth modernes
+      (Spring Security, NestJS) automatisent ce pattern via
+      decorateurs (@AuthUser).
+    explanation_en: |
+      Canonical pattern. Spread is efficient to copy business
+      fields (comment, rating) but userId MUST be written by the
+      server last to overwrite any maliciously injected userId.
+      Modern auth frameworks (Spring Security, NestJS) automate
+      this via decorators (@AuthUser).
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      L'OWASP Authorization Cheat Sheet recommande quel niveau
+      d'application des controles d'autorisation ?
+    question_en: |
+      The OWASP Authorization Cheat Sheet recommends applying
+      authorization checks at which level?
+    options_fr:
+      - "Au niveau de la base de donnees, via des triggers SQL"
+      - "Au niveau du gateway/middleware, pas dans la business logic — le pattern garantit que CHAQUE request est autorisee avant d'atteindre les handlers, et qu'un dev qui oublie le check sur un nouvel endpoint heritera quand meme du middleware"
+      - "Au niveau du frontend, dans les guards Angular"
+      - "Au niveau du load balancer, via des regles IP"
+    options_en:
+      - "At the DB level, via SQL triggers"
+      - "At the gateway/middleware level, not in business logic — the pattern guarantees EVERY request is authorized before reaching handlers, and a dev forgetting the check on a new endpoint will still inherit the middleware"
+      - "At the frontend, in Angular guards"
+      - "At the load balancer, via IP rules"
+    correct: 1
+    explanation_fr: |
+      Source : OWASP Authorization Cheat Sheet. Le middleware
+      d'autorisation au niveau du router prefix (Express
+      app.use('/api/admin', authzMiddleware), Spring Security
+      filterChain) est l'application structurelle de "default
+      deny". Un check business-logic peut etre oublie sur un
+      nouveau handler ; un middleware s'applique automatiquement.
+    explanation_en: |
+      Source: OWASP Authorization Cheat Sheet. Authorization
+      middleware at the router-prefix level (Express
+      app.use('/api/admin', authzMiddleware), Spring Security
+      filterChain) is the structural "default deny" application.
+      A business-logic check can be forgotten on a new handler;
+      a middleware applies automatically.

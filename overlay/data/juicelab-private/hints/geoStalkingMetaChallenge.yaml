@@ -1,0 +1,111 @@
+challenge_key: "geoStalkingMetaChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #3 : "answer the security question of
+      the John, who enjoys hiking in the park". Donc John a une
+      photo de hiking dans un parc. Ou trouver les photos
+      uploadees par les users dans Juice Shop ? Indice : "Photo
+      Wall".
+    text_en: |
+      Official OWASP hint #3: "answer the security question of
+      the John, who enjoys hiking in the park". So John has a
+      hiking photo in a park. Where to find user-uploaded
+      photos in Juice Shop? Hint: "Photo Wall".
+    pedagogical_intent: |
+      Localize the photo surface.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      /#/photo-wall affiche toutes les photos uploadees. Repere
+      celle de John (caption avec "hiking" / "park"). Hint
+      OWASP officiel #1 : "Take a look at the meta data of the
+      corresponding photo". Quelle metadata d'une photo
+      smartphone moderne contient des INFOS DE LIEU ?
+    text_en: |
+      /#/photo-wall shows all uploaded photos. Spot John's
+      (caption with "hiking" / "park"). Official OWASP hint
+      #1: "Take a look at the meta data of the corresponding
+      photo". Which modern-smartphone-photo metadata holds
+      LOCATION INFO?
+    pedagogical_intent: |
+      Pin the photo + signal EXIF.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      EXIF metadata. Toute photo smartphone contient par
+      defaut les coordonnees GPS exactes ou la photo a ete
+      prise. Hint OWASP officiel #2 : "Make use of tools that
+      can inspect the metadata of images". Outils : exiftool
+      (CLI), exifviewer.org (online), ou simplement
+      Properties Windows / Get Info macOS. Telecharge la photo
+      de John (right-click + Save As) et inspecte.
+    text_en: |
+      EXIF metadata. Every smartphone photo holds by default
+      exact GPS coords where it was taken. Official OWASP
+      hint #2: "Make use of tools that can inspect the
+      metadata of images". Tools: exiftool (CLI),
+      exifviewer.org (online), or just Windows Properties /
+      macOS Get Info. Download John's photo (right-click +
+      Save As) and inspect.
+    pedagogical_intent: |
+      Spell EXIF tools.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Une fois les coordonnees GPS extraites, fais reverse
+      geocoding (Google Maps : "lat,lng" dans la search bar
+      donne l'adresse + nom du lieu). Le parc qui apparait =
+      reponse a la security question. Va ensuite sur
+      /#/forgot-password, entre l'email de John (typiquement
+      john@juice-sh.op), tape le nom du parc en answer, et
+      definis un nouveau password.
+    text_en: |
+      Once GPS coords extracted, reverse geocode (Google
+      Maps: "lat,lng" in search bar gives address + place
+      name). The park name = security question answer. Then
+      go to /#/forgot-password, enter John's email
+      (typically john@juice-sh.op), type park name as
+      answer, and set new password.
+    pedagogical_intent: |
+      Spell reverse-geocoding step + forgot-password workflow.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet :
+      1. /#/photo-wall : trouve la photo de John (hiking, park).
+      2. Right-click la photo -> Save Image As, save localement.
+      3. exiftool john_photo.jpg | grep -i gps
+         -> recupere lat/lng (ex 52.5142N, 13.3502E).
+      4. Google Maps : "52.5142, 13.3502" -> nom du parc (ex
+         "Tiergarten" pour Berlin, varie selon Juice Shop seed).
+      5. /#/forgot-password : email john@juice-sh.op, security
+         question answer = nom du parc, define un nouveau
+         password.
+      6. Login avec john + nouveau password. Challenge se
+         valide automatiquement.
+      Source : OWASP Choosing Security Questions Cheat Sheet
+      (mitigationUrl) + EXIF specification (ISO 12234-2).
+    text_en: |
+      Complete workflow:
+      1. /#/photo-wall: find John's photo (hiking, park).
+      2. Right-click -> Save Image As, save locally.
+      3. exiftool john_photo.jpg | grep -i gps
+         -> get lat/lng (e.g. 52.5142N, 13.3502E).
+      4. Google Maps: "52.5142, 13.3502" -> park name (e.g.
+         "Tiergarten" for Berlin, varies by Juice Shop seed).
+      5. /#/forgot-password: email john@juice-sh.op, security
+         question answer = park name, set new password.
+      6. Login with john + new password. Challenge
+         auto-solves.
+      Source: OWASP Choosing Security Questions Cheat Sheet
+      (mitigationUrl) + EXIF specification (ISO 12234-2).
+    pedagogical_intent: |
+      Quasi-solution : full 6-step workflow with example coords.

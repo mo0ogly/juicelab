@@ -1,0 +1,204 @@
+challenge_key: "lfrChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #2 : "read up on Local File
+      Read (LFR) vulnerabilities in popular NodeJS
+      template engines". Donc (a) NodeJS, (b)
+      template engine (pug, ejs, handlebars, mustache),
+      (c) LFR class. Hint #3 : "easily forgettable
+      endpoint" = un endpoint pas obvious dans la nav
+      principale.
+    text_en: |
+      Official OWASP hint #2: "read up on Local File
+      Read (LFR) vulnerabilities in popular NodeJS
+      template engines". So (a) NodeJS, (b) template
+      engine (pug, ejs, handlebars, mustache), (c)
+      LFR class. Hint #3: "easily forgettable
+      endpoint" = endpoint not obvious in main nav.
+    pedagogical_intent: |
+      Activate template engine LFR reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Endpoint cible : /dataerasure (POST). C'est
+      l'endpoint GDPR Right to Erasure, visible si
+      tu as resolu ghostLoginChallenge (Lot 5) ou
+      via SQLi exfil. C'est un endpoint pas dans la
+      navigation principale (forgettable). Sur cet
+      endpoint, le body parameter `layout` est passe
+      a res.render() comme template name.
+    text_en: |
+      Target endpoint: /dataerasure (POST). It's the
+      GDPR Right to Erasure endpoint, visible if
+      you solved ghostLoginChallenge (Lot 5) or via
+      SQLi exfiltration. Endpoint not in main
+      navigation (forgettable). On this endpoint,
+      `layout` body parameter is passed to res.
+      render() as template name.
+    pedagogical_intent: |
+      Spell endpoint + parameter.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Hint OWASP #4 : "500 Internal Server Error is
+      always an interesting status code". Pour
+      tester : POST /dataerasure avec body `{layout:
+      "package.json", email: "...", securityAnswer:
+      "..."}`. Si tu obtiens 500 (parsing error de
+      pug) ou 200 avec html partiel, tu confirmes
+      le LFR. Hint #5 : "Fuzzing can also help" -
+      essaie plusieurs target paths.
+    text_en: |
+      OWASP hint #4: "500 Internal Server Error is
+      always an interesting status code". To test:
+      POST /dataerasure with body `{layout:
+      "package.json", email: "...",
+      securityAnswer: "..."}`. If you get 500 (pug
+      parsing error) or 200 with partial html, you
+      confirm LFR. Hint #5: "Fuzzing can also help"
+      - try multiple target paths.
+    pedagogical_intent: |
+      Spell test methodology + status codes.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      (routes/dataErasure.ts:68-82) : (a) le
+      `layout` parametre body est passe a
+      `path.resolve()` puis check `isForbiddenFile`
+      via 3 substring blocklist (`ftp`, `ctf.key`,
+      `encryptionkeys`). (b) Si le check passe,
+      `res.render('dataErasureResult', { ...
+      req.body })` est appele. (c) Le solveIf est
+      `() => { return true }` declenche quand le
+      callback render() reussit avec html
+      non-empty. (d) Donc target paths possibles :
+      `package.json`, `server.ts`, `routes/login.ts`,
+      ABSOLUTE paths comme `/etc/passwd` (Linux) ou
+      `C:/Windows/win.ini` (Windows).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server
+      source (routes/dataErasure.ts:68-82): (a)
+      `layout` body parameter passed to
+      `path.resolve()` then `isForbiddenFile` check
+      via 3 substring blocklist (`ftp`, `ctf.key`,
+      `encryptionkeys`). (b) If check passes,
+      `res.render('dataErasureResult', { ...
+      req.body })` called. (c) solveIf is `() => {
+      return true }` triggered when render()
+      callback succeeds with non-empty html. (d) So
+      possible target paths: `package.json`,
+      `server.ts`, `routes/login.ts`, ABSOLUTE
+      paths like `/etc/passwd` (Linux) or
+      `C:/Windows/win.ini` (Windows).
+    pedagogical_intent: |
+      Reveal exact code path + targets.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Login Juice Shop (need authenticated user
+         pour /dataerasure).
+      2. Construire le POST body :
+         ```json
+         {
+           "email": "test@juice-sh.op",
+           "securityAnswer": "test",
+           "layout": "package.json"
+         }
+         ```
+         (Aussi essayer "/etc/passwd" sur Linux
+         deployment.)
+      3. POST /dataerasure avec ce body via curl/
+         Burp :
+         `curl -X POST http://localhost:3000/
+         dataerasure -H "Content-Type: application/
+         x-www-form-urlencoded" -H "Cookie: token=
+         <jwt>" -d "email=...&securityAnswer=...&
+         layout=package.json"`.
+      4. Le serveur :
+         (a) `path.resolve("package.json")` ->
+             `/app/package.json` (ne match aucun
+             forbidden : pas de "ftp", "ctf.key",
+             "encryptionkeys"),
+         (b) `res.render("package.json", ...)` ->
+             pug essaie de compiler package.json
+             comme template (failure partial mais
+             produit du html),
+         (c) le callback render() recupere
+             `html.slice(0, 100) + '......'`,
+         (d) `res.send(sendlfrResponse)` envoie
+             les 100 premiers chars,
+         (e) solveIf(true) -> challenge solve auto.
+      5. Tu vois le content de package.json
+         partiellement dans la response = LFR
+         confirme.
+      Source canonique : routes/dataErasure.ts:
+      68-82 + pug template engine + Snyk LFR
+      advisory.
+      Defense canonique : (a) ALLOWLIST des
+      templates autorises au lieu de blocklist, (b)
+      ne PAS passer user-controlled input a res.
+      render(), (c) si necessaire, resolver le
+      template name via une map { aliasUser ->
+      templateInternal }, (d) audit endpoints
+      forgotten (less-trafficked = less-tested).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Login Juice Shop (need authenticated user
+         for /dataerasure).
+      2. Build POST body:
+         ```json
+         {
+           "email": "test@juice-sh.op",
+           "securityAnswer": "test",
+           "layout": "package.json"
+         }
+         ```
+         (Also try "/etc/passwd" on Linux
+         deployment.)
+      3. POST /dataerasure with this body via
+         curl/Burp:
+         `curl -X POST http://localhost:3000/
+         dataerasure -H "Content-Type: application/
+         x-www-form-urlencoded" -H "Cookie: token=
+         <jwt>" -d "email=...&securityAnswer=...&
+         layout=package.json"`.
+      4. Server:
+         (a) `path.resolve("package.json")` ->
+             `/app/package.json` (matches no
+             forbidden: no "ftp", "ctf.key",
+             "encryptionkeys"),
+         (b) `res.render("package.json", ...)` ->
+             pug tries to compile package.json as
+             template (partial failure but produces
+             html),
+         (c) render() callback retrieves
+             `html.slice(0, 100) + '......'`,
+         (d) `res.send(sendlfrResponse)` sends
+             first 100 chars,
+         (e) solveIf(true) -> challenge auto
+             solves.
+      5. You see package.json content partially
+         in response = LFR confirmed.
+      Canonical source: routes/dataErasure.ts:
+      68-82 + pug template engine + Snyk LFR
+      advisory.
+      Canonical defense: (a) ALLOWLIST of
+      authorized templates instead of blocklist,
+      (b) DON'T pass user-controlled input to res.
+      render(), (c) if needed, resolve template
+      name via map { aliasUser -> internalTemplate
+      }, (d) audit forgotten endpoints
+      (less-trafficked = less-tested).
+    pedagogical_intent: |
+      Quasi-solution : workflow + curl + targets +
+      defense.

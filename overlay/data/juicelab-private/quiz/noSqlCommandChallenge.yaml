@@ -1,0 +1,104 @@
+challenge_key: "noSqlCommandChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la difference structurelle entre une SQLi sur un
+      endpoint qui concatene une string SQL et une NoSQLi sur un
+      endpoint qui parse un body JSON ?
+    question_en: |
+      What is the structural difference between SQLi on an endpoint
+      that concatenates a SQL string and NoSQLi on an endpoint
+      that parses a JSON body?
+    options_fr:
+      - "SQLi est plus dangereuse que NoSQLi"
+      - "SQLi exploite la concatenation de strings (datatype confusion impossible). NoSQLi exploite la deserialization JSON : sans validation de type, l'attaquant remplace une string attendue par un objet avec operateurs ($where, $gt, $ne)"
+      - "NoSQLi necessite des privileges admin, SQLi non"
+      - "SQLi fonctionne en HTTP, NoSQLi seulement en HTTPS"
+    options_en:
+      - "SQLi is more dangerous than NoSQLi"
+      - "SQLi exploits string concatenation (datatype confusion impossible). NoSQLi exploits JSON deserialization: without type validation, the attacker replaces an expected string with an object carrying operators ($where, $gt, $ne)"
+      - "NoSQLi requires admin privileges, SQLi doesn't"
+      - "SQLi works on HTTP, NoSQLi only on HTTPS"
+    correct: 1
+    explanation_fr: |
+      C'est une faille de type-confusion / parameter pollution. La
+      defense pour SQLi (prepared statements) ne s'applique pas
+      directement a NoSQLi. La defense NoSQLi est la VALIDATION DE
+      TYPE en entree (JSON Schema) + la denylist des cles
+      commencant par $.
+    explanation_en: |
+      It's a type-confusion / parameter-pollution flaw. The SQLi
+      defense (prepared statements) doesn't directly apply to
+      NoSQLi. The NoSQLi defense is INPUT TYPE VALIDATION (JSON
+      Schema) + denylist of $-prefixed keys.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      L'operateur MongoDB $where prend une string JavaScript et
+      l'execute server-side. Pourquoi MongoDB 4.4+ le deconseille
+      explicitement ?
+    question_en: |
+      The MongoDB $where operator takes a JavaScript string and
+      runs it server-side. Why does MongoDB 4.4+ explicitly
+      discourage it?
+    options_fr:
+      - "Parce qu'il n'est pas standard ANSI SQL"
+      - "Parce qu'il offre litteralement un moteur d'execution JavaScript arbitraire au payload : injection NoSQL = potentiellement RCE serveur via la JS engine. $expr est l'alternative typee et limitee"
+      - "Parce qu'il est trop lent comparable a $expr"
+      - "Parce qu'il consomme trop de RAM"
+    options_en:
+      - "Because it isn't standard ANSI SQL"
+      - "Because it literally exposes an arbitrary JavaScript execution engine to the payload: NoSQL injection = potential server RCE via the JS engine. $expr is the typed and limited alternative"
+      - "Because it's slower than $expr"
+      - "Because it consumes too much RAM"
+    correct: 1
+    explanation_fr: |
+      $where = code execution. Pas seulement comparaison. C'est
+      pourquoi sleep() y fonctionne, mais aussi require() en
+      certaines versions / configs (RCE complet historique). $expr
+      est strictement comparaison, pas d'execution. Recommandation
+      MongoDB 4.4+ documentee dans la security configuration.
+    explanation_en: |
+      $where = code execution. Not just comparison. Why sleep()
+      works there, but also require() in some versions/configs
+      (full historical RCE). $expr is strictly comparison, no
+      execution. MongoDB 4.4+ recommendation documented in
+      security configuration.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense BLOQUE structurellement les NoSQLi par
+      type-confusion sur les endpoints API qui acceptent du JSON ?
+    question_en: |
+      Which defense structurally BLOCKS NoSQLi via type-confusion
+      on API endpoints accepting JSON?
+    options_fr:
+      - "Augmenter le rate limit a 1 requete par minute"
+      - "Validation de schema en entree (JSON Schema, Joi, Zod, class-validator) qui force les types attendus : si id doit etre une STRING, un object passe au validateur est rejete en 400 avant d'atteindre la query MongoDB"
+      - "Chiffrer le body de la requete avec AES-GCM"
+      - "Forcer Content-Type: application/x-www-form-urlencoded"
+    options_en:
+      - "Raise rate limit to 1 request per minute"
+      - "Input schema validation (JSON Schema, Joi, Zod, class-validator) enforcing expected types: if id must be a STRING, an object passed to the validator is rejected with 400 before reaching the MongoDB query"
+      - "Encrypt the request body with AES-GCM"
+      - "Force Content-Type: application/x-www-form-urlencoded"
+    correct: 1
+    explanation_fr: |
+      Validation de type au router = default deny structurel. Tout
+      input non-conforme est rejete avant d'atteindre la couche
+      data. C'est la defense canonique pour NoSQLi, equivalent des
+      prepared statements pour SQLi (ces deux defenses traitent
+      des problemes structurellement differents donc differentes
+      mais complementaires en defense en profondeur).
+    explanation_en: |
+      Router-level type validation = structural default deny. Any
+      non-conforming input is rejected before reaching the data
+      layer. This is the canonical NoSQLi defense, equivalent of
+      prepared statements for SQLi (these two defenses address
+      structurally different problems hence different but
+      complementary in defense in depth).

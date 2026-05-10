@@ -1,0 +1,146 @@
+challenge_key: "knownVulnerableComponentChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Report one of two
+      possible answers via the 'Customer Feedback'
+      form. Do not forget to submit the library's
+      version as well". Donc 2 reponses acceptees,
+      avec library NAME + VERSION. Hint #2 : pre-
+      requis forgottenDevBackup pour package.json.bak.
+    text_en: |
+      Official OWASP hint #1: "Report one of two
+      possible answers via the 'Customer Feedback'
+      form. Do not forget to submit the library's
+      version as well". So 2 accepted answers,
+      with library NAME + VERSION. Hint #2:
+      forgottenDevBackup prerequisite for
+      package.json.bak.
+    pedagogical_intent: |
+      Activate dual-target research reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #2 + #3 : inspecter les "security-
+      related dependencies" dans /ftp/package.json.
+      bak puis researcher les "known security
+      issues" sur internet. Cibles probables :
+      libraries de sanitization (sanitize-html, dompurify),
+      JWT (express-jwt, jsonwebtoken), helmet,
+      security middleware, etc. Cherche les versions
+      0.x ou < 1.0 (typiquement immatures).
+    text_en: |
+      OWASP hints #2 + #3: inspect "security-related
+      dependencies" in /ftp/package.json.bak then
+      research "known security issues" on internet.
+      Likely targets: sanitization libraries
+      (sanitize-html, dompurify), JWT (express-jwt,
+      jsonwebtoken), helmet, security middleware,
+      etc. Look for 0.x or < 1.0 versions
+      (typically immature).
+    pedagogical_intent: |
+      Spell research direction + version heuristic.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      2 candidats forts dans Juice Shop : (a)
+      `sanitize-html 1.4.2` (XSS bypass via DOM
+      mutation, used dans persistedXssFeedback Lot
+      3), (b) `express-jwt 0.1.3` (alg=none
+      acceptance, used dans jwtUnsigned Lot 6).
+      Les deux ont des CVE publics. Verifie la
+      version exacte dans package.json.bak.
+    text_en: |
+      2 strong candidates in Juice Shop: (a)
+      `sanitize-html 1.4.2` (XSS bypass via DOM
+      mutation, used in persistedXssFeedback Lot
+      3), (b) `express-jwt 0.1.3` (alg=none
+      acceptance, used in jwtUnsigned Lot 6). Both
+      have public CVEs. Verify exact version in
+      package.json.bak.
+    pedagogical_intent: |
+      Reveal 2 candidates.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      (routes/verify.ts:229-251) : 2 patterns
+      acceptes via Op.or :
+      (a) `[Op.and]: [{[Op.like]: '%sanitize-html%'},
+          {[Op.like]: '%1.4.2%'}]`
+      (b) `[Op.and]: [{[Op.like]: '%express-jwt%'},
+          {[Op.like]: '%0.1.3%'}]`
+      Les deux tokens doivent apparaitre dans le
+      meme commentaire (Op.and). Submit l'un des
+      deux pairs name+version dans le feedback.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server source
+      (routes/verify.ts:229-251): 2 patterns
+      accepted via Op.or:
+      (a) `[Op.and]: [{[Op.like]: '%sanitize-html%'},
+          {[Op.like]: '%1.4.2%'}]`
+      (b) `[Op.and]: [{[Op.like]: '%express-jwt%'},
+          {[Op.like]: '%0.1.3%'}]`
+      Both tokens must appear in same comment
+      (Op.and). Submit either pair name+version in
+      feedback.
+    pedagogical_intent: |
+      Reveal exact 2-pattern check (Op.and pair).
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Resoudre forgottenDevBackupChallenge.
+      2. Telecharger /ftp/package.json.bak.
+      3. Cherche "sanitize-html" ou "express-jwt"
+         dans les dependencies. Tu vois
+         "sanitize-html": "1.4.2" (par exemple) ou
+         "express-jwt": "0.1.3".
+      4. Recherche Google "sanitize-html 1.4.2 CVE"
+         ou "express-jwt 0.1.3 CVE" pour confirmer.
+      5. Aller sur /#/contact.
+      6. Remplir le commentaire avec NOM + VERSION
+         dans la meme phrase. Exemple :
+         "Found vulnerable library sanitize-html
+         version 1.4.2 with known XSS bypass"
+         OR "Library express-jwt 0.1.3 accepts
+         alg=none JWT".
+      7. Submit. Le serveur fait Op.and check ->
+         match -> challenge solve auto.
+      Source canonique : routes/verify.ts:229-251 +
+      OWASP Vulnerability Disclosure Cheat Sheet.
+      Defense canonique : npm audit, Snyk,
+      Dependabot, GitHub Dependency Review,
+      automated patches.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Solve forgottenDevBackupChallenge.
+      2. Download /ftp/package.json.bak.
+      3. Search "sanitize-html" or "express-jwt"
+         in dependencies. You see "sanitize-html":
+         "1.4.2" (for example) or "express-jwt":
+         "0.1.3".
+      4. Google search "sanitize-html 1.4.2 CVE"
+         or "express-jwt 0.1.3 CVE" to confirm.
+      5. Go to /#/contact.
+      6. Fill comment with NAME + VERSION in same
+         sentence. Example: "Found vulnerable
+         library sanitize-html version 1.4.2 with
+         known XSS bypass" OR "Library express-jwt
+         0.1.3 accepts alg=none JWT".
+      7. Submit. Server does Op.and check ->
+         match -> challenge auto solves.
+      Canonical source: routes/verify.ts:229-251 +
+      OWASP Vulnerability Disclosure Cheat Sheet.
+      Canonical defense: npm audit, Snyk,
+      Dependabot, GitHub Dependency Review,
+      automated patches.
+    pedagogical_intent: |
+      Quasi-solution : workflow + 2 reponses + format.

@@ -1,0 +1,117 @@
+challenge_key: "deprecatedInterfaceChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Use a deprecated B2B interface that was not
+  properly shut down. Tags : Contraption,
+  Prerequisite. Description OWASP. Hints : (1) "
+  developers think they could go invisible by
+  closing their eyes". (2) "old B2B interface
+  was replaced". (3) "not all of its parts were
+  cleanly removed from the code base". (4) "
+  Simply using the deprecated interface
+  suffices to solve. No attack or exploit
+  necessary". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve dans routes/fileUpload.ts:
+  77 + 111. Code : `solveIf(() => true)` quand
+  un upload .xml ou .yml/.yaml est fait via
+  /file-upload (B2B endpoint). Workflow :
+  upload file .xml ou .yml via curl. Solve
+  auto.
+
+mission_en: |
+  Use deprecated B2B interface not properly
+  shut down. Tags: Contraption, Prerequisite.
+  OWASP description. Hints: (1) "developers
+  think they could go invisible by closing
+  their eyes". (2) "old B2B interface was
+  replaced". (3) "not all of its parts were
+  cleanly removed from the code base". (4)
+  "Simply using the deprecated interface
+  suffices. No attack or exploit necessary".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve in routes/fileUpload.ts:77
+  + 111. Code: `solveIf(() => true)` when
+  .xml or .yml/.yaml upload is done via
+  /file-upload (B2B endpoint). Workflow:
+  upload .xml or .yml file via curl. Auto
+  solves.
+
+concepts:
+  - title_fr: "Deprecated interfaces : graveyard of code"
+    title_en: "Deprecated interfaces: code graveyard"
+    body_fr: |
+      Source canonique : OWASP Web Service
+      Security Cheat Sheet (mitigationUrl).
+      Anti-pattern : retire le UI/route mais
+      laisse le backend code. L'attaquant
+      utilise le backend directement (curl
+      bypass). Defense : (a) supprimer
+      ENTIEREMENT le code (delete files,
+      remove routes), (b) feature flags
+      explicit avec deny-by-default, (c)
+      audit periodique des routes
+      registered, (d) documentation claire
+      des deprecation cycles.
+    body_en: |
+      Canonical source: OWASP Web Service
+      Security Cheat Sheet (mitigationUrl).
+      Anti-pattern: remove UI/route but
+      leave backend code. Attacker uses
+      backend directly (curl bypass).
+      Defense: (a) ENTIRELY remove code
+      (delete files, remove routes), (b)
+      explicit feature flags with deny-by-
+      default, (c) periodic audit of
+      registered routes, (d) clear
+      documentation of deprecation cycles.
+
+  - title_fr: "Composition : enabling pour XXE/yamlBomb"
+    title_en: "Composition: enabling for XXE/yamlBomb"
+    body_fr: |
+      Tag "Prerequisite" : ce challenge
+      DEBLOQUE les XML/YAML upload challenges
+      (xxeFileDisclosure, xxeDos, yamlBomb).
+      L'interface B2B deprecated parse les
+      XML/YAML files = surfaces XXE et
+      bombing. Un seul bug structural
+      (deprecation incomplete) cree
+      multiple kill chains.
+    body_en: |
+      "Prerequisite" tag: this challenge
+      UNLOCKS XML/YAML upload challenges
+      (xxeFileDisclosure, xxeDos, yamlBomb).
+      Deprecated B2B interface parses XML/
+      YAML files = XXE and bombing
+      surfaces. Single structural bug
+      (incomplete deprecation) creates
+      multiple kill chains.
+
+  - title_fr: "Pas d'attack necessaire : pure existence"
+    title_en: "No attack necessary: pure existence"
+    body_fr: |
+      Hint OWASP #4 : "Simply using the
+      deprecated interface suffices. No
+      attack or exploit necessary". Pattern
+      pedagogique : un challenge qui revele
+      par sa simple existence le bug
+      structural. Pas de payload sophistique.
+      Le student observe que l'endpoint
+      EXISTE encore + l'utilise = solve.
+      Pattern reusable : recon = identifier
+      les endpoints non-documents/deprecated
+      avant exploitation.
+    body_en: |
+      OWASP hint #4: "Simply using the
+      deprecated interface suffices. No
+      attack or exploit necessary".
+      Pedagogical pattern: challenge
+      revealing by simple existence the
+      structural bug. No sophisticated
+      payload. Student observes endpoint
+      STILL EXISTS + uses it = solve.
+      Reusable pattern: recon = identify
+      undocumented/deprecated endpoints
+      before exploitation.

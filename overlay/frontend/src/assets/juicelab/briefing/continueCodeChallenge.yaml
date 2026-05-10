@@ -1,0 +1,176 @@
+challenge_key: "continueCodeChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Solve challenge #999 - mais ce challenge n'EXISTE
+  PAS. Tags : Shenanigans, Code Analysis. Description
+  OWASP. Hints officiels : (1) "You need to trick the
+  hacking progress persistence feature into thinking
+  you solved challenge #999". (2) "Find out how
+  saving and restoring progress is done behind the
+  scenes". (3) "Deduce from all available information
+  (e.g. the package.json.bak) how the application
+  encrypts and decrypts your hacking progress". (4)
+  "Other than the user's passwords, the hacking
+  progress involves an additional secret during its
+  encryption". (5) "What would be a really stupid
+  mistake a developer might make when choosing such
+  a secret?". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/restoreProgress.ts:24-25 (verifie source).
+  Code exact : `if (challengeUtils.notSolved(
+  challenges.continueCodeChallenge) && ids.includes(
+  999)) { challengeUtils.solve(challenges.continue
+  CodeChallenge) }`. Le serveur utilise hashids
+  library pour decode le continueCode parameter.
+  Code source ligne 18 : `const hashids = new
+  Hashids('this is my salt', 60, hashidsAlphabet)`.
+  Le SALT est `'this is my salt'` - le "really
+  stupid mistake" du hint OWASP #5 (le salt est en
+  hard-coded dans la string "this is my salt"
+  litteralement, pas un secret crypto-random
+  random). L'attaquant peut reproduire le hashids
+  avec ce salt + alphabet, encoder [999], envoyer
+  GET /rest/continue-code/apply/<encodedID>. Solve
+  auto.
+
+mission_en: |
+  Solve challenge #999 - but this challenge does
+  NOT exist. Tags: Shenanigans, Code Analysis.
+  OWASP description. Official hints: (1) "You need
+  to trick the hacking progress persistence
+  feature into thinking you solved challenge
+  #999". (2) "Find out how saving and restoring
+  progress is done behind the scenes". (3) "Deduce
+  from all available information (e.g.
+  package.json.bak) how the application encrypts
+  and decrypts your hacking progress". (4) "Other
+  than user's passwords, the hacking progress
+  involves an additional secret during its
+  encryption". (5) "What would be a really stupid
+  mistake a developer might make when choosing
+  such a secret?". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  restoreProgress.ts:24-25 (verified source). Exact
+  code: `if (challengeUtils.notSolved(challenges.
+  continueCodeChallenge) && ids.includes(999)) {
+  challengeUtils.solve(challenges.continueCode
+  Challenge) }`. Server uses hashids library to
+  decode continueCode parameter. Source line 18:
+  `const hashids = new Hashids('this is my salt',
+  60, hashidsAlphabet)`. SALT is `'this is my
+  salt'` - the "really stupid mistake" of OWASP
+  hint #5 (salt is literally hardcoded as string
+  "this is my salt", not a crypto-random
+  secret). Attacker can reproduce hashids with
+  this salt + alphabet, encode [999], send GET
+  /rest/continue-code/apply/<encodedID>. Auto
+  solves.
+
+concepts:
+  - title_fr: "hashids salt = 'this is my salt' : le \"really stupid mistake\""
+    title_en: "hashids salt = 'this is my salt': the \"really stupid mistake\""
+    body_fr: |
+      Source verifiee (routes/restoreProgress.ts:18) :
+      `const hashids = new Hashids('this is my
+      salt', 60, hashidsAlphabet)`. Hint OWASP #5
+      verbatim : "What would be a really stupid
+      mistake a developer might make when
+      choosing such a secret?". La reponse :
+      utiliser une string lit-eralement "this is
+      my salt" comme salt. Anti-pattern : un
+      developer pense que la library est secure
+      par defaut, mais le salt fourni doit etre
+      un secret crypto-random (32+ bytes via
+      crypto.randomBytes). Un salt predictible =
+      un schema bypass-able. Hashids n'est PAS
+      cryptographic anyway (c'est un encoding
+      reversible), donc utiliser un salt secret
+      = self-deception.
+    body_en: |
+      Verified source (routes/restoreProgress.ts:
+      18): `const hashids = new Hashids('this is
+      my salt', 60, hashidsAlphabet)`. OWASP
+      hint #5 verbatim: "What would be a really
+      stupid mistake a developer might make when
+      choosing such a secret?". Answer: use
+      string literally "this is my salt" as
+      salt. Anti-pattern: developer thinks
+      library is secure by default, but provided
+      salt must be crypto-random secret (32+
+      bytes via crypto.randomBytes). Predictable
+      salt = bypassable schema. Hashids is NOT
+      cryptographic anyway (it's reversible
+      encoding), so using secret salt = self-
+      deception.
+
+  - title_fr: "hashids != crypto : encoding reversible"
+    title_en: "hashids != crypto: reversible encoding"
+    body_fr: |
+      Hashids (npmjs.com/package/hashids) est une
+      library d'encoding qui transforme integers
+      en strings courtes "obfusquees". Mais ce
+      n'est PAS de la cryptographie : (a) reversible
+      (decode le hash retourne l'integer), (b)
+      pas de signature/MAC (pas d'authenticity
+      verification), (c) pas de IV/nonce (meme
+      input = meme output toujours). Le salt
+      determine l'alphabet de l'encoding mais ne
+      protege pas contre la reverse engineering.
+      Cf. README hashids : "DO NOT use Hashids
+      for sensitive data". Pattern reusable :
+      verifier QU'EST une library prima de
+      l'utiliser comme security primitive.
+    body_en: |
+      Hashids (npmjs.com/package/hashids) is an
+      encoding library transforming integers into
+      short "obfuscated" strings. But NOT
+      cryptography: (a) reversible (decode hash
+      returns integer), (b) no signature/MAC (no
+      authenticity verification), (c) no IV/nonce
+      (same input = same output always). Salt
+      determines encoding alphabet but doesn't
+      protect against reverse engineering. Cf.
+      hashids README: "DO NOT use Hashids for
+      sensitive data". Reusable pattern: verify
+      WHAT a library IS before using as security
+      primitive.
+
+  - title_fr: "Defense canonique : JWT signed + DB tracked"
+    title_en: "Canonical defense: signed JWT + DB tracked"
+    body_fr: |
+      mitigationUrl : OWASP Cryptographic Storage
+      Cheat Sheet. Defense canonique pour
+      progress persistence : (1) JWT signed
+      RS256 avec claims (userId, solvedChallenges
+      array). Le serveur verify la signature
+      avant accept le restore. Pas reverse-
+      engineerable car asymmetric crypto. (2)
+      Alternative : DB-side persistence
+      (Sequelize Progress model lie a userId).
+      Pas de continueCode de tout - le user
+      restore via login. (3) Si on garde le
+      pattern continueCode, signer avec HMAC-
+      SHA256 + secret crypto-random + verify la
+      signature avant decode. Pattern reusable :
+      authentication + integrity sont
+      OBLIGATOIRES pour les state persistence
+      tokens.
+    body_en: |
+      mitigationUrl: OWASP Cryptographic Storage
+      Cheat Sheet. Canonical defense for
+      progress persistence: (1) RS256-signed JWT
+      with claims (userId, solvedChallenges
+      array). Server verifies signature before
+      accepting restore. Not reverse-engineerable
+      due to asymmetric crypto. (2) Alternative:
+      DB-side persistence (Sequelize Progress
+      model linked to userId). No continueCode
+      at all - user restores via login. (3) If
+      keeping continueCode pattern, sign with
+      HMAC-SHA256 + crypto-random secret +
+      verify signature before decode. Reusable
+      pattern: authentication + integrity are
+      MANDATORY for state persistence tokens.

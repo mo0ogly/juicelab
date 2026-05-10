@@ -1,0 +1,100 @@
+challenge_key: "nftUnlockChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi une BIP39 seed phrase est-elle un secret
+      TERMINAL (impossible a rotater facilement) ?
+    question_en: |
+      Why is a BIP39 seed phrase a TERMINAL secret
+      (impossible to rotate easily)?
+    options_fr:
+      - "Parce qu'elle est chiffree avec ECDSA"
+      - "Parce que la seed regenere DETERMINISTIQUEMENT toutes les cles privees du wallet (ETH, BTC, etc.). Pour 'rotater', il faut creer un NOUVEAU wallet et MIGRER manuellement tous les assets, ce qui coute des fees + risque de perte. Defense : ne JAMAIS exposer la seed"
+      - "Parce que les wallets ne supportent pas la rotation"
+      - "Parce que BIP39 est obsolete"
+    options_en:
+      - "Because it's ECDSA-encrypted"
+      - "Because the seed DETERMINISTICALLY regenerates all wallet private keys (ETH, BTC, etc.). To 'rotate', you must create a NEW wallet and manually MIGRATE all assets, costing fees + loss risk. Defense: NEVER expose the seed"
+      - "Because wallets don't support rotation"
+      - "Because BIP39 is obsolete"
+    correct: 1
+    explanation_fr: |
+      Distinction critique avec les API keys (rotatables a
+      0 cout). Pour Web3, la prevention est la SEULE defense
+      effective. Hardware wallet + multi-sig + cold storage.
+      Reference : BIP39 spec + Buterin's Soul Bound Tokens
+      paper.
+    explanation_en: |
+      Critical distinction from API keys (rotatable at zero
+      cost). For Web3, prevention is the ONLY effective
+      defense. Hardware wallet + multi-sig + cold storage.
+      Reference: BIP39 spec + Buterin's Soul Bound Tokens
+      paper.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Soul Bound Tokens (SBT) sont des NFT non-transferable.
+      Quel concept Buterin propose-t-il pour eux ?
+    question_en: |
+      Soul Bound Tokens (SBT) are non-transferable NFTs.
+      Which concept does Buterin propose for them?
+    options_fr:
+      - "Une nouvelle cryptomonnaie centralisee"
+      - "DeSoc (Decentralized Society) : utiliser les SBT comme credentials academiques, achievements, reputation, identite digitale on-chain. EIP-5114 standardise. Use case typique : diplomes, certifications professionnelles, badges DAO"
+      - "Une fork de Bitcoin"
+      - "Un protocole de paiement"
+    options_en:
+      - "A new centralized cryptocurrency"
+      - "DeSoc (Decentralized Society): use SBTs as academic credentials, achievements, reputation, digital identity on-chain. EIP-5114 standardized. Typical use case: diplomas, professional certifications, DAO badges"
+      - "A Bitcoin fork"
+      - "A payment protocol"
+    correct: 1
+    explanation_fr: |
+      Reference : Buterin et al. paper "Decentralized Society:
+      Finding Web3's Soul" (mai 2022, papers.ssrn.com).
+      Concept influent dans l'ecosysteme Web3 2022-2026 pour
+      l'identite digitale. EIP-5114 standard.
+    explanation_en: |
+      Reference: Buterin et al. paper "Decentralized
+      Society: Finding Web3's Soul" (May 2022,
+      papers.ssrn.com). Influential 2022-2026 concept in the
+      Web3 ecosystem for digital identity. EIP-5114
+      standard.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour les wallets contenant des assets
+      de valeur : 3 couches. Laquelle protege MEME si la
+      seed leak ?
+    question_en: |
+      Canonical defense for valuable-asset wallets: 3
+      layers. Which protects EVEN if seed leaks?
+    options_fr:
+      - "Hardware wallet (Ledger, Trezor)"
+      - "Multi-signature (gnosis safe, Argent) : necessite plusieurs signatures (M-of-N) pour valider une transaction. Meme si UNE cle est compromise, le wallet reste safe car les autres signatures ne sont pas compromises. Defense en profondeur : combine avec hardware + cold storage"
+      - "Cold storage paper"
+      - "Forcer HTTPS"
+    options_en:
+      - "Hardware wallet (Ledger, Trezor)"
+      - "Multi-signature (gnosis safe, Argent): requires multiple signatures (M-of-N) to validate a transaction. Even if ONE key is compromised, wallet stays safe because other signatures aren't compromised. Defense in depth: combine with hardware + cold storage"
+      - "Cold storage paper"
+      - "Force HTTPS"
+    correct: 1
+    explanation_fr: |
+      Hardware wallet et cold storage protegent CONTRE le
+      leak. Multi-sig protege MEME APRES le leak, c'est ce
+      qui le rend unique. Pattern standard pour les
+      institutional wallets et les DAOs : 2-of-3 ou 3-of-5
+      multi-sig avec hardware wallets. Reference : Gnosis
+      Safe documentation.
+    explanation_en: |
+      Hardware wallet and cold storage protect AGAINST leak.
+      Multi-sig protects EVEN AFTER leak, what makes it
+      unique. Standard pattern for institutional wallets
+      and DAOs: 2-of-3 or 3-of-5 multi-sig with hardware
+      wallets. Reference: Gnosis Safe documentation.

@@ -1,0 +1,122 @@
+challenge_key: "persistedXssUserChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "There are only some input fields
+      in the Juice Shop forms that validate their input". Donc la
+      premiere etape est de mapper QUELS fields ont une validation
+      client-side. Indices visuels : un mat-error rouge qui
+      apparait, une regex pattern, un disable du bouton submit
+      tant que invalide. Va sur les pages avec des forms (Profile,
+      Account > Saved Addresses, Customer Feedback, Contact)
+      et observe.
+    text_en: |
+      Official OWASP hint #1: "There are only some input fields
+      in the Juice Shop forms that validate their input". So
+      first step is mapping WHICH fields have client-side
+      validation. Visual cues: red mat-error appearing, regex
+      pattern, submit button disabled until valid. Go through
+      pages with forms (Profile, Account > Saved Addresses,
+      Customer Feedback, Contact) and observe.
+    pedagogical_intent: |
+      Activate the field-mapping reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP officiel #2 : "Even less of these fields are
+      persisted in a way where their content is shown on another
+      screen". Donc le challenge a deux contraintes : (a)
+      validation client + (b) persisted + (c) reaffiche ailleurs.
+      Quel field combine ces 3 ? Reflechis : Customer Feedback est
+      affiche sur About Us. Saved Addresses est reaffichee a
+      l'admin et au user lui-meme.
+    text_en: |
+      Official OWASP hint #2: "Even less of these fields are
+      persisted in a way where their content is shown on another
+      screen". So the challenge has two constraints: (a) client
+      validation + (b) persisted + (c) re-displayed elsewhere.
+      Which field combines all 3? Reflect: Customer Feedback is
+      shown on About Us. Saved Addresses is shown to admin and
+      to the user themselves.
+    pedagogical_intent: |
+      Narrow the candidate set with display surfaces.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      L'angle est le formulaire de Address Create / Edit. Les
+      champs streetAddress / city / country ont des regex
+      patterns valides cote frontend (genre /^[a-zA-Z0-9 ]+$/) qui
+      bloquent les caracteres < et >. Hint OWASP officiel #3 :
+      deux methodes pour bypass, (1) DOM manipulation (DevTools)
+      ou (2) API direct (POST /api/Addresses sans passer par le
+      form Angular).
+    text_en: |
+      The angle is the Address Create / Edit form. Fields
+      streetAddress / city / country have frontend-validated
+      regex patterns (like /^[a-zA-Z0-9 ]+$/) blocking < and >.
+      Official OWASP hint #3: two methods to bypass, (1) DOM
+      manipulation (DevTools) or (2) direct API (POST
+      /api/Addresses without going through the Angular form).
+    pedagogical_intent: |
+      Pin down the form + spell the two bypass paths.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Methode API direct (la plus simple) :
+      curl -X POST http://127.0.0.1:3000/api/Addresses
+        -H "Authorization: Bearer <ton_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"streetAddress":"<iframe src=\"javascript:alert(`xss`)\">","city":"X","country":"Y","fullName":"X","mobileNum":"1234567","zipCode":"12345"}'
+      Le serveur cree l'address sans validation supplementaire.
+      Ensuite va dans Account > Saved Addresses, le iframe
+      s'execute parce que le champ est rendu via [innerHTML]
+      avec bypassSecurityTrustHtml.
+    text_en: |
+      Direct API method (simplest):
+      curl -X POST http://127.0.0.1:3000/api/Addresses
+        -H "Authorization: Bearer <your_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"streetAddress":"<iframe src=\"javascript:alert(`xss`)\">","city":"X","country":"Y","fullName":"X","mobileNum":"1234567","zipCode":"12345"}'
+      Server creates the address with no extra validation.
+      Then go to Account > Saved Addresses, iframe executes
+      because field is rendered via [innerHTML] with
+      bypassSecurityTrustHtml.
+    pedagogical_intent: |
+      Spell the exact API call with payload.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet :
+      1. Login + obtient un JWT (ou utilise une session active).
+      2. POST /api/Addresses avec le payload xss exact :
+         <iframe src="javascript:alert(`xss`)">
+         dans le champ streetAddress. Curl ci-dessus, ou via Burp
+         Repeater.
+      3. Navigate vers /#/address/saved (Saved Addresses).
+      4. L'iframe execute, alert apparait, challenge se valide.
+      Methode alternative : DOM manipulation (DevTools Console
+      pour modifier les regex pattern Angular avant submit) — plus
+      pedagogique mais plus longue. La methode 2 demontre le
+      pattern le plus important : skip-le-frontend-via-curl.
+    text_en: |
+      Complete workflow:
+      1. Login + get JWT (or use active session).
+      2. POST /api/Addresses with exact XSS payload:
+         <iframe src="javascript:alert(`xss`)">
+         in streetAddress field. Curl above, or via Burp
+         Repeater.
+      3. Navigate to /#/address/saved (Saved Addresses).
+      4. Iframe executes, alert appears, challenge solves.
+      Alternative: DOM manipulation (DevTools Console to modify
+      Angular regex patterns before submit) — more pedagogical
+      but longer. Method 2 demonstrates the most important
+      pattern: skip-frontend-via-curl.
+    pedagogical_intent: |
+      Quasi-solution : 4-step workflow + alternative method.

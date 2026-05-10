@@ -1,0 +1,120 @@
+challenge_key: "noSqlOrdersChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Recupere TOUS les orders incluant ceux qui ne t'appartiennent pas
+  via NoSQL Injection. La description OWASP officielle est lyrique :
+  "All your orders are belong to us! Even the ones which don't". Le
+  hint #3 te guide : "find an API endpoint with the intent of
+  delivering a SINGLE order to the user and work with that". La
+  cible n'est plus un endpoint search general mais un endpoint
+  /rest/track-order/:id qui devrait retourner UN seul order.
+
+  Methode recommandee : la track-order API construit en interne une
+  query MongoDB du type Order.find({ orderId: <input> }). Si tu
+  remplaces orderId string par un objet avec un operateur MongoDB
+  (hint OWASP #1 : "Take a close look on how the $where query
+  operator works"), la query retourne MULTIPLE orders. Payload
+  classique : /rest/track-order/{"$ne":-1} ou /rest/track-order/
+  {"$where":"true"}. La response liste tous les orders de la base.
+
+  Note pourquoi un endpoint cense retourner UN row peut leak la
+  base entiere si le moteur supporte les operateurs et ne valide
+  pas le type. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Retrieve ALL orders including those not belonging to you via
+  NoSQL Injection. Official OWASP description is lyrical: "All
+  your orders are belong to us! Even the ones which don't". Hint
+  #3 guides: "find an API endpoint with the intent of delivering
+  a SINGLE order to the user and work with that". Target is no
+  longer a general search endpoint but an endpoint
+  /rest/track-order/:id that should return ONE order.
+
+  Recommended method: the track-order API internally builds a
+  MongoDB query like Order.find({ orderId: <input> }). If you
+  replace orderId string with an object carrying a MongoDB
+  operator (official OWASP hint #1: "Take a close look on how the
+  $where query operator works"), the query returns MULTIPLE
+  orders. Classic payload: /rest/track-order/{"$ne":-1} or
+  /rest/track-order/{"$where":"true"}. The response lists every
+  order in the database.
+
+  Note why an endpoint meant to return ONE row can leak the
+  entire base if the engine supports operators and does not
+  validate type. You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Operator injection : un endpoint singulier qui retourne pluriel"
+    title_en: "Operator injection: a singular endpoint returning plural"
+    body_fr: |
+      Pattern dangereux. Un endpoint REST /resource/:id implique
+      semantiquement UN row. Mais cote backend, c'est typiquement
+      Resource.findOne({ id: req.params.id }) en Mongoose. Si
+      l'API ne valide pas le type de :id et passe directement le
+      raw value a findOne, l'attaquant peut envoyer un objet
+      operateur. {"$ne":-1} est toujours vrai (id different de -1
+      = tous les ids) -> findOne retourne le premier, mais Order
+      .find avec ce filtre retourne TOUTE la collection. Selon
+      l'API, tu obtiens 1 order qui ne t'appartient pas, ou la
+      collection complete.
+    body_en: |
+      Dangerous pattern. A REST endpoint /resource/:id semantically
+      implies ONE row. But server-side it's typically
+      Resource.findOne({ id: req.params.id }) in Mongoose. If the
+      API doesn't validate the :id type and passes the raw value
+      to findOne, the attacker can send an operator object.
+      {"$ne":-1} is always true (id different from -1 = all ids)
+      -> findOne returns the first, but Order.find with this
+      filter returns the WHOLE collection. Depending on the API,
+      you get 1 order that's not yours, or the full collection.
+
+  - title_fr: "Operateurs MongoDB usuels pour bypass : $ne, $gt, $where"
+    title_en: "Common MongoDB bypass operators: $ne, $gt, $where"
+    body_fr: |
+      Famille des operateurs always-true.
+      $ne (not equal) : { "id": { "$ne": -1 } } match tout id
+      different de -1, donc tout. $gt (greater than) :
+      { "id": { "$gt": "" } } match toute string non-vide. $where :
+      { "id": { "$where": "true" } } evalue la fonction JS qui
+      retourne toujours true. Pour ce challenge, $ne et $where sont
+      les plus directs. La prevalence de ce pattern explique
+      pourquoi MongoDB 4.4+ recommande la JSON Schema validation
+      au niveau collection (db.runCommand({collMod: ...})) en plus
+      de la validation API.
+    body_en: |
+      The always-true operator family.
+      $ne (not equal): { "id": { "$ne": -1 } } matches any id
+      different from -1, hence all. $gt (greater than):
+      { "id": { "$gt": "" } } matches any non-empty string.
+      $where: { "id": { "$where": "true" } } evaluates the JS
+      function returning always-true. For this challenge, $ne and
+      $where are most direct. Prevalence of this pattern explains
+      why MongoDB 4.4+ recommends collection-level JSON Schema
+      validation (db.runCommand({collMod: ...})) on top of API
+      validation.
+
+  - title_fr: "Defense couche par couche : type validation + ownership check"
+    title_en: "Layered defense: type validation + ownership check"
+    body_fr: |
+      Pour /rest/track-order/:id, deux defenses cumulables. (1)
+      Validation de type au router : :id doit matcher
+      ^[0-9a-f]{24}$ (ObjectId Mongo) ou un UUID. Tout objet
+      injecte est rejete en 400 avant d'atteindre la query.
+      Express middleware express-validator ou Zod. (2) Ownership
+      check apres la query : Order.findOne({ id, userId:
+      jwt.userId }) au lieu de juste { id }. Meme avec un
+      operateur injecte, le filter userId est satisfait par UN
+      seul user, donc retourne uniquement les orders du JWT
+      courant. Combinaison : aucun bypass d'ownership possible.
+    body_en: |
+      For /rest/track-order/:id, two stackable defenses. (1)
+      Router-level type validation: :id must match
+      ^[0-9a-f]{24}$ (Mongo ObjectId) or a UUID. Any injected
+      object is rejected with 400 before reaching the query.
+      Express middleware express-validator or Zod. (2) Post-query
+      ownership check: Order.findOne({ id, userId: jwt.userId })
+      instead of just { id }. Even with an injected operator, the
+      userId filter is satisfied by ONE user, so the query
+      returns only the orders of the current JWT. Combined: no
+      ownership bypass possible.

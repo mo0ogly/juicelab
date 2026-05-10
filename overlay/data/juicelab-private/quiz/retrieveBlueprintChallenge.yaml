@@ -1,0 +1,102 @@
+challenge_key: "retrieveBlueprintChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      L'image du produit contient l'indice (path du blueprint
+      .stl). Dans quel champ metadata les developpeurs ont-ils
+      souvent ecrit ce type d'info ?
+    question_en: |
+      The product image contains the clue (.stl blueprint
+      path). In which metadata field do devs often write this
+      kind of info?
+    options_fr:
+      - "Le champ EXIF GPS Latitude"
+      - "Le champ Comment ou Description (metadata libres souvent oubliees au strip), ou parfois les champs Software/Maker dans EXIF. Outils : exiftool -a -G1 image.jpg lit TOUS les fields"
+      - "Le champ Camera Model"
+      - "Le champ Resolution"
+    options_en:
+      - "EXIF GPS Latitude field"
+      - "Comment or Description field (free metadata often forgotten at strip), or sometimes Software/Maker fields in EXIF. Tools: exiftool -a -G1 image.jpg reads ALL fields"
+      - "Camera Model field"
+      - "Resolution field"
+    correct: 1
+    explanation_fr: |
+      Defense : ne pas se contenter de strip GPS, strip TOUTES
+      les metadata via -all:all en exiftool ou
+      .withMetadata(false) en sharp. Reference : OWASP image
+      upload guidelines section 4.2.
+    explanation_en: |
+      Defense: don't just strip GPS, strip ALL metadata via
+      -all:all in exiftool or .withMetadata(false) in sharp.
+      Reference: OWASP image upload guidelines section 4.2.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le challenge enseigne aussi le pattern "naming
+      conventions previsibles". Pourquoi est-ce dangereux ?
+    question_en: |
+      Challenge also teaches the "predictable naming
+      conventions" pattern. Why is it dangerous?
+    options_fr:
+      - "Parce que les noms previsibles sont trop courts"
+      - "Parce qu'un attaquant qui voit /assets/products/JuiceShop_logo.jpg peut deviner /assets/products/JuiceShop_blueprint.stl. Enumeration triviale d'autres fichiers. Defense : noms ALEATOIRES (UUID v4 + extension) avec mapping en DB"
+      - "Parce que les fichiers sont trop volumineux"
+      - "Parce que les noms enfreignent le RGPD"
+    options_en:
+      - "Because predictable names are too short"
+      - "Because an attacker seeing /assets/products/JuiceShop_logo.jpg can guess /assets/products/JuiceShop_blueprint.stl. Trivial enumeration of other files. Defense: RANDOM names (UUID v4 + extension) with DB mapping"
+      - "Because files are too large"
+      - "Because names violate GDPR"
+    correct: 1
+    explanation_fr: |
+      Pattern recurrent en pentest : URL/file enumeration via
+      naming convention. Defense : random UUID + DB mapping.
+      Le client demande /api/file/<uuid> et le serveur
+      retourne le bon fichier. L'enumeration de UUID v4
+      (122 bits d'entropie) est computationnellement
+      impossible.
+    explanation_en: |
+      Recurrent pentest pattern: URL/file enumeration via
+      naming convention. Defense: random UUID + DB mapping.
+      Client requests /api/file/<uuid> and server returns
+      the right file. UUID v4 enumeration (122 bits entropy)
+      is computationally impossible.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour un endpoint qui sert des
+      blueprints PAYANTS : 3 couches. Laquelle est la plus
+      strict pour empecher ce challenge ?
+    question_en: |
+      Canonical defense for an endpoint serving PAID
+      blueprints: 3 layers. Which is strictest to prevent
+      this challenge?
+    options_fr:
+      - "Compresser les blueprints en zip"
+      - "Access control sur la route de download : verifier que le user a ACHETE le produit (Order.findOne({ UserId, ProductId })) avant de servir le fichier. Combine a (a) noms aleatoires UUID, (b) strip metadata, defense en profondeur. Sans (a)+(b)+(c), l'attaque trouve toujours une voie"
+      - "Forcer HTTPS sur l'endpoint"
+      - "Limiter a 1 download par user"
+    options_en:
+      - "Compress blueprints in zip"
+      - "Access control on download route: verify user PURCHASED the product (Order.findOne({ UserId, ProductId })) before serving file. Combined with (a) random UUID names, (b) metadata strip, defense in depth. Without (a)+(b)+(c), attack always finds a way"
+      - "Force HTTPS on endpoint"
+      - "Limit to 1 download per user"
+    correct: 1
+    explanation_fr: |
+      Defense critique : verifier l'AUTORISATION avant de
+      servir un asset payant. Pattern OWASP API1:2023 Broken
+      Object Level Authorization applique aux files. La
+      randomisation et le strip metadata sont des
+      ralentisseurs ; l'access control est la defense
+      structurelle.
+    explanation_en: |
+      Critical defense: verify AUTHORIZATION before serving
+      a paid asset. OWASP API1:2023 Broken Object Level
+      Authorization pattern applied to files. Randomization
+      and metadata strip are slowdowns; access control is
+      structural defense.

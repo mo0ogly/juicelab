@@ -1,0 +1,123 @@
+challenge_key: "bullyChatbotChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Force le chatbot du shop a t'attribuer un coupon de remise alors qu'il
+  n'est pas suppose le faire spontanement. Le chatbot pige sa reponse
+  aleatoirement parmi un petit ensemble : il y a une probabilite
+  non-nulle qu'il accepte. La stratrategie : insister, beaucoup. C'est
+  un challenge de DECISION BUSINESS PROBABILISTE mal calibree, qui
+  prefigure les problematiques modernes de prompt injection sur
+  chatbots LLM.
+
+  Methode recommandee : ouvre le chat (icone bot, generalement en bas
+  a droite). Demande poliment un coupon. Refuse repondre ? Re-demande.
+  Encore. Encore. La probabilite cumulative converge rapidement vers
+  la certitude : statistiquement, l'attaquant qui insiste finit
+  toujours par gagner. Quand le bot lache un code coupon, le challenge
+  se valide.
+
+  Note le nombre de tentatives qu'il t'a fallu, et reflechis a la
+  difference entre une decision business deterministe (regles
+  metier) et une decision probabiliste (tirage). Tu en parleras dans
+  le journal "apres".
+
+mission_en: |
+  Force the shop chatbot to grant you a discount coupon even though
+  it is not supposed to do so spontaneously. The chatbot picks its
+  reply randomly from a small set: there is a non-zero probability
+  it accepts. The strategy: insist, a lot. This is a poorly
+  calibrated PROBABILISTIC BUSINESS DECISION challenge, foreshadowing
+  modern LLM-chatbot prompt-injection problematics.
+
+  Recommended method: open the chat (bot icon, usually
+  bottom-right). Politely ask for a coupon. It refuses? Ask again.
+  Again. Again. Cumulative probability converges fast to certainty:
+  statistically, the insisting attacker always wins. When the bot
+  drops a coupon code, the challenge solves.
+
+  Note how many attempts it took, and reflect on the difference
+  between a deterministic business decision (business rules) and a
+  probabilistic one (sampling). You will report it in the "after"
+  logbook.
+
+concepts:
+  - title_fr: "Decision business deterministe vs probabiliste"
+    title_en: "Deterministic vs probabilistic business decision"
+    body_fr: |
+      Pour toute decision business critique (remise, autorisation
+      d'acces, validation de transaction), l'application doit
+      utiliser des REGLES deterministes : eligibilite testee, code
+      promo unique en base, periode de validite verifiee. Une
+      decision probabiliste (tirage random parmi des reponses) ouvre
+      mecaniquement la porte au "spammer until success" :
+      lim P(at least one yes in N attempts) = 1 quand N -> infini,
+      des que P(yes per attempt) > 0.
+    body_en: |
+      For any critical business decision (discount, access grant,
+      transaction validation), the application must use
+      deterministic RULES: eligibility tested, promo code unique
+      in DB, validity period checked. A probabilistic decision
+      (random sampling among replies) mechanically opens the
+      "spam until success" door: lim P(at least one yes in N
+      attempts) = 1 as N -> infinity, as soon as
+      P(yes per attempt) > 0.
+
+  - title_fr: "Architecture moderne : intent + service deterministe"
+    title_en: "Modern architecture: intent + deterministic service"
+    body_fr: |
+      Le pattern correct pour les agents IA : le bot detecte
+      l'INTENT (probabiliste, OK pour un LLM) mais delegue la
+      DECISION a un service externe deterministe (regles business
+      sur eligibilite, periode, stock, historique du compte). Le
+      LLM peut alors refuser ou accepter en surface, mais l'effet
+      reel est gate par les regles. Aucun nombre d'insistance ne
+      change le verdict du service.
+    body_en: |
+      The right pattern for AI agents: the bot detects the INTENT
+      (probabilistic, fine for an LLM) but delegates the DECISION
+      to a deterministic external service (business rules on
+      eligibility, period, stock, account history). The LLM may
+      surface refuse or accept, but the real effect is gated by
+      the rules. No amount of insistence changes the service's
+      verdict.
+
+  - title_fr: "Prompt injection sur chatbot LLM moderne"
+    title_en: "Prompt injection on a modern LLM chatbot"
+    body_fr: |
+      Les chatbots modernes (Claude, GPT, Gemini) font face a un
+      probleme cousin mais plus difficile : la prompt injection.
+      L'attaquant ne joue pas sur la probabilite mais sur le
+      contenu du prompt pour faire deborder le contexte
+      (jailbreak, system prompt leak, role escalation). Defense
+      en profondeur : system prompt verrouille, post-processing
+      des sorties, red teaming adverse continu (frameworks comme
+      AEGIS, garak, PyRIT). Aucune mesure isolee ne suffit.
+    body_en: |
+      Modern chatbots (Claude, GPT, Gemini) face a cousin but
+      harder problem: prompt injection. The attacker plays not on
+      probability but on the prompt content to make the context
+      overflow (jailbreak, system prompt leak, role escalation).
+      Defense in depth: locked system prompt, output
+      post-processing, continuous adversarial red teaming
+      (frameworks like AEGIS, garak, PyRIT). No isolated measure
+      suffices.
+
+  - title_fr: "OWASP LLM Top 10 (2025) — LLM01 Prompt Injection"
+    title_en: "OWASP LLM Top 10 (2025) — LLM01 Prompt Injection"
+    body_fr: |
+      OWASP a publie un Top 10 dedie aux applications LLM en 2024
+      puis 2025. LLM01 Prompt Injection est en tete : couvre tous
+      les contournements de comportement attendu d'un agent IA,
+      du jailbreak direct au scenario indirect (un document
+      malicieux dans un RAG). Le challenge Bully Chatbot est la
+      version probabiliste sans LLM, mais le pattern de defense
+      (separation intent/decision) s'applique aux deux.
+    body_en: |
+      OWASP published an LLM-application Top 10 in 2024 then
+      2025. LLM01 Prompt Injection sits at the top: covers all
+      expected-behavior bypasses of an AI agent, from direct
+      jailbreak to indirect scenarios (a malicious document in a
+      RAG). The Bully Chatbot challenge is the no-LLM
+      probabilistic version, but the defense pattern (intent/
+      decision separation) fits both.

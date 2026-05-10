@@ -1,0 +1,93 @@
+challenge_key: "xssBonusChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Au-dela de l'effet "alert" classique, laquelle de ces actions est
+      LA PLUS critique qu'un attaquant peut realiser une fois qu'il a une
+      primitive XSS dans le navigateur de la victime ?
+    question_en: |
+      Beyond the classic "alert" effect, which of these actions is THE
+      MOST critical an attacker can perform once they have an XSS
+      primitive in the victim's browser?
+    options_fr:
+      - "Changer la couleur de fond de la page"
+      - "Faire des appels API authentifies au nom de la victime, exfiltrer cookies/localStorage, defacer la page, rediriger vers du phishing"
+      - "Lancer un download d'un fichier de 1Mo"
+      - "Empecher la victime d'utiliser le bouton Retour du navigateur"
+    options_en:
+      - "Change the page background color"
+      - "Make authenticated API calls on behalf of the victim, exfiltrate cookies/localStorage, deface the page, redirect to phishing"
+      - "Trigger a 1MB file download"
+      - "Prevent the victim from using the browser back button"
+    correct: 1
+    explanation_fr: |
+      Une primitive XSS = controle complet du navigateur de la victime
+      sur l'origine vulnerable. Vol de session, actions a sa place,
+      exfiltration de donnees. Tous les autres effets sont cosmetiques.
+    explanation_en: |
+      An XSS primitive = full control of the victim's browser on the
+      vulnerable origin. Session theft, actions on their behalf, data
+      exfiltration. All other effects are cosmetic.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le payload bonus charge un iframe externe (Soundcloud). Quelle
+      directive CSP permet specifiquement de bloquer le chargement
+      d'iframes vers des origines non autorisees ?
+    question_en: |
+      The bonus payload loads an external iframe (Soundcloud). Which
+      CSP directive specifically blocks iframe loading from
+      unauthorized origins?
+    options_fr:
+      - "default-src 'self'"
+      - "script-src 'unsafe-inline'"
+      - "frame-src 'self' (ou child-src en CSP2)"
+      - "img-src https:"
+    options_en:
+      - "default-src 'self'"
+      - "script-src 'unsafe-inline'"
+      - "frame-src 'self' (or child-src in CSP2)"
+      - "img-src https:"
+    correct: 2
+    explanation_fr: |
+      frame-src controle les iframes. default-src est un fallback mais
+      n'est pas la directive specifique. script-src et img-src ne
+      couvrent pas les iframes.
+    explanation_en: |
+      frame-src controls iframes. default-src is a fallback but not
+      the specific directive. script-src and img-src do not cover
+      iframes.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Pour un iframe legitime que l'on veut afficher dans une application
+      moderne, quel attribut HTML permet de limiter le contexte
+      d'execution du contenu de l'iframe ?
+    question_en: |
+      For a legitimate iframe one wants to display in a modern app,
+      which HTML attribute limits the execution context of the iframe
+      content?
+    options_fr:
+      - "loading='lazy'"
+      - "sandbox (par exemple sandbox='allow-scripts allow-same-origin')"
+      - "referrerpolicy='no-referrer'"
+      - "allowfullscreen='false'"
+    options_en:
+      - "loading='lazy'"
+      - "sandbox (e.g. sandbox='allow-scripts allow-same-origin')"
+      - "referrerpolicy='no-referrer'"
+      - "allowfullscreen='false'"
+    correct: 1
+    explanation_fr: |
+      sandbox restreint les capacites du contenu iframe : pas de scripts,
+      pas de same-origin, pas de top-navigation par defaut. Les autres
+      attributs concernent le chargement, le referrer ou le fullscreen.
+    explanation_en: |
+      sandbox restricts the iframe content capabilities: no scripts,
+      no same-origin, no top-navigation by default. The other
+      attributes concern loading, referrer, or fullscreen.

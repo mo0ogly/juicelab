@@ -1,0 +1,94 @@
+challenge_key: "adminSectionChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Toute application qui a des utilisateurs ordinaires a presque toujours
+      une section reservee aux administrateurs. Cette section n'est pas
+      proposee dans le menu pour un utilisateur normal, mais l'URL existe.
+      Le controle d'acces n'est pas l'absence du lien, c'est la verification
+      de l'identite. Que se passe-t-il si tu ouvres l'URL alors que tu es
+      deja admin ?
+    text_en: |
+      Any application with regular users almost always has an
+      administrator-only section. That section is not offered in the menu
+      for a regular user, but the URL exists. Access control is not the
+      absence of the link, it is the identity check. What happens if you
+      open the URL while already logged in as admin?
+    pedagogical_intent: |
+      Activate the access-control reflex: hidden URL is not the same as protected URL.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Pour acceder a la section admin, tu dois te trouver authentifie
+      avec un role administrateur. Juice Shop expose cette information
+      cote frontend via le JWT stocke en local apres login, mais c'est
+      l'API backend qui decide si une requete admin est autorisee.
+      Donc deux conditions : avoir un compte admin valide, et trouver
+      l'URL de la section admin.
+    text_en: |
+      To access the admin section, you must be authenticated with an
+      administrator role. Juice Shop exposes that info on the frontend via
+      the JWT stored locally after login, but the backend API decides if
+      an admin request is allowed. So two conditions: have a valid admin
+      account, and find the admin section URL.
+    pedagogical_intent: |
+      Make explicit the two prerequisites: identity + URL.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Si tu n'es pas encore admin, le challenge Login Admin (DJ2 challenge
+      precedent) te montre le chemin : injection SQL sur le formulaire de
+      login pour t'authentifier en tant qu'admin sans connaitre le mot de
+      passe. Pour l'URL admin, applique la meme demarche que pour le
+      score-board : cherche dans la table de routage Angular du bundle
+      main.js le path qui contient "admin" ou "administration".
+    text_en: |
+      If you are not yet admin, the Login Admin challenge (previous DJ2
+      challenge) shows the way: SQL injection on the login form to
+      authenticate as admin without knowing the password. For the admin
+      URL, follow the same approach as for the score-board: search the
+      Angular routing table in main.js for a path containing "admin" or
+      "administration".
+    pedagogical_intent: |
+      Compose two prior knowledge: SQLi for auth + route discovery for URL.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      L'URL de la section admin est /#/administration. Le component
+      cible verifie que le token JWT en localStorage contient bien le
+      role admin. Si le token ne contient pas ce role, le composant
+      redirige vers la page d'accueil. Donc tu dois te connecter en tant
+      qu'admin AVANT de naviguer vers cette URL.
+    text_en: |
+      The admin section URL is /#/administration. The target component
+      checks that the JWT in localStorage contains the admin role. If the
+      token does not have it, the component redirects to home. So you
+      must log in as admin BEFORE navigating to that URL.
+    pedagogical_intent: |
+      Give the URL and the authorization mechanism explicitly.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      1. Connecte-toi en tant qu'admin via Login Admin (' OR true-- dans
+         le champ email).
+      2. Une fois connecte, tape dans la barre d'adresse :
+         http://127.0.0.1:3000/#/administration
+      3. La page Administration s'affiche avec la liste des feedbacks et
+         users. Le challenge Admin Section est valide automatiquement par
+         Juice Shop des qu'un user avec role admin atteint cette route.
+    text_en: |
+      1. Log in as admin via Login Admin (' OR true-- in the email field).
+      2. Once logged in, type in the address bar:
+         http://127.0.0.1:3000/#/administration
+      3. The Administration page shows with the feedback and user lists.
+         The Admin Section challenge is auto-validated by Juice Shop as
+         soon as an admin-role user reaches that route.
+    pedagogical_intent: |
+      Quasi-solution: full sequence with both prerequisites and the URL.

@@ -1,0 +1,93 @@
+challenge_key: "redirectChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Wherever you go, there you are. Trouver une URL non-prevue qui passe
+  l'allowlist du /redirect endpoint. Tag : Unvalidated Redirects. Hint
+  OWASP : "any redirect not on allowlist". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/redirect.ts:18 :
+  `solveIf(redirectChallenge, () => isUnintendedRedirect(toUrl))`. La faille
+  est lib/insecurity.ts:138 :
+  `allowed = allowed || url.includes(allowedUrl)`. L'usage de includes()
+  au lieu de startsWith() permet de glisser une URL allowlistee dans le
+  query string ou path. Workflow : (1) Comprendre l'allowlist Set (138).
+  (2) Crafter URL attaquante avec `?url=https://github.com/bkimminich/
+  juice-shop` integre. (3) Naviguer.
+
+mission_en: |
+  Wherever you go, there you are. Find an unintended URL that passes the
+  /redirect endpoint allowlist. Tag: Unvalidated Redirects. OWASP hint:
+  "any redirect not on allowlist". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/redirect.ts:18:
+  `solveIf(redirectChallenge, () => isUnintendedRedirect(toUrl))`. Flaw is
+  lib/insecurity.ts:138: `allowed = allowed || url.includes(allowedUrl)`.
+  Using includes() instead of startsWith() lets attacker slip an
+  allowlisted URL into query string or path. Workflow: (1) Understand
+  allowlist Set (138). (2) Craft attacker URL with `?url=https://github.com/
+  bkimminich/juice-shop` embedded. (3) Navigate.
+
+concepts:
+  - title_fr: "Open Redirect : OWASP A01 Broken Access Control"
+    title_en: "Open Redirect: OWASP A01 Broken Access Control"
+    body_fr: |
+      Source canonique : OWASP A01:2021 + CWE-601 (Open Redirect). Un open
+      redirect permet a un attaquant de faire pointer un lien legit
+      (juice-sh.op/redirect?to=...) vers une URL malveillante (phishing,
+      malware download). Pattern reusable : phishing kits utilisent les
+      open redirects de sites trusted (Google, AWS, Microsoft, banques)
+      pour bypass email filters. Defense : (1) Allowlist STRICTE par
+      startsWith. (2) Rejeter all redirects with absolute URL. (3) Use
+      indirect references (token -> URL mapping cote serveur).
+    body_en: |
+      Canonical source: OWASP A01:2021 + CWE-601 (Open Redirect). Open
+      redirect allows attacker to make legit link
+      (juice-sh.op/redirect?to=...) point to malicious URL (phishing,
+      malware download). Reusable pattern: phishing kits use open
+      redirects from trusted sites (Google, AWS, Microsoft, banks) to
+      bypass email filters. Defense: (1) STRICT allowlist via startsWith.
+      (2) Reject all redirects with absolute URL. (3) Use indirect
+      references (token -> URL mapping server-side).
+
+  - title_fr: "includes() vs startsWith() : faille classique d'allowlist"
+    title_en: "includes() vs startsWith(): classic allowlist flaw"
+    body_fr: |
+      lib/insecurity.ts:138 :
+      `allowed = allowed || url.includes(allowedUrl)`. Si allowlist contient
+      `'https://github.com/bkimminich'`, alors
+      `https://attacker.com/?ref=https://github.com/bkimminich` PASSE.
+      Pattern reusable : `includes()` valide presence n'importe ou,
+      `startsWith()` valide debut strict, `URL parsing + hostname check`
+      valide la cible reelle. Defense : `const u = new URL(input); if
+      (allowedHosts.has(u.hostname))`. Cas reels : bug Wells Fargo 2018,
+      bug Slack 2019, AWS Cognito 2021.
+    body_en: |
+      lib/insecurity.ts:138:
+      `allowed = allowed || url.includes(allowedUrl)`. If allowlist
+      contains `'https://github.com/bkimminich'`, then
+      `https://attacker.com/?ref=https://github.com/bkimminich` PASSES.
+      Reusable pattern: `includes()` validates presence anywhere,
+      `startsWith()` validates strict start, `URL parsing + hostname
+      check` validates real target. Defense: `const u = new URL(input);
+      if (allowedHosts.has(u.hostname))`. Real cases: Wells Fargo 2018
+      bug, Slack 2019 bug, AWS Cognito 2021.
+
+  - title_fr: "Defense canonique : URL parsing + hostname check"
+    title_en: "Canonical defense: URL parsing + hostname check"
+    body_fr: |
+      (1) Parser l'URL avec WHATWG URL : `new URL(input)`. (2) Verifier
+      `u.protocol in ['https:']`. (3) Verifier `allowedHosts.has(u.
+      hostname)` (Set strict). (4) Re-construire l'URL apres validation
+      (`new URL(u.pathname, u.origin).href`) pour eliminer query
+      attaquants. (5) Logger toute tentative non-allowlist comme
+      potential attack. Pattern reusable : parsing > string matching.
+      Bibliotheque : node-url parsing standard, jamais regex sur URLs.
+    body_en: |
+      (1) Parse URL with WHATWG URL: `new URL(input)`. (2) Verify
+      `u.protocol in ['https:']`. (3) Verify `allowedHosts.has(u.
+      hostname)` (strict Set). (4) Re-build URL after validation
+      (`new URL(u.pathname, u.origin).href`) to eliminate attacker
+      queries. (5) Log any non-allowlist attempt as potential attack.
+      Reusable pattern: parsing > string matching. Library: node-url
+      standard parsing, never regex on URLs.

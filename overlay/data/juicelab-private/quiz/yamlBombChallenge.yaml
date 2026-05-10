@@ -1,0 +1,77 @@
+challenge_key: "yamlBombChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Comment fonctionne le YAML bomb (Billion Laughs
+      YAML) ?
+    question_en: |
+      How does YAML bomb (Billion Laughs YAML) work?
+    options_fr:
+      - "Encryption"
+      - "YAML supporte anchors `&name` (definir) + references `*name` (reuser). Une cascade : a=10 elements, b=10 refs vers a (=100), c=10 refs vers b (=1000)... 9 niveaux = 10^9 occurrences en memoire = OOM/timeout. Defense : `safeLoad`, limite anchor depth"
+      - "Compression"
+      - "Chiffrement"
+    options_en:
+      - "Encryption"
+      - "YAML supports anchors `&name` (define) + references `*name` (reuse). A cascade: a=10 elements, b=10 refs to a (=100), c=10 refs to b (=1000)... 9 levels = 10^9 occurrences in memory = OOM/timeout. Defense: `safeLoad`, anchor depth limit"
+      - "Compression"
+      - "Encryption"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : exponential expansion.
+      Source : CVE-2003-1564 + js-yaml docs.
+    explanation_en: |
+      Reusable pattern: exponential expansion. Source:
+      CVE-2003-1564 + js-yaml docs.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Au-dela du YAML bomb, quels autres risques YAML ?
+    question_en: |
+      Beyond YAML bomb, what other YAML risks?
+    options_fr:
+      - "Aucun"
+      - "(1) Custom tags `!!python/object/apply:os.system [...]` peuvent executer du code (Rails CVE-2013-0156, Python pickle-like). (2) Implicit type coercion (`yes` -> bool true, surprises). (3) Multi-document parsing (--- separator confusing). (4) Indentation YAML 1.1 vs 1.2 differences"
+      - "Standard parfait"
+      - "Aucun parser"
+    options_en:
+      - "None"
+      - "(1) Custom tags `!!python/object/apply:os.system [...]` can execute code (Rails CVE-2013-0156, Python pickle-like). (2) Implicit type coercion (`yes` -> bool true, surprises). (3) Multi-document parsing (--- separator confusing). (4) YAML 1.1 vs 1.2 indentation differences"
+      - "Perfect standard"
+      - "No parser"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : YAML est code, pas data.
+      Source : OWASP A08 + CVE-2013-0156.
+    explanation_en: |
+      Reusable pattern: YAML is code, not data.
+      Source: OWASP A08 + CVE-2013-0156.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour parser YAML user-uploaded ?
+    question_en: |
+      Canonical defense for parsing user-uploaded
+      YAML?
+    options_fr:
+      - "Trust user"
+      - "(1) `js-yaml.load(input, { schema: SAFE_SCHEMA })` (no custom tags). (2) File size limit (max 100KB). (3) Anchor depth limit (custom reviver). (4) Parsing dans isolated-vm avec timeout + memory limit. (5) JSON Schema post-parse. (6) Preferer JSON pour API (machine-to-machine)"
+      - "Encrypt YAML"
+      - "Plain text only"
+    options_en:
+      - "Trust user"
+      - "(1) `js-yaml.load(input, { schema: SAFE_SCHEMA })` (no custom tags). (2) File size limit (max 100KB). (3) Anchor depth limit (custom reviver). (4) Parsing in isolated-vm with timeout + memory limit. (5) JSON Schema post-parse. (6) Prefer JSON for API (machine-to-machine)"
+      - "Encrypt YAML"
+      - "Plain text only"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : multi-layer YAML defense.
+      Source : OWASP A08 + js-yaml docs.
+    explanation_en: |
+      Reusable pattern: multi-layer YAML defense.
+      Source: OWASP A08 + js-yaml docs.

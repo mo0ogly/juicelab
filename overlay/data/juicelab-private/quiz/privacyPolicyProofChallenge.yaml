@@ -1,0 +1,80 @@
+challenge_key: "privacyPolicyProofChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi nommer un dossier "/private/" ne le
+      protege pas ?
+    question_en: |
+      Why doesn't naming a folder "/private/" protect
+      it?
+    options_fr:
+      - "Mauvais standard"
+      - "Le nom du dossier n'a aucune semantique de securite. Sans middleware auth, tout dossier est accessible publiquement (Express staticserver listing par defaut). Cas reels : AWS S3 'private-data-2023' world-readable, GitHub 'internal-only' repos publics. Defense : auth middleware sur ressources sensibles"
+      - "Bug Express"
+      - "Standard ISO"
+    options_en:
+      - "Bad standard"
+      - "Folder name has no security semantics. Without auth middleware, any folder is publicly accessible (default Express staticserver listing). Real cases: AWS S3 'private-data-2023' world-readable, GitHub 'internal-only' public repos. Defense: auth middleware on sensitive resources"
+      - "Express bug"
+      - "ISO standard"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : naming != security.
+      Source : OWASP A01 + OWASP STO.
+    explanation_en: |
+      Reusable pattern: naming != security. Source:
+      OWASP A01 + OWASP STO.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Comment decouvrir des routes "private" dans une
+      app ?
+    question_en: |
+      How to discover "private" routes in an app?
+    options_fr:
+      - "Impossible"
+      - "(1) DevTools > Sources > grep main.js Ctrl+F. (2) `grep -rn` les sources si open-source. (3) Wayback Machine. (4) Path fuzzing (ffuf, gobuster). (5) Inspect server.ts pour `app.use/app.get`. (6) Verify Robotstxt + sitemap.xml. (7) Surface enumeration via DNS + cert transparency"
+      - "Demander"
+      - "Trop dur"
+    options_en:
+      - "Impossible"
+      - "(1) DevTools > Sources > grep main.js Ctrl+F. (2) `grep -rn` sources if open-source. (3) Wayback Machine. (4) Path fuzzing (ffuf, gobuster). (5) Inspect server.ts for `app.use/app.get`. (6) Verify Robotstxt + sitemap.xml. (7) Surface enumeration via DNS + cert transparency"
+      - "Ask"
+      - "Too hard"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : enumeration discovery.
+      Source : OWASP Web Security Testing Guide.
+    explanation_en: |
+      Reusable pattern: enumeration discovery. Source:
+      OWASP Web Security Testing Guide.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour endpoints serving "private"
+      assets ?
+    question_en: |
+      Canonical defense for endpoints serving "private"
+      assets?
+    options_fr:
+      - "Folder rename"
+      - "(1) Auth middleware obligatoire `app.get('/api/proof', requireAuth, ...)`. (2) Routes naming convention : `/private/*` reserve aux assets reellement authentifies. (3) Tests E2E qui verifient 401 sans auth. (4) CI audit script grep route definitions vs auth middleware. (5) Pattern : naming != security"
+      - "Encryption"
+      - "More obfuscation"
+    options_en:
+      - "Folder rename"
+      - "(1) Mandatory auth middleware `app.get('/api/proof', requireAuth, ...)`. (2) Routes naming convention: `/private/*` reserved for truly authenticated assets. (3) E2E tests verifying 401 without auth. (4) CI audit script grep route definitions vs auth middleware. (5) Pattern: naming != security"
+      - "Encryption"
+      - "More obfuscation"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : auth middleware first.
+      Source : OWASP Authentication Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: auth middleware first. Source:
+      OWASP Authentication Cheat Sheet.

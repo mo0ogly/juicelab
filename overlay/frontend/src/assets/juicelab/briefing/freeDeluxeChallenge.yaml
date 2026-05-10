@@ -1,0 +1,204 @@
+challenge_key: "freeDeluxeChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Obtenir un Deluxe Membership SANS payer.
+  Description OWASP. Hints officiels : (1) "Look
+  closely at what happens when you attempt to
+  upgrade your account". (2) "Go to the payment
+  page for a deluxe membership and try paying
+  through different methods". (3) "Try inspecting
+  the requests that go out for each of these
+  methods, using the browser's developer tools".
+  (4) "Maybe playing around with the parameters
+  in these requests could reveal something
+  interesting". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/deluxe.ts:44-46 (verifie source). Code
+  exact : `const updatedUser = await user.update(
+  { role: security.roles.deluxe, deluxeToken:
+  security.deluxeToken(user.email) });
+  challengeUtils.solveIf(challenges.freeDeluxe
+  Challenge, () => { return security.verify(
+  utils.jwtFrom(req)) && req.body.paymentMode !==
+  'wallet' && req.body.paymentMode !== 'card' })`.
+  Donc l'upgrade reussit (user.update) pour
+  TOUS les paymentMode, mais le solve trigger
+  uniquement si paymentMode N'EST NI 'wallet' NI
+  'card'. Bug : le code EXECUTE l'upgrade AVANT
+  de verifier que la payment est valide. Si on
+  passe paymentMode='free' ou autre string, le
+  user devient deluxe + le challenge solve auto.
+  Workflow : POST /rest/deluxe-membership avec
+  body `{paymentMode: "free", UserId: <id>}`.
+
+mission_en: |
+  Obtain a Deluxe Membership WITHOUT paying. OWASP
+  description. Official hints: (1) "Look closely
+  at what happens when you attempt to upgrade
+  your account". (2) "Go to the payment page for
+  a deluxe membership and try paying through
+  different methods". (3) "Try inspecting the
+  requests that go out for each of these
+  methods, using the browser's developer tools".
+  (4) "Maybe playing around with the parameters
+  in these requests could reveal something
+  interesting". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  deluxe.ts:44-46 (verified source). Exact code:
+  `const updatedUser = await user.update({ role:
+  security.roles.deluxe, deluxeToken:
+  security.deluxeToken(user.email) });
+  challengeUtils.solveIf(challenges.freeDeluxe
+  Challenge, () => { return security.verify(
+  utils.jwtFrom(req)) && req.body.paymentMode !==
+  'wallet' && req.body.paymentMode !== 'card' })`.
+  So upgrade succeeds (user.update) for ALL
+  paymentMode, but solve triggers ONLY if
+  paymentMode is NEITHER 'wallet' NOR 'card'.
+  Bug: code EXECUTES upgrade BEFORE checking
+  payment is valid. If we pass paymentMode='free'
+  or other string, user becomes deluxe +
+  challenge auto solves. Workflow: POST /rest/
+  deluxe-membership with body `{paymentMode:
+  "free", UserId: <id>}`.
+
+concepts:
+  - title_fr: "Order of operations bug : update before validate"
+    title_en: "Order of operations bug: update before validate"
+    body_fr: |
+      Source verifiee (routes/deluxe.ts:24-46) :
+      le code fait :
+      ```js
+      // 1. Validate ONLY for 'wallet' or 'card'
+      if (paymentMode === 'wallet') { /* check
+        balance, decrement wallet */ }
+      if (paymentMode === 'card') { /* check
+        card validity */ }
+      // 2. Update user role (TOUJOURS, peu
+      //    importe le paymentMode)
+      const updatedUser = await user.update({
+        role: security.roles.deluxe, ... });
+      // 3. solveIf check paymentMode unusual
+      ```
+      Bug : si paymentMode = 'free' (ou autre
+      string non-handled), les blocs (1) sont
+      skip (no validation), mais (2) execute
+      quand meme = upgrade gratuit. Pattern
+      reusable : SWITCH/IF avec missing default
+      = bypass garanti. Defense : validation
+      EXHAUSTIVE des paymentMode + reject pour
+      tout autre.
+    body_en: |
+      Verified source (routes/deluxe.ts:24-46):
+      code does:
+      ```js
+      // 1. Validate ONLY for 'wallet' or 'card'
+      if (paymentMode === 'wallet') { /* check
+        balance, decrement wallet */ }
+      if (paymentMode === 'card') { /* check
+        card validity */ }
+      // 2. Update user role (ALWAYS, regardless
+      //    of paymentMode)
+      const updatedUser = await user.update({
+        role: security.roles.deluxe, ... });
+      // 3. solveIf check paymentMode unusual
+      ```
+      Bug: if paymentMode = 'free' (or other
+      non-handled string), blocks (1) skip (no
+      validation), but (2) executes anyway =
+      free upgrade. Reusable pattern: SWITCH/IF
+      with missing default = guaranteed bypass.
+      Defense: EXHAUSTIVE paymentMode validation
+      + reject for any other.
+
+  - title_fr: "Hint #4 : parameter manipulation systematique"
+    title_en: "Hint #4: systematic parameter manipulation"
+    body_fr: |
+      Hint OWASP #4 : "playing around with the
+      parameters in these requests could reveal
+      something interesting". Methodology pentest
+      classique : (a) Capture la requete legitime
+      via Burp/DevTools. (b) Identifier les
+      parameters (paymentMode, UserId, paymentId).
+      (c) Pour chaque parameter, tester :
+      - missing (delete from body)
+      - empty ("")
+      - null
+      - other string ("free", "test", "asdf")
+      - integer si attendu string, vice-versa
+      - very long string, special chars
+      (d) Observer la response. Pour
+      freeDeluxeChallenge, modifier paymentMode
+      a une valeur arbitraire bypass la
+      validation.
+    body_en: |
+      OWASP hint #4: "playing around with the
+      parameters in these requests could reveal
+      something interesting". Classic pentest
+      methodology: (a) Capture legitimate
+      request via Burp/DevTools. (b) Identify
+      parameters (paymentMode, UserId,
+      paymentId). (c) For each parameter, test:
+      - missing (delete from body)
+      - empty ("")
+      - null
+      - other string ("free", "test", "asdf")
+      - integer if string expected, vice-versa
+      - very long string, special chars
+      (d) Observe response. For
+      freeDeluxeChallenge, modifying paymentMode
+      to arbitrary value bypasses validation.
+
+  - title_fr: "Defense canonique : enum validation + transactional update"
+    title_en: "Canonical defense: enum validation + transactional update"
+    body_fr: |
+      Defense correcte 3-layers : (1) Enum
+      validation : `paymentMode: { validate:
+      { isIn: [['wallet', 'card']] }}`. Reject si
+      autre valeur. (2) Transactional update :
+      payment validation + user.update DOIVENT
+      etre dans une SAME transaction Sequelize :
+      ```js
+      await sequelize.transaction(async (t) => {
+        // validate payment
+        if (paymentMode === 'wallet') { ... }
+        else if (paymentMode === 'card') { ... }
+        else { throw new Error('Invalid
+          paymentMode'); }
+        // update user (only if validation
+        //              passed)
+        await user.update({...}, { transaction:
+          t });
+      });
+      ```
+      (3) Audit log de chaque deluxe upgrade
+      pour anomaly detection. Pattern reusable :
+      validation BEFORE state change + atomic
+      transactions.
+    body_en: |
+      Correct 3-layer defense: (1) Enum
+      validation: `paymentMode: { validate:
+      { isIn: [['wallet', 'card']] }}`. Reject
+      if other value. (2) Transactional update:
+      payment validation + user.update MUST be
+      in SAME Sequelize transaction:
+      ```js
+      await sequelize.transaction(async (t) => {
+        // validate payment
+        if (paymentMode === 'wallet') { ... }
+        else if (paymentMode === 'card') { ... }
+        else { throw new Error('Invalid
+          paymentMode'); }
+        // update user (only if validation
+        //              passed)
+        await user.update({...}, { transaction:
+          t });
+      });
+      ```
+      (3) Audit log of each deluxe upgrade for
+      anomaly detection. Reusable pattern:
+      validation BEFORE state change + atomic
+      transactions.

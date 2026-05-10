@@ -1,0 +1,115 @@
+challenge_key: "forgedFeedbackChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "You can solve this by tampering
+      with the user interface or by intercepting the communication
+      with the RESTful backend". Donc deux voies : modifier le
+      DOM du form via DevTools, ou modifier le body de la requete
+      via Burp/intercepteur. Va d'abord sur Customer Feedback et
+      observe le formulaire.
+    text_en: |
+      Official OWASP hint #1: "You can solve this by tampering
+      with the user interface or by intercepting the
+      communication with the RESTful backend". Two ways: modify
+      the form DOM via DevTools, or modify the request body via
+      Burp/interceptor. Start by going to Customer Feedback and
+      observe the form.
+    pedagogical_intent: |
+      Activate the two-vectors reflex (UI tamper vs request tamper).
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP officiel #2 : "To find the client-side leverage
+      point, closely analyze the HTML form used for feedback
+      submission". Ouvre les DevTools (F12) > Elements et inspecte
+      le formulaire. Cherche les inputs : ceux visibles
+      (commentaire, rating) ET ceux invisibles (type=hidden).
+      Quel champ ne devrait pas exister du tout dans un form bien
+      concu ?
+    text_en: |
+      Official OWASP hint #2: "To find the client-side leverage
+      point, closely analyze the HTML form used for feedback
+      submission". Open DevTools (F12) > Elements and inspect
+      the form. Look at inputs: visible ones (comment, rating)
+      AND invisible (type=hidden). Which field shouldn't exist
+      at all in a well-designed form?
+    pedagogical_intent: |
+      Localize the hidden input.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Le tutoriel OWASP forgedFeedback.ts ligne 49 le dit :
+      "There is more than meets the eye among the fields of the
+      form". Ligne 55 : "Once you found the field that shouldn't
+      even be there, try manipulating its value to one that might
+      represent another user". Le champ s'appelle userId (id
+      Angular = #userId). Dans un design correct, le serveur
+      deduirait le userId du JWT — il n'a aucune raison d'etre
+      dans le form.
+    text_en: |
+      OWASP tutorial forgedFeedback.ts line 49 says: "There is
+      more than meets the eye among the fields of the form".
+      Line 55: "Once you found the field that shouldn't even be
+      there, try manipulating its value to one that might
+      represent another user". The field is named userId
+      (Angular id = #userId). In a correct design, the server
+      would derive userId from the JWT — no reason for it to be
+      in the form.
+    pedagogical_intent: |
+      Spell the field name with source citation.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Pour modifier le hidden input via DevTools : (1) Inspector
+      > Elements, click sur input#userId, dans le panneau
+      Properties change la valeur de "value" de ton id (typique
+      21+) a 1 (admin). (2) Alternative : console JavaScript,
+      tape document.getElementById('userId').value = 1. (3) Soumets
+      le formulaire normalement. Le backend reçoit userId=1, et
+      stocke le feedback avec userId=admin.
+    text_en: |
+      To edit the hidden input via DevTools: (1) Inspector >
+      Elements, click input#userId, in the Properties panel
+      change "value" from your id (typically 21+) to 1 (admin).
+      (2) Alternative: JavaScript console, type
+      document.getElementById('userId').value = 1. (3) Submit
+      the form normally. Backend receives userId=1, stores
+      feedback with userId=admin.
+    pedagogical_intent: |
+      Spell exact DevTools steps + JS alternative.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet (suit le tutoriel hacking-instructor lignes
+      56-66) :
+      1. Va sur /#/contact (Customer Feedback page)
+      2. F12 > Elements > inspecte le form
+      3. Click sur input#userId, edit value -> 1
+      4. Remplis Comment et Rating normalement
+      5. Click Submit
+      Le challenge se valide automatiquement quand le serveur
+      detecte un feedback avec un userId different de l'auth
+      JWT. Source : forgedFeedback.ts ligne 76 ("you successfully
+      submitted a feedback as another user").
+    text_en: |
+      Complete workflow (follows hacking-instructor tutorial
+      lines 56-66):
+      1. Go to /#/contact (Customer Feedback page)
+      2. F12 > Elements > inspect the form
+      3. Click input#userId, edit value -> 1
+      4. Fill Comment and Rating normally
+      5. Click Submit
+      The challenge auto-solves when the server sees a feedback
+      with userId different from the JWT auth. Source:
+      forgedFeedback.ts line 76 ("you successfully submitted a
+      feedback as another user").
+    pedagogical_intent: |
+      Quasi-solution : exact 5-step workflow with source citation.

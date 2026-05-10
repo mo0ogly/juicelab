@@ -1,0 +1,93 @@
+challenge_key: "redirectCryptoCurrencyChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "outdated cryptocurrency addresses". Le shop a propose
+      des donations crypto a un moment, les wallets sont encore dans
+      l'allowlist mais ont disparu du UI.
+    text_en: |
+      OWASP hint: "outdated cryptocurrency addresses". Shop offered crypto
+      donations at some point, wallets still in allowlist but disappeared
+      from UI.
+    pedagogical_intent: |
+      Activate decommissioning + drift reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Pour trouver les URLs : (1) Wayback Machine sur juice-sh.op /#/about.
+      (2) git log frontend/src/app/about/. (3) grep `redirectAllowlist`
+      dans lib/insecurity.ts.
+    text_en: |
+      To find URLs: (1) Wayback Machine on juice-sh.op /#/about. (2) git
+      log frontend/src/app/about/. (3) grep `redirectAllowlist` in
+      lib/insecurity.ts.
+    pedagogical_intent: |
+      Spell discovery techniques.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Les 3 URLs sont (insecurity.ts:124 + redirect.ts:17) : (a)
+      blockchain.info/address/1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm (Bitcoin).
+      (b) explorer.dash.org/address/Xr556RzuwX6hg5EGpkybbv5RanJoZN17kW
+      (Dash). (c) etherscan.io/address/
+      0x0f933ab9fcaaa782d0279c300d73750e1311eae6 (Ethereum).
+    text_en: |
+      3 URLs are (insecurity.ts:124 + redirect.ts:17): (a)
+      blockchain.info/address/1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm (Bitcoin).
+      (b) explorer.dash.org/address/Xr556RzuwX6hg5EGpkybbv5RanJoZN17kW
+      (Dash). (c) etherscan.io/address/
+      0x0f933ab9fcaaa782d0279c300d73750e1311eae6 (Ethereum).
+    pedagogical_intent: |
+      Reveal exact URLs.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Naviguer une de ces URLs via redirect endpoint (exact match
+      requis) : `http://localhost:3000/redirect?to=https://blockchain.info
+      /address/1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm`. Le redirect.ts:17
+      `solveIf(() => toUrl === ... || toUrl === ... || toUrl === ...)`
+      declenche.
+    text_en: |
+      Navigate one of these URLs via redirect endpoint (exact match
+      required): `http://localhost:3000/redirect?to=https://blockchain.info
+      /address/1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm`. redirect.ts:17
+      `solveIf(() => toUrl === ... || toUrl === ... || toUrl === ...)`
+      triggers.
+    pedagogical_intent: |
+      Spell exact request.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Decouvrir les wallets via
+      Wayback Machine OR
+      `grep redirectAllowlist juice-shop/lib/insecurity.ts`. (2)
+      Identifier les 3 URLs blockchain. (3) Naviguer
+      `http://localhost:3000/redirect?to=https://blockchain.info/address/
+      1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm`. (4) Le serveur redirect.ts:17
+      verifie que toUrl est strict-equal a une des 3 URLs et trigger
+      solve. (5) Notification "Solved Outdated Allowlist". Defense : (a)
+      Decommissioning checklist (UI + route + allowlist + config simultane).
+      (b) CI grep references orphelines. (c) Sunset HTTP headers (RFC
+      8594). (d) Test coverage : URL retournee 404 apres retrait.
+      Source : redirect.ts:17 + insecurity.ts:124.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Discover wallets via Wayback
+      Machine OR `grep redirectAllowlist juice-shop/lib/insecurity.ts`.
+      (2) Identify 3 blockchain URLs. (3) Navigate
+      `http://localhost:3000/redirect?to=https://blockchain.info/address/
+      1AbKfgvw9psQ41NbLi8kufDQTezwG8DRZm`. (4) Server redirect.ts:17
+      verifies toUrl is strict-equal to one of 3 URLs and triggers solve.
+      (5) "Solved Outdated Allowlist" notification. Defense: (a)
+      Decommissioning checklist (UI + route + allowlist + config
+      simultaneous). (b) CI grep orphan references. (c) Sunset HTTP
+      headers (RFC 8594). (d) Test coverage: URL returns 404 after
+      removal. Source: redirect.ts:17 + insecurity.ts:124.
+    pedagogical_intent: |
+      Solution + decommissioning discipline.

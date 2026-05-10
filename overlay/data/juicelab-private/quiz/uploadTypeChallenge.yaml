@@ -1,0 +1,123 @@
+challenge_key: "uploadTypeChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le check `checkFileType` extract l'extension
+      via `lastIndexOf('.') + 1`. Pourquoi cette
+      methode est-elle SPOOFABLE en production ?
+    question_en: |
+      `checkFileType` extracts extension via
+      `lastIndexOf('.') + 1`. Why is this method
+      SPOOFABLE in production?
+    options_fr:
+      - "Parce que substr est obsolete"
+      - "Parce que l'extension est UNRELIABLE comme indicator du contenu : (a) Double extensions (evil.exe.pdf - extract 'pdf' mais c'est un .exe). (b) Magic bytes != extension (un .pdf peut contenir du JS). (c) MIME type spoofing au upload via Content-Type header. Defense correcte : magic bytes verification (`[0x25,0x50,0x44,0x46]` pour PDF) + MIME detection via file-type lib + sandboxed processing"
+      - "Parce que toLowerCase ne fonctionne pas"
+      - "Parce que substr est lente"
+    options_en:
+      - "Because substr is obsolete"
+      - "Because extension is UNRELIABLE indicator of content: (a) Double extensions (evil.exe.pdf - extract 'pdf' but it's .exe). (b) Magic bytes != extension (.pdf can contain JS). (c) MIME type spoofing on upload via Content-Type header. Correct defense: magic bytes verification (`[0x25,0x50,0x44,0x46]` for PDF) + MIME detection via file-type lib + sandboxed processing"
+      - "Because toLowerCase doesn't work"
+      - "Because substr is slow"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour file uploads, NEVER
+      trust l'extension comme security boundary.
+      Defense en profondeur : extension allowlist
+      (Layer 1 reject obvious bad) + magic bytes
+      (Layer 2 reject disguised) + MIME detection
+      (Layer 3 confirm) + sandboxed processing
+      (Layer 4 contain). Source : OWASP File
+      Upload Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: for file uploads, NEVER
+      trust extension as security boundary.
+      Defense in depth: extension allowlist (Layer
+      1 reject obvious bad) + magic bytes (Layer
+      2 reject disguised) + MIME detection (Layer
+      3 confirm) + sandboxed processing (Layer 4
+      contain). Source: OWASP File Upload Cheat
+      Sheet.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #2 dit "apply the same solution
+      [as uploadSize] here". Quelle est la lecon
+      pedagogique sur les patterns OWASP ?
+    question_en: |
+      OWASP hint #2 says "apply the same solution
+      [as uploadSize] here". What pedagogical
+      LESSON about OWASP patterns?
+    options_fr:
+      - "Tous les challenges OWASP sont identiques"
+      - "Cas reusable : un endpoint avec defense client-only et pas server-side aura TYPIQUEMENT plusieurs bypasses (size, type, NULL fields, role injection). Une fois le pattern compris (curl bypass + JSON manipulation), il s'applique a tous les challenges du meme endpoint. Pattern reusable : auditer endpoint-par-endpoint, identifier toutes les validations manquantes en MEME audit"
+      - "Les hints OWASP sont always wrong"
+      - "Apply same = copy paste"
+    options_en:
+      - "All OWASP challenges are identical"
+      - "Reusable case: endpoint with client-only defense and no server-side TYPICALLY has multiple bypasses (size, type, NULL fields, role injection). Once pattern understood (curl bypass + JSON manipulation), it applies to all challenges on same endpoint. Reusable pattern: audit endpoint-by-endpoint, identify all missing validations in SAME audit"
+      - "OWASP hints are always wrong"
+      - "Apply same = copy paste"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la security work
+      systematique audit chaque endpoint
+      EXHAUSTIVEMENT. Si un endpoint manque la
+      validation X (size), il manque souvent
+      Y (type, role, etc.). Approche : pour
+      chaque endpoint, lister TOUTES les
+      validations qui devraient exister, verifier
+      chaque, et fixer en BATCH. Source :
+      hint OWASP #2 + methodology security audit.
+    explanation_en: |
+      Reusable pattern: systematic security work
+      audits each endpoint EXHAUSTIVELY. If
+      endpoint misses validation X (size), it
+      often misses Y (type, role, etc.).
+      Approach: for each endpoint, list ALL
+      validations that should exist, verify each,
+      and fix in BATCH. Source: OWASP hint #2 +
+      security audit methodology.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Si tu uploades un .png de 200kB, tu solves
+      simultanement uploadType ET uploadSize.
+      Quelle est l'OPTIMISATION pedagogique ?
+    question_en: |
+      If you upload a 200kB .png, you solve both
+      uploadType AND uploadSize simultaneously.
+      What's the pedagogical OPTIMIZATION?
+    options_fr:
+      - "Optimisation = exploitation rapide"
+      - "Pattern reusable : multiple challenges sur le meme endpoint peuvent souvent etre solved en UN payload combine. C'est la kill chain efficiency. Pour les pentests reels, cela traduit l'idee de COMBINER plusieurs vulnerabilites en un seul exploit qui maximise l'impact (exemple : RCE = SQLi + LFR + serialization deserialization). Defense doit penser CHAINS, pas isolated bugs"
+      - "Optimisation = mauvais pattern"
+      - "Tu dois uploader 2 fois"
+    options_en:
+      - "Optimization = fast exploitation"
+      - "Reusable pattern: multiple challenges on same endpoint can often be solved in ONE combined payload. It's kill chain efficiency. For real pentests, translates idea of COMBINING multiple vulnerabilities into single exploit maximizing impact (example: RCE = SQLi + LFR + serialization deserialization). Defense must think CHAINS, not isolated bugs"
+      - "Optimization = bad pattern"
+      - "Must upload twice"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la pensee CHAIN-FIRST
+      est ce qui differencie un pentester
+      junior d'un pentester expert. Le junior
+      voit les bugs isoles ; l'expert combine.
+      Defense correspondante : threat modeling
+      doit aussi etre chain-first. Source :
+      analyse routes/fileUpload.ts +
+      methodology pentest chaining.
+    explanation_en: |
+      Reusable pattern: CHAIN-FIRST thinking is
+      what distinguishes junior from expert
+      pentester. Junior sees isolated bugs;
+      expert chains them. Corresponding
+      defense: threat modeling must also be
+      chain-first. Source: routes/fileUpload.ts
+      analysis + pentest chaining methodology.

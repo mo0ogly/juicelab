@@ -1,0 +1,113 @@
+challenge_key: "forgottenBackupChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      forgottenDevBackup et forgottenBackup utilisent
+      EXACTEMENT le meme exploit (null byte bypass sur /ftp/).
+      Quelle propriete pedagogique ce duplicate cherche-t-il a
+      enseigner ?
+    question_en: |
+      forgottenDevBackup and forgottenBackup use the EXACT
+      same exploit (null-byte bypass on /ftp/). What
+      pedagogical property is this duplication trying to
+      teach?
+    options_fr:
+      - "Que les developpeurs aiment les redites"
+      - "Qu'un attaquant en pentest reel ne s'arrete jamais au PREMIER fichier trouve : pour chaque .bak dans le directory listing, il applique le meme exploit. La defense doit penser en SURFACE (toutes les .bak), pas en cible specifique"
+      - "Que le bypass null byte est obsolete"
+      - "Que les .md.bak sont differents des .bak simples"
+    options_en:
+      - "That developers love redundancy"
+      - "That a real pentester never stops at the FIRST file found: for every .bak in the directory listing, they apply the same exploit. Defense must think SURFACE-level (every .bak), not specific target"
+      - "That null-byte bypass is obsolete"
+      - "That .md.bak differs from plain .bak"
+    correct: 1
+    explanation_fr: |
+      C'est l'aspect strategique. /ftp/ contient ~10 fichiers
+      dont 4-5 .bak. Un attaquant les exploite TOUS en une
+      session. Le pattern de defense : audit folder-level
+      automatique (pas file-by-file), CI gate sur les
+      patterns d'extension, retention strategy stricte.
+    explanation_en: |
+      Strategic aspect. /ftp/ holds ~10 files including 4-5
+      .bak. Attacker exploits ALL of them in one session.
+      Defense pattern: automatic folder-level audit (not
+      file-by-file), CI gate on extension patterns, strict
+      retention strategy.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Les codes promo de 2013 que tu as trouve dans
+      coupons_2013.md.bak peuvent encore marcher si non
+      invalides en DB. Quel pattern de defense empeche
+      structurellement ce risque ?
+    question_en: |
+      The 2013 promo codes you found in coupons_2013.md.bak
+      may still work if not invalidated in DB. Which defense
+      pattern structurally prevents this risk?
+    options_fr:
+      - "Verifier la date du systeme dans le frontend avant de proposer un coupon"
+      - "Invalider explicitement en DB tous les codes promo expires (UPDATE coupons SET active=false WHERE expiry_date < NOW()), planifie en cron quotidien. NE PAS se fier a une logique date cote frontend qui peut etre bypassed (manipulateClockChallenge)"
+      - "Chiffrer les codes promo avec AES"
+      - "Limiter les codes promo a 1 caractere"
+    options_en:
+      - "Verify system date in frontend before offering a coupon"
+      - "Explicitly invalidate in DB every expired promo code (UPDATE coupons SET active=false WHERE expiry_date < NOW()), scheduled in a daily cron. DON'T rely on frontend date logic, bypassable (manipulateClockChallenge)"
+      - "Encrypt promo codes with AES"
+      - "Limit promo codes to 1 character"
+    correct: 1
+    explanation_fr: |
+      Pattern "leaked secret + missing rotation" : la fuite
+      n'est dangereuse QUE si le secret est encore actif. La
+      defense correcte est l'invalidation explicite cote
+      serveur (DB). Un check date cote frontend est cosmetique
+      (cf. manipulateClockChallenge qui exploite exactement
+      cela).
+    explanation_en: |
+      "Leaked secret + missing rotation" pattern: leak is
+      dangerous ONLY if secret is still active. Correct
+      defense is explicit server-side invalidation (DB). A
+      frontend date check is cosmetic (cf.
+      manipulateClockChallenge which exploits exactly this).
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Liste des extensions sensibles que tout audit de folder
+      public devrait flagger : .bak, .swp, ~, .git, .env, .log,
+      .sql, .DS_Store. Pourquoi inclure .DS_Store dans cette
+      liste ?
+    question_en: |
+      Sensitive-extension list every public-folder audit
+      should flag: .bak, .swp, ~, .git, .env, .log, .sql,
+      .DS_Store. Why include .DS_Store in the list?
+    options_fr:
+      - "Parce que .DS_Store contient toujours des credentials"
+      - "Parce que .DS_Store est un fichier macOS qui revele la STRUCTURE d'un dossier (liste des fichiers, meme caches). Un attaquant peut l'utiliser pour decouvrir des fichiers non listes par directory listing — exemple OSINT classique"
+      - "Parce que .DS_Store contient le mot de passe wifi"
+      - "Parce que les .DS_Store sont des executables"
+    options_en:
+      - "Because .DS_Store always contains credentials"
+      - "Because .DS_Store is a macOS file revealing folder STRUCTURE (file list, even hidden). An attacker can use it to discover files not listed by directory listing — classic OSINT example"
+      - "Because .DS_Store contains the WiFi password"
+      - "Because .DS_Store files are executables"
+    correct: 1
+    explanation_fr: |
+      Le risque .DS_Store est specifique : il revele la
+      structure de fichiers du dossier (incluant les fichiers
+      caches). Un attaquant qui le trouve peut enumerate
+      d'autres fichiers cibles. Reference : nombreux pentest
+      reports historiques (sites portfolio devs macOS qui
+      uploadent leur folder entier avec .DS_Store visible).
+      Defense : .gitignore + Docker .dockerignore + audit cron.
+    explanation_en: |
+      .DS_Store risk is specific: reveals folder file
+      structure (including hidden files). Attacker finding it
+      can enumerate other target files. Reference: many
+      historic pentest reports (macOS dev portfolio sites
+      uploading their full folder with .DS_Store visible).
+      Defense: .gitignore + Docker .dockerignore + cron audit.

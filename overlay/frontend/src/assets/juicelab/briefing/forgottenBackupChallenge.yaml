@@ -1,0 +1,119 @@
+challenge_key: "forgottenBackupChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Recupere le fichier de sauvegarde oublie d'un VENDEUR (sales
+  backup). Description OWASP officielle : "Access a salesman's
+  forgotten backup file". Hints OWASP officiels strictement
+  identiques a forgottenDevBackup : meme bypass de filtre
+  extension via null byte. La cible differe : ce n'est pas
+  package.json.bak mais un fichier orient business (coupons,
+  tarifs, donnees client). Le repo Juice Shop expose
+  /ftp/coupons_2013.md.bak qui matche le pattern "salesman".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : meme exploit que forgottenDevBackup,
+  cible different. Le student qui a deja resolu un challenge
+  /ftp/ + null byte a la solution. Workflow URL :
+  /ftp/coupons_2013.md.bak%2500.md. Le contenu revele les codes
+  promo de 2013 (qui peuvent ENCORE marcher si non rotates,
+  pattern utilise dans manipulateClockChallenge / Expired
+  Coupon).
+
+  Note la composition pedagogique : 4 challenges /ftp/ en cascade
+  (Confidential Doc, Easter Egg, DevBackup, SalesBackup).
+  L'attaquant en pentest reel exploite TOUS les fichiers, pas
+  juste un. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Retrieve a salesman's forgotten backup file. Official OWASP
+  description: "Access a salesman's forgotten backup file".
+  Official hints strictly identical to forgottenDevBackup:
+  same extension-filter bypass via null byte. Target differs:
+  not package.json.bak but a business-oriented file (coupons,
+  pricing, customer data). The Juice Shop repo exposes
+  /ftp/coupons_2013.md.bak matching the "salesman" pattern.
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: same exploit as forgottenDevBackup,
+  different target. Student who already solved a /ftp/ +
+  null-byte challenge has the solution. URL workflow:
+  /ftp/coupons_2013.md.bak%2500.md. Content reveals 2013 promo
+  codes (which may STILL work if not rotated, pattern used in
+  manipulateClockChallenge / Expired Coupon).
+
+  Note pedagogical composition: 4 cascading /ftp/ challenges
+  (Confidential Doc, Easter Egg, DevBackup, SalesBackup). A
+  real-pentest attacker exploits ALL files, not just one. You
+  will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Le pattern /ftp/ : un endpoint, plusieurs challenges en cascade"
+    title_en: "The /ftp/ pattern: one endpoint, multiple cascading challenges"
+    body_fr: |
+      Juice Shop expose /ftp/ avec ~10 fichiers. La meme
+      vulnerabilite (filtre extension cassable) sert plusieurs
+      challenges : (1) directoryListingChallenge (cible
+      acquisitions.md, sans bypass car .md whitelisted), (2)
+      easterEggLevelOne (cible eastere.gg via null byte), (3)
+      forgottenDevBackup (package.json.bak via null byte), (4)
+      forgottenBackup (coupons_2013.md.bak via null byte). 4
+      challenges, 1 vulnerabilite, 4 fichiers differents. C'est
+      la metaphore de l'attaque : un pentester ne s'arrete pas
+      au premier file trouve, il dump tout le folder.
+    body_en: |
+      Juice Shop exposes /ftp/ with ~10 files. The same
+      vulnerability (breakable extension filter) serves
+      multiple challenges: (1) directoryListingChallenge
+      (targets acquisitions.md, no bypass since .md
+      allowlisted), (2) easterEggLevelOne (targets eastere.gg
+      via null byte), (3) forgottenDevBackup (package.json.bak
+      via null byte), (4) forgottenBackup (coupons_2013.md.bak
+      via null byte). 4 challenges, 1 vuln, 4 different files.
+      The attack metaphor: a pentester doesn't stop at the
+      first file found, they dump the whole folder.
+
+  - title_fr: "Coupons 2013 : data sales backup avec valeur business"
+    title_en: "Coupons 2013: sales backup with business value"
+    body_fr: |
+      Le fichier vise (coupons_2013.md.bak) revele les codes
+      promo distribues par le marketing en 2013. Si ces codes
+      n'ont pas ete invalides en DB, ils marchent encore — un
+      attaquant les applique au checkout pour obtenir des
+      remises gratuites. C'est le pattern "leaked secret +
+      missing rotation" : la fuite n'est dangereuse QUE si le
+      secret est encore actif. Defense : invalider tous les
+      codes promo expires en DB (pas se fier a une logique
+      "date < 2014" cote frontend qui peut etre bypassed via
+      manipulateClockChallenge).
+    body_en: |
+      Target file (coupons_2013.md.bak) reveals promo codes
+      handed out by marketing in 2013. If those codes haven't
+      been invalidated in DB, they still work — an attacker
+      applies them at checkout for free discounts. The "leaked
+      secret + missing rotation" pattern: leak is dangerous
+      ONLY if the secret is still active. Defense: invalidate
+      all expired promo codes in DB (don't trust a "date <
+      2014" frontend logic, bypassable via
+      manipulateClockChallenge).
+
+  - title_fr: "Audit folder strategy : ne pas se contenter d'un seul find"
+    title_en: "Folder audit strategy: don't settle for a single find"
+    body_fr: |
+      Le pattern de defense : audit periodique automatique de
+      tout folder accessible publiquement. Liste des extensions
+      sensibles a flagger : .bak, .swp, .swo, ~ (vim/emacs
+      backups), .git, .svn, .DS_Store, .env, .log, .sql, .dump,
+      .sqlite, .mdb, .xlsx, .docx (souvent contenant des PII).
+      Cron quotidien avec alerte SIEM. Combine au CI gate qui
+      empeche le deploy d'images Docker contenant ces patterns.
+      Defense en profondeur : prevention + detection.
+    body_en: |
+      Defense pattern: automatic periodic audit of every
+      publicly-accessible folder. Sensitive extensions to flag:
+      .bak, .swp, .swo, ~ (vim/emacs backups), .git, .svn,
+      .DS_Store, .env, .log, .sql, .dump, .sqlite, .mdb, .xlsx,
+      .docx (often containing PII). Daily cron with SIEM
+      alert. Paired with CI gate preventing Docker image
+      deploy with these patterns. Defense in depth: prevention
+      + detection.

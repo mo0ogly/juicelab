@@ -1,0 +1,121 @@
+challenge_key: "httpHeaderXssChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Realise un XSS persiste avec le payload <iframe src="javascript:
+  alert(`xss`)"> via un HEADER HTTP. Description OWASP officielle.
+  Hints critiques : (1) "Finding a piece of displayed information
+  that could originate from an HTTP header is part of this
+  challenge". (2) "You might have to look into less common or even
+  proprietary HTTP headers to find the leverage point". (3)
+  "Adding insult to injury, the HTTP header you need will never
+  be sent by the application on its own".
+
+  Methode recommandee : trouve d'abord ou Juice Shop AFFICHE une
+  donnee provenant d'un header HTTP. La page Last Login IP
+  (/#/privacy-security/last-login-ip) affiche l'IP de la derniere
+  connexion. Cette IP peut venir de plusieurs sources : socket
+  TCP (vraie IP, immuable), header X-Forwarded-For (proxy chain),
+  header True-Client-IP (CDN proprietaire). Le hint #3 te dit que
+  le header CIBLE n'est pas envoye automatiquement — donc c'est
+  un header proprietaire que tu DOIS ajouter manuellement (curl
+  ou Burp).
+
+  Note la lecon : tout ce qui vient du client (incluant les
+  headers HTTP) doit etre traite comme HOSTILE. Tu en parleras
+  dans le journal "apres".
+
+mission_en: |
+  Perform a persisted XSS with payload <iframe src="javascript:
+  alert(`xss`)"> via an HTTP HEADER. Official OWASP description.
+  Critical hints: (1) "Finding a piece of displayed information
+  that could originate from an HTTP header is part of this
+  challenge". (2) "You might have to look into less common or
+  even proprietary HTTP headers to find the leverage point". (3)
+  "Adding insult to injury, the HTTP header you need will never
+  be sent by the application on its own".
+
+  Recommended method: first find where Juice Shop DISPLAYS data
+  coming from an HTTP header. The Last Login IP page
+  (/#/privacy-security/last-login-ip) shows the IP of the last
+  connection. This IP can come from several sources: TCP socket
+  (real IP, immutable), X-Forwarded-For header (proxy chain),
+  True-Client-IP header (proprietary CDN). Hint #3 tells you the
+  TARGET header isn't sent automatically — so it's a
+  proprietary header you MUST add manually (curl or Burp).
+
+  Note the lesson: anything from the client (including HTTP
+  headers) must be treated as HOSTILE. You will report it in
+  the "after" logbook.
+
+concepts:
+  - title_fr: "HTTP headers : surface d'attaque oubliee"
+    title_en: "HTTP headers: forgotten attack surface"
+    body_fr: |
+      Les developpeurs auditent typiquement les body et les query
+      params, mais oublient les HEADERS. Pourtant ils sont 100%
+      controles par le client. Headers couramment exploitables :
+      User-Agent (logs, analytics), Referer (cross-site), X-
+      Forwarded-For (IP spoofing), Accept-Language (i18n
+      injection), Cookie (session injection), et headers
+      proprietaires (True-Client-IP, X-Real-IP, X-Custom-...).
+      OWASP cheatsheet recommande de traiter chaque header user-
+      facing avec les memes regles de sanitization que le body.
+    body_en: |
+      Developers typically audit bodies and query params but
+      forget HEADERS. Yet they're 100% client-controlled.
+      Commonly exploitable headers: User-Agent (logs,
+      analytics), Referer (cross-site), X-Forwarded-For (IP
+      spoofing), Accept-Language (i18n injection), Cookie
+      (session injection), and proprietary headers
+      (True-Client-IP, X-Real-IP, X-Custom-...). OWASP
+      cheatsheet recommends treating each user-facing header
+      with the same sanitization rules as the body.
+
+  - title_fr: "True-Client-IP et le piege des CDN"
+    title_en: "True-Client-IP and the CDN trap"
+    body_fr: |
+      True-Client-IP est un header proprietaire popularise par
+      Akamai et Cloudflare pour transmettre l'IP REELLE du client
+      a l'origin server (vs X-Forwarded-For qui peut contenir une
+      chaine de proxies). Sur Juice Shop, le code accepte ce
+      header sans validation et l'affiche directement sur la page
+      Last Login IP. C'est une fausse defense par fonctionnalite :
+      le developpeur a vu un header "officiel" et lui a fait
+      confiance. Defense : (a) en absence de CDN, ne pas accepter
+      True-Client-IP du tout. (b) Avec CDN, n'accepter ces
+      headers que des IPs sources approuvees (whitelist
+      Akamai/Cloudflare).
+    body_en: |
+      True-Client-IP is a proprietary header popularized by
+      Akamai and Cloudflare to forward the REAL client IP to the
+      origin server (vs X-Forwarded-For which can hold a proxy
+      chain). On Juice Shop, code accepts this header with no
+      validation and displays it directly on the Last Login IP
+      page. It's a false defense via feature: developer saw an
+      "official" header and trusted it. Defense: (a) without a
+      CDN, don't accept True-Client-IP at all. (b) With CDN,
+      only accept these headers from approved source IPs
+      (Akamai/Cloudflare allowlist).
+
+  - title_fr: "Defense canonique : whitelist headers + sanitize tout output"
+    title_en: "Canonical defense: header whitelist + sanitize all output"
+    body_fr: |
+      Trois couches. (1) Au niveau reverse-proxy ou middleware
+      Express : whitelist des headers acceptes + strip headers
+      inattendus. Express helmet peut aider. (2) Pour les
+      headers utilises par l'app (X-Forwarded-For pour logs),
+      VALIDATION schema strict (regex IPv4/IPv6, len max). (3)
+      Au moment du render : sanitize tout output user-controlled
+      par DOMPurify, peu importe la source (body, query, header,
+      cookie). Defense en profondeur structure : un attaquant
+      doit casser les 3 couches.
+    body_en: |
+      Three layers. (1) At reverse-proxy or Express middleware
+      level: header whitelist + strip unexpected headers.
+      Express helmet helps. (2) For app-used headers
+      (X-Forwarded-For for logs), strict schema validation
+      (IPv4/IPv6 regex, max len). (3) At render time: sanitize
+      all user-controlled output via DOMPurify, regardless of
+      source (body, query, header, cookie). Structured defense
+      in depth: attacker must break all 3 layers.

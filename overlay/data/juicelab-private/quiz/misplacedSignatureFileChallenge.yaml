@@ -1,0 +1,95 @@
+challenge_key: "misplacedSignatureFileChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le challenge utilise le meme bug que
+      nullByteChallenge (Lot 7). Quelle est
+      la lecon pedagogique sur les bugs
+      "kill chain multipliers" ?
+    question_en: |
+      Challenge uses same bug as
+      nullByteChallenge (Lot 7). What
+      pedagogical lesson on "kill chain
+      multiplier" bugs?
+    options_fr:
+      - "Bugs sont rares"
+      - "Un single bug (null byte bypass dans fileServer.ts) ouvre 5 challenges (eastere.gg, package.json.bak, coupons_2013.md.bak, suspicious_errors.yml, encrypt.pyc). Defense corresponding : refactor le check dans une SINGLE FUNCTION utilisee partout (single point of fix). Pattern : un kill chain multiplier merite particulier focus en defense"
+      - "Multiple bugs sont meilleurs"
+      - "Aucune lecon"
+    options_en:
+      - "Bugs are rare"
+      - "A single bug (null byte bypass in fileServer.ts) opens 5 challenges (eastere.gg, package.json.bak, coupons_2013.md.bak, suspicious_errors.yml, encrypt.pyc). Corresponding defense: refactor check into SINGLE FUNCTION used everywhere (single point of fix). Pattern: kill chain multiplier deserves particular defense focus"
+      - "Multiple bugs are better"
+      - "No lesson"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : single point of fix
+      pour security checks repetitifs.
+      Source : routes/fileServer.ts:46-49 +
+      OWASP defense in depth.
+    explanation_en: |
+      Reusable pattern: single point of fix
+      for repetitive security checks.
+      Source: routes/fileServer.ts:46-49 +
+      OWASP defense in depth.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un Sigma signature file ne
+      DEVRAIT PAS etre dans /ftp/ ?
+    question_en: |
+      Why should a Sigma signature file NOT
+      be in /ftp/?
+    options_fr:
+      - "Sigma est commercial"
+      - "Sigma signatures revelent le DETECTION POSTURE de l'organisation : quelles attacks sont detectees, quelles patterns sont watched. L'attaquant qui obtient ces rules peut les CONTOURNER (ne pas declencher les patterns connus). Cas reels : breach reports indiquant compromise des SIEM rules (red team/blue team awareness). Defense : security artifacts dans systeme dedie (SIEM management) avec ACL strict"
+      - "Sigma sont volumineux"
+      - "Sigma sont obsoletes"
+    options_en:
+      - "Sigma is commercial"
+      - "Sigma signatures reveal organization's DETECTION POSTURE: which attacks are detected, which patterns watched. Attacker obtaining these rules can BYPASS them (avoid triggering known patterns). Real cases: breach reports indicating SIEM rules compromise (red/blue team awareness). Defense: security artifacts in dedicated system (SIEM management) with strict ACL"
+      - "Sigma is voluminous"
+      - "Sigma is obsolete"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : security posture
+      = secret valuable. Source : Sigma docs
+      + breach reports.
+    explanation_en: |
+      Reusable pattern: security posture =
+      valuable secret. Source: Sigma docs +
+      breach reports.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour les security
+      artifacts (Sigma rules, IDS configs,
+      ML models) ?
+    question_en: |
+      Canonical defense for security
+      artifacts (Sigma rules, IDS configs,
+      ML models)?
+    options_fr:
+      - "Encrypter les artifacts"
+      - "(1) Stocker hors web root (filesystem-only access). (2) ACL strict (RBAC + audit). (3) Periodic placement audit (tripwire, AIDE). (4) Version control en repo prive avec signed commits. (5) DLP scanning continue. (6) Honeytokens si valuable enough. Pattern : security posture artifacts = treated comme top secrets"
+      - "Plain text"
+      - "Disabler les SIEM"
+    options_en:
+      - "Encrypt artifacts"
+      - "(1) Store outside web root (filesystem-only access). (2) Strict ACL (RBAC + audit). (3) Periodic placement audit (tripwire, AIDE). (4) Version control in private repo with signed commits. (5) Continuous DLP scanning. (6) Honeytokens if valuable enough. Pattern: security posture artifacts = treated like top secrets"
+      - "Plain text"
+      - "Disable SIEMs"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : defense en
+      profondeur pour assets sensibles.
+      Source : OWASP best practices.
+    explanation_en: |
+      Reusable pattern: defense in depth
+      for sensitive assets. Source: OWASP
+      best practices.

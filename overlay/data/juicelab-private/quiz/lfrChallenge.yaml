@@ -1,0 +1,134 @@
+challenge_key: "lfrChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le bug racine est dans routes/dataErasure.ts:68
+      qui passe `req.body.layout` (user-controlled)
+      a `res.render()`. Quelle classe de vulnerabilite
+      est exploitee ?
+    question_en: |
+      Root bug is in routes/dataErasure.ts:68 passing
+      `req.body.layout` (user-controlled) to `res.
+      render()`. What vulnerability class is
+      exploited?
+    options_fr:
+      - "Cross-site scripting"
+      - "Server-Side Template Injection (SSTI) / Local File Read (LFR) via template path injection. L'attaquant contre l'argument template path et force le template engine (pug) a lire un fichier non-template du serveur (package.json, server.ts, /etc/passwd). Le rendering peut leak partiellement le content. Avec un payload pug avance, l'escalation vers RCE est possible (Danger Zone tag)"
+      - "Prototype pollution"
+      - "Buffer overflow"
+    options_en:
+      - "Cross-site scripting"
+      - "Server-Side Template Injection (SSTI) / Local File Read (LFR) via template path injection. Attacker controls template path argument and forces template engine (pug) to read non-template server file (package.json, server.ts, /etc/passwd). Rendering may partially leak content. With advanced pug payload, escalation to RCE possible (Danger Zone tag)"
+      - "Prototype pollution"
+      - "Buffer overflow"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : NEVER pass user-controlled
+      input to template engine functions (render,
+      compile, evaluate). Cas connus : ejs LFR
+      (CVE-2017-XXX), handlebars RCE
+      (CVE-2019-XXX), pug LFR. Defense canonique =
+      allowlist explicite des templates. Source :
+      routes/dataErasure.ts:68 + Snyk template
+      engine vulnerability database.
+    explanation_en: |
+      Reusable pattern: NEVER pass user-controlled
+      input to template engine functions (render,
+      compile, evaluate). Known cases: ejs LFR
+      (CVE-2017-XXX), handlebars RCE
+      (CVE-2019-XXX), pug LFR. Canonical defense =
+      explicit template allowlist. Source: routes/
+      dataErasure.ts:68 + Snyk template engine
+      vulnerability database.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      routes/dataErasure.ts:70 implemente un check :
+      `isForbiddenFile = (filePath.includes('ftp')
+      || filePath.includes('ctf.key') || filePath.
+      includes('encryptionkeys'))`. Pourquoi est-il
+      INSUFFISANT ?
+    question_en: |
+      routes/dataErasure.ts:70 implements check:
+      `isForbiddenFile = (filePath.includes('ftp')
+      || filePath.includes('ctf.key') || filePath.
+      includes('encryptionkeys'))`. Why is it
+      INSUFFICIENT?
+    options_fr:
+      - "Parce que includes() est lent"
+      - "C'est une BLOCKLIST defense (anti-pattern). On bloque 3 paths sensibles MAIS on autorise tout le reste : package.json, server.ts, routes/*.ts, node_modules/, /etc/passwd, /var/log/*. La defense correcte est une ALLOWLIST explicite : `if (!validTemplates.includes(layout)) return 400`. Pattern : allowlists > blocklists pour la security"
+      - "Parce que ftp peut etre upper-case"
+      - "Parce que les substrings ne match pas"
+    options_en:
+      - "Because includes() is slow"
+      - "It's a BLOCKLIST defense (anti-pattern). 3 sensitive paths blocked BUT everything else allowed: package.json, server.ts, routes/*.ts, node_modules/, /etc/passwd, /var/log/*. Correct defense is explicit ALLOWLIST: `if (!validTemplates.includes(layout)) return 400`. Pattern: allowlists > blocklists for security"
+      - "Because ftp can be upper-case"
+      - "Because substrings don't match"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : un blocklist incomplet
+      donne une FAUSSE confiance. La regle generale
+      : pour bloquer N choses dangereuses,
+      enumerer N+infinity exceptions = perdu
+      d'avance. Allowlist : enumerer M things
+      authorisees, refuser tout le reste = scalable.
+      Cf. usernameXssChallenge (Lot 3) avec le
+      meme anti-pattern sanitizer.
+    explanation_en: |
+      Reusable pattern: incomplete blocklist gives
+      FALSE confidence. General rule: to block N
+      dangerous things, enumerating N+infinity
+      exceptions = lost upfront. Allowlist:
+      enumerate M authorized things, refuse
+      everything else = scalable. Cf.
+      usernameXssChallenge (Lot 3) with same
+      sanitizer anti-pattern.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #3 : "Look for an easily
+      forgettable endpoint". Pourquoi
+      /dataerasure est PEDAGOGIQUEMENT bien choisi
+      pour un challenge LFR ?
+    question_en: |
+      OWASP hint #3: "Look for an easily forgettable
+      endpoint". Why is /dataerasure
+      PEDAGOGICALLY well-chosen for LFR challenge?
+    options_fr:
+      - "Parce que /dataerasure est rapide"
+      - "Parce que c'est un endpoint GDPR-related, peu utilise par les users normaux, donc peu teste par les pen testers automatises (qui se concentrent sur /login, /register, /products). Pattern reusable : auditer SYSTEMATIQUEMENT TOUS les endpoints (pas seulement ceux populaires). Les endpoints secondaires (auth-related, GDPR-related, admin-related) sont les plus probables d'avoir des bugs lourds"
+      - "Parce que GDPR exige LFR"
+      - "Parce que /dataerasure est public"
+    options_en:
+      - "Because /dataerasure is fast"
+      - "Because it's GDPR-related endpoint, rarely used by normal users, so less tested by automated pen testers (who focus on /login, /register, /products). Reusable pattern: SYSTEMATICALLY audit ALL endpoints (not only popular ones). Secondary endpoints (auth-related, GDPR-related, admin-related) most likely to have heavy bugs"
+      - "Because GDPR requires LFR"
+      - "Because /dataerasure is public"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la security work
+      systematique exige l'inventory exhaustive de
+      la surface d'attaque. Tools : OWASP ZAP
+      Spider, Burp Sitemap, OpenAPI/Swagger
+      definitions, manual code review pour les
+      routes registered. Endpoint forgotten =
+      endpoint critical. Cas reel : Equifax 2017
+      breach via Apache Struts dans un endpoint
+      legacy oublie. Source : OWASP Testing Guide
+      + analyse routes/dataErasure.ts.
+    explanation_en: |
+      Reusable pattern: systematic security work
+      requires exhaustive attack surface
+      inventory. Tools: OWASP ZAP Spider, Burp
+      Sitemap, OpenAPI/Swagger definitions, manual
+      code review for registered routes.
+      Forgotten endpoint = critical endpoint. Real
+      case: Equifax 2017 breach via Apache Struts
+      in forgotten legacy endpoint. Source: OWASP
+      Testing Guide + routes/dataErasure.ts
+      analysis.

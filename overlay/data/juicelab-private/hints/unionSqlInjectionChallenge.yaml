@@ -1,0 +1,112 @@
+challenge_key: "unionSqlInjectionChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Pre-requis pedagogique : as-tu deja resolu Database Schema ?
+      Si oui, tu sais quel endpoint est vulnerable et combien de
+      colonnes a la requete originale. Ce challenge reutilise le
+      meme angle, juste cible differente. Si non, commence par
+      Database Schema (dbSchemaChallenge) qui est moins difficile.
+    text_en: |
+      Pedagogical prerequisite: have you solved Database Schema
+      already? If yes, you know which endpoint is vulnerable and
+      the original query column count. This challenge reuses the
+      same angle, just a different target. If no, start with
+      Database Schema (dbSchemaChallenge) which is easier.
+    pedagogical_intent: |
+      Activate the dependency reflex: SQLi composition (recon then exploit).
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le hint OWASP officiel #1 te donne le pattern : "Gather
+      information on where user data is stored and how it is
+      addressed. Then craft a corresponding UNION SELECT attack".
+      Tu sais maintenant (via dbSchema) que la table s'appelle
+      Users avec colonnes email et password parmi d'autres. Reste
+      a placer ces deux colonnes dans une UNION SELECT sur le
+      meme endpoint search.
+    text_en: |
+      Official OWASP hint #1 gives the pattern: "Gather information
+      on where user data is stored and how it is addressed. Then
+      craft a corresponding UNION SELECT attack". You know now
+      (via dbSchema) that the table is Users with email and
+      password columns among others. What remains is placing these
+      two columns in a UNION SELECT on the same search endpoint.
+    pedagogical_intent: |
+      Connect the recon output to the exploit input.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      L'endpoint est /rest/products/search?q=... La requete originale
+      a 9 colonnes (que tu as deja alignees sur dbSchema). Pour ce
+      challenge, tu remplaces sqlite_master par Users dans le UNION
+      et tu choisis judicieusement OU placer email et password
+      pour qu'ils soient affiches par le frontend dans les
+      resultats search. Generalement, les colonnes 2 et 3 sont
+      affichees comme name et description.
+    text_en: |
+      The endpoint is /rest/products/search?q=... The original
+      query has 9 columns (you already aligned them on dbSchema).
+      For this challenge, replace sqlite_master with Users in the
+      UNION and choose wisely WHERE to place email and password so
+      they get rendered by the frontend in the search results.
+      Typically, columns 2 and 3 are displayed as name and
+      description.
+    pedagogical_intent: |
+      Direct the channel-mapping reflex (which columns are visible).
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Pour exfiltrer email + password en les rendant visibles dans
+      les resultats search, place-les en colonnes 2 et 3 (qui
+      s'affichent comme name et description sur Juice Shop). Les
+      autres colonnes peuvent etre NULL ou des integers. Squelette
+      du payload :
+      UNION SELECT 1,email,password,'4','5',6,7,'8','9' FROM Users
+      Note : selon les types attendus par les autres colonnes, tu
+      peux devoir mettre des strings ('4') ou des entiers (4) — si
+      ca casse, utilise NULL.
+    text_en: |
+      To exfiltrate email + password and make them visible in
+      search results, place them in columns 2 and 3 (rendered as
+      name and description on Juice Shop). Other columns can be
+      NULL or integers. Payload skeleton:
+      UNION SELECT 1,email,password,'4','5',6,7,'8','9' FROM Users
+      Note: depending on the types expected by the other columns,
+      you may need strings ('4') or integers (4) — if it breaks,
+      use NULL.
+    pedagogical_intent: |
+      Spell the column mapping with concrete payload structure.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Payload final pour le parametre q (URL-encoded en pratique) :
+      qwert')) UNION SELECT 1,email,password,'4','5',6,7,'8','9'
+      FROM Users--
+      URL complete :
+      /rest/products/search?q=qwert%27%29%29%20UNION%20SELECT%
+      201%2Cemail%2Cpassword%2C%274%27%2C%275%27%2C6%2C7%2C%
+      278%27%2C%279%27%20FROM%20Users--
+      La response affiche tous les users avec email et password
+      hash en clair. Le challenge se valide automatiquement quand
+      le serveur detecte la requete avec UNION + Users.
+    text_en: |
+      Final payload for the q parameter (URL-encoded in practice):
+      qwert')) UNION SELECT 1,email,password,'4','5',6,7,'8','9'
+      FROM Users--
+      Full URL:
+      /rest/products/search?q=qwert%27%29%29%20UNION%20SELECT%
+      201%2Cemail%2Cpassword%2C%274%27%2C%275%27%2C6%2C7%2C%
+      278%27%2C%279%27%20FROM%20Users--
+      The response shows every user with email and password hash
+      in clear. The challenge solves itself when the server
+      detects the query with UNION + Users.
+    pedagogical_intent: |
+      Quasi-solution : full URL-encoded payload + result expectation.

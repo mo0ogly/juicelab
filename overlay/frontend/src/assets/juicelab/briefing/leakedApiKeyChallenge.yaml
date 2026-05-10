@@ -1,0 +1,127 @@
+challenge_key: "leakedApiKeyChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Informe le shop a propos d'une API key leakee, en mentionnant
+  la cle EXACTE dans le commentaire. Description OWASP :
+  "Inform the shop about a leaked API key. (Mention the exact
+  key in your comment)". Hints : (1) "The API call is part of
+  a scheduled process behind the scenes, completely unrelated
+  to the web application", (2) "Check the Juice Shop's social
+  media channels for regularly scheduled content being posted",
+  (3) "Find out which part of the content might come from the
+  response of an API call", (4) "Find the place where the API
+  call happens — not in the web application — and then look
+  for the API key itself". [KILL_CHAIN_PROBABLE]
+
+  Methode recommandee : kill chain externe pure, hors webapp.
+  (1) Trouve les social media channels de Juice Shop (Twitter/
+  X, Instagram, GitHub) — typiquement linked dans le footer ou
+  About Us. (2) Identifie un pattern de posts automatiques
+  (memes/blagues postees regulierement). (3) Le contenu vient
+  d'une API. Trace la kill chain : Twitter post -> source
+  d'API (icanhazdadjoke.com pour blagues, jokes API, etc.). (4)
+  Le code automation (probablement public sur GitHub Juice
+  Shop ou similaire) contient la cle API en clair. (5)
+  Soumets cette cle dans Customer Feedback.
+
+  Note la lecon : automation scripts hors webapp + secrets
+  hardcodes dans repo public = top fail OWASP. Tu en parleras
+  dans le journal "apres".
+
+mission_en: |
+  Inform the shop about a leaked API key, mentioning the
+  EXACT key in the comment. OWASP description: "Inform the
+  shop about a leaked API key. (Mention the exact key in
+  your comment)". Hints: (1) "The API call is part of a
+  scheduled process behind the scenes, completely unrelated
+  to the web application", (2) "Check the Juice Shop's social
+  media channels for regularly scheduled content being
+  posted", (3) "Find out which part of the content might come
+  from the response of an API call", (4) "Find the place
+  where the API call happens — not in the web application —
+  and then look for the API key itself". [KILL_CHAIN_PROBABLE]
+
+  Recommended method: pure external kill chain, off-webapp.
+  (1) Find Juice Shop social media channels (Twitter/X,
+  Instagram, GitHub) — typically linked in footer or About
+  Us. (2) Identify automatic post pattern (memes/jokes
+  posted regularly). (3) Content comes from an API. Trace
+  the kill chain: Twitter post -> API source
+  (icanhazdadjoke.com for jokes, jokes API, etc.). (4)
+  Automation code (likely public on GitHub Juice Shop or
+  similar) holds the cleartext API key. (5) Submit this key
+  in Customer Feedback.
+
+  Note the lesson: off-webapp automation scripts + hardcoded
+  secrets in public repo = top OWASP fail. You will report
+  it in the "after" logbook.
+
+concepts:
+  - title_fr: "Secret leaks dans les automation scripts hors webapp"
+    title_en: "Secret leaks in off-webapp automation scripts"
+    body_fr: |
+      Pattern critique : les developpeurs auditent la WEBAPP
+      pour les secrets hardcodes (et trouvent
+      exposedCredentialsChallenge), mais oublient les SCRIPTS
+      AUTOMATION (cron jobs, GitHub Actions, scripts de
+      deploiement, bots social media). Ces scripts vivent
+      souvent dans le MEME repo Git que la webapp, donc
+      package.json.bak les expose, ou pire ils sont sur un
+      repo PUBLIC GitHub. Trufflehog/Gitleaks scan tout le
+      repo, pas juste le code applicatif.
+    body_en: |
+      Critical pattern: devs audit the WEBAPP for hardcoded
+      secrets (finding exposedCredentialsChallenge) but
+      forget AUTOMATION SCRIPTS (cron jobs, GitHub Actions,
+      deploy scripts, social media bots). These scripts often
+      live in the SAME Git repo as the webapp, so package.
+      json.bak exposes them, or worse they're on a PUBLIC
+      GitHub repo. Trufflehog/Gitleaks scan the entire repo,
+      not just app code.
+
+  - title_fr: "GitHub repos publics : la mine d'or des api keys"
+    title_en: "Public GitHub repos: the api key goldmine"
+    body_fr: |
+      Surface OSINT majeure pour les attaquants. GitHub Code
+      Search permet de scanner les repos publics pour des
+      patterns de secrets. Tools : trufflehog (specialise),
+      gitleaks, GitHub native secret scanning (active par
+      defaut sur les repos publics depuis 2018). Stats : des
+      millions de credentials leakes par an sur GitHub
+      public. Pour ce challenge, le repo Juice Shop est
+      public — l'attaquant trouve le bot social media et la
+      cle API en quelques minutes.
+    body_en: |
+      Major OSINT surface for attackers. GitHub Code Search
+      lets you scan public repos for secret patterns. Tools:
+      trufflehog (specialized), gitleaks, GitHub native
+      secret scanning (active by default on public repos
+      since 2018). Stats: millions of leaked credentials per
+      year on public GitHub. For this challenge, the Juice
+      Shop repo is public — attacker finds the social media
+      bot and API key in minutes.
+
+  - title_fr: "Defense canonique : secret manager + CI gate + key rotation"
+    title_en: "Canonical defense: secret manager + CI gate + key rotation"
+    body_fr: |
+      Trois couches. (1) JAMAIS de secret hardcoded dans le
+      repo Git. Secret manager (HashiCorp Vault, AWS Secrets
+      Manager, GCP Secret Manager). Le code lit le secret a
+      l'execution depuis env variable ou API du manager. (2)
+      CI gate qui scan le repo a chaque PR avec trufflehog/
+      gitleaks et fail le build si un secret est detecte.
+      (3) Key rotation reguliere : meme si un secret leak,
+      il sera invalide sous 30/90 jours. Reference : OWASP
+      Secrets Management Cheat Sheet (mitigationUrl du
+      challenge).
+    body_en: |
+      Three layers. (1) NEVER hardcode a secret in the Git
+      repo. Secret manager (HashiCorp Vault, AWS Secrets
+      Manager, GCP Secret Manager). Code reads secret at
+      runtime from env variable or manager API. (2) CI gate
+      scanning repo on every PR with trufflehog/gitleaks and
+      failing build if secret detected. (3) Regular key
+      rotation: even if a secret leaks, it'll be invalidated
+      within 30/90 days. Reference: OWASP Secrets Management
+      Cheat Sheet (challenge mitigationUrl).

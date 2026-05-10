@@ -1,0 +1,126 @@
+challenge_key: "persistedXssFeedbackChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "The Comment field in the Customer
+      Feedback screen is where you want to put your focus on".
+      Va sur Customer Feedback (/#/contact). Le field Comment
+      est ta cible. Mais hint #3 te previent : "the attack
+      payload will not be rejected by any validator but stripped
+      from the comment before persisting it". Donc le serveur
+      strip le payload — il ne le rejette pas, il le transforme.
+    text_en: |
+      Official OWASP hint #1: "The Comment field in the Customer
+      Feedback screen is where you want to put your focus on".
+      Go to Customer Feedback (/#/contact). Comment field is
+      your target. But hint #3 warns: "the attack payload will
+      not be rejected by any validator but stripped from the
+      comment before persisting it". So the server strips the
+      payload — doesn't reject, transforms.
+    pedagogical_intent: |
+      Pin the field + signal strip-not-reject behavior.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Pre-requis pedagogique critique. Hint OWASP officiel #4 :
+      "Look for possible dependencies related to input processing
+      in the package.json.bak you harvested earlier". Donc tu
+      dois avoir resolu un challenge de file disclosure
+      (forgottenDevBackup ou similar) pour obtenir un fichier
+      package.json.bak qui revele les dependances. Si pas
+      resolu, va le faire en premier.
+    text_en: |
+      Critical pedagogical prerequisite. Official OWASP hint #4:
+      "Look for possible dependencies related to input
+      processing in the package.json.bak you harvested earlier".
+      So you must have solved a file disclosure challenge
+      (forgottenDevBackup or similar) to obtain a package.json.
+      bak revealing dependencies. If not solved, do that first.
+    pedagogical_intent: |
+      Activate prerequisite reflex on file disclosure.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Dans package.json.bak, cherche les deps liees a "sanitize"
+      ou "html". Tu vas trouver typiquement
+      "sanitize-html": "1.4.2" (ou une version ancienne
+      similaire). Cette version a une CVE connue qui permet de
+      bypass le strip via mutation XSS. Recherche cette version
+      sur snyk.io ou nvd.nist.gov pour trouver le pattern de
+      bypass exact.
+    text_en: |
+      In package.json.bak, look for "sanitize" or "html" deps.
+      You'll typically find
+      "sanitize-html": "1.4.2" (or similar old version). This
+      version has a known CVE allowing bypass of strip via
+      mutation XSS. Search this version on snyk.io or
+      nvd.nist.gov for the exact bypass pattern.
+    pedagogical_intent: |
+      Spell the dep + version + CVE lookup workflow.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le payload exact a faire passer (description OWASP) :
+      <iframe src="javascript:alert(`xss`)">
+      Pour bypass sanitize-html 1.4.x, le pattern classique est
+      d'inserer un nested ou une variation de tags qui confond
+      le parser. Exemple historique connu :
+      <<iframe>iframe src="javascript:alert(`xss`)">
+      Le sanitizer voit "<<iframe>" et strip "<iframe>" interne,
+      laissant "<iframe src=...". Adapte-toi a la version
+      exacte trouvee dans package.json.bak.
+    text_en: |
+      Exact payload to get through (OWASP description):
+      <iframe src="javascript:alert(`xss`)">
+      To bypass sanitize-html 1.4.x, classic pattern is
+      inserting nested or tag variation confusing the parser.
+      Known historic example:
+      <<iframe>iframe src="javascript:alert(`xss`)">
+      Sanitizer sees "<<iframe>" and strips inner "<iframe>",
+      leaving "<iframe src=...". Adapt to the exact version
+      found in package.json.bak.
+    pedagogical_intent: |
+      Spell mutation XSS pattern.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet :
+      1. Resoudre forgottenDevBackup (sortir package.json.bak du
+         /ftp/ via null byte bypass, comme pour easterEggLevelOne).
+      2. Lire package.json.bak, trouver "sanitize-html": "1.x.x"
+         et chercher CVE.
+      3. Sur /#/contact (Customer Feedback) : dans le champ
+         Comment, taper :
+         <<iframe>iframe src="javascript:alert(`xss`)">
+         (ajuste selon version)
+      4. Submit le feedback (rating obligatoire).
+      5. Va sur /#/about (About Us) ou les feedbacks sont
+         affiches. L'iframe execute si bypass reussi.
+      Hint #5 OWASP : si tu as un alert mais pas le challenge
+      qui se valide, c'est que la string EXACTE n'est pas en
+      DB. Iterate jusqu'a obtenir la string exacte.
+    text_en: |
+      Complete workflow:
+      1. Solve forgottenDevBackup (extract package.json.bak from
+         /ftp/ via null byte bypass, like easterEggLevelOne).
+      2. Read package.json.bak, find "sanitize-html": "1.x.x"
+         and lookup CVE.
+      3. On /#/contact (Customer Feedback): in the Comment
+         field, type:
+         <<iframe>iframe src="javascript:alert(`xss`)">
+         (adjust by version)
+      4. Submit feedback (rating mandatory).
+      5. Go to /#/about (About Us) where feedbacks display.
+         Iframe executes if bypass succeeded.
+      OWASP hint #5: if you have an alert but the challenge
+      doesn't solve, the EXACT string isn't in DB. Iterate
+      until you get the exact string.
+    pedagogical_intent: |
+      Quasi-solution : full kill chain + warning on exact-string match.

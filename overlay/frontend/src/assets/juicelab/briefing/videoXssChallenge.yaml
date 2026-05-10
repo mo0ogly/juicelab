@@ -1,0 +1,152 @@
+challenge_key: "videoXssChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Embarque le payload XSS </script><script>alert(`xss`)</script>
+  dans la promo video de Juice Shop. Description OWASP officielle.
+  Difficulte 6 : c'est l'un des challenges les plus complexes de
+  Juice Shop. Hint #1 : "Without utilizing the vulnerability
+  behind another 6-star challenge it is not possible to plant the
+  XSS payload" — donc pre-requis d'un autre challenge 6 etoiles.
+  Hint #2 : "marketing collateral might have been publicly
+  advertised by the Juice Shop but is not necessarily part of its
+  sitemap yet". Hint #3 : "online searches for structurally
+  similar web projects". Hint #4 : "this challenge will always
+  partially keep you blindfolded".
+
+  Methode recommandee : ce challenge fait reference a une
+  ressource de marketing (la video promo) qui contient des
+  metadata (subtitles VTT, EXIF, ou file path) ou une lib
+  externe (player video tiers) ou un pattern de path traversal
+  permettant de servir un autre fichier que la video. Le
+  pre-requis 6 etoiles est typiquement rceOccupyChallenge
+  (Successful RCE DoS) qui permet d'overwrite des fichiers
+  serveur. Ainsi tu peux uploader/modifier la file qui sert de
+  promo video pour injecter du HTML.
+
+  Note la complexite : ce n'est pas un XSS dans un champ user
+  classique mais un XSS via une RESSOURCE STATIQUE compromise
+  via un autre exploit. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Embed the XSS payload </script><script>alert(`xss`)</script>
+  into the Juice Shop promo video. Official OWASP description.
+  Difficulty 6: one of the most complex Juice Shop challenges.
+  Hint #1: "Without utilizing the vulnerability behind another
+  6-star challenge it is not possible to plant the XSS payload"
+  — so prerequisite of another 6-star challenge. Hint #2:
+  "marketing collateral might have been publicly advertised by
+  the Juice Shop but is not necessarily part of its sitemap
+  yet". Hint #3: "online searches for structurally similar web
+  projects". Hint #4: "this challenge will always partially
+  keep you blindfolded".
+
+  Recommended method: this challenge references a marketing
+  resource (the promo video) containing metadata (VTT
+  subtitles, EXIF, or file path) or an external lib (3rd-party
+  video player) or a path traversal pattern allowing serving
+  another file than the video. The 6-star prerequisite is
+  typically rceOccupyChallenge (Successful RCE DoS) enabling
+  overwriting server files. You can thus upload/modify the
+  file serving as promo video to inject HTML.
+
+  Note the complexity: this isn't an XSS in a classic user
+  field but XSS via a STATIC RESOURCE compromised via another
+  exploit. You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "XSS via static asset : la surface inattendue"
+    title_en: "XSS via static asset: the unexpected surface"
+    body_fr: |
+      Pattern de bug peu connu. Une video promo, une image, un
+      PDF, un MP3 : si l'asset est SERVI avec le bon Content-
+      Type ET inclut du HTML/JS interpretable, le navigateur
+      peut l'executer. Cas classiques : (a) MIME-type sniffing
+      (sans X-Content-Type-Options: nosniff), (b) subtitle VTT
+      qui contient du HTML, (c) PDF avec JavaScript embedded,
+      (d) SVG avec scripts. Defense : X-Content-Type-Options:
+      nosniff sur tous les assets + CSP restrictive +
+      validation/scan des uploads.
+    body_en: |
+      Lesser-known bug pattern. A promo video, image, PDF, MP3:
+      if the asset is SERVED with the right Content-Type AND
+      includes interpretable HTML/JS, the browser can execute
+      it. Classic cases: (a) MIME-type sniffing (without
+      X-Content-Type-Options: nosniff), (b) VTT subtitle
+      containing HTML, (c) PDF with embedded JavaScript, (d)
+      SVG with scripts. Defense: X-Content-Type-Options:
+      nosniff on all assets + restrictive CSP + upload
+      validation/scan.
+
+  - title_fr: "Composition forte : RCE -> file overwrite -> XSS persistant"
+    title_en: "Strong composition: RCE -> file overwrite -> persistent XSS"
+    body_fr: |
+      Pre-requis 6-star (probablement rceOccupyChallenge ou
+      fileWriteChallenge) donne la primitive RCE / arbitrary
+      file write. Avec, l'attaquant overwrite un asset servi
+      publiquement (la video) avec un fichier malicieux. Tous
+      les visiteurs de la page hosting la video declenchent le
+      payload. C'est le pattern le plus dangereux : (1) RCE
+      donne acces au filesystem, (2) file write modifie un
+      asset distribue, (3) XSS persiste sur tous les
+      visiteurs. Severite maximale : compromission complete +
+      mass-affecting payload. Defense : aucun upload doit
+      pouvoir overwrite des assets statiques distributed ; les
+      assets prod doivent etre immutable (CDN, S3 versioned).
+    body_en: |
+      6-star prerequisite (likely rceOccupyChallenge or
+      fileWriteChallenge) gives the RCE / arbitrary file write
+      primitive. With it, attacker overwrites a publicly-served
+      asset (the video) with a malicious file. All visitors of
+      the hosting page trigger the payload. Most dangerous
+      pattern: (1) RCE gives filesystem access, (2) file write
+      modifies a distributed asset, (3) XSS persists for all
+      visitors. Maximum severity: full compromise + mass-
+      affecting payload. Defense: no upload should overwrite
+      distributed static assets; prod assets must be immutable
+      (CDN, S3 versioned).
+
+  - title_fr: "Defense canonique : separer asset storage et write surface"
+    title_en: "Canonical defense: separate asset storage and write surface"
+    body_fr: |
+      Pattern d'architecture cloud-native. Les assets statiques
+      (videos promo, images marketing) sont sur un CDN ou un
+      bucket S3 IMMUTABLE accessible uniquement en read par le
+      web frontend. Les write paths (uploads users) sont sur
+      un bucket SEPARE accessible en read public mais en write
+      restreint. Ainsi, meme une RCE sur le frontend ne peut
+      pas modifier les assets prod. C'est le principe "no
+      single point of compromise" applique au content delivery.
+      Reference : AWS S3 versioning + bucket policies, ou GCS
+      object holds.
+    body_en: |
+      Cloud-native architecture pattern. Static assets (promo
+      videos, marketing images) on a CDN or IMMUTABLE S3
+      bucket read-only accessible by the web frontend. Write
+      paths (user uploads) on a SEPARATE bucket public-read
+      but write-restricted. Thus, even an RCE on the frontend
+      can't modify prod assets. "No single point of compromise"
+      principle applied to content delivery. Reference: AWS S3
+      versioning + bucket policies, or GCS object holds.
+
+  - title_fr: "X-Content-Type-Options: nosniff comme browser-side defense"
+    title_en: "X-Content-Type-Options: nosniff as browser-side defense"
+    body_fr: |
+      Header HTTP qui INTERDIT au navigateur de "sniffer" le
+      Content-Type d'un asset (mecanisme legacy ou le
+      navigateur examine le contenu pour deviner le type).
+      Sans nosniff, un fichier servi en text/plain mais
+      contenant <script> peut etre interprete comme HTML.
+      Avec nosniff, le navigateur respecte strictement le
+      Content-Type declare. Defense low-cost (un header HTTP)
+      qui empeche les XSS via static asset confusion. A
+      activer sur TOUS les assets non-HTML.
+    body_en: |
+      HTTP header FORBIDDING the browser from "sniffing" an
+      asset's Content-Type (legacy mechanism where the browser
+      examines content to guess type). Without nosniff, a file
+      served as text/plain but containing <script> can be
+      interpreted as HTML. With nosniff, the browser strictly
+      respects the declared Content-Type. Low-cost defense (an
+      HTTP header) preventing XSS via static-asset confusion.
+      Enable on ALL non-HTML assets.

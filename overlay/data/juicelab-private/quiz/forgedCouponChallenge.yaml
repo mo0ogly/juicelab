@@ -1,0 +1,117 @@
+challenge_key: "forgedCouponChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le bug racine est l'usage de "homemade
+      crypto" pour les coupon codes (z85 + XOR).
+      Pourquoi cet anti-pattern est-il
+      dangereux ?
+    question_en: |
+      Root bug is "homemade crypto" use for
+      coupon codes (z85 + XOR). Why is this
+      anti-pattern dangerous?
+    options_fr:
+      - "Parce que z85 est obsolete"
+      - "Parce que les vraies primitives crypto (AES, HMAC, Ed25519) sont peer-reviewed pour decennies. Une crypto maison est : (a) inspectable (reverse engineering du bundle), (b) bypass-able (l'attaquant a le code), (c) souvent buggy (off-by-one, weak seed). Defense canonique : utiliser cryptographic primitives standards (JWT signed, HMAC-SHA256) + DB tracking pour les coupons, JAMAIS rouler sa propre crypto"
+      - "Parce que XOR est trop lent"
+      - "Parce que le code est secret"
+    options_en:
+      - "Because z85 is obsolete"
+      - "Because real crypto primitives (AES, HMAC, Ed25519) are peer-reviewed for decades. Homemade crypto is: (a) inspectable (bundle reverse engineering), (b) bypassable (attacker has code), (c) often buggy (off-by-one, weak seed). Canonical defense: use standard cryptographic primitives (signed JWT, HMAC-SHA256) + DB tracking for coupons, NEVER roll your own crypto"
+      - "Because XOR is too slow"
+      - "Because code is secret"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : "don't roll your own
+      crypto". Cas reels : Telegram custom MTProto
+      protocol bugs (multiple CVEs), Whatsapp
+      pre-Signal homebrew (deprecated), countless
+      DIY auth schemes. Source : OWASP
+      Cryptographic Storage Cheat Sheet + analyse
+      lib/insecurity.ts.
+    explanation_en: |
+      Reusable pattern: "don't roll your own
+      crypto". Real cases: Telegram custom
+      MTProto protocol bugs (multiple CVEs),
+      Whatsapp pre-Signal homebrew (deprecated),
+      countless DIY auth schemes. Source: OWASP
+      Cryptographic Storage Cheat Sheet + lib/
+      insecurity.ts analysis.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le challenge tag "Code Analysis" suggere
+      reverse engineering. Quelle methodologie
+      pedagogique est implicite ?
+    question_en: |
+      "Code Analysis" challenge tag suggests
+      reverse engineering. What pedagogical
+      methodology is implicit?
+    options_fr:
+      - "Lire random code"
+      - "White-box code review : (a) Dumper le bundle Angular (DevTools Sources). (b) Identifier la fonction generateCoupon dans lib/insecurity.ts ou similar. (c) Reproduire la logique localement (Node.js script). (d) Generer un payload valide. Pattern reusable : pour les vulnerabilites cryptographic, le source code analysis est plus rapide que le brute force"
+      - "Brute force seulement"
+      - "Demander au support"
+    options_en:
+      - "Read random code"
+      - "White-box code review: (a) Dump Angular bundle (DevTools Sources). (b) Identify generateCoupon function in lib/insecurity.ts or similar. (c) Reproduce logic locally (Node.js script). (d) Generate valid payload. Reusable pattern: for cryptographic vulnerabilities, source code analysis faster than brute force"
+      - "Brute force only"
+      - "Ask support"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : white-box analysis est
+      la methode preferee pour les vulnerabilites
+      crypto. Le brute force fonctionne mais
+      coute en time/requests. Le reverse
+      engineering est immediat once la fonction
+      est identifiee. Source : OWASP hint #1 +
+      methodology pentest crypto.
+    explanation_en: |
+      Reusable pattern: white-box analysis is
+      preferred method for crypto vulnerabilities.
+      Brute force works but costs time/requests.
+      Reverse engineering is immediate once
+      function is identified. Source: OWASP hint
+      #1 + crypto pentest methodology.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense canonique remplace les
+      coupon codes home-made crypto en
+      production ?
+    question_en: |
+      What canonical defense replaces homemade
+      crypto coupon codes in production?
+    options_fr:
+      - "Coupon codes plus longs"
+      - "(1) JWT signed RS256 avec claims (exp, discount, code) - serveur verify la signature. (2) DB-tracked UUIDs : coupon = UUID stocke en DB avec metadata + state (used/unused). (3) Idempotent redemption (UNIQUE constraint user-coupon). (4) Audit log + anomaly detection. Combine permet : verifiability cryptographique + revocation + tracability"
+      - "Hashed coupons"
+      - "Plain text coupons"
+    options_en:
+      - "Longer coupon codes"
+      - "(1) RS256-signed JWT with claims (exp, discount, code) - server verifies signature. (2) DB-tracked UUIDs: coupon = DB-stored UUID with metadata + state (used/unused). (3) Idempotent redemption (UNIQUE user-coupon constraint). (4) Audit log + anomaly detection. Combined provides: cryptographic verifiability + revocation + traceability"
+      - "Hashed coupons"
+      - "Plain text coupons"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour les business
+      tokens (coupons, gift cards, vouchers),
+      preferer les architectures :
+      cryptographique (JWT signe) OU databasee
+      (UUID tracked). Eviter les schemes
+      home-made meme s'ils semblent simples.
+      Source : OWASP Cryptographic Storage
+      Cheat Sheet + best practices.
+    explanation_en: |
+      Reusable pattern: for business tokens
+      (coupons, gift cards, vouchers), prefer
+      architectures: cryptographic (signed JWT)
+      OR database-backed (tracked UUID). Avoid
+      homemade schemes even if they look simple.
+      Source: OWASP Cryptographic Storage Cheat
+      Sheet + best practices.

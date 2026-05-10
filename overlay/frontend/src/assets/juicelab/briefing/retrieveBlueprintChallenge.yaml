@@ -1,0 +1,120 @@
+challenge_key: "retrieveBlueprintChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Telecharge le BLUEPRINT (plan technique 3D) d'un des produits
+  du shop pour priver le commercant de revenus. Description
+  OWASP : "Deprive the shop of earnings by downloading the
+  blueprint for one of its products". Hints : (1) "Check for
+  products which seem like a natural fit for being based on a
+  blueprint", (2) "pay attention to the images of the
+  identified product candidates", (3) "the blueprint was not
+  misplaced into the same place like so many others forgotten
+  files". [KILL_CHAIN_PROBABLE]
+
+  Methode recommandee : (1) parcours le catalogue produits
+  (/#/search) pour identifier un produit qui pourrait avoir
+  un blueprint (un OWASP Juice Shop "OWASP Juice Shop Logo
+  3D-printed object" ou similar). Hint #2 te demande
+  d'inspecter l'image du produit. (2) Telecharge l'image et
+  regarde son metadata EXIF, ou clic-droit View Source pour
+  voir l'URL. L'URL du fichier blueprint est probablement
+  embedded dans l'image elle-meme (steganographie ou metadata
+  Comment field) ou dans une convention de naming similaire.
+  (3) Hint #3 dit que le blueprint n'est PAS dans /ftp/ —
+  donc une autre route ou folder.
+
+  Note la lecon : les assets statiques (images) peuvent
+  contenir des chemins ou des metadata identifying d'autres
+  ressources. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Download the BLUEPRINT (3D technical plan) of one of the
+  shop's products to deprive earnings. OWASP description:
+  "Deprive the shop of earnings by downloading the blueprint
+  for one of its products". Hints: (1) "Check for products
+  which seem like a natural fit for being based on a
+  blueprint", (2) "pay attention to the images of the
+  identified product candidates", (3) "the blueprint was not
+  misplaced into the same place like so many others forgotten
+  files". [KILL_CHAIN_PROBABLE]
+
+  Recommended method: (1) browse product catalog
+  (/#/search) to identify a product that might have a
+  blueprint (an OWASP Juice Shop "OWASP Juice Shop Logo
+  3D-printed object" or similar). Hint #2 asks to inspect the
+  product image. (2) Download the image and look at its EXIF
+  metadata, or right-click View Source to see the URL. The
+  blueprint file URL is likely embedded in the image itself
+  (steganography or metadata Comment field) or in a naming
+  convention. (3) Hint #3 says blueprint is NOT in /ftp/ —
+  so another route or folder.
+
+  Note the lesson: static assets (images) can contain paths
+  or identifying metadata of other resources. You will
+  report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Steganography legere : metadata Comment field d'image"
+    title_en: "Light steganography: image metadata Comment field"
+    body_fr: |
+      Au-dela des coordonnees EXIF GPS classiques, les
+      metadata d'image incluent un champ "Comment" libre
+      souvent oublie. Les developpeurs y ecrivent parfois des
+      paths internes, des notes de version, des credentials de
+      test. Outils : exiftool -Comment image.jpg. Defense :
+      strip TOUTE metadata server-side (pas juste EXIF GPS).
+      Reference : OWASP image upload guidelines + ISO 12234-2
+      EXIF spec.
+    body_en: |
+      Beyond classic EXIF GPS coordinates, image metadata
+      includes a free "Comment" field often forgotten. Devs
+      sometimes write internal paths, version notes, test
+      credentials there. Tools: exiftool -Comment image.jpg.
+      Defense: strip ALL metadata server-side (not just EXIF
+      GPS). Reference: OWASP image upload guidelines + ISO
+      12234-2 EXIF spec.
+
+  - title_fr: "Naming conventions previsibles : un anti-pattern recurrent"
+    title_en: "Predictable naming conventions: recurrent anti-pattern"
+    body_fr: |
+      Pattern d'erreur commun : nommer les fichiers selon une
+      convention previsible (product_id_<id>.jpg,
+      blueprint_<product>.pdf, model_<sku>.stl). L'attaquant
+      qui voit un fichier "JuiceShop_logo.jpg" devine
+      "JuiceShop_logo.stl" ou "JuiceShop_blueprint.pdf".
+      Defense : noms de fichier ALEATOIRES (UUID v4 +
+      extension), mapping en DB pour faire le lien
+      logical_name -> filename. Le client n'a aucun moyen
+      d'enumerer ou deviner d'autres fichiers.
+    body_en: |
+      Common error pattern: naming files via predictable
+      convention (product_id_<id>.jpg, blueprint_<product>.
+      pdf, model_<sku>.stl). Attacker seeing "JuiceShop_logo.
+      jpg" guesses "JuiceShop_logo.stl" or
+      "JuiceShop_blueprint.pdf". Defense: RANDOM filenames
+      (UUID v4 + extension), DB mapping for the
+      logical_name -> filename link. Client has no way to
+      enumerate or guess other files.
+
+  - title_fr: "Defense canonique : assets randomized + access control sur downloads"
+    title_en: "Canonical defense: randomized assets + access control on downloads"
+    body_fr: |
+      Trois couches. (1) Naming aleatoire (UUID) pour tous
+      les assets. (2) Access control sur les routes de
+      download : un blueprint payant doit verifier que le
+      user a achete le produit avant de servir le fichier.
+      (3) Strip metadata server-side a l'upload (pour eviter
+      les leaks de paths via Comment field). Combinaison =
+      aucune voie d'enumeration ni d'acces non autorise.
+      Reference : OWASP A01 Broken Access Control + A05
+      Security Misconfiguration.
+    body_en: |
+      Three layers. (1) Random naming (UUID) for all assets.
+      (2) Access control on download routes: a paid
+      blueprint must verify user purchased the product before
+      serving file. (3) Strip metadata server-side at upload
+      (to avoid path leaks via Comment field). Combined =
+      no enumeration path nor unauthorized access. Reference:
+      OWASP A01 Broken Access Control + A05 Security
+      Misconfiguration.

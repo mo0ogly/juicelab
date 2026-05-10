@@ -1,0 +1,80 @@
+challenge_key: "extraLanguageChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un fichier i18n peut etre present sans
+      etre dans le selecteur UI ?
+    question_en: |
+      Why can an i18n file be present without being
+      in the UI selector?
+    options_fr:
+      - "Bug Angular"
+      - "Build process incomplete (translations en cours mais files commited), staticserver liste TOUT le dossier sans manifest, dev oublie de retirer un draft. Pattern reusable : ressources statiques != ressources publiques. Defense : manifest explicite (i18n-available.json) + audit CI"
+      - "Les Klingons sont speciaux"
+      - "C'est obligatoire"
+    options_en:
+      - "Angular bug"
+      - "Incomplete build process (translations in-progress but files committed), staticserver lists ENTIRE folder without manifest, dev forgot to remove a draft. Reusable pattern: static resources != public resources. Defense: explicit manifest (i18n-available.json) + CI audit"
+      - "Klingons are special"
+      - "It's required"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : whitelist > blacklist.
+      Source : OWASP Resource Embedding.
+    explanation_en: |
+      Reusable pattern: whitelist > blacklist. Source:
+      OWASP Resource Embedding.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Comment enumerer les ressources statiques d'une
+      app ?
+    question_en: |
+      How to enumerate an app's static resources?
+    options_fr:
+      - "Demander a l'admin"
+      - "(1) DevTools > Sources tab pour lister les bundles, (2) ffuf/gobuster/dirsearch sur /assets/ avec wordlist, (3) Network tab pour observer les GET, (4) Wayback Machine pour anciennes versions, (5) GitHub recherche du repo upstream. Defense : restriction MIME, allowlist serveur"
+      - "Lire le source du framework"
+      - "Impossible legalement"
+    options_en:
+      - "Ask admin"
+      - "(1) DevTools > Sources tab to list bundles, (2) ffuf/gobuster/dirsearch on /assets/ with wordlist, (3) Network tab to observe GETs, (4) Wayback Machine for old versions, (5) GitHub search for upstream repo. Defense: MIME restriction, server allowlist"
+      - "Read framework source"
+      - "Legally impossible"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : audit static periodique.
+      Source : OWASP Web Security Testing Guide.
+    explanation_en: |
+      Reusable pattern: periodic static audit. Source:
+      OWASP Web Security Testing Guide.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique : pourquoi un manifest i18n
+      explicite ?
+    question_en: |
+      Canonical defense: why an explicit i18n
+      manifest?
+    options_fr:
+      - "Pour la performance"
+      - "(1) Le manifest est la SEULE source de verite des langues publiques. (2) Build CI fail si /assets/i18n/ contient des fichiers non listes. (3) Backend /api/languages retourne le manifest. (4) UI selector consume cette liste. (5) Pattern : whitelist > blacklist pour ressources publiques"
+      - "C'est joli"
+      - "Standard ISO obligatoire"
+    options_en:
+      - "For performance"
+      - "(1) Manifest is the SOLE truth source of public languages. (2) Build CI fails if /assets/i18n/ contains unlisted files. (3) Backend /api/languages returns the manifest. (4) UI selector consumes this list. (5) Pattern: whitelist > blacklist for public resources"
+      - "It's pretty"
+      - "Mandatory ISO standard"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : manifest comme contract.
+      Source : OWASP Cheat Sheet Series.
+    explanation_en: |
+      Reusable pattern: manifest as contract. Source:
+      OWASP Cheat Sheet Series.

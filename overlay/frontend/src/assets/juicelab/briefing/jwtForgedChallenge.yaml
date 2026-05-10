@@ -1,0 +1,180 @@
+challenge_key: "jwtForgedChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Forge un JWT presque-correctement signe en RSA qui
+  impersonate l'utilisateur (non-existant) rsa_lord@
+  juice-sh.op. Description OWASP. Hints officiels :
+  (1) "This challenge is explicitly not about acquiring
+  the RSA private key used for JWT signing". (2) "The
+  three generic hints from Forge an essentially
+  unsigned JWT token also help with this challenge".
+  (3) "Instead of enforcing no encryption to be
+  applied, try to apply a more sophisticated exploit
+  against the JWT libraries used in the Juice Shop".
+  (4) "Getting your hands on the public RSA key the
+  application employs for its JWTs is mandatory for
+  this challenge". (5) "Finding the corresponding
+  private key should actually be impossible, but that
+  obviously doesn't make this challenge unsolvable".
+  (6) "Make sure your JWT is URL safe!". [KILL_CHAIN_
+  DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/verify.ts:85-86 + 108-130 (verifie source).
+  Code exact : `if (utils.isChallengeEnabled(
+  challenges.jwtForgedChallenge) && challengeUtils.
+  notSolved(challenges.jwtForgedChallenge)) {
+  jwtChallenge(challenges.jwtForgedChallenge, req,
+  'HS256', /rsa_lord@/) }`. Donc 2 conditions :
+  alg='HS256' ET email matches /rsa_lord@/. Note : le
+  code verify utilise `jwt.verify(token,
+  security.publicKey, ...)` (ligne 117). Le bug
+  exploite l'algorithm confusion attack : l'app
+  utilise une RSA public key pour verifier les
+  signatures RS256. Si on signe avec HS256 EN
+  UTILISANT la public key RSA comme HMAC secret, la
+  verif jwt.verify() reussit car elle ne specifie pas
+  algorithms restrictif.
+
+mission_en: |
+  Forge an almost-properly RSA-signed JWT
+  impersonating (non-existent) user rsa_lord@juice-
+  sh.op. OWASP description. Official hints: (1) "This
+  challenge is explicitly not about acquiring the RSA
+  private key used for JWT signing". (2) "The three
+  generic hints from Forge an essentially unsigned
+  JWT token also help with this challenge". (3)
+  "Instead of enforcing no encryption to be applied,
+  try to apply a more sophisticated exploit against
+  the JWT libraries used in the Juice Shop". (4)
+  "Getting your hands on the public RSA key the
+  application employs for its JWTs is mandatory for
+  this challenge". (5) "Finding the corresponding
+  private key should actually be impossible, but that
+  obviously doesn't make this challenge unsolvable".
+  (6) "Make sure your JWT is URL safe!". [KILL_CHAIN_
+  DOCUMENTED]
+
+  Recommended method: Solve check in routes/verify.
+  ts:85-86 + 108-130 (verified source). Exact code:
+  `if (utils.isChallengeEnabled(challenges.
+  jwtForgedChallenge) && challengeUtils.notSolved(
+  challenges.jwtForgedChallenge)) { jwtChallenge(
+  challenges.jwtForgedChallenge, req, 'HS256', /
+  rsa_lord@/) }`. So 2 conditions: alg='HS256' AND
+  email matches /rsa_lord@/. Note: verify code uses
+  `jwt.verify(token, security.publicKey, ...)`
+  (line 117). Bug exploits algorithm confusion
+  attack: app uses RSA public key to verify RS256
+  signatures. If we sign with HS256 USING RSA
+  public key as HMAC secret, jwt.verify() succeeds
+  as it doesn't specify restrictive algorithms.
+
+concepts:
+  - title_fr: "Algorithm confusion attack : RS256/HS256 (CVE-2016-10555-like)"
+    title_en: "Algorithm confusion attack: RS256/HS256 (CVE-2016-10555-like)"
+    body_fr: |
+      Source canonique : Auth0 disclosure 2016 et CVE-
+      2016-10555 (jsonwebtoken < 4.2.2). Mecanique :
+      les libraries JWT supportent ASYMMETRIC algos
+      (RS256 = RSA signature, key = private/public
+      pair) et SYMMETRIC algos (HS256 = HMAC, key =
+      shared secret). Si l'app fait `jwt.verify(token,
+      key)` SANS specifier `algorithms`, la library
+      lit l'alg du HEADER et utilise la KEY pour
+      verifier. Bug critique : si l'app passe la RSA
+      PUBLIC key comme `key`, et l'attaquant signe
+      avec HS256 en utilisant cette MEME public key
+      comme HMAC secret, la verif jwt.verify() reussit
+      ! La library traite la public key comme un
+      shared secret. CVE associee : CVE-2016-10555,
+      CVE-2018-XXX (express-jwt < 5.x).
+    body_en: |
+      Canonical source: Auth0 disclosure 2016 and
+      CVE-2016-10555 (jsonwebtoken < 4.2.2).
+      Mechanic: JWT libraries support ASYMMETRIC
+      algos (RS256 = RSA signature, key = private/
+      public pair) and SYMMETRIC algos (HS256 = HMAC,
+      key = shared secret). If app does
+      `jwt.verify(token, key)` WITHOUT specifying
+      `algorithms`, library reads HEADER alg and
+      uses KEY to verify. Critical bug: if app
+      passes RSA PUBLIC key as `key`, and attacker
+      signs with HS256 using SAME public key as HMAC
+      secret, jwt.verify() succeeds! Library treats
+      public key as shared secret. Associated CVEs:
+      CVE-2016-10555, CVE-2018-XXX (express-jwt <
+      5.x).
+
+  - title_fr: "Public key acquisition : la phase recon prerequisite"
+    title_en: "Public key acquisition: prerequisite recon phase"
+    body_fr: |
+      Hint OWASP #4 explicite : "Getting your hands on
+      the public RSA key the application employs for
+      its JWTs is mandatory for this challenge".
+      Sources d'acquisition : (a) endpoint /jwks ou
+      /.well-known/jwks.json (standard discovery), (b)
+      certificat X.509 si TLS termine cote app, (c)
+      hardcoded dans le bundle (DevTools Sources,
+      search 'BEGIN PUBLIC KEY' ou 'modulus'). Pour
+      Juice Shop, la public key est en
+      lib/insecurity.ts (verifie via grep), donc soit
+      hardcoded soit derivable via /encryptionkeys
+      endpoint exposed. Pattern reusable : la
+      cryptographie asymmetrique repose sur le secret
+      du PRIVATE key, mais la public key peut etre
+      compromise dans la chaine de signature si la
+      library accepte le bad alg.
+    body_en: |
+      OWASP hint #4 explicit: "Getting your hands on
+      the public RSA key the application employs for
+      its JWTs is mandatory for this challenge".
+      Acquisition sources: (a) /jwks or
+      /.well-known/jwks.json endpoint (standard
+      discovery), (b) X.509 certificate if TLS
+      terminated app-side, (c) hardcoded in bundle
+      (DevTools Sources, search 'BEGIN PUBLIC KEY'
+      or 'modulus'). For Juice Shop, public key is
+      in lib/insecurity.ts (verified via grep), so
+      either hardcoded or derivable via exposed
+      /encryptionkeys endpoint. Reusable pattern:
+      asymmetric crypto rests on PRIVATE key
+      secrecy, but public key can be compromised in
+      signature chain if library accepts bad alg.
+
+  - title_fr: "Defense canonique : algorithm whitelist + key type binding"
+    title_en: "Canonical defense: algorithm whitelist + key type binding"
+    body_fr: |
+      mitigationUrl : OWASP JSON Web Token Cheat
+      Sheet. Defense canonique alg confusion : (1)
+      `jwt.verify(token, key, {algorithms:
+      ['RS256']})` - WHITELIST explicite seul
+      l'asymmetric algo (rejette HS256 meme si bien
+      signe). (2) Library moderne (jsonwebtoken
+      >= 4.2.2 ou 9.0+, express-jwt >= 6.0). (3)
+      Use ONLY asymmetric algos pour les JWT cross-
+      service (RS256, ES256, EdDSA). (4) Key type
+      binding : utiliser separately les keys
+      (HMAC secret != public key) pour eliminer la
+      confusion. (5) Pour les JWT internes (single
+      service), HS256 avec key crypto-random 256+
+      bits stocke en HSM est fine. Pattern reusable :
+      ne jamais reutiliser un secret crypto cross-
+      algorithm.
+    body_en: |
+      mitigationUrl: OWASP JSON Web Token Cheat
+      Sheet. Canonical alg confusion defense: (1)
+      `jwt.verify(token, key, {algorithms:
+      ['RS256']})` - explicit WHITELIST asymmetric
+      algo only (rejects HS256 even if well-
+      signed). (2) Modern library (jsonwebtoken >=
+      4.2.2 or 9.0+, express-jwt >= 6.0). (3) Use
+      ONLY asymmetric algos for cross-service
+      JWTs (RS256, ES256, EdDSA). (4) Key type
+      binding: use keys separately (HMAC secret !=
+      public key) to eliminate confusion. (5) For
+      internal JWTs (single service), HS256 with
+      crypto-random 256+ bit key in HSM is fine.
+      Reusable pattern: never reuse crypto secret
+      cross-algorithm.

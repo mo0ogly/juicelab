@@ -1,0 +1,128 @@
+challenge_key: "loginAmyChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Connecte-toi avec les credentials ORIGINAUX d'Amy (la
+  description OWASP exclut SQLi). Description : "(This could
+  take 93.83 billion trillion trillion centuries to brute force,
+  but luckily she did not read the One Important Final Note)".
+  Hints : Amy = personnage de Futurama, mariee a un alien nomme
+  Kif (hint #3), "Amy - being a little dimwitted - did not put
+  nearly enough effort and creativity into the password
+  selection process" (hint #5). [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : c'est un challenge OSINT POP-CULTURE.
+  Recherche "Amy Wong Futurama Kif Kroker" — Amy est la fiancee
+  puis epouse de Kif Kroker. La description fait reference a la
+  conference XKCD/passwords ("One Important Final Note" =
+  webcomic xkcd #936 sur les passphrases longues mais
+  predictibles "correct horse battery staple" qui montre qu'une
+  longue passphrase de mots communs concataines est
+  vulnerable). Amy a probablement choisi un mot de passe qui
+  concatene des mots simples lies a Kif. Email : amy@juice-sh
+  .op (convention business).
+
+  Note la lecon : meme une longue passphrase est devinable si
+  les mots sont predictibles + thematiques. Tu en parleras dans
+  le journal "apres".
+
+mission_en: |
+  Log in with Amy's ORIGINAL credentials (the OWASP description
+  excludes SQLi). Description: "(This could take 93.83 billion
+  trillion trillion centuries to brute force, but luckily she
+  did not read the One Important Final Note)". Hints: Amy =
+  Futurama character, married to an alien named Kif (hint #3),
+  "Amy - being a little dimwitted - did not put nearly enough
+  effort and creativity into the password selection process"
+  (hint #5). [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: this is a POP-CULTURE OSINT challenge.
+  Search "Amy Wong Futurama Kif Kroker" — Amy is Kif Kroker's
+  fiancee then wife. Description references the XKCD/passwords
+  meme ("One Important Final Note" = xkcd #936 on long but
+  predictable passphrases "correct horse battery staple" showing
+  that a long passphrase of concatenated common words is
+  vulnerable). Amy probably picked a password concatenating
+  simple words related to Kif. Email: amy@juice-sh.op
+  (business convention).
+
+  Note the lesson: even a long passphrase is guessable if
+  words are predictable + thematic. You will report it in the
+  "after" logbook.
+
+concepts:
+  - title_fr: "XKCD #936 et l'illusion de la passphrase forte"
+    title_en: "XKCD #936 and the strong-passphrase illusion"
+    body_fr: |
+      Le webcomic XKCD #936 ("Password Strength", 2011) a fait
+      ecole : "correct horse battery staple" — 4 mots aleatoires
+      concatenes = 44 bits d'entropie, plus fort qu'un mot de
+      passe court avec chars speciaux. CORRECT en theorie. Mais
+      le "One Important Final Note" du comic (caracteres en bas)
+      precise : ca ne marche QUE si les mots sont VRAIMENT
+      aleatoires (Diceware, EFF wordlist). Si l'utilisateur
+      choisit des mots THEMATIQUES (lies a sa vie, ses passions),
+      l'entropie chute drastiquement — un attaquant qui connait
+      la cible (OSINT) reduit l'espace de recherche a quelques
+      milliers de combinaisons. Amy = victime archetypale.
+    body_en: |
+      XKCD webcomic #936 ("Password Strength", 2011) became a
+      meme: "correct horse battery staple" — 4 random
+      concatenated words = 44 bits entropy, stronger than a
+      short password with special chars. CORRECT in theory. But
+      the comic's "One Important Final Note" (small text)
+      adds: this works ONLY if words are TRULY random
+      (Diceware, EFF wordlist). If the user picks THEMATIC
+      words (related to their life, hobbies), entropy drops
+      drastically — an attacker who knows the target (OSINT)
+      narrows the search space to a few thousand combos. Amy =
+      archetypal victim.
+
+  - title_fr: "OSINT pop-culture : un sous-domaine specifique"
+    title_en: "Pop-culture OSINT: a specific sub-domain"
+    body_fr: |
+      Pour les comptes seedes par OWASP Juice Shop (admin,
+      jim, bender, amy, mc-safesearch, etc.), les credentials
+      sont chosen par les developpeurs comme JEUX-MOTS sur les
+      personnages. Methode pentester : (1) identifier le
+      personnage (Futurama, Star Trek, music industry, etc.),
+      (2) lister ses traits caracteristiques (relations, songs,
+      catchphrases, planet of origin), (3) tester les
+      combinaisons les plus probables. Pour Amy : Kif (mari),
+      Wong (nom), Mars (planete), Leela/Fry (proches),
+      "ohYearth" (catchphrase). Tools : pyfuzz, John with custom
+      rules.
+    body_en: |
+      For OWASP Juice Shop seeded accounts (admin, jim,
+      bender, amy, mc-safesearch, etc.), credentials are chosen
+      by developers as PUNS on characters. Pentester method:
+      (1) identify the character (Futurama, Star Trek, music
+      industry, etc.), (2) list their traits (relationships,
+      songs, catchphrases, planet of origin), (3) try the most
+      likely combos. For Amy: Kif (husband), Wong (last name),
+      Mars (planet), Leela/Fry (friends), "ohYearth"
+      (catchphrase). Tools: pyfuzz, John with custom rules.
+
+  - title_fr: "Defense canonique : password policy + 2FA + breach detection"
+    title_en: "Canonical defense: password policy + 2FA + breach detection"
+    body_fr: |
+      Trois couches. (1) Password policy stricte : minimum
+      complexite + check contre haveibeenpwned API qui rejette
+      les passwords compromis dans des breaches publics
+      (incluant les passphrases predictibles
+      thematiques). (2) 2FA OBLIGATOIRE : meme si le password
+      est devinable, 2FA bloque l'acces. (3) Anomaly detection :
+      alert sur des login attempts depuis des IPs nouvelles
+      (geo-fencing, device fingerprinting), avec
+      step-up authentication. La combinaison des 3 rend l'OSINT
+      pure inutile pour l'attaquant.
+    body_en: |
+      Three layers. (1) Strict password policy: minimum
+      complexity + check against haveibeenpwned API rejecting
+      passwords compromised in public breaches (including
+      predictable thematic passphrases). (2) MANDATORY 2FA:
+      even if password is guessable, 2FA blocks access. (3)
+      Anomaly detection: alert on login attempts from new IPs
+      (geo-fencing, device fingerprinting), with step-up
+      authentication. Combined, the 3 make pure OSINT useless
+      for the attacker.

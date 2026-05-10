@@ -1,0 +1,86 @@
+challenge_key: "loginAdminChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Quand tu te connectes à un site, ce que tu tapes dans le formulaire est-il
+      directement passé à la base de données qui te cherche ? Que se passerait-il
+      si tu tapais quelque chose qui ne ressemble pas à un mot de passe normal,
+      mais qui pourrait avoir un sens technique pour la base ?
+    text_en: |
+      When you log in to a site, is what you type in the form passed directly
+      to the database that looks you up? What would happen if you typed
+      something that does not look like a normal password but could mean
+      something technical to the database?
+    pedagogical_intent: |
+      Activate the injection mindset: see user input as potential code, not just data.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Les bases de données comprennent un langage spécifique : SQL. Si une
+      application construit ses requêtes en collant directement ta saisie dans
+      la requête, tu pourrais y glisser des morceaux de SQL au lieu d'un email.
+      Pour observer ce qui se passe, garde un œil sur l'onglet Réseau de tes
+      DevTools quand tu cliques sur Se connecter.
+    text_en: |
+      Databases speak a specific language: SQL. If an application builds its
+      queries by directly concatenating your input into the query, you could
+      slip pieces of SQL in instead of an email. To observe what happens, keep
+      an eye on the Network tab of your DevTools when you click Log in.
+    pedagogical_intent: |
+      Introduce SQL as the target language and DevTools as the observation tool.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Sur le formulaire de login de Juice Shop, le champ email est probablement
+      intégré dans la requête SQL qui cherche ton compte. Essaie de mettre des
+      caractères qui forcent SQL à interpréter ta saisie comme du code et plus
+      seulement comme une chaîne. Si la requête se casse, le serveur va te le
+      faire savoir avec un message d'erreur révélateur.
+    text_en: |
+      In the Juice Shop login form, the email field is likely embedded into
+      the SQL query that looks up your account. Try inserting characters that
+      force SQL to interpret your input as code and not just as a string. If
+      the query breaks, the server will let you know with a revealing error
+      message.
+    pedagogical_intent: |
+      Localize the attack surface: the email field, with the goal of breaking the query.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le caractère apostrophe ' termine une chaîne en SQL. Combiné avec un OR
+      toujours vrai et un commentaire pour neutraliser la fin de la requête,
+      tu peux changer la sémantique de la requête de login pour qu'elle
+      retourne un user sans vérifier le mot de passe. La forme générale ressemble
+      à : valeur' OR vrai-- avec deux tirets en fin pour commenter.
+    text_en: |
+      The single quote ' terminates a string in SQL. Combined with an
+      always-true OR and a comment to neutralize the rest of the query, you
+      can change the semantics of the login query so it returns a user without
+      checking the password. The general form looks like:
+      value' OR true-- with two dashes at the end to comment out the rest.
+    pedagogical_intent: |
+      Give the syntactic shape of the payload, without the literal value to type.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Dans le champ email du formulaire de login, saisis ' OR true-- (avec
+      l'espace après OR et les deux tirets à la fin). Mets n'importe quoi dans
+      le champ mot de passe, ça n'a plus d'importance. Soumets. La requête SQL
+      construite devient quelque chose comme SELECT * FROM Users WHERE email='' OR true--' AND password='...'
+      ce qui retourne le premier utilisateur de la table, qui se trouve être l'admin.
+    text_en: |
+      In the email field of the login form, enter ' OR true-- (with the space
+      after OR and the two dashes at the end). Put anything in the password
+      field, it does not matter anymore. Submit. The SQL query built by the
+      app becomes something like SELECT * FROM Users WHERE email='' OR true--' AND password='...'
+      which returns the first user in the table, who happens to be the admin.
+    pedagogical_intent: |
+      Quasi-solution: full payload provided with the mechanism explained, but
+      the student still has to type and observe the result themselves.

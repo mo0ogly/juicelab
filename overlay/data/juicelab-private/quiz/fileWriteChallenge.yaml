@@ -1,0 +1,125 @@
+challenge_key: "fileWriteChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le bug racine est dans la library `unzipper`
+      (verifie routes/fileUpload.ts:39). Quelle classe
+      de vulnerabilite est exploitee ?
+    question_en: |
+      Root bug is in `unzipper` library (verified routes/
+      fileUpload.ts:39). What vulnerability class is
+      exploited?
+    options_fr:
+      - "Buffer overflow"
+      - "Zip Slip (Snyk 2018) : un .zip dont une entry path utilise des `../` permet a l'extracteur de creer/ecraser des fichiers en dehors du dossier d'extraction. C'est une categorie de path traversal connue depuis 2003 (Apache Tomcat CVE-2003-0042) re-decouverte mass-scale en 2018 par Snyk Research. Affecte des dizaines de libraries (unzip, unzipper, adm-zip, jszip)"
+      - "SQL injection"
+      - "Cross-site scripting"
+    options_en:
+      - "Buffer overflow"
+      - "Zip Slip (Snyk 2018): a .zip whose entry path uses `../` allows extractor to create/overwrite files outside extraction folder. Path traversal class known since 2003 (Apache Tomcat CVE-2003-0042) re-discovered mass-scale in 2018 by Snyk Research. Affects dozens of libraries (unzip, unzipper, adm-zip, jszip)"
+      - "SQL injection"
+      - "Cross-site scripting"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : le pattern Zip Slip illustre
+      qu'une vulnerabilite peut "dormir" 15 ans dans
+      l'ecosysteme avant d'etre re-decouverte mass-scale.
+      Defense moderne = automated dependency scanning
+      (Snyk, Dependabot, OWASP Dependency-Check) + safe-
+      by-default extractors (yauzl, decompress avec
+      strip). Source : Snyk research 2018 +
+      routes/fileUpload.ts:43.
+    explanation_en: |
+      Reusable pattern: Zip Slip illustrates how a
+      vulnerability can "sleep" 15 years in ecosystem
+      before mass-scale re-discovery. Modern defense =
+      automated dependency scanning (Snyk, Dependabot,
+      OWASP Dependency-Check) + safe-by-default
+      extractors (yauzl, decompress with strip). Source:
+      Snyk research 2018 + routes/fileUpload.ts:43.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      routes/fileUpload.ts:44 contient une defense :
+      `if (absolutePath.includes(path.resolve('.')))`.
+      Pourquoi cette defense est-elle INSUFFISANTE pour
+      bloquer Zip Slip ?
+    question_en: |
+      routes/fileUpload.ts:44 contains a defense: `if
+      (absolutePath.includes(path.resolve('.')))`. Why
+      is this defense INSUFFICIENT to block Zip Slip?
+    options_fr:
+      - "Parce que includes() est lent"
+      - "Parce que `includes(cwd)` autorise toute ecriture dans n'importe quel sous-dossier du cwd : ftp/, uploads/, node_modules/, .git/, etc. Or la cible legal.md EST dans cwd/ftp. La defense correcte est `startsWith(extractionDir + path.sep)` (verifier que l'ecriture reste DANS le dossier d'extraction). Pattern : includes() ne verifie PAS la position du match"
+      - "Parce que path.resolve() ne fonctionne pas sous Windows"
+      - "Parce que le cwd change entre les requetes"
+    options_en:
+      - "Because includes() is slow"
+      - "Because `includes(cwd)` authorizes any write to any subdirectory of cwd: ftp/, uploads/, node_modules/, .git/, etc. But target legal.md IS in cwd/ftp. Correct defense is `startsWith(extractionDir + path.sep)` (verify write stays IN extraction folder). Pattern: includes() does NOT verify match position"
+      - "Because path.resolve() doesn't work under Windows"
+      - "Because cwd changes between requests"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour les checks de path safety,
+      la primitive correcte est `startsWith(safeDir +
+      path.sep)` ou mieux `path.relative(safeDir,
+      target).startsWith('..')` pour rejeter les paths
+      qui sortent. Le pattern includes() est un
+      anti-pattern courant ; il faut connaitre la
+      semantique exacte des string methods. Source : OWASP
+      Path Traversal Cheat Sheet + analyse routes/
+      fileUpload.ts.
+    explanation_en: |
+      Reusable pattern: for path safety checks, correct
+      primitive is `startsWith(safeDir + path.sep)` or
+      better `path.relative(safeDir, target).startsWith(
+      '..')` to reject paths going out. includes()
+      pattern is common anti-pattern; must know exact
+      semantics of string methods. Source: OWASP Path
+      Traversal Cheat Sheet + routes/fileUpload.ts
+      analysis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la defense canonique RECOMMANDEE par
+      OWASP Vulnerable Dependency Management Cheat Sheet
+      pour eviter les vulns du type Zip Slip ?
+    question_en: |
+      What canonical defense RECOMMENDED by OWASP
+      Vulnerable Dependency Management Cheat Sheet to
+      avoid Zip Slip type vulns?
+    options_fr:
+      - "Toujours utiliser le ZIP officiel"
+      - "Defense en profondeur : (1) automated dependency scanning (Snyk, Dependabot, OWASP Dependency-Check) qui flag les CVEs connues. (2) keep dependencies up-to-date (auto-merge des patches de securite). (3) safe extractors par defaut. (4) sandbox d'extraction (chroot/Docker volume read-only ailleurs). (5) code-level path validation startsWith()"
+      - "Stocker les zips en plaintext"
+      - "Disable les uploads completement"
+    options_en:
+      - "Always use official ZIP"
+      - "Defense in depth: (1) automated dependency scanning (Snyk, Dependabot, OWASP Dependency-Check) flagging known CVEs. (2) keep dependencies up-to-date (auto-merge security patches). (3) safe-by-default extractors. (4) extraction sandbox (chroot/Docker volume read-only outside). (5) code-level path validation startsWith()"
+      - "Store zips in plaintext"
+      - "Disable uploads entirely"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la defense en profondeur (DiD)
+      contre les supply chain vulnerabilities combine
+      automation (scanning) + governance (patching
+      policy) + architecture (sandboxing) + code (path
+      validation). Aucune couche unique n'est
+      suffisante - voir le challenge supplyChainAttack
+      et knownVulnerableComponent pour autres
+      composantes. Source : OWASP Vulnerable Dependency
+      Management Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: defense in depth (DiD) against
+      supply chain vulnerabilities combines automation
+      (scanning) + governance (patching policy) +
+      architecture (sandboxing) + code (path
+      validation). No single layer is sufficient - see
+      supplyChainAttack and knownVulnerableComponent
+      challenges for other components. Source: OWASP
+      Vulnerable Dependency Management Cheat Sheet.

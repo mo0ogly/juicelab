@@ -1,0 +1,513 @@
+warning: in the working copy of 'frontend/package.json', LF will be replaced by CRLF the next time Git touches it
+diff --git a/config/default.yml b/config/default.yml
+index 96d6a0d..9327ce0 100644
+--- a/config/default.yml
++++ b/config/default.yml
+@@ -458,7 +458,10 @@ memories:
+     caption: 'Everything up and running!'
+     user: bjoernOwasp
+ ctf:
+-  showFlagsInNotifications: false
++  # Activated for the JuiceLab TD : the student needs to read the HMAC
++  # flag in the solve notification and paste it in the Coach to claim
++  # the +10 bonus. See juicelab-add-challenge skill for the full flow.
++  showFlagsInNotifications: true
+   showCountryDetailsInNotifications: none # Options: none  name  flag  both
+   countryMapping: ~
+   systemWideNotifications:
+diff --git a/frontend/package.json b/frontend/package.json
+index 5991bda..88fc70f 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -45,6 +45,7 @@
+     "file-saver": "^2.0.2",
+     "flag-icons": "^6.9.2",
+     "font-mfizz": "^2.4.1",
++    "js-yaml": "^4.1.0",
+     "jwt-decode": "^2.2.0",
+     "lodash-es": "^4.17.21",
+     "material-icons": "^0.3.1",
+@@ -70,6 +71,7 @@
+     "@types/file-saver": "^2.0.1",
+     "@types/jasmine": "~5.1.0",
+     "@types/jasminewd2": "^2.0.10",
++    "@types/js-yaml": "^4.0.9",
+     "@types/jwt-decode": "^2.2.1",
+     "@types/node": "^20.17.19",
+     "@types/socket.io-client": "^1.4.33",
+diff --git a/frontend/src/app/app.routing.ts b/frontend/src/app/app.routing.ts
+index d3508e8..d0df4d5 100644
+--- a/frontend/src/app/app.routing.ts
++++ b/frontend/src/app/app.routing.ts
+@@ -59,6 +59,23 @@ const loadWeb3SandboxModule = async () => {
+ }
+ // vuln-code-snippet start adminSectionChallenge scoreBoardChallenge web3SandboxChallenge
+ const routes: Routes = [
++  {
++    path: 'juicelab',
++    loadComponent: async () => {
++      const m = await import('./juicelab-overlay/juicelab-panel/juicelab-panel.component')
++      return m.JuicelabPanelComponent
++    }
++  },
++  {
++    // Hidden trophy room — deliberately not surfaced anywhere in the UI.
++    // Pedagogical : students who explore /#/<random> URLs eventually find
++    // their gamified achievements page with the captured CTF flags.
++    path: 'cabinet',
++    loadComponent: async () => {
++      const m = await import('./juicelab-overlay/trophy-room/trophy-room.component')
++      return m.TrophyRoomComponent
++    }
++  },
+   { // vuln-code-snippet neutral-line adminSectionChallenge
+     path: 'administration', // vuln-code-snippet vuln-line adminSectionChallenge
+     component: AdministrationComponent, // vuln-code-snippet neutral-line adminSectionChallenge
+diff --git a/frontend/src/app/navbar/navbar.component.html b/frontend/src/app/navbar/navbar.component.html
+index 8d010e4..9dc9ef3 100644
+--- a/frontend/src/app/navbar/navbar.component.html
++++ b/frontend/src/app/navbar/navbar.component.html
+@@ -112,6 +112,12 @@
+       </button>
+     }
+ 
++    <button mat-icon-button routerLink="/juicelab" class="buttons nav-square-button"
++      aria-label="Coach pedagogique JuiceLab"
++      matTooltip="Coach pedagogique JuiceLab" matTooltipPosition="below">
++      <mat-icon>school</mat-icon>
++    </button>
++
+     <button id="navbarLanguageButton" [matMenuTriggerFor]="menu" mat-button class="buttons nav-square-button"
+       aria-label="Language selection menu"
+       matTooltip="{{ 'LANGUAGE_SEL_HINT' | translate }}" matTooltipPosition="below">
+diff --git a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html
+index 15436aa..3cc22d2 100644
+--- a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html
++++ b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html
+@@ -16,6 +16,18 @@
+     }
+   </div>
+   <div class="badge-group">
++    <!-- juicelab coach (TD only) — placed FIRST so it's the visual anchor for TD challenges -->
++    @if (isTdChallenge()) {
++      <button
++        class="badge not-completable juicelab-coach"
++        type="button"
++        (click)="openCoach()"
++        [matTooltip]="'JUICELAB_COACH_TOOLTIP' | translate"
++      >
++        <mat-icon>school</mat-icon>
++        <span class="juicelab-coach-label">{{ 'JUICELAB_COACH_BADGE' | translate }}</span>
++      </button>
++    }
+     <!-- info text if the challenge is unavailable -->
+     @if (challenge.disabledEnv !== null && challenge.disabledEnv !== 'safetyMode') {
+       <button
+diff --git a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss
+index 66c25de..3352bd0 100644
+--- a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss
++++ b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss
+@@ -5,6 +5,35 @@
+ 
+ @use '../../../../styles/variables' as *;
+ 
++// JuiceLab — visual frame for the 13 TD challenges. Applied via host class
++// challenge-card.juicelab-td, set by HostBinding when isTdChallenge() is true.
++:host.juicelab-td {
++  border-left: 4px solid #38bdf8;
++  background: linear-gradient(
++    90deg,
++    rgba(56, 189, 248, 0.10) 0%,
++    rgba(56, 189, 248, 0.02) 60%,
++    transparent 100%
++  );
++}
++
++.juicelab-coach {
++  background: rgba(56, 189, 248, 0.22);
++  border: 1px solid rgba(56, 189, 248, 0.7);
++  color: #38bdf8;
++  min-width: auto;
++  padding: 0 8px;
++  gap: 4px;
++  font-weight: 700;
++}
++.juicelab-coach mat-icon { color: #38bdf8; }
++.juicelab-coach-label {
++  font-size: 10px;
++  letter-spacing: 0.5px;
++  color: #38bdf8;
++  font-weight: 700;
++}
++
+ :host {
+   background-color: var(--theme-background-darker);
+   border-radius: 2px;
+diff --git a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts
+index b7618d8..a098d62 100644
+--- a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts
++++ b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts
+@@ -1,4 +1,4 @@
+-import { Component, Input, type OnInit, inject, type OnChanges, type SimpleChanges, ViewChild, HostBinding } from '@angular/core'
++import { Component, Input, type OnInit, inject, type OnChanges, type SimpleChanges, ViewChild, HostBinding, signal } from '@angular/core'
+ import { EnrichedChallenge } from '../../types/EnrichedChallenge'
+ import { Config } from 'src/app/Services/configuration.service'
+ import { TranslateModule } from '@ngx-translate/core'
+@@ -7,6 +7,9 @@ import { MatTooltip } from '@angular/material/tooltip'
+ import { NgClass } from '@angular/common'
+ import { DifficultyStarsComponent } from '../difficulty-stars/difficulty-stars.component'
+ import { SnackBarHelperService } from 'src/app/Services/snack-bar-helper.service'
++import { MatDialog } from '@angular/material/dialog'
++import { JuicelabPackService } from 'src/app/juicelab-overlay/services/juicelab-pack.service'
++import { JuicelabCoachDialogComponent } from 'src/app/juicelab-overlay/coach-dialog/coach-dialog.component'
+ 
+ @Component({
+   selector: 'challenge-card',
+@@ -16,6 +19,14 @@ import { SnackBarHelperService } from 'src/app/Services/snack-bar-helper.service
+ })
+ export class ChallengeCardComponent implements OnInit, OnChanges {
+   private readonly snackBarHelperService = inject(SnackBarHelperService)
++  private readonly dialog = inject(MatDialog)
++  private readonly juicelabPackService = inject(JuicelabPackService)
++  readonly isTdChallenge = signal(false)
++
++  @HostBinding('class.juicelab-td')
++  get juicelabTdHostClass(): boolean {
++    return this.isTdChallenge()
++  }
+ 
+   @Input()
+   public challenge: EnrichedChallenge
+@@ -57,6 +68,27 @@ export class ChallengeCardComponent implements OnInit, OnChanges {
+     const { hasInstructions, startHackingInstructorFor } = await import('../../../../hacking-instructor')
+     this.hasInstructions = hasInstructions
+     this.startHackingInstructorFor = startHackingInstructorFor
++    this.juicelabPackService.getTdKeySet().subscribe({
++      next: (keys) => this.isTdChallenge.set(keys.has(this.challenge?.key)),
++      error: () => this.isTdChallenge.set(false),
++    })
++  }
++
++  openCoach (): void {
++    if (!this.challenge?.key) return
++    this.dialog.open(JuicelabCoachDialogComponent, {
++      data: {
++        challengeKey: this.challenge.key,
++        challengeName: this.challenge.name,
++        challengeDescription: this.challenge.description,
++        challengeCategory: this.challenge.category,
++        challengeDifficulty: this.challenge.difficulty,
++      },
++      width: '900px',
++      maxWidth: '95vw',
++      panelClass: 'juicelab-coach-dialog-panel',
++      autoFocus: false,
++    })
+   }
+ 
+   ngOnChanges (changes: SimpleChanges): void {
+diff --git a/frontend/src/app/sidenav/sidenav.component.html b/frontend/src/app/sidenav/sidenav.component.html
+index 70be2d2..f048d61 100644
+--- a/frontend/src/app/sidenav/sidenav.component.html
++++ b/frontend/src/app/sidenav/sidenav.component.html
+@@ -276,6 +276,15 @@
+       </span>
+     </a>
+   }
++  @if (cabinetVisible()) {
++    <a mat-list-item routerLink="/cabinet" (click)="onToggleSidenav()"
++      aria-label="Open trophy cabinet">
++      <mat-icon matListIcon>military_tech</mat-icon>
++      <span class="menu-text truncate">
++        {{"JUICELAB_TROPHY_TITLE" | translate}}
++      </span>
++    </a>
++  }
+   @if (!scoreBoardVisible && offerScoreBoardTutorial) {
+     <a mat-list-item (click)="startHackingInstructor()"
+       aria-label="Launch beginners tutorial">
+diff --git a/frontend/src/app/sidenav/sidenav.component.ts b/frontend/src/app/sidenav/sidenav.component.ts
+index f272108..f33a4c9 100644
+--- a/frontend/src/app/sidenav/sidenav.component.ts
++++ b/frontend/src/app/sidenav/sidenav.component.ts
+@@ -5,7 +5,8 @@
+ 
+ import { environment } from '../../environments/environment'
+ import { ChallengeService } from '../Services/challenge.service'
+-import { Component, EventEmitter, NgZone, type OnInit, Output, inject } from '@angular/core'
++import { Component, EventEmitter, NgZone, type OnInit, Output, computed, inject } from '@angular/core'
++import { JuicelabStateService } from '../juicelab-overlay/services/juicelab-state.service'
+ import { SocketIoService } from '../Services/socket-io.service'
+ import { AdministrationService } from '../Services/administration.service'
+ import { Router, RouterLink } from '@angular/router'
+@@ -39,6 +40,15 @@ export class SidenavComponent implements OnInit {
+   private readonly router = inject(Router)
+   private readonly configurationService = inject(ConfigurationService)
+   private readonly loginGuard = inject(LoginGuard)
++  private readonly juicelabState = inject(JuicelabStateService)
++
++  // Cabinet (trophy room) menu entry — appears only after the student has
++  // captured at least one CTF flag, so the hidden /#/cabinet route is not
++  // surfaced before there is a reason to visit it.
++  public readonly cabinetVisible = computed<boolean>(() => {
++    const challenges = this.juicelabState.state()?.challenges ?? {}
++    return Object.values(challenges).some((c: any) => c?.flag_captured === true)
++  })
+ 
+   public applicationName = 'OWASP Juice Shop'
+   public showGitHubLink = true
+diff --git a/frontend/src/assets/i18n/en.json b/frontend/src/assets/i18n/en.json
+index 17d5f58..c498fcf 100644
+--- a/frontend/src/assets/i18n/en.json
++++ b/frontend/src/assets/i18n/en.json
+@@ -480,5 +480,73 @@
+   "NFT_MINT_TEXT_SUCCESS": "Minted Successfully",
+   "NFT_MINT_TEXT_AWAITING_APPROVAL": "Awaiting Approval",
+   "NFT_MINT_TEXT_CONFIRM": "Confirm Mint...",
+-  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process..."
++  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process...",
++  "JUICELAB_COACH_TITLE": "JuiceLab Coach",
++  "JUICELAB_COACH_TOOLTIP": "JuiceLab Coach: hints, logbook, quiz, signed proof",
++  "JUICELAB_COACH_BADGE": "TD",
++  "JUICELAB_TAB_HINTS": "Hints",
++  "JUICELAB_TAB_BEFORE": "Before - logbook",
++  "JUICELAB_TAB_BRIEFING": "Briefing",
++  "JUICELAB_TAB_AFTER": "After - logbook",
++  "JUICELAB_TAB_QUIZ": "Quiz",
++  "JUICELAB_AUTH_WARN": "Log in to Juice Shop before using the coach (hints and quiz are reserved to authenticated accounts).",
++  "JUICELAB_CLOSE": "Close",
++  "JUICELAB_HINTS_TITLE": "Graduated hints",
++  "JUICELAB_HINTS_SCORE_CURRENT": "Current score",
++  "JUICELAB_HINTS_CONSUMED": "Hints consumed",
++  "JUICELAB_HINTS_COST": "cost",
++  "JUICELAB_HINTS_REVEAL": "Reveal",
++  "JUICELAB_HINTS_LOADING": "Loading...",
++  "JUICELAB_HINTS_ERR_AUTH": "Log in to Juice Shop to reveal hints.",
++  "JUICELAB_HINTS_ERR_GATING": "You must first reveal {{required}} before {{level}}.",
++  "JUICELAB_HINTS_ERR_NOTFOUND": "No hints available for {{key}}.",
++  "JUICELAB_HINTS_ERR_NETWORK": "Network error while reading the hint (status {{status}}).",
++  "JUICELAB_JOURNAL_TITLE_BEFORE": "Logbook - before",
++  "JUICELAB_JOURNAL_TITLE_AFTER": "Logbook - after",
++  "JUICELAB_JOURNAL_PLACEHOLDER": "Answer in 2 to 4 lines.",
++  "JUICELAB_JOURNAL_WORDS": "Words written",
++  "JUICELAB_JOURNAL_WARN50": "(50 words minimum recommended)",
++  "JUICELAB_JOURNAL_MINWORDS": "At least {{n}} words required to save.",
++  "JUICELAB_JOURNAL_DIRTY": "Unsaved draft.",
++  "JUICELAB_JOURNAL_SAVE": "Save",
++  "JUICELAB_JOURNAL_SAVED_AT": "Saved at",
++  "JUICELAB_JOURNAL_DOWNLOAD": "Download proof (.md)",
++  "JUICELAB_JOURNAL_DOWNLOAD_HINT": "Bundle: brief + before + after + hints + quiz score, ready to submit.",
++  "JUICELAB_FLAG_LABEL": "CTF flag (paste the hash from the Juice Shop notification)",
++  "JUICELAB_FLAG_VERIFY": "Verify flag",
++  "JUICELAB_FLAG_VERIFYING": "Verifying...",
++  "JUICELAB_FLAG_OK": "Flag verified - +10 bonus applied",
++  "JUICELAB_FLAG_KO": "Flag invalid (check that you copied the full hash from the notification)",
++  "JUICELAB_FLAG_DISABLED": "Flag verification disabled (server secret missing)",
++  "JUICELAB_FLAG_ERR_NETWORK": "Network error during verification (status {{status}}).",
++  "JUICELAB_TROPHY_TITLE": "Trophy cabinet",
++  "JUICELAB_TROPHY_LEAD": "Hidden room. Each trophy here means a CTF flag verified by the dashboard.",
++  "JUICELAB_TROPHY_COUNTER": "{{captured}} / {{total}} flags captured",
++  "JUICELAB_TROPHY_EMPTY_TITLE": "No trophy yet",
++  "JUICELAB_TROPHY_EMPTY_BODY": "Solve a challenge, copy its flag from the Juice Shop notification, paste it in the Coach 'After' tab and verify. Successful verifications appear here.",
++  "JUICELAB_TROPHY_CAPTURED_AT": "Captured at",
++  "JUICELAB_TROPHY_BACK": "Back to coach",
++  "JUICELAB_TROPHY_LEGEND_NAME": "Legend trophy",
++  "JUICELAB_TROPHY_LEGEND_PLACEHOLDER": "Decoded keyword",
++  "JUICELAB_TROPHY_LEGEND_VALIDATE": "Submit",
++  "JUICELAB_TROPHY_LEGEND_SUCCESS": "F12 layer cleared : DOM inspection + ROT13 decoding + CSS toggle.",
++  "JUICELAB_TROPHY_LEGEND_FAIL": "Wrong keyword. Keep looking.",
++  "JUICELAB_QUIZ_TITLE": "Comprehension quiz",
++  "JUICELAB_QUIZ_SUBTITLE": "3 questions to anchor the concept after solving the challenge.",
++  "JUICELAB_QUIZ_NOTAVAILABLE": "Quiz not yet available for this challenge.",
++  "JUICELAB_QUIZ_SUBMIT": "Submit quiz",
++  "JUICELAB_QUIZ_SENDING": "Sending...",
++  "JUICELAB_QUIZ_SCORE": "Quiz score",
++  "JUICELAB_QUIZ_ERR_AUTH": "Log in to Juice Shop to submit the quiz.",
++  "JUICELAB_QUIZ_ERR_NOTFOUND": "No quiz available for this challenge.",
++  "JUICELAB_QUIZ_ERR_NETWORK": "Network error while submitting the quiz (status {{status}}).",
++  "JUICELAB_BRIEFING_LOADING": "Loading the briefing...",
++  "JUICELAB_BRIEFING_NOTAVAILABLE": "No briefing available yet for this challenge.",
++  "JUICELAB_BRIEFING_MISSION": "Mission",
++  "JUICELAB_BRIEFING_CONCEPTS": "Key concepts to understand",
++  "JUICELAB_BRIEFING_HINT_TIP": "Need a clue? Open the Hints tab. Each level you reveal costs you points.",
++  "JUICELAB_SCORE_TOTAL": "Total",
++  "JUICELAB_SCORE_CHALLENGE": "Challenge",
++  "JUICELAB_SCORE_QUIZ_PENDING": "quiz pending",
++  "JUICELAB_SCORE_FORMULA": "Formula: total = (challenge + quiz) / 2. challenge = 100 - sum of hint costs. quiz = average of Q1+Q2+Q3."
+ }
+diff --git a/frontend/src/assets/i18n/fr_FR.json b/frontend/src/assets/i18n/fr_FR.json
+index 9966f7d..dbcc793 100644
+--- a/frontend/src/assets/i18n/fr_FR.json
++++ b/frontend/src/assets/i18n/fr_FR.json
+@@ -480,5 +480,73 @@
+   "NFT_MINT_TEXT_SUCCESS": "Minted Successfully",
+   "NFT_MINT_TEXT_AWAITING_APPROVAL": "En attente d’approbation",
+   "NFT_MINT_TEXT_CONFIRM": "Confirm Mint...",
+-  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process..."
++  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process...",
++  "JUICELAB_COACH_TITLE": "Coach JuiceLab",
++  "JUICELAB_COACH_TOOLTIP": "Coach JuiceLab : indices, journal, quiz, preuve signee",
++  "JUICELAB_COACH_BADGE": "TD",
++  "JUICELAB_TAB_HINTS": "Indices",
++  "JUICELAB_TAB_BEFORE": "Avant - journal",
++  "JUICELAB_TAB_BRIEFING": "Briefing",
++  "JUICELAB_TAB_AFTER": "Apres - journal",
++  "JUICELAB_TAB_QUIZ": "Quiz",
++  "JUICELAB_AUTH_WARN": "Connecte-toi a Juice Shop avant d'utiliser le coach (les indices et le quiz sont reserves aux comptes authentifies).",
++  "JUICELAB_CLOSE": "Fermer",
++  "JUICELAB_HINTS_TITLE": "Indices gradues",
++  "JUICELAB_HINTS_SCORE_CURRENT": "Score actuel",
++  "JUICELAB_HINTS_CONSUMED": "Indices consommes",
++  "JUICELAB_HINTS_COST": "cout",
++  "JUICELAB_HINTS_REVEAL": "Reveler",
++  "JUICELAB_HINTS_LOADING": "Chargement...",
++  "JUICELAB_HINTS_ERR_AUTH": "Connecte-toi a Juice Shop pour reveler les indices.",
++  "JUICELAB_HINTS_ERR_GATING": "Tu dois d'abord reveler {{required}} avant {{level}}.",
++  "JUICELAB_HINTS_ERR_NOTFOUND": "Aucun indice disponible pour {{key}}.",
++  "JUICELAB_HINTS_ERR_NETWORK": "Erreur reseau lors de la lecture de l'indice (statut {{status}}).",
++  "JUICELAB_JOURNAL_TITLE_BEFORE": "Journal de bord - avant",
++  "JUICELAB_JOURNAL_TITLE_AFTER": "Journal de bord - apres",
++  "JUICELAB_JOURNAL_PLACEHOLDER": "Reponds en 2 a 4 lignes.",
++  "JUICELAB_JOURNAL_WORDS": "Mots saisis",
++  "JUICELAB_JOURNAL_WARN50": "(50 mots minimum recommandes)",
++  "JUICELAB_JOURNAL_MINWORDS": "Minimum {{n}} mots pour enregistrer.",
++  "JUICELAB_JOURNAL_DIRTY": "Brouillon non enregistre.",
++  "JUICELAB_JOURNAL_SAVE": "Enregistrer",
++  "JUICELAB_JOURNAL_SAVED_AT": "Enregistre a",
++  "JUICELAB_JOURNAL_DOWNLOAD": "Telecharger preuve (.md)",
++  "JUICELAB_JOURNAL_DOWNLOAD_HINT": "Bundle : brief + avant + apres + indices + score quiz, pret a rendre.",
++  "JUICELAB_FLAG_LABEL": "Flag CTF (copier le hash depuis la notification Juice Shop)",
++  "JUICELAB_FLAG_VERIFY": "Verifier flag",
++  "JUICELAB_FLAG_VERIFYING": "Verification...",
++  "JUICELAB_FLAG_OK": "Flag verifie - bonus +10 applique",
++  "JUICELAB_FLAG_KO": "Flag invalide (verifie que tu as bien copie le hash complet de la notification)",
++  "JUICELAB_FLAG_DISABLED": "Verification de flag desactivee (secret serveur manquant)",
++  "JUICELAB_FLAG_ERR_NETWORK": "Erreur reseau durant la verification (statut {{status}}).",
++  "JUICELAB_TROPHY_TITLE": "Cabinet des trophees",
++  "JUICELAB_TROPHY_LEAD": "Salle cachee. Chaque trophee correspond a un flag CTF verifie par le dashboard.",
++  "JUICELAB_TROPHY_COUNTER": "{{captured}} / {{total}} flags captures",
++  "JUICELAB_TROPHY_EMPTY_TITLE": "Aucun trophee encore",
++  "JUICELAB_TROPHY_EMPTY_BODY": "Resous un challenge, copie son flag depuis la notification Juice Shop, colle-le dans l'onglet 'Apres' du Coach et verifie. Les verifications reussies apparaissent ici.",
++  "JUICELAB_TROPHY_CAPTURED_AT": "Capture le",
++  "JUICELAB_TROPHY_BACK": "Retour au coach",
++  "JUICELAB_TROPHY_LEGEND_NAME": "Trophee Legende",
++  "JUICELAB_TROPHY_LEGEND_PLACEHOLDER": "Mot decode",
++  "JUICELAB_TROPHY_LEGEND_VALIDATE": "Valider",
++  "JUICELAB_TROPHY_LEGEND_SUCCESS": "Couche F12 franchie : inspection DOM + decodage ROT13 + bascule CSS.",
++  "JUICELAB_TROPHY_LEGEND_FAIL": "Mauvais mot. Continue a chercher.",
++  "JUICELAB_QUIZ_TITLE": "Quiz de comprehension",
++  "JUICELAB_QUIZ_SUBTITLE": "3 questions pour ancrer le concept apres avoir resolu le challenge.",
++  "JUICELAB_QUIZ_NOTAVAILABLE": "Quiz pas encore disponible pour ce challenge.",
++  "JUICELAB_QUIZ_SUBMIT": "Soumettre le quiz",
++  "JUICELAB_QUIZ_SENDING": "Envoi...",
++  "JUICELAB_QUIZ_SCORE": "Score quiz",
++  "JUICELAB_QUIZ_ERR_AUTH": "Connecte-toi a Juice Shop pour soumettre le quiz.",
++  "JUICELAB_QUIZ_ERR_NOTFOUND": "Aucun quiz disponible pour ce challenge.",
++  "JUICELAB_QUIZ_ERR_NETWORK": "Erreur reseau lors de la soumission du quiz (statut {{status}}).",
++  "JUICELAB_BRIEFING_LOADING": "Chargement du briefing...",
++  "JUICELAB_BRIEFING_NOTAVAILABLE": "Pas encore de briefing pour ce challenge.",
++  "JUICELAB_BRIEFING_MISSION": "Mission",
++  "JUICELAB_BRIEFING_CONCEPTS": "Concepts cles a comprendre",
++  "JUICELAB_BRIEFING_HINT_TIP": "Besoin d'aide ? Ouvre l'onglet Indices. Chaque niveau revele coute des points.",
++  "JUICELAB_SCORE_TOTAL": "Total",
++  "JUICELAB_SCORE_CHALLENGE": "Challenge",
++  "JUICELAB_SCORE_QUIZ_PENDING": "quiz en attente",
++  "JUICELAB_SCORE_FORMULA": "Formule : total = (challenge + quiz) / 2. challenge = 100 - somme des couts d'indices. quiz = moyenne Q1+Q2+Q3."
+ }
+diff --git a/ftp/acquisitions.md b/ftp/acquisitions.md
+index 0c76ae7..a94d8c6 100644
+--- a/ftp/acquisitions.md
++++ b/ftp/acquisitions.md
+@@ -2,18 +2,51 @@
+ 
+ > This document is confidential! Do not distribute!
+ 
+-Our company plans to acquire several competitors within the next year.
+-This will have a significant stock market impact as we will elaborate in
+-detail in the following paragraph:
+-
+-Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy
+-eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam
+-voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet
+-clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit
+-amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam
+-nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat,
+-sed diam voluptua. At vero eos et accusam et justo duo dolores et ea
+-rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem
+-ipsum dolor sit amet.
++**Document ref:** JLH-MA-2026-014
++**Classification:** Internal use only
++**Author:** M. Vandeput, Head of Strategy
++**Issued:** 07 February 2026
++**Next review:** 07 May 2026
++
++---
++
++## 1. Executive summary
++
++Our company plans to acquire several competitors within the next year. This will have a significant stock market impact as we will elaborate in detail in the following paragraph:
++
++The strategy committee has identified three high-value targets in adjacent verticals (beverages, cold-chain logistics, sustainable packaging). Combined enterprise value sits in the EUR 85-95M range, financed through a mix of cash on balance sheet (40%), a syndicated bridge loan (35%), and a reserved capital increase (25%). Goldman Sachs has been mandated as lead financial advisor, with Linklaters handling the legal workstream.
++
++We expect the announcement of the first transaction (FreshSqueeze GmbH) to lift the share price between 8% and 12% in the days following publication, based on comparable transactions analyzed by our M&A team. Pre-announcement trading volume must remain within historical bands to avoid triggering market abuse alerts from the AMF and BaFin. All recipients of this document are reminded that they are on a permanent insider list as of the date of issue and are subject to the trading restrictions detailed in our Insider Dealing Policy v3.2.
+ 
+ Our shareholders will be excited. It's true. No fake news.
++
++## 2. Targets shortlist
++
++| # | Target | Sector | Indicative valuation | Status |
++|---|--------|--------|----------------------|--------|
++| 1 | FreshSqueeze GmbH | Beverages | EUR 42M | Due diligence |
++| 2 | OrchardCo SA | Supply chain | EUR 27M | Letter of intent signed |
++| 3 | PulpWorks Ltd. | Packaging | EUR 18M | Initial contact |
++
++## 3. Indicative timeline
++
++1. Q1 2026: complete due diligence on target #1
++2. Q2 2026: board approval, public announcement
++3. Q3 2026: closing target #1, opening of negotiations on #2 and #3
++4. Q4 2026: integration phase
++
++## 4. Distribution list
++
++- CEO Office, J. Halverson
++- CFO Office, L. Marchetti
++- Head of Strategy, M. Vandeput
++- General Counsel, P. Rastogi
++- Head of Investor Relations, C. Bertrand
++
++## 5. Handling instructions
++
++This document must not leave the corporate perimeter. Printing is restricted to the executive floor printer (PRT-EXEC-01). Any unauthorized disclosure will be treated as a material breach under the employment agreement and may trigger regulatory notification under market abuse regulations.
++
++---
++
++*JuiceLab Holdings Ltd. internal document. Do not distribute.*
+\ No newline at end of file
+diff --git a/server.ts b/server.ts
+index b09ebf6..9af298a 100644
+--- a/server.ts
++++ b/server.ts
+@@ -100,6 +100,7 @@ import { captchas, verifyCaptcha } from './routes/captcha'
+ import * as restoreProgress from './routes/restoreProgress'
+ import { checkKeys, nftUnlocked } from './routes/checkKeys'
+ import { retrieveLoggedInUser } from './routes/currentUser'
++import * as juicelab from './routes/juicelab'
+ import authenticatedUsers from './routes/authenticatedUsers'
+ import { securityQuestion } from './routes/securityQuestion'
+ import { servePremiumContent } from './routes/premiumReward'
+@@ -596,6 +597,14 @@ restoreOverwrittenFilesWithOriginals().then(() => {
+   app.post('/rest/user/reset-password', resetPassword())
+   app.get('/rest/user/security-question', securityQuestion())
+   app.get('/rest/user/whoami', security.updateAuthenticatedUsers(), retrieveLoggedInUser())
++
++  /* JuiceLab phase B - server-side gating for hints / quiz / walkthroughs */
++  app.use('/data/juicelab-private', juicelab.blockPrivateAssets())
++  app.get('/api/juicelab/hint', security.updateAuthenticatedUsers(), juicelab.getHint())
++  app.get('/api/juicelab/quiz/questions', security.updateAuthenticatedUsers(), juicelab.getQuizQuestions())
++  app.post('/api/juicelab/quiz/score', security.updateAuthenticatedUsers(), juicelab.scoreQuiz())
++  app.get('/api/juicelab/walkthrough', security.updateAuthenticatedUsers(), juicelab.getWalkthrough())
++  app.get('/api/juicelab/admin/state', juicelab.getAdminState())
+   app.get('/rest/user/authentication-details', authenticatedUsers())
+   app.get('/rest/products/search', searchProducts())
+   app.get('/rest/basket/:id', retrieveBasket())

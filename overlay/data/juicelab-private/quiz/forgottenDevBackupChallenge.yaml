@@ -1,0 +1,113 @@
+challenge_key: "forgottenDevBackupChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Tu as recupere package.json.bak via null byte bypass.
+      Pourquoi ce fichier est-il PARTICULIEREMENT precieux pour
+      un attaquant en phase de reconnaissance ?
+    question_en: |
+      You retrieved package.json.bak via null byte bypass. Why
+      is this file PARTICULARLY valuable for an attacker in
+      recon phase?
+    options_fr:
+      - "Parce qu'il contient les mots de passe des admins"
+      - "Parce qu'il liste TOUTES les dependances + versions exactes, qui peuvent etre cross-referencees avec snyk.io ou nvd.nist.gov pour identifier des CVEs avec PoC public"
+      - "Parce qu'il revele l'IP du serveur de production"
+      - "Parce qu'il est obligatoire pour acceder a /admin"
+    options_en:
+      - "Because it contains admin passwords"
+      - "Because it lists ALL dependencies + exact versions, cross-referenceable with snyk.io or nvd.nist.gov to identify CVEs with public PoCs"
+      - "Because it reveals the production server IP"
+      - "Because it's mandatory to access /admin"
+    correct: 1
+    explanation_fr: |
+      Pattern recurrent en pentest : ENUMERATION DES
+      DEPENDANCES = porte d'entree vers les CVEs connues.
+      package.json (Node.js), requirements.txt (Python),
+      pom.xml (Java), Gemfile.lock (Ruby) — tous fournissent
+      la meme info. Defense : ne JAMAIS exposer ces fichiers
+      en zones publiques + maintenir les deps a jour avec
+      Dependabot/Renovate.
+    explanation_en: |
+      Recurrent pentest pattern: DEPENDENCY ENUMERATION =
+      gateway to known CVEs. package.json (Node.js),
+      requirements.txt (Python), pom.xml (Java), Gemfile.lock
+      (Ruby) — all give the same info. Defense: NEVER expose
+      these files in public zones + keep deps up-to-date with
+      Dependabot/Renovate.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      La technique de bypass est exactement la meme que pour
+      easterEggLevelOneChallenge (null byte). Quelle lecon
+      defensive faut-il en tirer ?
+    question_en: |
+      The bypass technique is exactly the same as for
+      easterEggLevelOneChallenge (null byte). What defensive
+      lesson should we draw?
+    options_fr:
+      - "Une vulnerabilite isolee est facile a fixer une fois pour toutes"
+      - "Une seule vulnerabilite (filtre extension cassable) ouvre N challenges sur N fichiers differents — fixer le bypass UNE FOIS protege contre tous les variants. La defense doit etre STRUCTURELLE (extension allowlist + filesystem-level validation), pas case-by-case"
+      - "Le poison null byte ne marche que sur Linux"
+      - "Les bypass null byte sont obsoletes en Node.js moderne"
+    options_en:
+      - "An isolated vulnerability is easy to fix once and for all"
+      - "A single vulnerability (breakable extension filter) opens N challenges on N different files — fixing the bypass ONCE protects against all variants. Defense must be STRUCTURAL (extension allowlist + filesystem-level validation), not case-by-case"
+      - "Null-byte poisoning only works on Linux"
+      - "Null-byte bypasses are obsolete in modern Node.js"
+    correct: 1
+    explanation_fr: |
+      Reflexe a graver : penser en surface d'attaque (1 vuln
+      = N challenges) plutot qu'en bug specifique. Pattern
+      recurrent dans /ftp/ : la meme technique sert 4-5 fois
+      sur Juice Shop (Confidential Doc, Easter Egg, DevBackup,
+      SalesBackup). Defense en profondeur : extension
+      allowlist au niveau Express + validation filesystem
+      level (check le path resolu apres ouverture).
+    explanation_en: |
+      Reflex to engrave: think in attack surface (1 vuln = N
+      challenges) rather than specific bug. Recurrent pattern
+      in /ftp/: same technique serves 4-5 times on Juice Shop
+      (Confidential Doc, Easter Egg, DevBackup, SalesBackup).
+      Defense in depth: extension allowlist at Express level
+      + filesystem-level validation (check resolved path after
+      opening).
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense en profondeur cloud-native : quelle architecture
+      empeche STRUCTURELLEMENT les fuites de fichiers .bak en
+      production ?
+    question_en: |
+      Cloud-native defense in depth: which architecture
+      STRUCTURALLY prevents .bak file leaks in production?
+    options_fr:
+      - "Augmenter la frequence des backups"
+      - "(1) CI gate fail si l'image Docker contient .bak/.swp/.git/~ en zones publiques. (2) Cron audit cyclique des folders publics avec alerte SIEM. (3) Secret manager separe pour ne pas hardcoder de secrets dans les configs (meme si un .bak leak, pas de secret expose)"
+      - "Forcer HTTPS sur /ftp/"
+      - "Compresser tous les .bak en gzip"
+    options_en:
+      - "Increase backup frequency"
+      - "(1) CI gate failing if Docker image contains .bak/.swp/.git/~ in public zones. (2) Cyclical cron audit of public folders with SIEM alert. (3) Separate secret manager so no hardcoded secrets in configs (even if a .bak leaks, no secret exposed)"
+      - "Force HTTPS on /ftp/"
+      - "Gzip-compress all .bak"
+    correct: 1
+    explanation_fr: |
+      Defense structurelle = automatisation + separation. CI
+      gate attrape les bugs avant deploy. Audit cron detecte
+      les bugs en prod. Secret manager rend les fichiers
+      eventuellement leakes inutiles. Aucune mesure unique ne
+      couvre les 3 niveaux. Reference : OWASP A05:2021 Security
+      Misconfiguration et CIS Docker Benchmark.
+    explanation_en: |
+      Structural defense = automation + separation. CI gate
+      catches bugs before deploy. Cron audit detects bugs in
+      prod. Secret manager makes leaked files useless. No
+      single measure covers all 3 levels. Reference: OWASP
+      A05:2021 Security Misconfiguration and CIS Docker
+      Benchmark.

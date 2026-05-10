@@ -1,0 +1,89 @@
+challenge_key: "closeNotificationsChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "close multiple notifications". L'app envoie une
+      notification quand un challenge est resolu. Solver 2+ challenges
+      d'abord pour avoir plusieurs notifications.
+    text_en: |
+      OWASP hint: "close multiple notifications". App shows a notification
+      when a challenge is solved. Solve 2+ challenges first to have
+      multiple notifications.
+    pedagogical_intent: |
+      Activate prerequisite + WS reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      DevTools > Network > WS tab > inspect le WebSocket connection.
+      Quand tu close une notification, observe le payload envoye au
+      serveur (event = 'notification received').
+    text_en: |
+      DevTools > Network > WS tab > inspect WebSocket connection. When
+      you close a notification, observe payload sent to server (event =
+      'notification received').
+    pedagogical_intent: |
+      Spell tools + observation.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Le payload normal est un single ID (string ou number) du
+      challenge. Le serveur registerWebsocketEvents.ts:51 verifie si
+      `Array.isArray(data) && data.length > 1` -> solve. Donc envoyer un
+      Array de 2+ IDs = solve.
+    text_en: |
+      Normal payload is single ID (string or number) of challenge.
+      Server registerWebsocketEvents.ts:51 checks if `Array.isArray(data)
+      && data.length > 1` -> solve. So sending Array of 2+ IDs = solve.
+    pedagogical_intent: |
+      Reveal exact condition.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Console DevTools : trouver l'instance socket
+      (`window.socket` ou `ng.getComponent($0).socket`) et envoyer :
+      `socket.emit('notification received', [1, 2])`. Le serveur le
+      detecte comme Array.length > 1 et solve.
+    text_en: |
+      DevTools Console: find socket instance (`window.socket` or
+      `ng.getComponent($0).socket`) and send:
+      `socket.emit('notification received', [1, 2])`. Server detects
+      Array.length > 1 and solves.
+    pedagogical_intent: |
+      Spell exact action.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Solver 2+ challenges (ex.
+      scoreBoardChallenge + DOMXssChallenge - faciles). (2) Voir 2+ pop-up
+      notifications. (3) Console DevTools Chrome : `window.socket
+      = ngScope.socket; socket.emit('notification received', [1, 2])`.
+      (Si window.socket n'existe pas, inspect via `ng.getComponent
+      ($0).io` ou regarder le code Angular pour la reference). (4) Le
+      serveur registerWebsocketEvents.ts:51
+      `solveIf(closeNotificationsChallenge, () => Array.isArray(data) &&
+      data.length > 1)` declenche. (5) Notification "Solved Mass
+      Dispel". Defense : Zod schema strict (z.string().uuid()) au lieu
+      de trust raw data, runtime type check, message envelope avec type
+      field. Source : registerWebsocketEvents.ts:51.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Solve 2+ challenges (e.g.
+      scoreBoardChallenge + DOMXssChallenge - easy ones). (2) See 2+
+      notification popups. (3) Chrome DevTools Console: `window.socket
+      = ngScope.socket; socket.emit('notification received', [1, 2])`.
+      (If window.socket doesn't exist, inspect via `ng.getComponent
+      ($0).io` or look at Angular code for reference). (4) Server
+      registerWebsocketEvents.ts:51
+      `solveIf(closeNotificationsChallenge, () => Array.isArray(data) &&
+      data.length > 1)` triggers. (5) "Solved Mass Dispel" notification.
+      Defense: strict Zod schema (z.string().uuid()) instead of trusting
+      raw data, runtime type check, message envelope with type field.
+      Source: registerWebsocketEvents.ts:51.
+    pedagogical_intent: |
+      Solution + canonical fix.

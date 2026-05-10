@@ -1,0 +1,160 @@
+challenge_key: "supplyChainAttackChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "This vulnerability will
+      not affect any customer of the shop. It is aimed
+      exclusively at its developers". Donc cible
+      DEVELOPERS, pas end-users. Hint #2 : "research-
+      heavy challenge which does not involve any
+      actual hacking". Donc OSINT pur, pas
+      exploitation.
+    text_en: |
+      Official OWASP hint #1: "This vulnerability
+      will not affect any customer of the shop. It is
+      aimed exclusively at its developers". So
+      targets DEVELOPERS, not end-users. Hint #2:
+      "research-heavy challenge which does not
+      involve any actual hacking". So pure OSINT, not
+      exploitation.
+    pedagogical_intent: |
+      Activate OSINT-only research reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #3 : "Solving 'Access a developer's
+      forgotten backup file' before attempting this
+      challenge will save you from a lot of
+      frustration". Donc pre-requis : forgottenDev
+      Backup. Inspecte /ftp/package.json.bak pour
+      identifier les transitive dependencies. Cherche
+      des libraries qui ont eu des incidents de
+      supply chain attack connus. eslint-scope est un
+      candidat fort (incident 2018 celebre).
+    text_en: |
+      OWASP hint #3: "Solving 'Access a developer's
+      forgotten backup file' before attempting this
+      challenge will save you from a lot of
+      frustration". So prerequisite: forgottenDev
+      Backup. Inspect /ftp/package.json.bak to
+      identify transitive dependencies. Look for
+      libraries that had known supply chain
+      incidents. eslint-scope is strong candidate
+      (famous 2018 incident).
+    pedagogical_intent: |
+      Spell prerequisite + research direction.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Recherche Google : "eslint-scope incident",
+      "eslint-scope hijack 2018", "eslint-scope npm
+      compromised". Tu trouves : (a) GitHub Issue
+      #39 du repo eslint-scope avec le post-mortem
+      complet, (b) Snyk advisory avec ID
+      `npm:eslint-scope:20180712`. Le serveur Juice
+      Shop accepte les 2 references comme valides.
+    text_en: |
+      Google search: "eslint-scope incident",
+      "eslint-scope hijack 2018", "eslint-scope npm
+      compromised". You find: (a) GitHub Issue #39
+      of eslint-scope repo with full post-mortem,
+      (b) Snyk advisory with ID
+      `npm:eslint-scope:20180712`. Juice Shop server
+      accepts both references as valid.
+    pedagogical_intent: |
+      Reveal canonical references.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      (routes/verify.ts:291-303) : `void
+      checkPatternInFeedbackAndComplaints(challenges.
+      supplyChainAttackChallenge, { [Op.or]: [
+      { [Op.like]: '%eslint-scope/issues/39%' },
+      { [Op.like]: '%npm:eslint-scope:20180712%' } ]
+      })`. Donc 2 patterns acceptes. Submit un
+      feedback /#/contact avec l'un des deux ; URL
+      complete `https://github.com/eslint/eslint-
+      scope/issues/39` est plus naturel a cite mais
+      le Snyk ID `npm:eslint-scope:20180712` est
+      egalement accepte.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server source
+      (routes/verify.ts:291-303): `void
+      checkPatternInFeedbackAndComplaints(challenges.
+      supplyChainAttackChallenge, { [Op.or]: [
+      { [Op.like]: '%eslint-scope/issues/39%' },
+      { [Op.like]: '%npm:eslint-scope:20180712%' } ]
+      })`. So 2 accepted patterns. Submit feedback
+      /#/contact with either; full URL `https://
+      github.com/eslint/eslint-scope/issues/39` is
+      more natural to cite but Snyk ID
+      `npm:eslint-scope:20180712` is also accepted.
+    pedagogical_intent: |
+      Reveal exact 2-pattern check.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Resoudre forgottenDevBackupChallenge
+         (recommande hint #3).
+      2. Inspecter /ftp/package.json.bak pour
+         confirmer presence de eslint-scope dans les
+         deps (typiquement dans devDependencies via
+         eslint).
+      3. Recherche : "eslint-scope incident 2018"
+         (Google + GitHub).
+      4. Trouver GitHub Issue : github.com/eslint/
+         eslint-scope/issues/39 (post-mortem).
+      5. Aller sur /#/contact (Customer Feedback).
+      6. Remplir le form avec un commentaire qui
+         contient soit "https://github.com/eslint/
+         eslint-scope/issues/39", soit
+         "npm:eslint-scope:20180712".
+      7. Soumettre. Match -> challenge solve auto.
+      Resume historique : 12 juillet 2018, account
+      npm de mainteneur compromis. Versions 3.7.2 et
+      3.7.3 publiees avec postinstall script
+      exfiltrant ~/.npmrc creds vers Pastebin. Detect
+      ~6h apres publication. Affecte babel, eslint,
+      webpack indirectly.
+      Defense canonique : npm 2FA mandatory (top
+      1000), npm provenance attestation (v9+),
+      Socket.dev / Snyk monitoring, private mirror
+      pre-validation.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Solve forgottenDevBackupChallenge
+         (recommended hint #3).
+      2. Inspect /ftp/package.json.bak to confirm
+         eslint-scope presence in deps (typically
+         in devDependencies via eslint).
+      3. Search: "eslint-scope incident 2018"
+         (Google + GitHub).
+      4. Find GitHub Issue: github.com/eslint/
+         eslint-scope/issues/39 (post-mortem).
+      5. Go to /#/contact (Customer Feedback).
+      6. Fill form with comment containing either
+         "https://github.com/eslint/eslint-scope/
+         issues/39" or "npm:eslint-scope:20180712".
+      7. Submit. Match -> challenge auto solves.
+      Historical summary: July 12, 2018, npm
+      maintainer account compromised. Versions
+      3.7.2 and 3.7.3 published with postinstall
+      script exfiltrating ~/.npmrc creds to
+      Pastebin. Detected ~6h after publication.
+      Affects babel, eslint, webpack indirectly.
+      Canonical defense: mandatory npm 2FA (top
+      1000), npm provenance attestation (v9+),
+      Socket.dev / Snyk monitoring, private mirror
+      pre-validation.
+    pedagogical_intent: |
+      Quasi-solution : workflow + canonical refs +
+      historical context.

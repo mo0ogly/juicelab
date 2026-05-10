@@ -1,0 +1,125 @@
+challenge_key: "usernameXssChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #2 : "Find a screen in the application
+      that looks subtly odd and dated compared with all other
+      screens". Donc une page LEGACY visuellement differente du
+      reste. Tous les autres ecrans utilisent Angular Material
+      (style coherent). Lequel des ecrans Juice Shop est
+      visuellement different — old-school HTML, pas de Material
+      ?
+    text_en: |
+      Official OWASP hint #2: "Find a screen in the application
+      that looks subtly odd and dated compared with all other
+      screens". So a LEGACY page visually different from the
+      rest. All other screens use Angular Material (consistent
+      style). Which Juice Shop screen looks visually different —
+      old-school HTML, no Material?
+    pedagogical_intent: |
+      Direct toward the legacy page identification.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      C'est la page de profil utilisateur /#/profile. Elle est
+      servie par un endpoint Express direct (pas Angular SPA),
+      avec un template engine cote serveur. Le champ "Username"
+      sur cette page est l'angle d'injection. Hint OWASP officiel
+      #1 : "Having CSP injection issues on the exact same page
+      as well!" — ce que tu tapes dans username apparait dans
+      DEUX endroits : (a) le rendu HTML de la page, (b) le header
+      Content-Security-Policy.
+    text_en: |
+      It's the user profile page /#/profile. Served by a direct
+      Express endpoint (not Angular SPA), with a server-side
+      template engine. The "Username" field on this page is the
+      injection angle. Official OWASP hint #1: "Having CSP
+      injection issues on the exact same page as well!" — what
+      you type in username appears in TWO places: (a) the HTML
+      render of the page, (b) the Content-Security-Policy
+      header.
+    pedagogical_intent: |
+      Pin the page + reveal the dual surface (HTML + CSP).
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Avant d'attaquer, observe la CSP envoyee par le serveur.
+      Open DevTools onglet Network, navigate sur /profile,
+      regarde le header Content-Security-Policy de la response.
+      Tu verras quelque chose comme :
+      script-src 'self' 'nonce-<ton_username>' ...
+      Donc ton username devient le nonce CSP. Si tu mets un
+      username avec des single quotes et un nonce arbitraire,
+      tu controles la CSP.
+    text_en: |
+      Before attacking, observe the CSP sent by the server.
+      Open DevTools Network tab, navigate to /profile, look at
+      the Content-Security-Policy response header. You'll see
+      something like:
+      script-src 'self' 'nonce-<your_username>' ...
+      So your username becomes the CSP nonce. If you set a
+      username with single quotes and an arbitrary nonce, you
+      control the CSP.
+    pedagogical_intent: |
+      Reveal the CSP injection mechanism.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le payload exact requis par le challenge :
+      <script>alert(`xss`)</script>
+      Pour le faire passer dans le username : (1) il faut bypass
+      le regex sanitizer (hint OWASP officiel #4), souvent en
+      cassant la balise script avec un caractere intermediaire
+      ou en utilisant une variation casing. (2) Il faut que la
+      CSP autorise le script inline — donc tu inclus dans le
+      username une partie qui ferme le nonce existant et ajoute
+      un nonce que ton script utilise.
+    text_en: |
+      Exact payload required by the challenge:
+      <script>alert(`xss`)</script>
+      To get it through username: (1) bypass the regex sanitizer
+      (official OWASP hint #4), often by breaking the script tag
+      with an intermediate char or casing variation. (2) Make
+      CSP allow the inline script — so include in username a
+      part that closes the existing nonce and adds one your
+      script uses.
+    pedagogical_intent: |
+      Spell the dual injection requirement.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Cette quasi-solution depend de la version exacte de Juice
+      Shop. Forme generale :
+      1. Update ton username via PUT /api/Users/<ton_id> avec un
+         payload type :
+         "<script>alert(`xss`)</script>"
+         (plus eventuellement les caracteres pour bypass la regex
+         et casser la CSP). Le bypass exact varie selon la
+         version, fais-le par essai-erreur en observant la CSP
+         retournee.
+      2. Navigue sur /#/profile. Ton script s'execute en raison
+         du double bug : regex bypassed + CSP nonce attacker-
+         controlled. Source : OWASP XSS Prevention Cheat Sheet
+         linked dans challenges.yml.
+    text_en: |
+      This quasi-solution depends on the exact Juice Shop
+      version. General form:
+      1. Update your username via PUT /api/Users/<your_id> with
+         a payload like:
+         "<script>alert(`xss`)</script>"
+         (plus chars to bypass the regex and break the CSP).
+         Exact bypass varies by version, do trial-error
+         observing the returned CSP.
+      2. Navigate to /#/profile. Your script executes due to
+         the double bug: regex bypassed + attacker-controlled
+         CSP nonce. Source: OWASP XSS Prevention Cheat Sheet
+         linked in challenges.yml.
+    pedagogical_intent: |
+      Quasi-solution : workflow + version-dependency caveat.

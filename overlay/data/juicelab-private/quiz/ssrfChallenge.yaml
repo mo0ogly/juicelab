@@ -1,0 +1,102 @@
+challenge_key: "ssrfChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un attaquant prefere-t-il exploiter une SSRF plutot
+      que de cibler directement les ressources internes ?
+    question_en: |
+      Why does an attacker prefer SSRF over directly targeting
+      internal resources?
+    options_fr:
+      - "Parce que SSRF est plus rapide a exploiter"
+      - "Parce que les ressources internes (loopback 127.x, IP private 10.x/172.16.x/192.168.x, AWS metadata 169.254.169.254) sont INACCESSIBLES depuis Internet. SSRF utilise le serveur comme proxy pour les atteindre"
+      - "Parce que SSRF leak moins de logs"
+      - "Parce que SSRF est compatible avec HTTPS"
+    options_en:
+      - "Because SSRF is faster to exploit"
+      - "Because internal resources (127.x loopback, private IP 10.x/172.16.x/192.168.x, AWS metadata 169.254.169.254) are UNREACHABLE from the Internet. SSRF uses the server as a proxy to reach them"
+      - "Because SSRF leaks fewer logs"
+      - "Because SSRF is HTTPS-compatible"
+    correct: 1
+    explanation_fr: |
+      C'est l'essence de SSRF : pivoter via une ressource
+      legitime exposee (le serveur web public) pour atteindre des
+      ressources non exposees (services internes, metadata cloud,
+      database). Cible classique : AWS metadata 169.254.169.254
+      qui contient les credentials IAM de l'instance.
+    explanation_en: |
+      The essence of SSRF: pivot via a legitimately exposed
+      resource (the public web server) to reach unexposed
+      resources (internal services, cloud metadata, databases).
+      Classic target: AWS metadata 169.254.169.254 holding the
+      instance IAM credentials.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense SSRF resiste au DNS rebinding (l'attaquant
+      controle un domaine DNS qui retourne une IP publique au
+      premier resolve puis 127.0.0.1 au second) ?
+    question_en: |
+      Which SSRF defense resists DNS rebinding (attacker
+      controls a DNS domain returning a public IP on first
+      resolve then 127.0.0.1 on second)?
+    options_fr:
+      - "Bloquer simplement les URLs commencant par http://localhost"
+      - "Resoudre le DNS UNE SEULE FOIS et VERIFIER l'IP resolue contre la blocklist (127.x, 10.x, 172.16.x, 192.168.x, 169.254.x) AVANT de faire la requete. Si OK, faire la requete avec cette IP exacte (pas re-resoudre le hostname)"
+      - "Augmenter le TTL DNS a 24h"
+      - "Forcer DNS over HTTPS sur le serveur"
+    options_en:
+      - "Simply block URLs starting with http://localhost"
+      - "Resolve DNS ONCE and CHECK the resolved IP against the blocklist (127.x, 10.x, 172.16.x, 192.168.x, 169.254.x) BEFORE making the request. If OK, make the request with that exact IP (don't re-resolve hostname)"
+      - "Increase DNS TTL to 24h"
+      - "Force DNS over HTTPS on the server"
+    correct: 1
+    explanation_fr: |
+      DNS rebinding exploite la difference entre le check (TIME
+      OF CHECK) et l'usage reel (TIME OF USE). La defense
+      canonique est de "pinning" l'IP : resoudre une fois,
+      verifier, puis utiliser cette IP exacte. Reference OWASP
+      SSRF Prevention Cheat Sheet section "DNS Rebinding".
+    explanation_en: |
+      DNS rebinding exploits the gap between the check (TIME OF
+      CHECK) and actual use (TIME OF USE). Canonical defense is
+      IP pinning: resolve once, check, then use that exact IP.
+      Reference OWASP SSRF Prevention Cheat Sheet "DNS
+      Rebinding" section.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi l'allowlist d'hosts est-elle preferable a la
+      blocklist d'IPs internes pour la defense SSRF ?
+    question_en: |
+      Why is host allowlist preferable to internal-IP blocklist
+      for SSRF defense?
+    options_fr:
+      - "Parce que les allowlists sont plus rapides a parser"
+      - "Allowlist = enumeration des bons cas attendus (default deny). Blocklist = enumeration des mauvais cas connus (default allow). Le space des cas mauvais inclut les IPs IPv6 link-local, les ranges cloud emergents, les redirections HTTP, etc. — la blocklist est toujours en retard"
+      - "Parce que les allowlists supportent IPv6"
+      - "Parce que les allowlists sont obligatoires en RGPD"
+    options_en:
+      - "Because allowlists parse faster"
+      - "Allowlist = enumeration of expected-good cases (default deny). Blocklist = enumeration of known-bad cases (default allow). The bad-case space includes IPv6 link-local IPs, emerging cloud ranges, HTTP redirects, etc. — blocklist is always behind"
+      - "Because allowlists support IPv6"
+      - "Because allowlists are GDPR-mandated"
+    correct: 1
+    explanation_fr: |
+      Pattern recurrent : structure allowlist > blocklist.
+      Specifique a SSRF : nouveaux ranges cloud (ex Google Cloud
+      metadata 169.254.169.254 puis Azure metadata 169.254.169.254
+      mais avec autres paths), redirections HTTP qui font
+      rebondir vers une IP interne. Une allowlist d'hosts ferme
+      cette surface entierement.
+    explanation_en: |
+      Recurrent pattern: structurally, allowlist > blocklist.
+      SSRF-specific: emerging cloud ranges (e.g. Google Cloud
+      metadata 169.254.169.254 then Azure metadata 169.254.169.254
+      but with other paths), HTTP redirects bouncing to internal
+      IPs. A host allowlist closes this surface entirely.

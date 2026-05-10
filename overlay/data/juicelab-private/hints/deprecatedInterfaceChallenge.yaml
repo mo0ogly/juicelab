@@ -1,0 +1,110 @@
+challenge_key: "deprecatedInterfaceChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP #1 + #2 : "old B2B interface
+      was replaced" + developers "go invisible
+      by closing their eyes". Donc cherche un
+      legacy B2B endpoint encore actif
+      derrière le code.
+    text_en: |
+      OWASP hints #1 + #2: "old B2B interface
+      was replaced" + developers "go invisible
+      by closing their eyes". So search legacy
+      B2B endpoint still active behind code.
+    pedagogical_intent: |
+      Activate legacy endpoint reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le file-upload form (Complaint) accepte
+      .pdf et .zip dans le UI. Mais le backend
+      processe AUSSI .xml et .yml/.yaml
+      (legacy formats). Test via curl.
+    text_en: |
+      File-upload form (Complaint) accepts
+      .pdf and .zip in UI. But backend ALSO
+      processes .xml and .yml/.yaml (legacy
+      formats). Test via curl.
+    pedagogical_intent: |
+      Spell legacy formats.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (routes/fileUpload.ts:
+      77 + 111) : `handleXmlUpload` +
+      `handleYamlUpload` ont chacun
+      `solveIf(deprecatedInterfaceChallenge,
+      () => true)`. Donc upload .xml ou .yml
+      = solve.
+    text_en: |
+      Server source (routes/fileUpload.ts:
+      77 + 111): `handleXmlUpload` +
+      `handleYamlUpload` each have
+      `solveIf(deprecatedInterfaceChallenge,
+      () => true)`. So upload .xml or .yml =
+      solve.
+    pedagogical_intent: |
+      Reveal solve mechanism.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Construction : `echo '<root></root>' >
+      legacy.xml` puis `curl -X POST
+      http://localhost:3000/file-upload -F
+      "file=@legacy.xml" -H "Authorization:
+      Bearer <token>"`. Solve auto.
+    text_en: |
+      Construction: `echo '<root></root>' >
+      legacy.xml` then `curl -X POST
+      http://localhost:3000/file-upload -F
+      "file=@legacy.xml" -H "Authorization:
+      Bearer <token>"`. Auto solves.
+    pedagogical_intent: |
+      Spell exact upload.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow :
+      1. Login Juice Shop pour le token JWT.
+      2. Generer un fichier XML simple :
+         `echo '<root></root>' > legacy.xml`.
+      3. POST /file-upload via curl avec
+         le file. Solve auto.
+      Note : ce challenge UNLOCKS aussi les
+      XXE challenges (xxeFileDisclosure,
+      xxeDos) et yamlBomb. L'attaquant qui
+      a deprecatedInterface peut chain vers
+      ces autres bugs.
+      Source : routes/fileUpload.ts:77+111
+      + OWASP Web Service Security Cheat
+      Sheet.
+      Defense : DELETE le code completement
+      lors de la deprecation, pas juste
+      hide le UI.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow:
+      1. Login Juice Shop for JWT token.
+      2. Generate simple XML file: `echo
+         '<root></root>' > legacy.xml`.
+      3. POST /file-upload via curl with
+         file. Auto solves.
+      Note: this challenge ALSO UNLOCKS
+      XXE challenges (xxeFileDisclosure,
+      xxeDos) and yamlBomb. Attacker with
+      deprecatedInterface can chain to
+      these other bugs.
+      Source: routes/fileUpload.ts:77+111
+      + OWASP Web Service Security Cheat
+      Sheet.
+      Defense: DELETE code completely on
+      deprecation, not just hide UI.
+    pedagogical_intent: |
+      Solution + chain unlock note.

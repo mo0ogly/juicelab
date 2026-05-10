@@ -1,0 +1,117 @@
+challenge_key: "nftUnlockChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Prends le controle du wallet contenant le NFT Soul Bound
+  Token officiel de Juice Shop. Description OWASP : "Take
+  over the wallet containing our official Soul Bound Token
+  (NFT)". Hint OWASP officiel unique : "Find the seed phrase
+  posted accidentally". [KILL_CHAIN_PROBABLE]
+
+  Methode recommandee : un wallet Web3 (Ethereum, Polygon)
+  est controle par sa SEED PHRASE (12-24 mots BIP39). Si
+  l'attaquant trouve la seed, il peut importer le wallet dans
+  son propre MetaMask et signer des transactions avec.
+  L'OWASP hint dit que la seed a ete "posted accidentally" —
+  donc OSINT externe : Twitter, GitHub, Discord, Reddit, ou
+  autre canal social. Variantes plausibles : (1) un dev a
+  paste la seed sur GitHub Issues/Discussions, (2) la seed
+  est dans un commit Git du repo Juice Shop public, (3) elle
+  est dans un screenshot poste sur Twitter/Discord.
+
+  Note la lecon : les seed phrases Web3 sont des secrets
+  TERMINAUX (impossible a rotater pour un wallet sans le
+  vider d'abord). Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Take over the wallet containing the official Juice Shop
+  Soul Bound Token (NFT). OWASP description: "Take over the
+  wallet containing our official Soul Bound Token (NFT)".
+  Single official OWASP hint: "Find the seed phrase posted
+  accidentally". [KILL_CHAIN_PROBABLE]
+
+  Recommended method: a Web3 wallet (Ethereum, Polygon) is
+  controlled by its SEED PHRASE (12-24 BIP39 words). If
+  attacker finds the seed, they can import the wallet into
+  their own MetaMask and sign transactions. The OWASP hint
+  says the seed was "posted accidentally" — so external
+  OSINT: Twitter, GitHub, Discord, Reddit, or another social
+  channel. Plausible variants: (1) a dev pasted the seed on
+  GitHub Issues/Discussions, (2) seed is in a Git commit of
+  the public Juice Shop repo, (3) it's in a screenshot
+  posted on Twitter/Discord.
+
+  Note the lesson: Web3 seed phrases are TERMINAL secrets
+  (impossible to rotate for a wallet without emptying it
+  first). You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "BIP39 seed phrases : les masters keys de Web3"
+    title_en: "BIP39 seed phrases: Web3 master keys"
+    body_fr: |
+      Standard BIP39 (Bitcoin Improvement Proposal 39) :
+      generation deterministe d'un wallet a partir de 12 ou
+      24 mots tires d'une wordlist standardisee de 2048
+      mots. Entropie : 12 mots = 128 bits, 24 mots = 256
+      bits. La seed regenere TOUTES les cles privees du
+      wallet (adresses ETH, BTC, etc.). Quiconque possede la
+      seed possede le wallet entier. Defense : NEVER paste/
+      photograph/log la seed. Stockage hardware (Ledger,
+      Trezor) ou paper backup en safe physique.
+    body_en: |
+      BIP39 standard (Bitcoin Improvement Proposal 39):
+      deterministic wallet generation from 12 or 24 words
+      drawn from a standardized 2048-word wordlist. Entropy:
+      12 words = 128 bits, 24 words = 256 bits. The seed
+      regenerates ALL wallet private keys (ETH, BTC, etc.
+      addresses). Whoever has the seed owns the entire
+      wallet. Defense: NEVER paste/photograph/log the seed.
+      Hardware storage (Ledger, Trezor) or paper backup in
+      physical safe.
+
+  - title_fr: "Soul Bound Token : NFT non-transferable"
+    title_en: "Soul Bound Token: non-transferable NFT"
+    body_fr: |
+      Concept introduit par Vitalik Buterin (2022). SBT =
+      NFT qui ne peut PAS etre transfere apres le mint. Cas
+      d'usage : credentials academiques, achievements,
+      reputation, identite digitale. Pour ce challenge, le
+      SBT Juice Shop est probablement un trophee/credential
+      lie au wallet officiel — donc avoir la seed = "voler"
+      l'identite associee au token. Reference : EIP-5114
+      (Soulbound Badges) + Buterin et al. paper "DeSoc"
+      2022.
+    body_en: |
+      Concept introduced by Vitalik Buterin (2022). SBT =
+      NFT that CANNOT be transferred after mint. Use cases:
+      academic credentials, achievements, reputation,
+      digital identity. For this challenge, the Juice Shop
+      SBT is likely a trophy/credential tied to the official
+      wallet — so having the seed = "stealing" the
+      token-associated identity. Reference: EIP-5114
+      (Soulbound Badges) + Buterin et al. "DeSoc" paper
+      2022.
+
+  - title_fr: "Defense canonique : hardware wallet + multi-sig"
+    title_en: "Canonical defense: hardware wallet + multi-sig"
+    body_fr: |
+      Trois couches. (1) HARDWARE wallet (Ledger, Trezor) :
+      la seed N'EST JAMAIS exposee a un device connecte au
+      reseau. Les transactions sont signees on-device. (2)
+      Multi-signature (gnosis safe, Argent) : nécessite
+      plusieurs signatures (M-of-N) pour valider une
+      transaction. Meme si une cle est compromise, le wallet
+      reste safe. (3) Cold storage : la seed est en paper
+      backup dans un safe physique, jamais sur device
+      connecte. Reference : OWASP Web3 Security guidelines
+      (en cours de redaction).
+    body_en: |
+      Three layers. (1) HARDWARE wallet (Ledger, Trezor):
+      seed is NEVER exposed to a connected device.
+      Transactions signed on-device. (2) Multi-signature
+      (gnosis safe, Argent): requires multiple signatures
+      (M-of-N) to validate a transaction. Even if one key
+      is compromised, wallet stays safe. (3) Cold storage:
+      seed in paper backup in a physical safe, never on a
+      connected device. Reference: OWASP Web3 Security
+      guidelines (under draft).

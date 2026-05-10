@@ -1,0 +1,92 @@
+challenge_key: "svgInjectionChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la mecanique d'attack
+      combinee dans svgInjection ?
+    question_en: |
+      What's combined attack mechanic in
+      svgInjection?
+    options_fr:
+      - "SVG simple injection"
+      - "Composition multi-vuln : (a) SVG injection (XML-based image accept user content), (b) Path traversal (../../../ remonte path), (c) Open redirect bypass (allowlist incomplete sur /redirect endpoint), (d) WebSocket payload trust. L'attaquant chain les 4 pour load cataas.com kittens. Pattern reusable : real-world bugs sont souvent compositions"
+      - "Simple SVG upload"
+      - "XSS classique"
+    options_en:
+      - "Simple SVG injection"
+      - "Multi-vuln composition: (a) SVG injection (XML-based image accepts user content), (b) Path traversal (../../../ climbs path), (c) Open redirect bypass (incomplete allowlist on /redirect endpoint), (d) WebSocket payload trust. Attacker chains all 4 to load cataas.com kittens. Reusable pattern: real-world bugs often compositions"
+      - "Simple SVG upload"
+      - "Classic XSS"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : kill chains
+      multi-vuln. Defense : audit chaque
+      gaffe individuellement + chain
+      analysis. Source : registerWebsocket
+      Events.ts:47.
+    explanation_en: |
+      Reusable pattern: multi-vuln kill
+      chains. Defense: audit each gaffe
+      individually + chain analysis.
+      Source: registerWebsocketEvents.
+      ts:47.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi SVG est une surface dangereuse
+      en general ?
+    question_en: |
+      Why is SVG a dangerous surface in
+      general?
+    options_fr:
+      - "SVG est volumineux"
+      - "SVG est un XML-based format permettant `<script>`, `<image href>`, `<foreignObject>`, `<use href>`. Cela permet : XSS via <script>, cross-domain content via <image>, SSRF via <use>, info disclosure via referrer leak. Defense : sanitize SVG via dompurify avec allowlist tags safe (no <script>, no <foreignObject>, validate image hrefs). Cas reels : Slack 2017 SVG XSS"
+      - "SVG est obsolete"
+      - "SVG est texte"
+    options_en:
+      - "SVG is voluminous"
+      - "SVG is XML-based format allowing `<script>`, `<image href>`, `<foreignObject>`, `<use href>`. Allows: XSS via <script>, cross-domain content via <image>, SSRF via <use>, info disclosure via referrer leak. Defense: sanitize SVG via dompurify with safe tags allowlist (no <script>, no <foreignObject>, validate image hrefs). Real cases: Slack 2017 SVG XSS"
+      - "SVG is obsolete"
+      - "SVG is text"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : SVG = XML, treated
+      with same caution. Source : OWASP
+      File Upload + dompurify docs.
+    explanation_en: |
+      Reusable pattern: SVG = XML, treated
+      with same caution. Source: OWASP
+      File Upload + dompurify docs.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour SVG accept en
+      production ?
+    question_en: |
+      Canonical defense for SVG accept in
+      production?
+    options_fr:
+      - "Disabler SVG entirely"
+      - "(1) Sanitize SVG via DOMPurify avec allowlist strict (no <script>, no <foreignObject>, no <use href>). (2) Validate image hrefs against allowlist domains. (3) Convert SVG en raster (PNG) au upload (eliminate XML attack surface). (4) CSP strict sur le domain serving SVG. (5) Sub-Resource Integrity sur les SVG references. Pattern : multi-layer defense"
+      - "Encrypter les SVG"
+      - "Plain text only"
+    options_en:
+      - "Disable SVG entirely"
+      - "(1) Sanitize SVG via DOMPurify with strict allowlist (no <script>, no <foreignObject>, no <use href>). (2) Validate image hrefs against allowlist domains. (3) Convert SVG to raster (PNG) on upload (eliminates XML attack surface). (4) Strict CSP on domain serving SVG. (5) Sub-Resource Integrity on SVG references. Pattern: multi-layer defense"
+      - "Encrypt SVG"
+      - "Plain text only"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : multi-layer
+      defense pour user-uploaded content.
+      Source : OWASP File Upload + DOMPurify.
+    explanation_en: |
+      Reusable pattern: multi-layer
+      defense for user-uploaded content.
+      Source: OWASP File Upload +
+      DOMPurify.

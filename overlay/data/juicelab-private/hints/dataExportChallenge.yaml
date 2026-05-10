@@ -1,0 +1,130 @@
+challenge_key: "dataExportChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Trick the regular Data Export
+      to give you more than actually belongs to you". La
+      feature GDPR Data Export est dans Account > Privacy &
+      Security. Hint #4 : "Inspecting various server
+      responses which contain user-specific data might give
+      you a clue about the mistake the developers made". Donc
+      regarde les responses Network — comment l'API construit-
+      elle la query ?
+    text_en: |
+      Official OWASP hint #1: "Trick the regular Data Export
+      to give you more than actually belongs to you". The
+      GDPR Data Export feature is in Account > Privacy &
+      Security. Hint #4: "Inspecting various server responses
+      which contain user-specific data might give you a clue
+      about the mistake the developers made". So watch
+      Network responses — how does the API build the query?
+    pedagogical_intent: |
+      Direct toward Network observation.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      En appelant /dataerasure (la route dataExport), tu
+      reçois un fichier qui contient TES orders + reviews.
+      Inspecte ce fichier : il y a un champ "email" deforme
+      avec des asterisques (les voyelles remplacees). C'est
+      un INDICE majeur sur la mecanique : le serveur query
+      par email DEFORME, pas par user.id.
+    text_en: |
+      Calling /dataerasure (the dataExport route), you get a
+      file with YOUR orders + reviews. Inspect the file:
+      there's a deformed "email" field with asterisks (vowels
+      replaced). Major CLUE on the mechanic: server queries
+      by DEFORMED email, not user.id.
+    pedagogical_intent: |
+      Reveal the email-deformation mechanism.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Le code serveur (route dataExport.ts) execute :
+      const updatedEmail = email.replace(/[aeiou]/gi, '*')
+      orders = await db.ordersCollection.find({ email:
+        updatedEmail })
+      Donc le query retourne TOUS les orders dont l'email
+      DEFORME matche le tien. Si tu peux register avec un
+      email qui DEFORME comme celui d'une victime, tu obtiens
+      ses orders. Hint #2 : "should not try a vanilla user
+      who never even ordered" — choisi une victime qui A des
+      orders.
+    text_en: |
+      Server code (route dataExport.ts) runs:
+      const updatedEmail = email.replace(/[aeiou]/gi, '*')
+      orders = await db.ordersCollection.find({ email:
+        updatedEmail })
+      So the query returns ALL orders whose DEFORMED email
+      matches yours. If you can register with an email
+      DEFORMING like a victim's, you get their orders. Hint
+      #2: "should not try a vanilla user who never even
+      ordered" — pick a victim who HAS orders.
+    pedagogical_intent: |
+      Spell the exact server code + collision strategy.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Strategie de collision : prendre un email cible (ex
+      bender@juice-sh.op), calculer sa deformation
+      (b*nd*r@j**c*-sh.*p), et trouver un email valide a
+      register qui donne la meme deformation. Exemples :
+      "bonder@juice-sh.op", "binder@juice-sh.op",
+      "bunder@juice-sh.op" — tous ont la meme structure de
+      voyelles. Register un de ceux-la, login, click Data
+      Export. Tu obtiens les orders de Bender.
+    text_en: |
+      Collision strategy: take a target email (e.g.
+      bender@juice-sh.op), compute its deformation
+      (b*nd*r@j**c*-sh.*p), and find a valid email to
+      register yielding same deformation. Examples:
+      "bonder@juice-sh.op", "binder@juice-sh.op",
+      "bunder@juice-sh.op" — all share vowel structure.
+      Register one, login, click Data Export. You get
+      Bender's orders.
+    pedagogical_intent: |
+      Spell collision strategy + concrete example.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet :
+      1. Identifie une victime active (order). Bender, Jim,
+         Amy sont des candidats.
+      2. Calcule la deformation : remplace voyelles par '*'.
+         "bender@juice-sh.op" -> "b*nd*r@j**c*-sh.*p"
+      3. Choisis un email VALIDE qui collision : remplace les
+         voyelles de bender par d'autres voyelles.
+         "binder@juice-sh.op" est libre, valide, et a la
+         meme deformation.
+      4. Register : POST /api/Users avec l'email collision.
+      5. Login avec ce nouveau compte.
+      6. Va sur Account > Privacy & Security > Data Export.
+      7. Click le bouton, telecharge le fichier. Il contient
+         les orders de Bender en plus des tiens (vides).
+      8. Le challenge se valide automatiquement.
+      Source : verifie via grep dans routes/dataExport.ts.
+    text_en: |
+      Complete workflow:
+      1. Identify an active victim (with orders). Bender,
+         Jim, Amy are candidates.
+      2. Compute deformation: replace vowels with '*'.
+         "bender@juice-sh.op" -> "b*nd*r@j**c*-sh.*p"
+      3. Pick a VALID email that collides: replace bender's
+         vowels with others. "binder@juice-sh.op" is free,
+         valid, same deformation.
+      4. Register: POST /api/Users with collision email.
+      5. Login with new account.
+      6. Go to Account > Privacy & Security > Data Export.
+      7. Click button, download file. Contains Bender's
+         orders plus yours (empty).
+      8. Challenge auto-solves.
+      Source: verified via grep in routes/dataExport.ts.
+    pedagogical_intent: |
+      Quasi-solution : full 8-step workflow.

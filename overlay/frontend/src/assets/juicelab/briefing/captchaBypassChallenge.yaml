@@ -1,0 +1,88 @@
+challenge_key: "captchaBypassChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Submit 10 feedbacks consecutifs en moins de 20 secondes via /#/contact
+  pour contourner le CAPTCHA. Tag : Broken Anti Automation. Hint OWASP :
+  "feedback rate limiting". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/verify.ts:37-41 : si l'intervalle
+  entre la 1ere et la 10eme requete (`captchaReqId - 10`) est <= 20000ms,
+  challenge solve. Le serveur tracke `captchaBypassReqTimes[]` mais ne
+  bloque pas. Workflow : (1) Inspect /#/contact, identifier API endpoint
+  POST /api/Feedbacks. (2) Ecrire un script (curl loop, Burp Intruder,
+  Python requests) qui POST 10 fois rapidement. (3) Verifier solve dans
+  notifications.
+
+mission_en: |
+  Submit 10 consecutive feedbacks in less than 20 seconds via /#/contact
+  to bypass CAPTCHA. Tag: Broken Anti Automation. OWASP hint: "feedback
+  rate limiting". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/verify.ts:37-41: if interval between
+  1st and 10th request (`captchaReqId - 10`) is <= 20000ms, challenge
+  solves. Server tracks `captchaBypassReqTimes[]` but doesn't block.
+  Workflow: (1) Inspect /#/contact, identify API endpoint POST
+  /api/Feedbacks. (2) Write a script (curl loop, Burp Intruder, Python
+  requests) that POSTs 10 times rapidly. (3) Verify solve in
+  notifications.
+
+concepts:
+  - title_fr: "Broken Anti-Automation : tracker sans bloquer"
+    title_en: "Broken Anti-Automation: track without blocking"
+    body_fr: |
+      Source canonique : OWASP API Security Top 10 (API4:2023 Unrestricted
+      Resource Consumption + API8:2023 Security Misconfiguration). Le code
+      Juice Shop tracke `captchaBypassReqTimes[reqId]` mais ne bloque pas
+      apres rate limit detection. Pattern reusable : detection sans
+      action = monitoring vide. Defense : (1) Vrai rate limiting
+      (express-rate-limit, 5 requetes/min). (2) IP-based + token-based
+      buckets. (3) Slow-down progressive (express-slow-down). Cas reels :
+      Spam apps qui passent 1000 messages/sec sans CAPTCHA effectif.
+    body_en: |
+      Canonical source: OWASP API Security Top 10 (API4:2023 Unrestricted
+      Resource Consumption + API8:2023 Security Misconfiguration). Juice
+      Shop code tracks `captchaBypassReqTimes[reqId]` but doesn't block
+      after rate limit detection. Reusable pattern: detection without
+      action = empty monitoring. Defense: (1) Real rate limiting
+      (express-rate-limit, 5 req/min). (2) IP-based + token-based
+      buckets. (3) Progressive slow-down (express-slow-down). Real cases:
+      Spam apps passing 1000 messages/sec without effective CAPTCHA.
+
+  - title_fr: "Bypassing client-side validation"
+    title_en: "Bypassing client-side validation"
+    body_fr: |
+      Le CAPTCHA Juice Shop est une math question (3+5=?) verifiee
+      cote serveur mais facilement scriptable. Tools de bypass : (1) Burp
+      Intruder pour replay automatise. (2) Python requests + ocr/eval pour
+      solver math. (3) Selenium pour browser automation. Defense reelle :
+      reCAPTCHA v3 (Google, score-based), hCaptcha, Cloudflare Turnstile
+      (privacy-preserving). Pattern : la verification cote serveur seule
+      n'est PAS suffisante - il faut un challenge non-trivial a automatiser.
+    body_en: |
+      Juice Shop CAPTCHA is a math question (3+5=?) server-side verified
+      but easily scriptable. Bypass tools: (1) Burp Intruder for
+      automated replay. (2) Python requests + ocr/eval for math solver.
+      (3) Selenium for browser automation. Real defense: reCAPTCHA v3
+      (Google, score-based), hCaptcha, Cloudflare Turnstile (privacy-
+      preserving). Pattern: server-side verification alone is NOT
+      enough - need non-trivial challenge to automate.
+
+  - title_fr: "Defense canonique : multi-layer rate limiting"
+    title_en: "Canonical defense: multi-layer rate limiting"
+    body_fr: |
+      (1) express-rate-limit avec windowMs=60000 et max=5 par IP. (2)
+      express-slow-down avec delayAfter=3 et delayMs=500 (progressive
+      slow-down). (3) reCAPTCHA v3 avec score threshold 0.5. (4)
+      Honeypot field hidden (rejected si filled). (5) Behavioral analysis
+      (typing speed, mouse movement). (6) Account-level throttling (5
+      feedbacks/heure par user). Pattern reusable : defense en
+      profondeur, pas un seul mecanisme.
+    body_en: |
+      (1) express-rate-limit with windowMs=60000 and max=5 per IP. (2)
+      express-slow-down with delayAfter=3 and delayMs=500 (progressive
+      slow-down). (3) reCAPTCHA v3 with score threshold 0.5. (4) Hidden
+      honeypot field (rejected if filled). (5) Behavioral analysis
+      (typing speed, mouse movement). (6) Account-level throttling (5
+      feedbacks/hour per user). Reusable pattern: defense in depth, not
+      single mechanism.

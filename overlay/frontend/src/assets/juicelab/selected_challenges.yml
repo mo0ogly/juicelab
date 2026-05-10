@@ -1,0 +1,102 @@
+# Public TD outline. This file describes which 13 Juice Shop challenges
+# are part of the JuiceLab pedagogy parcours. It does not contain solutions.
+# Hints, quiz answers, and walkthroughs are NOT served as static assets;
+# they live in the private juicelab-pedagogy repo and will be exposed
+# through the phase B mini-endpoint with progressive reveal gating.
+
+last_updated: "2026-05-09"
+total_challenges: 13
+juice_shop_version: "depth-1 clone 2026-05-09"
+
+selected_challenges:
+
+  scoreBoardChallenge:
+    name_official: "Score Board"
+    demi_journee: 1
+    position: 1
+    difficulty: 1
+    category: Miscellaneous
+
+  privacyPolicyChallenge:
+    name_official: "Privacy Policy"
+    demi_journee: 1
+    position: 2
+    difficulty: 1
+    category: Miscellaneous
+
+  directoryListingChallenge:
+    name_official: "Confidential Document"
+    demi_journee: 1
+    position: 3
+    difficulty: 1
+    category: "Sensitive Data Exposure"
+
+  exposedCredentialsChallenge:
+    name_official: "Exposed credentials"
+    demi_journee: 1
+    position: 4
+    difficulty: 2
+    category: "Sensitive Data Exposure"
+
+  passwordHashLeakChallenge:
+    name_official: "Password Hash Leak"
+    demi_journee: 1
+    position: 5
+    difficulty: 2
+    category: "Sensitive Data Exposure"
+
+  loginAdminChallenge:
+    name_official: "Login Admin"
+    demi_journee: 2
+    position: 1
+    difficulty: 2
+    category: Injection
+
+  adminSectionChallenge:
+    name_official: "Admin Section"
+    demi_journee: 2
+    position: 2
+    difficulty: 2
+    category: "Broken Access Control"
+
+  basketAccessChallenge:
+    name_official: "View Basket"
+    demi_journee: 2
+    position: 3
+    difficulty: 2
+    category: "Broken Access Control"
+
+  feedbackChallenge:
+    name_official: "Five-Star Feedback"
+    demi_journee: 2
+    position: 4
+    difficulty: 2
+    category: "Broken Access Control"
+
+  localXssChallenge:
+    name_official: "DOM XSS"
+    demi_journee: 3
+    position: 1
+    difficulty: 1
+    category: XSS
+
+  reflectedXssChallenge:
+    name_official: "Reflected XSS"
+    demi_journee: 3
+    position: 2
+    difficulty: 2
+    category: XSS
+
+  xssBonusChallenge:
+    name_official: "Bonus Payload"
+    demi_journee: 3
+    position: 3
+    difficulty: 1
+    category: XSS
+
+  bullyChatbotChallenge:
+    name_official: "Bully Chatbot"
+    demi_journee: 3
+    position: 4
+    difficulty: 1
+    category: Miscellaneous

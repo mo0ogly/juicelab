@@ -1,0 +1,100 @@
+challenge_key: "web3WalletChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Vider le wallet du contrat smart-contract Web3 (Ethereum Sepolia
+  testnet) du Juice Shop pour declencher l'event "ContractExploited". Tag
+  : Miscellaneous (Web3). Hint OWASP : "drain the smart contract".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/web3Wallet.ts:24 :
+  `void contract.on('ContractExploited', (exploiter) => { if
+  (walletsConnected.has(exploiter)) solveIf(() => true) })`. Le contract
+  Solidity emit `ContractExploited` quand son state est exploite. Workflow
+  : (1) Comprendre le contract Solidity du shop (Etherscan address
+  0x413744D59d31AFDC2889aeE602636177805Bd7b0 sur Sepolia). (2) Connect
+  Metamask au shop. (3) Crafter transaction qui exploit le contract
+  (reentrancy, integer overflow, ou logic bug specifique). (4) Le contract
+  emit ContractExploited.
+
+mission_en: |
+  Drain Juice Shop's Web3 smart-contract wallet (Ethereum Sepolia testnet)
+  to trigger "ContractExploited" event. Tag: Miscellaneous (Web3). OWASP
+  hint: "drain the smart contract". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/web3Wallet.ts:24:
+  `void contract.on('ContractExploited', (exploiter) => { if
+  (walletsConnected.has(exploiter)) solveIf(() => true) })`. Solidity
+  contract emits `ContractExploited` when its state is exploited.
+  Workflow: (1) Understand shop's Solidity contract (Etherscan address
+  0x413744D59d31AFDC2889aeE602636177805Bd7b0 on Sepolia). (2) Connect
+  Metamask to shop. (3) Craft transaction exploiting contract (reentrancy,
+  integer overflow, or specific logic bug). (4) Contract emits
+  ContractExploited.
+
+concepts:
+  - title_fr: "Smart contract security : OWASP Top 10 Smart Contract"
+    title_en: "Smart contract security: OWASP Top 10 Smart Contract"
+    body_fr: |
+      Source canonique : OWASP Top 10 Smart Contract 2025 + Trail of Bits
+      Smart Contract Security. Top vulnerabilites : (1) Reentrancy (CWE-841,
+      $30M+ DAO 2016, $200M Compound 2023). (2) Integer Overflow/Underflow
+      (Solidity <0.8.0). (3) Access Control errors (onlyOwner missing). (4)
+      Front-running (MEV bots). (5) Oracle manipulation (Mango Markets
+      $116M 2022). (6) Flash loan attacks. (7) Logic bugs in
+      mathematical formulas (LP bonding curves). Tools : Slither, Mythril,
+      Echidna, Manticore. Defense : audits formel + bounty + verification.
+    body_en: |
+      Canonical source: OWASP Top 10 Smart Contract 2025 + Trail of Bits
+      Smart Contract Security. Top vulnerabilities: (1) Reentrancy
+      (CWE-841, $30M+ DAO 2016, $200M Compound 2023). (2) Integer
+      Overflow/Underflow (Solidity <0.8.0). (3) Access Control errors
+      (missing onlyOwner). (4) Front-running (MEV bots). (5) Oracle
+      manipulation (Mango Markets $116M 2022). (6) Flash loan attacks.
+      (7) Logic bugs in mathematical formulas (LP bonding curves). Tools:
+      Slither, Mythril, Echidna, Manticore. Defense: formal audits +
+      bounty + verification.
+
+  - title_fr: "Web3 integration risk : trust externe sur chain"
+    title_en: "Web3 integration risk: external chain trust"
+    body_fr: |
+      Le code Juice Shop : `WebSocketProvider('wss://eth-sepolia.g.alchemy.
+      com/v2/FZD...')` se connecte a Alchemy comme RPC provider. Risques
+      : (1) RPC provider compromise = state inconnu. (2) Hardcoded API
+      key dans code (Alchemy v2 token expose). (3) Event listener qui
+      trust `walletsConnected.has(exploiter)` sans verifier identite.
+      Pattern reusable : Web3 integrations heritent les risques on-chain
+      + risques traditionnels (API key, race condition, etc.). Defense :
+      EIP-712 typed signature pour auth, event verification multi-source,
+      key rotation.
+    body_en: |
+      Juice Shop code: `WebSocketProvider('wss://eth-sepolia.g.alchemy.
+      com/v2/FZD...')` connects to Alchemy as RPC provider. Risks: (1)
+      RPC provider compromise = unknown state. (2) Hardcoded API key in
+      code (Alchemy v2 token exposed). (3) Event listener trusting
+      `walletsConnected.has(exploiter)` without identity verification.
+      Reusable pattern: Web3 integrations inherit on-chain risks +
+      traditional risks (API key, race condition, etc.). Defense: EIP-712
+      typed signature for auth, multi-source event verification, key
+      rotation.
+
+  - title_fr: "Defense canonique : audit smart contract + secure integration"
+    title_en: "Canonical defense: smart contract audit + secure integration"
+    body_fr: |
+      (1) Audit formel du contract avec Slither/Mythril/Echidna avant
+      deployment. (2) OpenZeppelin libraries pour patterns audites
+      (ReentrancyGuard, Ownable, SafeMath). (3) Bounty programme actif
+      (Immunefi, HackerOne). (4) Multi-sig wallet pour fonds critiques.
+      (5) Time lock sur upgrades. (6) Cote integration : EIP-712 auth,
+      event verification multi-source (Alchemy + Infura + your-node), API
+      key in env var (jamais hardcoded), rate limit per address. Pattern
+      reusable : Web3 = audit formel + redondance + monitoring.
+    body_en: |
+      (1) Formal contract audit with Slither/Mythril/Echidna before
+      deployment. (2) OpenZeppelin libraries for audited patterns
+      (ReentrancyGuard, Ownable, SafeMath). (3) Active bounty programme
+      (Immunefi, HackerOne). (4) Multi-sig wallet for critical funds.
+      (5) Upgrade time lock. (6) Integration side: EIP-712 auth, multi-
+      source event verification (Alchemy + Infura + your-node), API key
+      in env var (never hardcoded), per-address rate limit. Reusable
+      pattern: Web3 = formal audit + redundancy + monitoring.

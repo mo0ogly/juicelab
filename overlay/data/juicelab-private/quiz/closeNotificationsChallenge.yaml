@@ -1,0 +1,78 @@
+challenge_key: "closeNotificationsChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Qu'est-ce qu'une type confusion attack via
+      WebSocket ?
+    question_en: |
+      What is a WebSocket type confusion attack?
+    options_fr:
+      - "DDoS WebSocket"
+      - "JS dynamic typing permet d'envoyer Array, Object, null la ou single value est attendu. Si le serveur ne valide pas le shape, comportement inattendu (CWE-843). Cas reels : Slack RCE via JSON deserialization 2019, Discord token exfil 2020. Defense : runtime schema validation"
+      - "Bug Network"
+      - "Standard ISO"
+    options_en:
+      - "WebSocket DDoS"
+      - "JS dynamic typing allows sending Array, Object, null where single value expected. If server doesn't validate shape, unexpected behavior (CWE-843). Real cases: Slack RCE via JSON deserialization 2019, Discord token exfil 2020. Defense: runtime schema validation"
+      - "Network bug"
+      - "ISO standard"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : runtime type check.
+      Source : CWE-843 + OWASP A08.
+    explanation_en: |
+      Reusable pattern: runtime type check. Source:
+      CWE-843 + OWASP A08.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Comment inspecter et override un WebSocket en
+      pentest ?
+    question_en: |
+      How to inspect and override WebSocket in
+      pentest?
+    options_fr:
+      - "Impossible"
+      - "(1) Chrome DevTools Network > WS tab voit toutes frames in/out. (2) Console monkey-patching `socket.emit = (event, data) => {...}`. (3) Burp Repeater + WebSocket plugin. (4) Custom Python `websockets.connect(url).send(...)`. (5) Frida/WAS-pi-equivalent pour mobile. (6) tcpdump + Wireshark"
+      - "Trop secure"
+      - "Bug repandu"
+    options_en:
+      - "Impossible"
+      - "(1) Chrome DevTools Network > WS tab sees all in/out frames. (2) Console monkey-patching `socket.emit = (event, data) => {...}`. (3) Burp Repeater + WebSocket plugin. (4) Custom Python `websockets.connect(url).send(...)`. (5) Frida/WAS-pi-equivalent for mobile. (6) tcpdump + Wireshark"
+      - "Too secure"
+      - "Common bug"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : WS inspection. Source :
+      OWASP Web Security Testing Guide.
+    explanation_en: |
+      Reusable pattern: WS inspection. Source: OWASP
+      Web Security Testing Guide.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour endpoints WebSocket ?
+    question_en: |
+      Canonical defense for WebSocket endpoints?
+    options_fr:
+      - "Trust client"
+      - "(1) Zod ou Ajv runtime schema validation par message type. (2) TypeScript `typeof` defensive check. (3) Message envelope avec `type` field + per-type validation. (4) Per-socket rate limit + auth (JWT). (5) Per-message integrity (HMAC). (6) Fuzz testing avec types varies. (7) Binary protocol (protobuf) si possible"
+      - "Pas de WS"
+      - "Encrypter tout"
+    options_en:
+      - "Trust client"
+      - "(1) Zod or Ajv runtime schema validation per message type. (2) TypeScript `typeof` defensive check. (3) Message envelope with `type` field + per-type validation. (4) Per-socket rate limit + auth (JWT). (5) Per-message integrity (HMAC). (6) Fuzz testing with varied types. (7) Binary protocol (protobuf) if possible"
+      - "No WS"
+      - "Encrypt all"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : schema-driven WS. Source :
+      OWASP Cheat Sheet Series.
+    explanation_en: |
+      Reusable pattern: schema-driven WS. Source:
+      OWASP Cheat Sheet Series.

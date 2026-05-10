@@ -1,0 +1,78 @@
+challenge_key: "redirectCryptoCurrencyChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi des wallets retires du UI restent
+      reachables ?
+    question_en: |
+      Why do UI-removed wallets remain reachable?
+    options_fr:
+      - "Bug Angular"
+      - "Config drift : la feature est retiree du UI mais l'allowlist (lib/insecurity.ts:124) garde les URLs. Pattern reusable : decommissioning incomplete = surface latente. Cas reels : Equifax 2017 Struts URL config nginx, Capital One 2019 IAM role orphelin"
+      - "Tres efficace"
+      - "Standard ISO"
+    options_en:
+      - "Angular bug"
+      - "Config drift: feature removed from UI but allowlist (lib/insecurity.ts:124) keeps URLs. Reusable pattern: incomplete decommissioning = latent surface. Real cases: Equifax 2017 Struts URL nginx config, Capital One 2019 orphan IAM role"
+      - "Very efficient"
+      - "ISO standard"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : config drift = vulnerabilite
+      latente. Source : OWASP A05 Misconfiguration.
+    explanation_en: |
+      Reusable pattern: config drift = latent
+      vulnerability. Source: OWASP A05
+      Misconfiguration.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Comment decouvrir des features decommissioned ?
+    question_en: |
+      How to discover decommissioned features?
+    options_fr:
+      - "Demander au CTO"
+      - "(1) web.archive.org (Wayback Machine) - snapshots historiques. (2) git log de l'app si open-source. (3) archive.today. (4) Old sitemap.xml. (5) GitHub Pages history. (6) Allowlist files (lib/insecurity, nginx, IAM policies). Pattern : surfaces decommissioned souvent reachables"
+      - "C'est secret"
+      - "Impossible"
+    options_en:
+      - "Ask CTO"
+      - "(1) web.archive.org (Wayback Machine) - historical snapshots. (2) git log if open-source. (3) archive.today. (4) Old sitemap.xml. (5) GitHub Pages history. (6) Allowlist files (lib/insecurity, nginx, IAM policies). Pattern: decommissioned surfaces often reachable"
+      - "It's secret"
+      - "Impossible"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : history mining. Source :
+      OWASP Web Security Testing Guide.
+    explanation_en: |
+      Reusable pattern: history mining. Source: OWASP
+      Web Security Testing Guide.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour decommissioning
+      proprement ?
+    question_en: |
+      Canonical defense for clean decommissioning?
+    options_fr:
+      - "Esperance"
+      - "Checklist signoff retirant SIMULTANEMENT : (a) UI element, (b) backend route, (c) allowlist entries, (d) config keys, (e) database tables, (f) DNS records, (g) test fixtures. CI audit grep references orphelines + Sunset HTTP header (RFC 8594) + test coverage URL=404 apres retrait"
+      - "Plus de feature"
+      - "Aucune defense"
+    options_en:
+      - "Hope"
+      - "Signoff checklist SIMULTANEOUSLY removing: (a) UI element, (b) backend route, (c) allowlist entries, (d) config keys, (e) database tables, (f) DNS records, (g) test fixtures. CI audit grep orphan references + Sunset HTTP header (RFC 8594) + test coverage URL=404 after removal"
+      - "No more features"
+      - "No defense"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : decommissioning discipline.
+      Source : OWASP A05 + RFC 8594.
+    explanation_en: |
+      Reusable pattern: decommissioning discipline.
+      Source: OWASP A05 + RFC 8594.

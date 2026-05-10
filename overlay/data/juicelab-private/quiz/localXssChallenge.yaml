@@ -1,0 +1,92 @@
+challenge_key: "localXssChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Comment definir le DOM XSS ?
+    question_en: |
+      How to define DOM XSS?
+    options_fr:
+      - "Une injection persistante stockee en base et reaffichee aux autres utilisateurs"
+      - "Une injection traitee entierement cote client par du JavaScript, sans aller-retour serveur"
+      - "Une injection qui exploite un bug du DOM Parser de Chrome"
+      - "Une injection qui ne fonctionne que dans les SPA Angular"
+    options_en:
+      - "A persistent injection stored in DB and displayed to other users"
+      - "An injection processed entirely client-side by JavaScript, without server round-trip"
+      - "An injection that exploits a Chrome DOM Parser bug"
+      - "An injection that only works in Angular SPAs"
+    correct: 1
+    explanation_fr: |
+      DOM XSS = injection traitee entierement cote client par du JS.
+      Different du Reflected (passe par le serveur) et du Stored (persiste
+      en base). Le serveur ne voit jamais le payload dans un DOM XSS pur.
+    explanation_en: |
+      DOM XSS = injection processed entirely client-side by JS.
+      Different from Reflected (goes through the server) and Stored
+      (persists in DB). The server never sees the payload in pure DOM
+      XSS.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Sur Angular, quelle methode est specifiquement responsable de
+      bypasser l'echappement HTML par defaut, et donc d'introduire un
+      risque de XSS si elle est appliquee a du contenu utilisateur ?
+    question_en: |
+      In Angular, which method is specifically responsible for
+      bypassing default HTML escaping, and therefore introduces XSS
+      risk when applied to user-controlled content?
+    options_fr:
+      - "Renderer2.appendChild"
+      - "DomSanitizer.bypassSecurityTrustHtml"
+      - "ChangeDetectorRef.detectChanges"
+      - "HttpClient.get avec responseType: text"
+    options_en:
+      - "Renderer2.appendChild"
+      - "DomSanitizer.bypassSecurityTrustHtml"
+      - "ChangeDetectorRef.detectChanges"
+      - "HttpClient.get with responseType: text"
+    correct: 1
+    explanation_fr: |
+      bypassSecurityTrustHtml dit explicitement a Angular "fais
+      confiance a ce HTML, ne l'echappe pas". C'est concu pour du
+      contenu statique de confiance, jamais pour de l'input utilisateur.
+    explanation_en: |
+      bypassSecurityTrustHtml explicitly tells Angular "trust this
+      HTML, do not escape it". It is designed for trusted static
+      content, never for user input.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense browser-side moderne (header HTTP) peut mitiger
+      l'execution d'un payload XSS meme en presence de la vulnerabilite
+      dans l'application ?
+    question_en: |
+      Which modern browser-side defense (HTTP header) can mitigate the
+      execution of an XSS payload even when the application
+      vulnerability is present?
+    options_fr:
+      - "X-Frame-Options: DENY"
+      - "Content-Security-Policy avec script-src 'self' + nonce, et/ou Trusted Types"
+      - "Strict-Transport-Security: max-age=31536000"
+      - "X-Content-Type-Options: nosniff"
+    options_en:
+      - "X-Frame-Options: DENY"
+      - "Content-Security-Policy with script-src 'self' + nonce, and/or Trusted Types"
+      - "Strict-Transport-Security: max-age=31536000"
+      - "X-Content-Type-Options: nosniff"
+    correct: 1
+    explanation_fr: |
+      CSP est la defense XSS dediee : refuse l'execution de scripts
+      inline non autorises. Trusted Types force les API DOM dangereuses
+      a recevoir des objets typeS, bloque les sinks vulnerables. Les
+      autres headers protegent contre clickjacking, MITM, MIME sniffing.
+    explanation_en: |
+      CSP is the dedicated XSS defense: refuses execution of
+      unauthorized inline scripts. Trusted Types forces dangerous DOM
+      APIs to receive typed objects, blocking vulnerable sinks. The
+      other headers protect against clickjacking, MITM, MIME sniffing.

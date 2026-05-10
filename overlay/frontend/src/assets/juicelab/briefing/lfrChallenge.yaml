@@ -1,0 +1,174 @@
+challenge_key: "lfrChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Gagne un access read sur un fichier local arbitraire
+  du serveur web. Description OWASP. Hints officiels :
+  (1) "You should read up on vulnerabilities in popular
+  NodeJs template engines". (2) "You should read up on
+  Local File Read (LFR) vulnerabilities in popular
+  NodeJS template engines". (3) "Look for an easily
+  forgettable endpoint in Juice Shop to test out the
+  LFR attack". (4) "500 Internal Server Error is always
+  an interesting status code". (5) "Fuzzing can also
+  help with this challenge". Tag : OSINT, Danger Zone.
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le bug est dans routes/
+  dataErasure.ts:68-82 (verifie source). Code exact :
+  `if (req.body.layout) { const filePath: string =
+  path.resolve(req.body.layout).toLowerCase(); const
+  isForbiddenFile: boolean = (filePath.includes(
+  'ftp') || filePath.includes('ctf.key') || filePath.
+  includes('encryptionkeys')); if (!isForbiddenFile) {
+  res.render('dataErasureResult', { ...req.body },
+  (error, html) => { ... res.send(sendlfrResponse);
+  challengeUtils.solveIf(challenges.lfrChallenge, () =>
+  { return true }) }) } }`. Donc l'endpoint
+  /dataerasure (POST) lit un parametre `layout` et
+  l'utilise comme template path pour res.render(). Le
+  pug template engine est used (default Express). Si
+  layout pointe vers un fichier non-pug (ex.
+  package.json, server.ts), pug peut etre confused mais
+  rendre PARTIELLEMENT du contenu = solve.
+
+mission_en: |
+  Gain read access to arbitrary local file on web
+  server. OWASP description. Official hints: (1) "You
+  should read up on vulnerabilities in popular NodeJs
+  template engines". (2) "You should read up on Local
+  File Read (LFR) vulnerabilities in popular NodeJS
+  template engines". (3) "Look for an easily
+  forgettable endpoint in Juice Shop to test out the
+  LFR attack". (4) "500 Internal Server Error is
+  always an interesting status code". (5) "Fuzzing
+  can also help with this challenge". Tag: OSINT,
+  Danger Zone. [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Bug is in routes/dataErasure.
+  ts:68-82 (verified source). Exact code: `if (req.
+  body.layout) { const filePath: string = path.
+  resolve(req.body.layout).toLowerCase(); const
+  isForbiddenFile: boolean = (filePath.includes(
+  'ftp') || filePath.includes('ctf.key') ||
+  filePath.includes('encryptionkeys')); if
+  (!isForbiddenFile) { res.render('
+  dataErasureResult', { ...req.body }, (error,
+  html) => { ... res.send(sendlfrResponse);
+  challengeUtils.solveIf(challenges.lfrChallenge,
+  () => { return true }) }) } }`. So /dataerasure
+  endpoint (POST) reads `layout` parameter and uses
+  as template path for res.render(). pug template
+  engine is used (Express default). If layout
+  points to non-pug file (e.g., package.json,
+  server.ts), pug may be confused but render
+  PARTIAL content = solve.
+
+concepts:
+  - title_fr: "Pug LFR via res.render() : un classique CVE-2024-style"
+    title_en: "Pug LFR via res.render(): a CVE-2024-style classic"
+    body_fr: |
+      Source canonique : pug template engine
+      documentation + Snyk advisory pour pug-based
+      LFR. Mecanique : `res.render(view, locals)`
+      passe `view` au pug compiler, qui (a) cherche
+      le template, (b) lit son content, (c) compile
+      en function, (d) execute avec locals, (e) ren
+      vers HTML. Si `view` est attacker-controlled,
+      pug peut etre force a (a) lire un fichier
+      arbitraire du serveur (Local File Read), (b)
+      potentiellement evaluer du JavaScript injected
+      dans le template (RCE escalation possible). Le
+      challenge cible UNIQUEMENT LFR (Danger Zone tag
+      indique RCE escalation possible mais non
+      souhaitee). Cf. CVE-2022-XXX pug + autres
+      template engines (handlebars, ejs).
+    body_en: |
+      Canonical source: pug template engine
+      documentation + Snyk advisory for pug-based
+      LFR. Mechanic: `res.render(view, locals)`
+      passes `view` to pug compiler, which (a)
+      searches template, (b) reads its content, (c)
+      compiles to function, (d) executes with
+      locals, (e) renders to HTML. If `view` is
+      attacker-controlled, pug can be forced to (a)
+      read arbitrary server file (Local File Read),
+      (b) potentially evaluate injected JavaScript
+      in template (RCE escalation possible).
+      Challenge targets ONLY LFR (Danger Zone tag
+      indicates RCE escalation possible but
+      unwanted). Cf. CVE-2022-XXX pug + other
+      template engines (handlebars, ejs).
+
+  - title_fr: "isForbiddenFile : la blocklist insuffisante"
+    title_en: "isForbiddenFile: the insufficient blocklist"
+    body_fr: |
+      Source verifiee (routes/dataErasure.ts:70) :
+      `const isForbiddenFile: boolean = (filePath.
+      includes('ftp') || filePath.includes('ctf.
+      key') || filePath.includes('encryptionkeys'))`.
+      C'est une BLOCKLIST defense (anti-pattern
+      classique) : on bloque QUELQUES paths
+      sensibles, mais on autorise tout le reste. Bugs
+      multiples : (a) `ftp` substring permet le
+      contournement (un path comme `node_modules/ftp/
+      lib/whatever` serait bloque mais c'est
+      ambigu), (b) ne bloque pas `package.json`,
+      `server.ts`, `routes/*.ts`, `node_modules/`,
+      etc., (c) ne bloque pas `/etc/passwd` (sur
+      Linux). Defense correcte = ALLOWLIST des
+      templates autorises (dataErasureResult,
+      privacyForm, etc.) et REFUSER tout le reste.
+      Pattern : allowlists > blocklists.
+    body_en: |
+      Verified source (routes/dataErasure.ts:70):
+      `const isForbiddenFile: boolean = (filePath.
+      includes('ftp') || filePath.includes('ctf.
+      key') || filePath.includes('encryptionkeys'))`.
+      It's a BLOCKLIST defense (classic anti-
+      pattern): block SOME sensitive paths, allow
+      everything else. Multiple bugs: (a) `ftp`
+      substring allows bypass (path like
+      `node_modules/ftp/lib/whatever` would be
+      blocked but ambiguous), (b) doesn't block
+      `package.json`, `server.ts`, `routes/*.ts`,
+      `node_modules/`, etc., (c) doesn't block
+      `/etc/passwd` (on Linux). Correct defense =
+      ALLOWLIST of authorized templates
+      (dataErasureResult, privacyForm, etc.) and
+      REFUSE everything else. Pattern: allowlists >
+      blocklists.
+
+  - title_fr: "Forgettable endpoint + 500 status : signaux pedagogiques"
+    title_en: "Forgettable endpoint + 500 status: pedagogical signals"
+    body_fr: |
+      Hint OWASP #3 : "easily forgettable endpoint" =
+      /dataerasure (a fait pour la GDPR Right to
+      Erasure, voir aussi ghostLoginChallenge dans
+      Lot 5). Pas un endpoint principal de l'app,
+      souvent oublie dans les pen tests. Hint #4 :
+      "500 Internal Server Error is always an
+      interesting status code". Pattern reusable :
+      les erreurs serveur sont des FUITES
+      d'information (stack trace, file paths
+      internal, library versions). Un fuzzer doit
+      (a) tester chaque endpoint avec des inputs
+      "weird" (path traversals, format strings, null
+      bytes), (b) noter les 500 errors, (c) extraire
+      info des stack traces. Hint #5 : "Fuzzing can
+      also help" - confirme l'approche systematique.
+    body_en: |
+      OWASP hint #3: "easily forgettable endpoint"
+      = /dataerasure (made for GDPR Right to
+      Erasure, see also ghostLoginChallenge in Lot
+      5). Not a main app endpoint, often forgotten
+      in pen tests. Hint #4: "500 Internal Server
+      Error is always an interesting status code".
+      Reusable pattern: server errors are
+      information LEAKS (stack trace, internal file
+      paths, library versions). Fuzzer must (a)
+      test each endpoint with "weird" inputs (path
+      traversals, format strings, null bytes), (b)
+      note 500 errors, (c) extract info from stack
+      traces. Hint #5: "Fuzzing can also help" -
+      confirms systematic approach.

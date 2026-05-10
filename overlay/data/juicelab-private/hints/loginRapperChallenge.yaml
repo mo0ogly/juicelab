@@ -1,0 +1,118 @@
+challenge_key: "loginRapperChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "MC SafeSearch is a rapper who
+      produced the song Protect Ya' Passwordz which explains
+      password & sensitive data protection very nicely". Donc
+      OSINT musical. Recherche "MC SafeSearch Protect Ya
+      Passwordz" — c'est une parodie ou un vrai clip a propos
+      de la securite des mots de passe. Le pattern : un
+      personnage qui CHANTE la bonne pratique mais utilise un
+      exemple de mauvais password.
+    text_en: |
+      Official OWASP hint #1: "MC SafeSearch is a rapper who
+      produced the song Protect Ya' Passwordz which explains
+      password & sensitive data protection very nicely". So
+      musical OSINT. Search "MC SafeSearch Protect Ya
+      Passwordz" — parody or real clip about password
+      security. Pattern: character SINGING good practice but
+      using a bad-password example.
+    pedagogical_intent: |
+      Activate musical OSINT reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP officiel #2 : "even 2 stars is a slightly
+      exaggerated difficulty rating". Donc le mot de passe est
+      EVIDENT une fois la chanson trouvee. Pattern : MC
+      SafeSearch chante "ne fais pas ca" et donne un EXEMPLE
+      en clair. Cet exemple est son propre mot de passe (par
+      ironie/paresse). Donc il s'agit d'un password dans le top
+      10 des worst passwords annuels.
+    text_en: |
+      Official OWASP hint #2: "even 2 stars is a slightly
+      exaggerated difficulty rating". So password is OBVIOUS
+      once the song is found. Pattern: MC SafeSearch sings
+      "don't do this" and gives a CLEAR example. That example
+      is his own password (irony/laziness). So it's a password
+      from the annual top-10 worst passwords.
+    pedagogical_intent: |
+      Hint at the obviousness + worst-passwords list.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Le clip "Protect Ya' Passwordz" sur YouTube (ou le source
+      Juice Shop GitHub) montre MC SafeSearch citant des bad
+      passwords. Le sien typique : "Password" ou "P4ssw0rd" ou
+      similaire — un classique du worst-passwords annual list.
+      Email : mc.safesearch@juice-sh.op (essaie aussi
+      mc-safesearch@juice-sh.op si l'autre echoue, les
+      conventions de delimiter changent).
+    text_en: |
+      The "Protect Ya' Passwordz" YouTube clip (or Juice Shop
+      GitHub source) shows MC SafeSearch citing bad passwords.
+      His typical: "Password" or "P4ssw0rd" or similar — an
+      annual worst-passwords classic. Email:
+      mc.safesearch@juice-sh.op (also try
+      mc-safesearch@juice-sh.op if the other fails, delimiter
+      conventions vary).
+    pedagogical_intent: |
+      Pin the password pattern + email candidates.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le mot de passe officiel pour MC SafeSearch dans Juice
+      Shop est "Mr. N00dles". Cet "exemple" est citoye dans la
+      chanson de MC SafeSearch comme demonstration de password
+      ridicule. Email candidates : mc.safesearch@juice-sh.op,
+      mc-safesearch@juice-sh.op. La convention de Juice Shop
+      utilise typiquement le tiret (mc-safesearch).
+    text_en: |
+      MC SafeSearch's official password in Juice Shop is
+      "Mr. N00dles". This "example" is cited in the song as
+      a ridiculous password demonstration. Email candidates:
+      mc.safesearch@juice-sh.op, mc-safesearch@juice-sh.op.
+      Juice Shop convention typically uses the hyphen
+      (mc-safesearch).
+    pedagogical_intent: |
+      Spell exact password + email convention.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow direct :
+      1. Va sur /#/login
+      2. Email : mc-safesearch@juice-sh.op (ou
+         mc.safesearch@juice-sh.op selon la version Juice
+         Shop installee).
+      3. Password : Mr. N00dles
+      4. Click Login.
+      5. Le challenge se valide automatiquement (login
+         reussi avec credentials originaux, sans SQLi).
+      Si le password ne marche pas, fais un OSINT rapide sur
+      la chanson "Protect Ya' Passwordz" pour confirmer le
+      pattern. Source : Juice Shop seeded accounts (lib/
+      datacreator.ts ou similaire dans le repo officiel).
+    text_en: |
+      Direct workflow:
+      1. Go to /#/login
+      2. Email: mc-safesearch@juice-sh.op (or
+         mc.safesearch@juice-sh.op depending on installed
+         Juice Shop version).
+      3. Password: Mr. N00dles
+      4. Click Login.
+      5. Challenge auto-solves (successful login with
+         original credentials, no SQLi).
+      If password doesn't work, do quick OSINT on "Protect
+      Ya' Passwordz" song to confirm pattern. Source: Juice
+      Shop seeded accounts (lib/datacreator.ts or similar in
+      official repo).
+    pedagogical_intent: |
+      Quasi-solution : exact email + password + version caveat.

@@ -1,0 +1,89 @@
+challenge_key: "privacyPolicyProofChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "find the privacy proof URL". Une URL existe pour
+      "prouver" qu'on a lu la privacy policy. L'URL retourne une image.
+    text_en: |
+      OWASP hint: "find the privacy proof URL". A URL exists to "prove"
+      one has read the privacy policy. URL returns an image.
+    pedagogical_intent: |
+      Activate URL hunting reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      L'URL sert un fichier image dans /assets/private/. Cherche dans le
+      bundle Angular ou la page /#/privacy-security. Tools : DevTools
+      Sources, grep frontend/dist/.
+    text_en: |
+      URL serves an image file in /assets/private/. Search Angular bundle
+      or /#/privacy-security page. Tools: DevTools Sources, grep
+      frontend/dist/.
+    pedagogical_intent: |
+      Spell location hint.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Voir routes/privacyPolicyProof.ts : `res.sendFile(path.resolve(
+      'frontend/dist/frontend/assets/private/thank-you.jpg'))`. Donc
+      l'URL retourne thank-you.jpg.
+    text_en: |
+      See routes/privacyPolicyProof.ts: `res.sendFile(path.resolve(
+      'frontend/dist/frontend/assets/private/thank-you.jpg'))`. So URL
+      returns thank-you.jpg.
+    pedagogical_intent: |
+      Reveal target file.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Naviguer
+      http://localhost:3000/we/may/also/instruct/you/to/refuse/all/reasonably
+      /necessary/responsibility (ou similaire suffix - inspect bundle).
+      Dans server.ts: voir `app.use(... privacyPolicyProof)`. Le simple
+      GET solve.
+    text_en: |
+      Navigate
+      http://localhost:3000/we/may/also/instruct/you/to/refuse/all/reasonably
+      /necessary/responsibility (or similar suffix - inspect bundle). In
+      server.ts: see `app.use(... privacyPolicyProof)`. Simple GET solves.
+    pedagogical_intent: |
+      Spell URL example.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) DevTools > Sources > main.js,
+      Ctrl+F "privacy" / "thank" / "private" -> trouve URL ou route. (2)
+      OR `grep -rn "privacyPolicyProof\|thank-you" juice-shop/server.ts
+      juice-shop/routes/`. (3) URL servie via privacyPolicyProof endpoint
+      (cf. routes/privacyPolicyProof.ts:11 `res.sendFile(path.resolve(
+      'frontend/dist/frontend/assets/private/thank-you.jpg'))`). (4)
+      Naviguer l'URL exacte (defined dans server.ts). (5) Le serveur
+      privacyPolicyProof.ts:13
+      `solveIf(privacyPolicyProofChallenge, () => true)` declenche AU
+      SIMPLE GET. (6) Notification "Solved Privacy Policy Inspection".
+      Defense : auth middleware obligatoire sur /private/*, audit reguliere
+      route enumeration, test E2E checks 401. Source :
+      privacyPolicyProof.ts:11-13.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) DevTools > Sources > main.js,
+      Ctrl+F "privacy" / "thank" / "private" -> find URL or route. (2)
+      OR `grep -rn "privacyPolicyProof\|thank-you" juice-shop/server.ts
+      juice-shop/routes/`. (3) URL served via privacyPolicyProof endpoint
+      (cf. routes/privacyPolicyProof.ts:11 `res.sendFile(path.resolve(
+      'frontend/dist/frontend/assets/private/thank-you.jpg'))`). (4)
+      Navigate exact URL (defined in server.ts). (5) Server
+      privacyPolicyProof.ts:13
+      `solveIf(privacyPolicyProofChallenge, () => true)` triggers ON
+      SIMPLE GET. (6) "Solved Privacy Policy Inspection" notification.
+      Defense: mandatory auth middleware on /private/*, regular route
+      enumeration audit, E2E test checks 401. Source:
+      privacyPolicyProof.ts:11-13.
+    pedagogical_intent: |
+      Solution + canonical fix.

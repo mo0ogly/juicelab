@@ -1,0 +1,103 @@
+challenge_key: "feedbackChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Un site marchand qui affiche des avis clients souhaite generalement
+      mettre en avant les bons retours et garder une preuve des mauvais.
+      Mais l'inverse est aussi possible : si on contournait le controle
+      d'acces, on pourrait par exemple supprimer les avis qui ne nous
+      arrangent pas. Quelle interface permet de gerer les avis ?
+    text_en: |
+      A shop that displays customer feedback usually wants to highlight
+      positive entries and keep a record of negative ones. The reverse is
+      also possible: if access control is bypassed, one could delete
+      feedback that one does not like. Which interface lets you manage
+      feedback?
+    pedagogical_intent: |
+      Activate the framing: deletion is also a relevant attack outcome.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le challenge Five-Star Feedback demande precisement de supprimer
+      tous les avis 5 etoiles. La condition de validation cote backend
+      est "il ne reste plus aucun feedback avec rating=5". Pour
+      supprimer des feedbacks, il faut acceder a l'interface qui permet
+      cette action. Sur la plupart des applications, c'est dans le panneau
+      d'administration.
+    text_en: |
+      The Five-Star Feedback challenge asks specifically to delete every
+      5-star review. The backend validation condition is "no feedback
+      with rating=5 remains". To delete feedback, you need to access the
+      interface that allows that action. In most apps, that means the
+      admin panel.
+    pedagogical_intent: |
+      Make explicit the success criterion and the interface needed.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Tu as donc deux pre-requis : etre administrateur (challenge Login
+      Admin), et acceder a la section admin (challenge Admin Section).
+      Une fois sur la page Administration, la liste des feedbacks
+      s'affiche. Pour chaque feedback 5 etoiles, il y a un bouton ou
+      une icone permettant la suppression. Selon les versions, ce
+      bouton peut etre desactive cote frontend mais l'action reste
+      possible cote API.
+    text_en: |
+      Two prerequisites then: be admin (Login Admin challenge) and reach
+      the admin section (Admin Section challenge). Once on the
+      Administration page, the feedback list appears. For each 5-star
+      feedback, there is a button or icon to delete. Depending on
+      versions, this button may be disabled on the frontend but the
+      action is still reachable through the API.
+    pedagogical_intent: |
+      Compose three prior knowledge: SQLi, route discovery, deletion mechanism.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Sur la page /#/administration, identifie chaque feedback dont le
+      rating est 5 etoiles. Clique sur l'icone poubelle pour le supprimer.
+      Repete jusqu'a ce que plus aucun feedback 5 etoiles ne soit affiche.
+      Si la console DevTools montre des erreurs de permission, cela peut
+      signifier que le bouton est disabled mais que l'API DELETE est
+      ouverte : tu peux alors envoyer la requete DELETE directement.
+    text_en: |
+      On /#/administration, identify each feedback whose rating is 5
+      stars. Click the trash icon to delete it. Repeat until no 5-star
+      feedback remains. If the DevTools console shows permission errors,
+      the button may be disabled while the DELETE API is open: you can
+      then send the DELETE request directly.
+    pedagogical_intent: |
+      Give the click sequence + the API fallback in case the UI button is disabled.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      1. Connecte-toi en admin (' OR true-- sur le login).
+      2. Ouvre /#/administration.
+      3. Pour chaque feedback dont la note est 5 etoiles, clique sur
+         l'icone de suppression dans la colonne Actions.
+      4. La validation Juice Shop est automatique : la route
+         /api/Feedbacks verifie a chaque suppression que le count
+         feedbacks WHERE rating=5 vaut 0. Quand c'est le cas, le
+         challenge Five-Star Feedback passe a solved.
+      Equivalent API si l'UI bloque : DELETE /api/Feedbacks/<id> avec
+      ton JWT admin en header Authorization Bearer ...
+    text_en: |
+      1. Log in as admin (' OR true-- on the login).
+      2. Open /#/administration.
+      3. For each feedback with a 5-star rating, click the delete icon
+         in the Actions column.
+      4. Juice Shop validation is automatic: the /api/Feedbacks route
+         checks after each deletion that the count of feedback WHERE
+         rating=5 is 0. When that condition holds, the Five-Star Feedback
+         challenge moves to solved.
+      API equivalent if the UI blocks: DELETE /api/Feedbacks/<id> with
+      your admin JWT in the Authorization Bearer ... header.
+    pedagogical_intent: |
+      Quasi-solution: full sequence + the API bypass in case the UI is hostile.

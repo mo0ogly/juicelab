@@ -1,0 +1,177 @@
+challenge_key: "uploadTypeChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Upload un fichier qui N'A PAS d'extension .pdf ou
+  .zip. Description OWASP. Hints officiels : (1)
+  "You can attach a PDF or ZIP file to the
+  Complaint form. Investigate how this upload
+  actually works". (2) "If you solved the Upload a
+  file larger than 100 kB challenge, you should try
+  to apply the same solution here". [KILL_CHAIN_
+  DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/fileUpload.ts:67-71 (verifie source).
+  Code exact : `function checkFileType ({ file },
+  res, next) { const fileType = file?.originalname.
+  substr(file.originalname.lastIndexOf('.') + 1).
+  toLowerCase(); challengeUtils.solveIf(challenges.
+  uploadTypeChallenge, () => { return !(fileType
+  === 'pdf' || fileType === 'xml' || fileType ===
+  'zip' || fileType === 'yml' || fileType ===
+  'yaml') }) next() }`. Donc le solve trigger si
+  l'extension du fichier N'EST PAS dans
+  {pdf,xml,zip,yml,yaml}. Le frontend filtre via
+  `accept="application/pdf,application/zip"`. La
+  solution = bypass le frontend (curl) avec un
+  fichier .png/.exe/.txt/etc. Workflow : POST
+  /file-upload via curl avec fichier
+  arbitraire (.png par ex.).
+
+mission_en: |
+  Upload a file with NO .pdf or .zip extension.
+  OWASP description. Official hints: (1) "You can
+  attach a PDF or ZIP file to the Complaint form.
+  Investigate how this upload actually works". (2)
+  "If you solved the Upload a file larger than 100
+  kB challenge, you should try to apply the same
+  solution here". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  fileUpload.ts:67-71 (verified source). Exact
+  code: `function checkFileType ({ file }, res,
+  next) { const fileType = file?.originalname.
+  substr(file.originalname.lastIndexOf('.') + 1).
+  toLowerCase(); challengeUtils.solveIf(challenges.
+  uploadTypeChallenge, () => { return !(fileType
+  === 'pdf' || fileType === 'xml' || fileType ===
+  'zip' || fileType === 'yml' || fileType ===
+  'yaml') }) next() }`. So solve triggers if
+  file extension is NOT in {pdf,xml,zip,yml,yaml}.
+  Frontend filters via `accept="application/pdf,
+  application/zip"`. Solution = bypass frontend
+  (curl) with .png/.exe/.txt/etc file. Workflow:
+  POST /file-upload via curl with arbitrary file
+  (.png e.g.).
+
+concepts:
+  - title_fr: "Extension-based filtering : faiblesse fondamentale"
+    title_en: "Extension-based filtering: fundamental weakness"
+    body_fr: |
+      Source canonique : OWASP File Upload Cheat
+      Sheet (mitigationUrl). Le check sur extension
+      est INSUFFISANT pour 3 raisons : (1)
+      Bypass-able via frontend (curl/Burp ne
+      respecte pas accept). (2) Spoofable :
+      l'attaquant peut renommer un .exe en .pdf
+      (.exe.pdf double extension trick), bypassant
+      le check. (3) Magic bytes != extension : un
+      fichier avec extension .pdf peut contenir du
+      JS, du PHP, du shell script. La defense
+      correcte = (a) MIME type detection (file -i
+      / file-type lib), (b) magic bytes check
+      ([0x25,0x50,0x44,0x46] = %PDF pour PDF
+      legitime), (c) sandboxed processing
+      (Pandoc / Ghostscript en container).
+    body_en: |
+      Canonical source: OWASP File Upload Cheat
+      Sheet (mitigationUrl). Extension check is
+      INSUFFICIENT for 3 reasons: (1)
+      Bypassable via frontend (curl/Burp
+      doesn't respect accept). (2) Spoofable:
+      attacker can rename .exe to .pdf (.exe.pdf
+      double extension trick), bypassing check.
+      (3) Magic bytes != extension: file with
+      .pdf extension can contain JS, PHP, shell
+      script. Correct defense = (a) MIME type
+      detection (file -i / file-type lib), (b)
+      magic bytes check ([0x25,0x50,0x44,0x46]
+      = %PDF for legitimate PDF), (c) sandboxed
+      processing (Pandoc / Ghostscript in
+      container).
+
+  - title_fr: "Composition avec uploadSizeChallenge"
+    title_en: "Composition with uploadSizeChallenge"
+    body_fr: |
+      Hint OWASP #2 : "If you solved the Upload a
+      file larger than 100 kB challenge, you
+      should try to apply the same solution here".
+      Donc la SAME solution path : bypass frontend
+      via curl/Burp. La difference : le payload
+      est un fichier d'EXTENSION arbitraire (pas
+      la taille). Pattern reusable
+      pedagogique : 2 challenges adjacents avec
+      la meme racine (no server validation) mais
+      surfaces differentes (size vs extension).
+      Cela illustre le pattern "endpoint avec
+      defense client-only et pas server-side =
+      multiple bypasses".
+    body_en: |
+      OWASP hint #2: "If you solved the Upload a
+      file larger than 100 kB challenge, you
+      should try to apply the same solution
+      here". So SAME solution path: bypass
+      frontend via curl/Burp. Difference: payload
+      is file with arbitrary EXTENSION (not
+      size). Reusable pedagogical pattern: 2
+      adjacent challenges with same root (no
+      server validation) but different surfaces
+      (size vs extension). Illustrates pattern
+      "endpoint with client-only defense and no
+      server-side = multiple bypasses".
+
+  - title_fr: "Defense canonique : magic bytes + extension + MIME + sandboxing"
+    title_en: "Canonical defense: magic bytes + extension + MIME + sandboxing"
+    body_fr: |
+      Defense en profondeur 4-layers :
+      ```js
+      // Layer 1: Extension check
+      const allowed = ['.pdf', '.zip'];
+      const ext = path.extname(file.originalname).
+        toLowerCase();
+      if (!allowed.includes(ext)) reject;
+
+      // Layer 2: MIME type from file-type lib
+      const fileType = await fileTypeFromBuffer(
+        file.buffer);
+      if (!['application/pdf','application/zip']
+          .includes(fileType.mime)) reject;
+
+      // Layer 3: Magic bytes check (defense
+      //          contre disguised executables)
+      const magicBytes = file.buffer.slice(0, 4);
+      if (ext === '.pdf' && !magicBytes.equals(
+          Buffer.from([0x25,0x50,0x44,0x46])))
+        reject;
+
+      // Layer 4: Sandboxed processing
+      // (PDF processing en Docker container
+      //  read-only filesystem)
+      ```
+    body_en: |
+      4-layer defense in depth:
+      ```js
+      // Layer 1: Extension check
+      const allowed = ['.pdf', '.zip'];
+      const ext = path.extname(file.originalname).
+        toLowerCase();
+      if (!allowed.includes(ext)) reject;
+
+      // Layer 2: MIME type from file-type lib
+      const fileType = await fileTypeFromBuffer(
+        file.buffer);
+      if (!['application/pdf','application/zip']
+          .includes(fileType.mime)) reject;
+
+      // Layer 3: Magic bytes check (defense
+      //          against disguised executables)
+      const magicBytes = file.buffer.slice(0, 4);
+      if (ext === '.pdf' && !magicBytes.equals(
+          Buffer.from([0x25,0x50,0x44,0x46])))
+        reject;
+
+      // Layer 4: Sandboxed processing
+      // (PDF processing in Docker container
+      //  read-only filesystem)
+      ```

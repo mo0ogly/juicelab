@@ -1,0 +1,163 @@
+challenge_key: "knownVulnerableComponentChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Informe le shop (via /#/contact) d'une library
+  vulnerable utilisee. Mentionne le NOM EXACT et la
+  VERSION de la library dans le commentaire.
+  Description OWASP. Hints officiels : (1) "Report
+  one of two possible answers via the 'Customer
+  Feedback' form. Do not forget to submit the
+  library's version as well". (2) "Look for possible
+  dependencies related to security in the
+  package.json.bak you probably harvested earlier
+  during the Access a developer's forgotten backup
+  file challenge". (3) "Do some research on the
+  internet for known security issues in the most
+  suspicious application dependencies". Tag : OSINT.
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/verify.ts:229-251 (verifie source). Code
+  exact : 2 patterns acceptes via Op.or :
+  (a) `'%sanitize-html%' AND '%1.4.2%'` (note Op.and
+  : les deux tokens doivent apparaitre), ou
+  (b) `'%express-jwt%' AND '%0.1.3%'`. Donc 2
+  reponses acceptees : "sanitize-html 1.4.2" OU
+  "express-jwt 0.1.3". Workflow : (1) Pre-requis
+  forgottenDevBackup pour package.json.bak. (2)
+  Inspecter les security-related deps (sanitize-
+  html, express-jwt, helmet, etc.). (3) Researcher
+  les CVE associes. (4) Submit feedback /#/contact
+  avec library + version.
+
+mission_en: |
+  Inform shop (via /#/contact) about vulnerable
+  library it's using. Mention EXACT NAME and
+  VERSION of library in comment. OWASP description.
+  Official hints: (1) "Report one of two possible
+  answers via the 'Customer Feedback' form. Do not
+  forget to submit the library's version as well".
+  (2) "Look for possible dependencies related to
+  security in the package.json.bak you probably
+  harvested earlier during the Access a developer's
+  forgotten backup file challenge". (3) "Do some
+  research on the internet for known security
+  issues in the most suspicious application
+  dependencies". Tag: OSINT. [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/verify.
+  ts:229-251 (verified source). Exact code: 2
+  patterns accepted via Op.or: (a) `'%sanitize-
+  html%' AND '%1.4.2%'` (note Op.and: both tokens
+  must appear), or (b) `'%express-jwt%' AND
+  '%0.1.3%'`. So 2 accepted answers: "sanitize-html
+  1.4.2" OR "express-jwt 0.1.3". Workflow: (1)
+  Prerequisite forgottenDevBackup for package.json.
+  bak. (2) Inspect security-related deps (sanitize-
+  html, express-jwt, helmet, etc.). (3) Research
+  associated CVEs. (4) Submit feedback /#/contact
+  with library + version.
+
+concepts:
+  - title_fr: "sanitize-html 1.4.2 : XSS bypass via mutation"
+    title_en: "sanitize-html 1.4.2: XSS bypass via mutation"
+    body_fr: |
+      sanitize-html 1.4.2 (publiee 2014) a une
+      vulnerabilite XSS bypass connue : certains
+      payloads utilisant des sequences de DOM
+      mutation (re-parsing apres sanitization)
+      reussissent a re-injecter du JavaScript.
+      Reference : npmjs.com sanitize-html security
+      advisories (CVE-2015-XXX). La version corrigee
+      est 1.20.0+. Cette vulnerabilite est utilisee
+      dans persistedXssFeedbackChallenge (Lot 3) :
+      le bypass via dependency disclosure. Pattern
+      reusable : un sanitizer broken est pire qu'un
+      sanitizer absent (false sense of security).
+      Cf. mitigationUrl du challenge :
+      cheatsheetseries.owasp.org/cheatsheets/
+      Vulnerability_Disclosure_Cheat_Sheet.html.
+    body_en: |
+      sanitize-html 1.4.2 (published 2014) has known
+      XSS bypass vulnerability: certain payloads
+      using DOM mutation sequences (re-parsing
+      after sanitization) succeed in re-injecting
+      JavaScript. Reference: npmjs.com sanitize-html
+      security advisories (CVE-2015-XXX). Fixed
+      version is 1.20.0+. This vulnerability is
+      used in persistedXssFeedbackChallenge (Lot 3):
+      bypass via dependency disclosure. Reusable
+      pattern: a broken sanitizer is worse than no
+      sanitizer (false sense of security). Cf.
+      challenge mitigationUrl:
+      cheatsheetseries.owasp.org/cheatsheets/
+      Vulnerability_Disclosure_Cheat_Sheet.html.
+
+  - title_fr: "express-jwt 0.1.3 : JWT verification bugs (alg=none)"
+    title_en: "express-jwt 0.1.3: JWT verification bugs (alg=none)"
+    body_fr: |
+      express-jwt 0.1.3 (publiee 2014) a une
+      vulnerabilite critique : la library accepte
+      l'algorithme `none` dans le JWT header sans
+      verification. Cela permet de forger des JWT
+      sans signature (cf. jwtUnsignedChallenge dans
+      ce meme Lot 6). CVE associee : CVE-2015-9235.
+      Versions corrigees : >= 0.5.6 (verification
+      stricte des algorithms). Aussi vulnerabilites
+      additionnelles type alg confusion (HS256 +
+      public key utilise comme HMAC secret) - cf.
+      jwtForgedChallenge. Pattern reusable :
+      cryptographic libraries en versions 0.x sont
+      typiquement immatures, eviter en production.
+    body_en: |
+      express-jwt 0.1.3 (published 2014) has
+      critical vulnerability: library accepts `none`
+      algorithm in JWT header without verification.
+      Allows forging JWTs without signature (cf.
+      jwtUnsignedChallenge in this same Lot 6).
+      Associated CVE: CVE-2015-9235. Fixed
+      versions: >= 0.5.6 (strict algorithm
+      verification). Also additional alg confusion
+      vulnerabilities (HS256 + public key used as
+      HMAC secret) - cf. jwtForgedChallenge.
+      Reusable pattern: cryptographic libraries in
+      0.x versions are typically immature, avoid in
+      production.
+
+  - title_fr: "Defense canonique : Vulnerability Disclosure ET update strategy"
+    title_en: "Canonical defense: Vulnerability Disclosure AND update strategy"
+    body_fr: |
+      mitigationUrl du challenge : OWASP Vulnerability
+      Disclosure Cheat Sheet. Le challenge demande de
+      DECLARER au shop la vuln (responsible
+      disclosure pattern). En pratique, defense
+      operationnelle : (1) `npm audit` regulier (CI/
+      CD), (2) Snyk / Dependabot / GitHub Dependency
+      Review pour pull requests automatiques de
+      patch, (3) policy de retention des deps : ne
+      pas freezer indefiniment sur version
+      vulnerable, (4) SBOM publie pour les
+      consommateurs en aval, (5) program de
+      vulnerability disclosure (security.txt sur le
+      site, hackerone, bugcrowd). Le challenge
+      illustre le coté disclosure : un pentester /
+      bug hunter externe trouve la vuln et la report
+      au vendor. C'est complementaire au scanning
+      interne.
+    body_en: |
+      Challenge mitigationUrl: OWASP Vulnerability
+      Disclosure Cheat Sheet. Challenge asks to
+      DECLARE vuln to shop (responsible disclosure
+      pattern). In practice, operational defense:
+      (1) regular `npm audit` (CI/CD), (2) Snyk /
+      Dependabot / GitHub Dependency Review for
+      automatic patch pull requests, (3) deps
+      retention policy: don't freeze indefinitely
+      on vulnerable version, (4) published SBOM for
+      downstream consumers, (5) vulnerability
+      disclosure program (security.txt on site,
+      hackerone, bugcrowd). Challenge illustrates
+      disclosure side: external pentester / bug
+      hunter finds vuln and reports to vendor.
+      Complementary to internal scanning.

@@ -1,0 +1,174 @@
+challenge_key: "weirdCryptoChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Report one of
+      five possible answers via Customer Feedback
+      form". Donc 5 reponses acceptees. Hint #2 :
+      "Cryptographic functions only used in
+      'Apply some advanced cryptanalysis'
+      challenge do not count" - donc ROT13
+      (easterEggLevelTwo) ne compte PAS.
+    text_en: |
+      Official OWASP hint #1: "Report one of
+      five possible answers via Customer Feedback
+      form". So 5 accepted answers. Hint #2:
+      "Cryptographic functions only used in
+      'Apply some advanced cryptanalysis'
+      challenge do not count" - so ROT13
+      (easterEggLevelTwo) does NOT count.
+    pedagogical_intent: |
+      Activate weak crypto identification reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Cherche dans le bundle Angular OU
+      package.json.bak (forgottenDevBackup
+      pre-requis recommande) les libraries
+      crypto-related : z85, base85, hashids,
+      md5, base64. Toutes 5 sont des anti-
+      patterns crypto (encodings/broken hash).
+    text_en: |
+      Search in Angular bundle OR package.json.
+      bak (forgottenDevBackup recommended
+      prerequisite) for crypto-related
+      libraries: z85, base85, hashids, md5,
+      base64. All 5 are crypto anti-patterns
+      (encodings/broken hash).
+    pedagogical_intent: |
+      Spell library identification.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur verifiee (routes/verify.ts:
+      253-267) : 5 patterns acceptes via
+      Op.or : `%z85%`, `%base85%`, `%hashids%`,
+      `%md5%`, `%base64%`. Submit feedback
+      contenant UN de ces noms exact dans le
+      commentaire.
+    text_en: |
+      Verified server source (routes/verify.ts:
+      253-267): 5 accepted patterns via Op.or:
+      `%z85%`, `%base85%`, `%hashids%`, `%md5%`,
+      `%base64%`. Submit feedback containing ONE
+      of these exact names in comment.
+    pedagogical_intent: |
+      Reveal exact 5 patterns.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Justifications
+      pedagogiques par categorie :
+      - z85 : encoding ZeroMQ Base-85, NON-
+        crypto (cf. forgedCoupon Lot 8)
+      - base85 : general Base-85, encoding
+        sans security
+      - hashids : integer encoding obfuscated
+        (cf. continueCode Lot 8)
+      - md5 : hash broken depuis 2004 (Wang &
+        Yu collisions)
+      - base64 : encoding standard, souvent
+        confondu avec encryption
+      Le student soumet l'un dans le feedback.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Pedagogical
+      justifications by category:
+      - z85: ZeroMQ Base-85 encoding, NON-
+        crypto (cf. forgedCoupon Lot 8)
+      - base85: general Base-85, encoding
+        without security
+      - hashids: obfuscated integer encoding
+        (cf. continueCode Lot 8)
+      - md5: hash broken since 2004 (Wang &
+        Yu collisions)
+      - base64: standard encoding, often
+        confused with encryption
+      Student submits one in feedback.
+    pedagogical_intent: |
+      Reveal 5 categories with reasoning.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Resoudre forgottenDevBackup
+         (recommande) pour acceder
+         package.json.bak.
+      2. Inspecter package.json.bak (ou
+         current package.json frontend) pour
+         identifier les 5 libraries cibles.
+         Tu trouveras typiquement : `z85`,
+         `hashids`, `md5` ou `base64`
+         dependencies (au moins une).
+      3. Aller sur /#/contact (Customer
+         Feedback form).
+      4. Remplir le commentaire avec UN des 5
+         noms (le plus expressif :
+         "z85 is not actually a cryptographic
+         function, it should not be used to
+         encode coupon codes" ou "md5 has
+         been broken since 2004 and should
+         not be used for security purposes").
+      5. Submit le formulaire. Le serveur :
+         (a) FeedbackModel.create stores
+             feedback
+         (b) verify.weirdCryptoChallenge
+             middleware (server.ts) checks
+             findAndCountAll avec [Op.or]
+             des 5 patterns
+         (c) Match -> challenge solve auto.
+      Source canonique : routes/verify.ts:
+      253-267 + OWASP Cryptographic Storage
+      + crypto fundamentals.
+      Defense canonique : refactor pour
+      utiliser des PRIMITIVES crypto modernes
+      (SHA-256/SHA-3 pour hashing, AES-GCM
+      pour encryption, JWT signed pour tokens,
+      bcrypt/argon2id pour passwords).
+      Educate les developers sur la
+      distinction encoding vs hashing vs
+      encryption vs signing.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Solve forgottenDevBackup (recommended)
+         to access package.json.bak.
+      2. Inspect package.json.bak (or current
+         frontend package.json) to identify 5
+         target libraries. You'll typically
+         find: `z85`, `hashids`, `md5` or
+         `base64` dependencies (at least one).
+      3. Go to /#/contact (Customer Feedback
+         form).
+      4. Fill comment with ONE of 5 names
+         (most expressive: "z85 is not
+         actually a cryptographic function, it
+         should not be used to encode coupon
+         codes" or "md5 has been broken since
+         2004 and should not be used for
+         security purposes").
+      5. Submit form. Server:
+         (a) FeedbackModel.create stores
+             feedback
+         (b) verify.weirdCryptoChallenge
+             middleware (server.ts) checks
+             findAndCountAll with [Op.or] of
+             5 patterns
+         (c) Match -> challenge auto solves.
+      Canonical source: routes/verify.ts:
+      253-267 + OWASP Cryptographic Storage
+      + crypto fundamentals.
+      Canonical defense: refactor to use
+      modern PRIMITIVES (SHA-256/SHA-3 for
+      hashing, AES-GCM for encryption, signed
+      JWT for tokens, bcrypt/argon2id for
+      passwords). Educate developers on
+      encoding vs hashing vs encryption vs
+      signing distinction.
+    pedagogical_intent: |
+      Solution complete + 5 reponses + defense.

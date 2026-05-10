@@ -1,0 +1,90 @@
+challenge_key: "timingAttackChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Liker un product review plus de 2 fois en exploitant une race condition.
+  Tag : Broken Anti Automation. Hint OWASP : "spam likes faster than
+  cooldown". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/likeProductReviews.ts:48 :
+  `solveIf(timingAttackChallenge, () => count > 2)`. Le serveur a un
+  cooldown anti-spam (5s entre 2 likes du meme user) mais la verification
+  est non-atomique (TOCTOU - Time Of Check Time Of Use). Si l'attaquant
+  envoie plusieurs requetes en parallele avant que le cooldown timestamp
+  soit ecrit, toutes passent. Workflow : (1) Login. (2) Identifier un
+  review. (3) POST /api/Reviews/{id}/like en parallele x10.
+
+mission_en: |
+  Like a product review more than 2 times by exploiting a race condition.
+  Tag: Broken Anti Automation. OWASP hint: "spam likes faster than
+  cooldown". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/likeProductReviews.ts:48:
+  `solveIf(timingAttackChallenge, () => count > 2)`. Server has anti-spam
+  cooldown (5s between 2 likes same user) but verification is non-atomic
+  (TOCTOU - Time Of Check Time Of Use). If attacker sends multiple
+  parallel requests before cooldown timestamp is written, all pass.
+  Workflow: (1) Login. (2) Identify a review. (3) POST
+  /api/Reviews/{id}/like in parallel x10.
+
+concepts:
+  - title_fr: "TOCTOU : Time Of Check Time Of Use race condition"
+    title_en: "TOCTOU: Time Of Check Time Of Use race condition"
+    body_fr: |
+      Source canonique : CWE-367 TOCTOU + Bishop & Dilger 1996 paper.
+      Pattern : (1) check une condition (read state), (2) act sur la
+      condition (write state). Entre (1) et (2) un attaquant peut changer
+      l'etat. En likeProductReviews : check `lastLikeTimestamp + 5s <
+      now`, then `update lastLikeTimestamp + increment count`. Race :
+      lance 10 reqs simultanees -> toutes lisent l'ancien timestamp ->
+      toutes pass le check -> count incremente 10x. Cas reels : Coinbase
+      2018 (race condition double-spend), Twitter "force-follow" 2014.
+    body_en: |
+      Canonical source: CWE-367 TOCTOU + Bishop & Dilger 1996 paper.
+      Pattern: (1) check condition (read state), (2) act on condition
+      (write state). Between (1) and (2) attacker can change state. In
+      likeProductReviews: check `lastLikeTimestamp + 5s < now`, then
+      `update lastLikeTimestamp + increment count`. Race: launch 10
+      simultaneous reqs -> all read old timestamp -> all pass check ->
+      count increments 10x. Real cases: Coinbase 2018 (race condition
+      double-spend), Twitter "force-follow" 2014.
+
+  - title_fr: "Atomicity : transactions DB + locks"
+    title_en: "Atomicity: DB transactions + locks"
+    body_fr: |
+      Pattern reusable : pour eviter TOCTOU sur DB, (1) utiliser
+      transactions ACID (`SELECT ... FOR UPDATE` PostgreSQL). (2) Atomic
+      operations (`UPDATE ... WHERE timestamp < NOW() - INTERVAL 5s`). (3)
+      Optimistic locking (version column, retry si conflict). (4)
+      Pessimistic locking (advisory lock par user_id). En NoSQL : findAndModify
+      MongoDB, conditional updates DynamoDB. Pattern : checks et updates
+      DOIVENT etre atomic ou serializees par lock.
+    body_en: |
+      Reusable pattern: to avoid TOCTOU on DB, (1) use ACID transactions
+      (`SELECT ... FOR UPDATE` PostgreSQL). (2) Atomic operations
+      (`UPDATE ... WHERE timestamp < NOW() - INTERVAL 5s`). (3) Optimistic
+      locking (version column, retry on conflict). (4) Pessimistic
+      locking (advisory lock per user_id). In NoSQL: MongoDB
+      findAndModify, DynamoDB conditional updates. Pattern: checks and
+      updates MUST be atomic or serialized by lock.
+
+  - title_fr: "Defense canonique : atomic operations + idempotency"
+    title_en: "Canonical defense: atomic operations + idempotency"
+    body_fr: |
+      (1) UPDATE atomique : `UPDATE reviews SET likes_count = likes_count
+      + 1, last_like_at = NOW() WHERE id = ? AND last_like_at < NOW() -
+      INTERVAL 5s` (returning rowCount tells si update happened). (2)
+      Idempotency keys : client send X-Idempotency-Key header, serveur
+      garde une cache 24h. (3) Distributed lock (Redis SETNX) si
+      transactions DB pas dispo. (4) Rate limit + debounce cote client
+      (UI disable button apres click). Pattern reusable : check + act
+      doit etre 1 operation atomic.
+    body_en: |
+      (1) Atomic UPDATE: `UPDATE reviews SET likes_count = likes_count +
+      1, last_like_at = NOW() WHERE id = ? AND last_like_at < NOW() -
+      INTERVAL 5s` (returning rowCount tells if update happened). (2)
+      Idempotency keys: client sends X-Idempotency-Key header, server
+      keeps 24h cache. (3) Distributed lock (Redis SETNX) if DB
+      transactions unavailable. (4) Rate limit + client-side debounce
+      (UI disables button after click). Reusable pattern: check + act
+      must be 1 atomic operation.

@@ -1,0 +1,101 @@
+challenge_key: "easterEggLevelOneChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un easter egg dans une application en production
+      est-il un risque de securite, meme s'il semble inoffensif ?
+    question_en: |
+      Why is an easter egg in a production application a security
+      risk even when seemingly harmless?
+    options_fr:
+      - "Parce que les easter eggs ralentissent l'application"
+      - "Parce qu'il est par definition non documente, donc non audit ; le developpeur peut y avoir inclus du code de debug, des credentials de test, ou un endpoint backdoor pour son demo qui reste en production avec son code"
+      - "Parce qu'il viole le RGPD"
+      - "Parce qu'il consomme trop d'espace disque"
+    options_en:
+      - "Because easter eggs slow down the application"
+      - "Because by definition it's undocumented, hence unaudited; the developer may have included debug code, test credentials, or a demo backdoor endpoint that ships into production with their code"
+      - "Because it violates GDPR"
+      - "Because it consumes too much disk space"
+    correct: 1
+    explanation_fr: |
+      Le risque ne vient pas de l'easter egg lui-meme mais de la
+      culture qui l'autorise : si on tolere du code non audit en
+      prod, on tolere implicitement debug endpoints, credentials
+      hardcodes, et autres patterns dangereux. Toute fonctionnalite
+      en prod doit passer par le pipeline review/test/deploy.
+    explanation_en: |
+      Risk comes not from the easter egg itself but from the
+      culture allowing it: if we tolerate unaudited code in prod,
+      we implicitly tolerate debug endpoints, hardcoded
+      credentials, and other dangerous patterns. Every prod
+      feature must go through the review/test/deploy pipeline.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelle technique de bypass d'extension repose sur une
+      difference de parsing entre le filtre (regex sur la string)
+      et le filesystem (qui ouvre le vrai fichier) ?
+    question_en: |
+      Which extension bypass technique relies on a parsing
+      difference between the filter (regex on the string) and the
+      filesystem (opening the actual file)?
+    options_fr:
+      - "Compresser le nom de fichier en gzip"
+      - "Poison null byte (%00) : le filtre voit la chaine complete avec une extension whitelistee, le filesystem en C tronque sur le null byte et ouvre le fichier avec l'extension reelle"
+      - "Renommer le fichier avec un nom plus court"
+      - "Encoder le nom de fichier en UTF-16"
+    options_en:
+      - "Compress the filename in gzip"
+      - "Poison null byte (%00): the filter sees the full string with an allowlisted extension, the C filesystem truncates on the null byte and opens the file with the real extension"
+      - "Rename the file with a shorter name"
+      - "Encode the filename in UTF-16"
+    correct: 1
+    explanation_fr: |
+      Pattern d'attaque historique exploitant les differences de
+      parsing entre langages (Java/Python regex sur la chaine
+      complete vs C filesystem qui truncate). La defense est une
+      allowlist d'extensions (pas blocklist) ET une validation au
+      niveau filesystem (verifier le fichier reellement ouvert).
+    explanation_en: |
+      Historic attack pattern exploiting parsing differences
+      between languages (Java/Python regex on the full string vs
+      C filesystem truncating). The defense is an extension
+      allowlist (not blocklist) AND filesystem-level validation
+      (checking the actually-opened file).
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense secondaire (au-dela du fix d'extension)
+      detecterait un attaquant qui scan /ftp/ a la recherche de
+      fichiers cibles ?
+    question_en: |
+      Which secondary defense (beyond the extension fix) would
+      detect an attacker scanning /ftp/ for target files?
+    options_fr:
+      - "Augmenter la longueur des noms de fichiers a 255 chars"
+      - "Honeypot : laisser un fichier tentant nomme honeypot.bak qui declenche une alerte SIEM des qu'il est accede ; combine a un alert sur les requetes vers extensions inhabituelles (.bak, .git, .env, .log, .swp)"
+      - "Forcer HTTPS sur /ftp/"
+      - "Blocker la geolocalisation des requetes"
+    options_en:
+      - "Increase filename length to 255 chars"
+      - "Honeypot: leave a tempting file named honeypot.bak that triggers a SIEM alert on access; paired with alerts on requests to unusual extensions (.bak, .git, .env, .log, .swp)"
+      - "Force HTTPS on /ftp/"
+      - "Block geolocation of requests"
+    correct: 1
+    explanation_fr: |
+      Defense en profondeur active. Les techniques deception
+      (honeypot, canary tokens) detectent l'attaquant en phase de
+      reconnaissance, avant l'exploitation. Les autres options ne
+      changent pas le risque (HTTPS protege le transport, pas la
+      logique applicative).
+    explanation_en: |
+      Active defense in depth. Deception techniques (honeypot,
+      canary tokens) detect the attacker during recon, before
+      exploitation. Other options don't change the risk (HTTPS
+      protects transport, not application logic).

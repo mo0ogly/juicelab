@@ -1,0 +1,137 @@
+challenge_key: "premiumPaywallChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #3 cite "key under the door mat"
+      metaphor. Quel concept defensif security
+      illustre-t-il ?
+    question_en: |
+      OWASP hint #3 quotes "key under the door
+      mat" metaphor. What defensive security
+      concept illustrates?
+    options_fr:
+      - "Les portes sont vulnerables"
+      - "Key Management : la cryptography la plus robuste (AES-256, RSA-4096) est INUTILE si la clef est cachee de maniere triviale (hardcoded dans le bundle frontend, dans les commits git, dans les logs). Defense canonique : (a) clef en env var / KMS / Vault, (b) JAMAIS hardcoded, (c) rotation periodique, (d) audit log key access. Pattern : algorithm strength <<< key management"
+      - "Door locks sont obsoletes"
+      - "Plant pots cachent bien"
+    options_en:
+      - "Doors are vulnerable"
+      - "Key Management: most robust cryptography (AES-256, RSA-4096) is USELESS if key trivially hidden (hardcoded in frontend bundle, in git commits, in logs). Canonical defense: (a) key in env var / KMS / Vault, (b) NEVER hardcoded, (c) periodic rotation, (d) audit log key access. Pattern: algorithm strength <<< key management"
+      - "Door locks obsolete"
+      - "Plant pots hide well"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : key management est
+      le maillon le plus faible. Cas reels :
+      Uber 2017 (AWS keys hardcoded dans
+      GitHub repo, 57M users breach), Capital
+      One 2019 (IAM credentials accessible),
+      Twitter 2020 ($XXX bounty pour exposed
+      tokens). Defense en profondeur =
+      separation des secrets et du code +
+      audit + rotation. Source : OWASP Key
+      Management Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: key management is
+      weakest link. Real cases: Uber 2017
+      (AWS keys hardcoded in GitHub repo, 57M
+      users breach), Capital One 2019
+      (accessible IAM credentials), Twitter
+      2020 ($XXX bounty for exposed tokens).
+      Defense in depth = separation of
+      secrets and code + audit + rotation.
+      Source: OWASP Key Management Cheat
+      Sheet.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #2 dit explicitement "no
+      inappropriate, self-written or
+      misconfigured cryptographic library".
+      Quelle est la lecon pedagogique ?
+    question_en: |
+      OWASP hint #2 says explicitly "no
+      inappropriate, self-written or
+      misconfigured cryptographic library".
+      What's pedagogical LESSON?
+    options_fr:
+      - "AES est buggy"
+      - "OWASP signale que le challenge n'est PAS sur la cryptography (AES correcte) mais sur le KEY MANAGEMENT. Pour le student : eviter de chercher des bugs dans les algorithmes ou implementations. Pattern reusable : 95% des bugs crypto reels sont en KEY MANAGEMENT (hardcoded keys, weak random, key reuse), pas dans les algorithms eux-memes"
+      - "Self-written est meilleur"
+      - "Hint est faux"
+    options_en:
+      - "AES is buggy"
+      - "OWASP signals challenge is NOT about cryptography (AES correct) but about KEY MANAGEMENT. For student: avoid searching bugs in algorithms or implementations. Reusable pattern: 95% of real crypto bugs are KEY MANAGEMENT (hardcoded keys, weak random, key reuse), not in algorithms themselves"
+      - "Self-written is better"
+      - "Hint is false"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour les pentesters,
+      audit le key management AVANT
+      l'algorithm. Verifier (a) ou est la
+      clef stockee, (b) comment elle est
+      generee, (c) qui y a acces, (d)
+      rotation policy. Les algorithms modernes
+      (AES, RSA, EdDSA) sont eprouves ; les
+      bugs viennent presque toujours du
+      management. Source : OWASP hint #2 +
+      cryptography fundamentals.
+    explanation_en: |
+      Reusable pattern: for pentesters, audit
+      key management BEFORE algorithm. Verify
+      (a) where key stored, (b) how
+      generated, (c) who has access, (d)
+      rotation policy. Modern algorithms
+      (AES, RSA, EdDSA) are proven; bugs
+      almost always come from management.
+      Source: OWASP hint #2 + cryptography
+      fundamentals.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense canonique remplace la
+      paywall hardcoded-key en production
+      pour servir du contenu protege ?
+    question_en: |
+      What canonical defense replaces
+      hardcoded-key paywall in production for
+      serving protected content?
+    options_fr:
+      - "Forcer HTTPS"
+      - "Time-limited signed URLs : (1) Backend genere une URL signee (HMAC-SHA256 ou JWT-signed) avec expiration courte (5-15 min) au moment de la verification du payment. (2) URL contient les claims (userId, contentId, exp). (3) CDN (CloudFront, Akamai) verifie la signature et serve le content. (4) Pas de decryption client-side. Cas connus : S3 presigned URLs, Vimeo private streams, AWS CloudFront signed cookies"
+      - "Stocker la clef en clair"
+      - "Disabler les paywalls"
+    options_en:
+      - "Force HTTPS"
+      - "Time-limited signed URLs: (1) Backend generates signed URL (HMAC-SHA256 or JWT-signed) with short expiration (5-15 min) at moment of payment verification. (2) URL contains claims (userId, contentId, exp). (3) CDN (CloudFront, Akamai) verifies signature and serves content. (4) No client-side decryption. Known cases: S3 presigned URLs, Vimeo private streams, AWS CloudFront signed cookies"
+      - "Store key in clear"
+      - "Disable paywalls"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : les signed URLs
+      time-limited eliminent ENTIEREMENT le
+      besoin de client-side decryption. La
+      clef HMAC reste cote backend. Le user
+      obtient une URL valid pour une duree
+      courte. Si revoquee, la signature
+      expire automatiquement. Cas reels :
+      Stripe webhooks signed URLs, GitHub
+      releases pre-signed downloads. Source :
+      OWASP Key Management + best practices
+      content delivery.
+    explanation_en: |
+      Reusable pattern: time-limited signed
+      URLs ENTIRELY eliminate need for
+      client-side decryption. HMAC key stays
+      backend-side. User gets URL valid for
+      short duration. If revoked, signature
+      expires automatically. Real cases:
+      Stripe webhooks signed URLs, GitHub
+      releases pre-signed downloads. Source:
+      OWASP Key Management + content delivery
+      best practices.

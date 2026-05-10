@@ -1,0 +1,160 @@
+challenge_key: "ghostLoginChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Login avec le compte ERASED de Chris (utilisateur supprime).
+  Description OWASP. Hints officiels : (1) "Turns out that
+  something is technically and legally wrong with the
+  implementation of the right to be forgotten for users". (2)
+  "Trying out the Request Data Erasure functionality might be
+  interesting, but cannot help you solve this challenge in real
+  time". (3) "If you have solved the challenge Retrieve a list
+  of all user credentials via SQL Injection you might have
+  already retrieved some information about how the Juice Shop
+  deletes users upon their request". (4) "What the Juice Shop
+  does here is totally incompliant with GDPR. Luckily a 4% fine
+  on a gross income of 0$ is still 0$". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : (1) Pre-requis : exposedCredentials
+  Challenge ou unionSqlInjectionChallenge resolus pour avoir
+  les Users dump. (2) Inspecter la table Users : Chris a un
+  champ `deletedAt` non-null mais ses credentials (email,
+  password hash) sont conserves (juste tagges deleted, pas
+  effacees physiquement = "soft delete"). C'est le bug racine :
+  Sequelize ORM gere les soft deletes via `paranoid: true`,
+  mais le LOGIN endpoint (routes/login.ts) doit utiliser
+  `paranoid: false` ou ne pas filtrer sur deletedAt. (3) Login
+  normal sur /#/login avec chris@juice-sh.op + son password
+  exfiltre. (4) Solve condition (verifie ligne 73 de
+  login.ts) : user.data.id === users.chris.id.
+
+mission_en: |
+  Login with Chris's ERASED account (deleted user). OWASP
+  description. Official hints: (1) "Turns out that something
+  is technically and legally wrong with the implementation of
+  the right to be forgotten for users". (2) "Trying out the
+  Request Data Erasure functionality might be interesting, but
+  cannot help you solve this challenge in real time". (3) "If
+  you have solved the challenge Retrieve a list of all user
+  credentials via SQL Injection you might have already
+  retrieved some information about how the Juice Shop deletes
+  users upon their request". (4) "What the Juice Shop does
+  here is totally incompliant with GDPR. Luckily a 4% fine on
+  a gross income of 0$ is still 0$". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: (1) Prerequisite:
+  exposedCredentialsChallenge or unionSqlInjectionChallenge
+  solved to have Users dump. (2) Inspect Users table: Chris
+  has non-null `deletedAt` field but his credentials (email,
+  password hash) are kept (just tagged deleted, not
+  physically erased = "soft delete"). Root bug: Sequelize ORM
+  handles soft deletes via `paranoid: true`, but LOGIN
+  endpoint (routes/login.ts) must use `paranoid: false` or
+  not filter on deletedAt. (3) Normal login on /#/login with
+  chris@juice-sh.op + exfiltrated password. (4) Solve
+  condition (verified login.ts line 73): user.data.id ===
+  users.chris.id.
+
+concepts:
+  - title_fr: "Soft delete vs hard delete : la trap GDPR"
+    title_en: "Soft delete vs hard delete: the GDPR trap"
+    body_fr: |
+      Soft delete (Sequelize paranoid mode) ajoute un
+      `deletedAt` timestamp sans physical erasure : la row
+      reste en DB. Hard delete supprime physiquement. GDPR
+      Art. 17 (Right to Erasure / Right to be Forgotten)
+      exige PHYSICAL erasure : "the controller shall have
+      the obligation to erase personal data without undue
+      delay". Soft delete = INCOMPLIANT par defaut. Le
+      challenge OWASP cite verbatim : "What the Juice Shop
+      does here is totally incompliant with GDPR" (hint #4).
+      mitigationUrl du challenge :
+      cheatsheetseries.owasp.org/cheatsheets/User_Privacy_
+      Protection_Cheat_Sheet.html. La defense correcte
+      impose une politique : (a) data anonymization (efface
+      PII mais preserve metadata aggregat), (b) retention
+      policy explicite (90j max post-deletion request), (c)
+      audit log de chaque deletion request.
+    body_en: |
+      Soft delete (Sequelize paranoid mode) adds `deletedAt`
+      timestamp without physical erasure: row stays in DB.
+      Hard delete physically removes. GDPR Art. 17 (Right
+      to Erasure / Right to be Forgotten) requires PHYSICAL
+      erasure: "the controller shall have the obligation
+      to erase personal data without undue delay". Soft
+      delete = INCOMPLIANT by default. OWASP challenge
+      verbatim: "What the Juice Shop does here is totally
+      incompliant with GDPR" (hint #4). Challenge
+      mitigationUrl: cheatsheetseries.owasp.org/cheatsheets/
+      User_Privacy_Protection_Cheat_Sheet.html. Correct
+      defense imposes policy: (a) data anonymization
+      (erases PII but preserves aggregate metadata), (b)
+      explicit retention policy (90d max post-deletion
+      request), (c) audit log of each deletion request.
+
+  - title_fr: "Sequelize paranoid mode : le query bug"
+    title_en: "Sequelize paranoid mode: the query bug"
+    body_fr: |
+      Source verifiee (routes/login.ts) : le solve check
+      ligne 73 dit `user.data.id === users.chris.id`. Pour
+      que ce check passe, le login doit retourner Chris
+      malgre son deletedAt non-null. Sequelize avec
+      paranoid: true REJETTE par defaut les rows soft-
+      deleted dans .findOne(). Mais le LOGIN endpoint Juice
+      Shop fait probablement une raw query OU un .findOne()
+      avec `paranoid: false` (recherche utilisateur SANS
+      filtre deletedAt). Ce sont deux patterns Sequelize
+      bien documentes : `Model.findOne({ where, paranoid:
+      false })` ou `Model.unscoped().findOne(...)`. Pattern :
+      l'authentification doit RESPECTER le delete state
+      (refuser login deleted users) ; sauf cas
+      explicitement legitime (admin restore tooling, audit
+      log lookup), JAMAIS bypass le filtre.
+    body_en: |
+      Verified source (routes/login.ts): solve check line
+      73 says `user.data.id === users.chris.id`. For this
+      check to pass, login must return Chris despite
+      non-null deletedAt. Sequelize with paranoid: true
+      REJECTS by default soft-deleted rows in .findOne().
+      But Juice Shop LOGIN endpoint likely does raw query
+      OR .findOne() with `paranoid: false` (user lookup
+      WITHOUT deletedAt filter). Two well-documented
+      Sequelize patterns: `Model.findOne({ where,
+      paranoid: false })` or `Model.unscoped().findOne(...
+      )`. Pattern: authentication must RESPECT delete
+      state (refuse deleted users login); except in
+      explicitly legitimate cases (admin restore tooling,
+      audit log lookup), NEVER bypass filter.
+
+  - title_fr: "Composition avec exposedCredentialsChallenge / SQLi"
+    title_en: "Composition with exposedCredentialsChallenge / SQLi"
+    body_fr: |
+      Hint OWASP #3 : "If you have solved the challenge
+      Retrieve a list of all user credentials via SQL
+      Injection you might have already retrieved some
+      information about how the Juice Shop deletes users
+      upon their request". Donc le pre-requis logique est
+      d'avoir l'exfil des Users. Mais nuance critique :
+      l'exfil donne le HASH bcrypt, PAS le password en
+      clair. Pour login Chris, il faut soit (a) cracker
+      le hash via hashcat (lent, depends de la qualite
+      password), soit (b) trouver le password Chris ailleurs
+      (OSINT, sticker, etc.). Pour un challenge difficulty
+      3, le password est probablement faible (cracking en
+      <1 min). Pattern reusable : SQLi exfil = step 1, hash
+      cracking = step 2 souvent indispensable.
+    body_en: |
+      OWASP hint #3: "If you have solved the challenge
+      Retrieve a list of all user credentials via SQL
+      Injection you might have already retrieved some
+      information about how the Juice Shop deletes users
+      upon their request". So logical prerequisite is
+      having Users exfiltration. Critical nuance:
+      exfiltration gives bcrypt HASH, NOT cleartext
+      password. To login as Chris, need either (a) crack
+      hash via hashcat (slow, depends on password
+      quality), or (b) find Chris's password elsewhere
+      (OSINT, sticker, etc.). For a difficulty-3
+      challenge, password likely weak (cracking <1 min).
+      Reusable pattern: SQLi exfiltration = step 1, hash
+      cracking = step 2 often indispensable.

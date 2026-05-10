@@ -1,0 +1,119 @@
+challenge_key: "uploadSizeChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le bug racine est l'absence de multer `limits`
+      config. Quel est le risque REEL au-dela du
+      challenge (qui cible 100kB) ?
+    question_en: |
+      Root bug is absence of multer `limits` config.
+      What's REAL risk beyond challenge (targeting
+      100kB)?
+    options_fr:
+      - "Aucun risque"
+      - "DoS via large uploads : un attaquant uploadant des fichiers de 1GB+ peut exhaust la memory du Node process (multer buffer en RAM par default), fill le disk (uploads/ dir), epuiser les file descriptors. Cas reels : Slowloris-like attacks via upload (ZAP) + ZIP bomb (10TB decompress). Pattern : tout file upload sans limit = DoS surface critique. Defense = limits multi-niveaux (multer, nginx, OS quota)"
+      - "Risque uniquement de challenge"
+      - "Risque cosmetique"
+    options_en:
+      - "No risk"
+      - "DoS via large uploads: attacker uploading 1GB+ files can exhaust Node process memory (multer buffers in RAM by default), fill disk (uploads/ dir), exhaust file descriptors. Real cases: Slowloris-like attacks via upload (ZAP) + ZIP bomb (10TB decompress). Pattern: any file upload without limit = critical DoS surface. Defense = multi-level limits (multer, nginx, OS quota)"
+      - "Risk only of challenge"
+      - "Cosmetic risk"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : un challenge OWASP qui
+      cible 100kB est en realite la TIP DE
+      L'ICEBERG. Le bug fundamental (no size
+      limit) ouvre des risques bien plus serieux.
+      C'est pourquoi la defense doit etre
+      systematique. Source : analyse routes/
+      fileUpload.ts + OWASP File Upload Cheat
+      Sheet + DoS Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: OWASP challenge targeting
+      100kB is in reality TIP of the iceberg.
+      Fundamental bug (no size limit) opens far
+      more serious risks. That's why defense
+      must be systematic. Source: routes/
+      fileUpload.ts analysis + OWASP File Upload
+      Cheat Sheet + DoS Cheat Sheet.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi le frontend HTML `accept="application/
+      pdf,application/zip"` + JS size check ne PROTEGE
+      PAS contre cette attaque ?
+    question_en: |
+      Why doesn't HTML `accept="application/
+      pdf,application/zip"` + JS size check
+      PROTECT against this attack?
+    options_fr:
+      - "Parce que accept est case-sensitive"
+      - "Parce que TOUTE protection cote CLIENT est UX uniquement, JAMAIS securite. L'attaquant utilise curl/Burp/Postman/console fetch() pour bypass. Le `accept` HTML attribute filter SEULEMENT le file picker UI ; un upload programmatique ne respecte rien. Pattern : si la SECURITY est sur le SERVER, la PROTECTION doit etre sur le SERVER. Repete encore et encore"
+      - "Parce que accept est obsolete"
+      - "Parce que JS est buggy"
+    options_en:
+      - "Because accept is case-sensitive"
+      - "Because ALL CLIENT-side protection is UX only, NEVER security. Attacker uses curl/Burp/Postman/console fetch() to bypass. HTML `accept` attribute only filters file picker UI; programmatic upload doesn't respect anything. Pattern: if SECURITY is on SERVER, PROTECTION must be on SERVER. Repeat again and again"
+      - "Because accept is obsolete"
+      - "Because JS is buggy"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : meme regle que tous les
+      challenges Improper Input Validation. Le
+      client n'est PAS un security boundary. Cas
+      reels : les bugs de file upload sont
+      extremement courants justement parce que
+      les developers font confiance au frontend.
+      Source : OWASP File Upload + analyse Juice
+      Shop frontend.
+    explanation_en: |
+      Reusable pattern: same rule as all Improper
+      Input Validation challenges. Client is NOT
+      security boundary. Real cases: file upload
+      bugs extremely common precisely because
+      developers trust frontend. Source: OWASP
+      File Upload + Juice Shop frontend
+      analysis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense MULTI-COUCHE est la plus
+      EFFECTIVE pour les file uploads en general
+      ?
+    question_en: |
+      Which MULTI-LAYER defense is MOST
+      EFFECTIVE for file uploads in general?
+    options_fr:
+      - "Disabler les uploads"
+      - "Defense 4-layers : (1) Multer middleware avec `limits.fileSize` (Node.js level). (2) Reverse proxy nginx `client_max_body_size` (HTTP level). (3) Body-parser `limit` (Express level). (4) OS disk quota + filesystem read-only sauf upload dir + scan antivirus (clamav). Combine avec validation extension + magic bytes + sandboxed processing. Pattern : file upload est une surface critique multi-vector"
+      - "Encrypter les uploads"
+      - "Stocker en plaintext"
+    options_en:
+      - "Disable uploads"
+      - "4-layer defense: (1) Multer middleware with `limits.fileSize` (Node.js level). (2) nginx reverse proxy `client_max_body_size` (HTTP level). (3) Body-parser `limit` (Express level). (4) OS disk quota + filesystem read-only except upload dir + antivirus scan (clamav). Combined with extension validation + magic bytes + sandboxed processing. Pattern: file upload is critical multi-vector surface"
+      - "Encrypt uploads"
+      - "Store in plaintext"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : le file upload est l'une
+      des surfaces les plus dangereuses en
+      web app. CVE record : ImageTragick (2016
+      ImageMagick), CVE-2017-XXX FFmpeg LFR,
+      CVE-2018-7269 phpThumb, etc. Defense en
+      profondeur OBLIGATOIRE. Source : OWASP
+      File Upload Cheat Sheet + analyse cas
+      reels.
+    explanation_en: |
+      Reusable pattern: file upload is one of
+      most dangerous surfaces in web app. CVE
+      record: ImageTragick (2016 ImageMagick),
+      CVE-2017-XXX FFmpeg LFR, CVE-2018-7269
+      phpThumb, etc. MANDATORY defense in depth.
+      Source: OWASP File Upload Cheat Sheet +
+      real cases analysis.

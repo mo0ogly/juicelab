@@ -1,0 +1,81 @@
+challenge_key: "captchaBypassChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un CAPTCHA math (3+5=?) est-il facile
+      a bypass ?
+    question_en: |
+      Why is a math CAPTCHA (3+5=?) easy to bypass?
+    options_fr:
+      - "Trop dur"
+      - "(1) eval() programmatique sur l'expression. (2) OCR + Python sympy/eval pour parser. (3) Burp Intruder pour replay automatise. (4) Selenium browser automation. Defense : reCAPTCHA v3 (Google score-based), hCaptcha, Cloudflare Turnstile - challenges non-trivialement automatisables"
+      - "Trop facile pour humain"
+      - "Bug Angular"
+    options_en:
+      - "Too hard"
+      - "(1) Programmatic eval() on expression. (2) OCR + Python sympy/eval to parse. (3) Burp Intruder for automated replay. (4) Selenium browser automation. Defense: reCAPTCHA v3 (Google score-based), hCaptcha, Cloudflare Turnstile - non-trivially automatable challenges"
+      - "Too easy for human"
+      - "Angular bug"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : challenge automatisable =
+      defense morte. Source : OWASP API Security
+      API4:2023.
+    explanation_en: |
+      Reusable pattern: automatable challenge = dead
+      defense. Source: OWASP API Security API4:2023.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelle anti-pattern le code Juice Shop illustre
+      ici ?
+    question_en: |
+      Which anti-pattern does Juice Shop code
+      illustrate here?
+    options_fr:
+      - "Validation cote client"
+      - "Tracker sans bloquer : `captchaBypassReqTimes[reqId]` enregistre les timestamps mais ne bloque pas apres detection. Pattern reusable : detection sans action = monitoring vide. Defense : enforce un blocage actif (express-rate-limit) en plus du tracking"
+      - "Pas de logging"
+      - "Trop de mots de passe"
+    options_en:
+      - "Client-side validation"
+      - "Track without block: `captchaBypassReqTimes[reqId]` records timestamps but doesn't block after detection. Reusable pattern: detection without action = empty monitoring. Defense: enforce active block (express-rate-limit) in addition to tracking"
+      - "No logging"
+      - "Too many passwords"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : detection != action.
+      Source : OWASP API Security.
+    explanation_en: |
+      Reusable pattern: detection != action. Source:
+      OWASP API Security.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique multi-layer pour anti-
+      automation ?
+    question_en: |
+      Canonical multi-layer defense for anti-
+      automation?
+    options_fr:
+      - "Captcha visuel uniquement"
+      - "(1) express-rate-limit (max=5/min par IP). (2) express-slow-down (delayAfter=3, delayMs=500 progressif). (3) reCAPTCHA v3 (score >= 0.5). (4) Honeypot field hidden (rejet si rempli). (5) Behavioral analysis (typing speed, mouse). (6) Account throttling (5 feedbacks/heure)"
+      - "Encrypter requests"
+      - "Bloquer Tor"
+    options_en:
+      - "Visual captcha only"
+      - "(1) express-rate-limit (max=5/min per IP). (2) express-slow-down (delayAfter=3, delayMs=500 progressive). (3) reCAPTCHA v3 (score >= 0.5). (4) Hidden honeypot field (reject if filled). (5) Behavioral analysis (typing speed, mouse). (6) Account throttling (5 feedbacks/hour)"
+      - "Encrypt requests"
+      - "Block Tor"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : defense en profondeur.
+      Source : OWASP Authentication Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: defense in depth. Source:
+      OWASP Authentication Cheat Sheet.

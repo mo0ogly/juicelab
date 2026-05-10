@@ -1,0 +1,102 @@
+challenge_key: "loginBenderChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Sur ce challenge tu as utilise la page About Us pour trouver
+      l'email de Bender. Cette source d'OSINT institutionnelle est
+      problematique de quel point de vue ?
+    question_en: |
+      For this challenge you used the About Us page to find Bender's
+      email. This institutional OSINT source is problematic from
+      which standpoint?
+    options_fr:
+      - "Aucun probleme : seuls les utilisateurs authentifies peuvent voir About Us"
+      - "Le marketing veut attribuer les feedbacks (visibilite des ambassadeurs), la securite veut anonymiser — l'attribution publique d'un email cree un canal de fuite par construction"
+      - "About Us est protege par CSP et l'email n'est pas reellement lisible"
+      - "Le scraping d'About Us est interdit par les CGU et tout email recupere est inutilisable legalement"
+    options_en:
+      - "No problem: only authenticated users can see About Us"
+      - "Marketing wants to attribute feedbacks (ambassador visibility), security wants to anonymize — public email attribution creates a leak channel by construction"
+      - "About Us is CSP-protected and the email is not actually readable"
+      - "About Us scraping is forbidden by ToS and any harvested email is legally unusable"
+    correct: 1
+    explanation_fr: |
+      Conflit classique marketing/securite. La defense est UX : afficher
+      le prenom seul ou l'email tronque (b**er@juice-sh.op).
+      L'authentification ne change rien (About Us est public), CSP ne
+      protege pas du scraping, les CGU ne sont pas un controle technique.
+    explanation_en: |
+      Classic marketing/security conflict. The defense is UX: show
+      first name only or truncated email (b**er@juice-sh.op).
+      Authentication does not help (About Us is public), CSP does not
+      protect against scraping, ToS is not a technical control.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le payload bender@juice-sh.op'-- a fonctionne. Quel est l'effet
+      EXACT du double tiret en SQL standard (compatible SQLite,
+      MySQL >= 5.7, PostgreSQL) ?
+    question_en: |
+      The payload bender@juice-sh.op'-- worked. What is the EXACT
+      effect of the double dash in standard SQL (compatible with
+      SQLite, MySQL >= 5.7, PostgreSQL)?
+    options_fr:
+      - "Il echappe l'apostrophe precedente"
+      - "Il introduit un commentaire de ligne : tout ce qui suit jusqu'a la fin de la ligne est ignore par le parseur"
+      - "Il est interprete comme un operateur de soustraction sur des strings"
+      - "Il execute la requete de maniere asynchrone"
+    options_en:
+      - "It escapes the preceding single quote"
+      - "It introduces a line comment: everything after, until the end of the line, is ignored by the parser"
+      - "It is interpreted as a string subtraction operator"
+      - "It executes the query asynchronously"
+    correct: 1
+    explanation_fr: |
+      "-- " est le commentaire de ligne SQL standard ANSI. La syntaxe
+      MySQL ancienne exigeait un espace apres pour eviter ambiguite,
+      MySQL >= 5.7 et SQLite l'acceptent meme sans espace. Le AND
+      password = '...' qui suit est entierement ignore.
+    explanation_en: |
+      "-- " is the ANSI standard SQL line comment. Older MySQL
+      required a space after to avoid ambiguity, MySQL >= 5.7 and
+      SQLite accept it without space. The AND password = '...' that
+      follows is entirely ignored.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      L'application defend-elle correctement si elle utilise un
+      prepared statement Sequelize de la forme User.findOne({ where:
+      { email, password: hash(password) } }) au lieu de la
+      concatenation directe ?
+    question_en: |
+      Does the application defend correctly if it uses a Sequelize
+      prepared statement like User.findOne({ where: { email,
+      password: hash(password) } }) instead of direct concatenation?
+    options_fr:
+      - "Non, parce que Sequelize est connu pour avoir des bugs SQLi historiques"
+      - "Oui, le mecanisme de binding de Sequelize est equivalent a un Prepared Statement : la valeur email est passee separement, l'apostrophe injectee est echappee mecaniquement"
+      - "Oui, mais uniquement si on ajoute un blocklist regex sur les caracteres dangereux"
+      - "Non, il faut chiffrer le champ email avec AES avant la requete"
+    options_en:
+      - "No, because Sequelize is known for historical SQLi bugs"
+      - "Yes, the Sequelize binding mechanism is equivalent to a Prepared Statement: the email value is passed separately, an injected single quote is mechanically escaped"
+      - "Yes, but only if you add a regex blocklist on dangerous characters"
+      - "No, you must encrypt the email field with AES before the query"
+    correct: 1
+    explanation_fr: |
+      Source : codefixes/dbSchemaChallenge.info.yml fix id 2 et
+      unionSqlInjectionChallenge.info.yml fix id 2. "Using the built-in
+      replacement (or binding) mechanism of Sequelize is equivalent to
+      creating a Prepared Statement". Le blocklist regex est documente
+      comme failure mode (fix id 3).
+    explanation_en: |
+      Source: codefixes/dbSchemaChallenge.info.yml fix id 2 and
+      unionSqlInjectionChallenge.info.yml fix id 2. "Using the
+      built-in replacement (or binding) mechanism of Sequelize is
+      equivalent to creating a Prepared Statement". Regex blocklist
+      is documented as a failure mode (fix id 3).

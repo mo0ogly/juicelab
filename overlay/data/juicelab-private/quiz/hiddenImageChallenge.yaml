@@ -1,0 +1,79 @@
+challenge_key: "hiddenImageChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelles sont les 4 techniques classiques de
+      steganographie sur images ?
+    question_en: |
+      What are the 4 classic image steganography
+      techniques?
+    options_fr:
+      - "Encryption"
+      - "(1) LSB (Least Significant Bit) - modifier bit de poids faible des pixels RGB (invisible). (2) EXIF metadata (commentaires, GPS, copyright). (3) Append apres EOI JPEG marker (concat). (4) Sub-image (image dans image). Tools : zsteg, stegcracker, exiftool, binwalk, foremost"
+      - "AES-256"
+      - "RSA only"
+    options_en:
+      - "Encryption"
+      - "(1) LSB (Least Significant Bit) - modify low-order bit of RGB pixels (invisible). (2) EXIF metadata (comments, GPS, copyright). (3) Append after EOI JPEG marker (concat). (4) Sub-image (image-in-image). Tools: zsteg, stegcracker, exiftool, binwalk, foremost"
+      - "AES-256"
+      - "RSA only"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : auditer les images uploadees.
+      Source : NIST Steganography.
+    explanation_en: |
+      Reusable pattern: audit uploaded images. Source:
+      NIST Steganography.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi auditer les easter eggs en pentest ?
+    question_en: |
+      Why audit easter eggs in pentest?
+    options_fr:
+      - "Pour rire"
+      - "Easter eggs revelent souvent des debug routes, panels admin caches, ou fonctionnalites non documentees. Tools : grep strings dans bundles + assets pour 'easter', 'egg', noms cult shows. Cas reels : Tesla Autopilot videos cachees, Google Doodles avec mini-games revelant des features"
+      - "Inutile"
+      - "Trop legal"
+    options_en:
+      - "For fun"
+      - "Easter eggs often reveal debug routes, hidden admin panels, or undocumented features. Tools: grep strings in bundles + assets for 'easter', 'egg', cult show names. Real cases: hidden Tesla Autopilot videos, Google Doodles with mini-games revealing features"
+      - "Useless"
+      - "Too legal"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : easter eggs = surface
+      undocumented. Source : OWASP Web Security
+      Testing Guide.
+    explanation_en: |
+      Reusable pattern: easter eggs = undocumented
+      surface. Source: OWASP Web Security Testing
+      Guide.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour images uploadees ?
+    question_en: |
+      Canonical defense for uploaded images?
+    options_fr:
+      - "Bloquer toutes les images"
+      - "(1) Build CI strip metadata (exiftool -all=). (2) Steg test reguliere (zsteg -a fichier.png) - zero LSB suspect attendu. (3) Re-encoder cote serveur (sharp/ImageMagick avec strip) pour eliminer steg. (4) ASSETS_MANIFEST.md pour assets legitimes. (5) MIME validation + magic bytes check"
+      - "Encrypter les images"
+      - "Plain text only"
+    options_en:
+      - "Block all images"
+      - "(1) Build CI strip metadata (exiftool -all=). (2) Regular steg test (zsteg -a file.png) - zero suspect LSB expected. (3) Server-side re-encode (sharp/ImageMagick with strip) to eliminate steg. (4) ASSETS_MANIFEST.md for legitimate assets. (5) MIME validation + magic bytes check"
+      - "Encrypt images"
+      - "Plain text only"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : multi-layer image hardening.
+      Source : OWASP File Upload Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: multi-layer image hardening.
+      Source: OWASP File Upload Cheat Sheet.

@@ -1,0 +1,102 @@
+challenge_key: "persistedXssUserChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi la validation client-side (Angular FormControl,
+      HTML5 input pattern) est-elle INSUFFISANTE comme seule
+      defense ?
+    question_en: |
+      Why is client-side validation (Angular FormControl, HTML5
+      input pattern) INSUFFICIENT as the sole defense?
+    options_fr:
+      - "Parce qu'elle ralentit le site"
+      - "Parce que tout code livre au navigateur est manipulable : ouvrir DevTools modifie le DOM, changer le code TypeScript, ou skip-er Angular en POSTant directement via curl. La validation client est un GUIDE UX, pas une defense"
+      - "Parce qu'elle ne supporte pas Unicode"
+      - "Parce qu'elle est interdite par OWASP"
+    options_en:
+      - "Because it slows the site"
+      - "Because any code shipped to the browser is tamper-able: opening DevTools modifies the DOM, changing TS code, or skipping Angular by POSTing directly via curl. Client validation is a UX GUIDE, not a defense"
+      - "Because it doesn't support Unicode"
+      - "Because it's forbidden by OWASP"
+    correct: 1
+    explanation_fr: |
+      Reflexe fondamental : tout code client est PUBLIC et
+      manipulable. La defense est cote serveur, toujours.
+      Source : OWASP Input Validation Cheat Sheet. La validation
+      client AIDE l'UX, ne PROTEGE pas l'app.
+    explanation_en: |
+      Fundamental reflex: all client code is PUBLIC and
+      manipulable. Defense is server-side, always. Source:
+      OWASP Input Validation Cheat Sheet. Client validation
+      HELPS UX, doesn't PROTECT the app.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP officiel #3 enumere DEUX methodes pour bypass
+      la validation client. Lesquelles ?
+    question_en: |
+      Official OWASP hint #3 enumerates TWO methods to bypass
+      client validation. Which?
+    options_fr:
+      - "(1) Disable JavaScript dans le navigateur, (2) Utiliser un VPN"
+      - "(1) Manipuler le DOM tree dans le navigateur (modifier les attributs pattern, disabled, etc. via DevTools), (2) Ignorer completement le frontend et interagir avec le backend directement (curl, Postman, Burp)"
+      - "(1) Forcer un mode incognito, (2) Vider le cache"
+      - "(1) Changer le User-Agent, (2) Disable cookies"
+    options_en:
+      - "(1) Disable JavaScript in the browser, (2) Use a VPN"
+      - "(1) Manipulate the DOM tree in the browser (modify pattern, disabled attributes via DevTools), (2) Ignore the frontend entirely and interact directly with the backend (curl, Postman, Burp)"
+      - "(1) Force incognito mode, (2) Clear cache"
+      - "(1) Change User-Agent, (2) Disable cookies"
+    correct: 1
+    explanation_fr: |
+      Source officielle hint OWASP #3 in extenso : "Bypassing
+      client-side security can typically be done by either
+      disabling it on the client (i.e. in the browser by
+      manipulating the DOM tree) or by ignoring it completely
+      and interacting with the backend instead". La 2eme methode
+      (skip frontend) est plus rapide et plus generale.
+    explanation_en: |
+      Official source OWASP hint #3 in full: "Bypassing
+      client-side security can typically be done by either
+      disabling it on the client (i.e. in the browser by
+      manipulating the DOM tree) or by ignoring it completely
+      and interacting with the backend instead". The 2nd method
+      (skip frontend) is faster and more general.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense BACKEND empeche structurellement ce
+      challenge ?
+    question_en: |
+      Which BACKEND defense structurally prevents this
+      challenge?
+    options_fr:
+      - "Augmenter la longueur max des fields a 1000 chars"
+      - "Validation server-side via une lib (Joi, Zod, class-validator) au router level qui rejette tout body non conforme au schema (regex pattern, max length, type) AVANT que ca atteigne le DB. Combine a un sanitizer DOMPurify au moment du render"
+      - "Forcer HTTPS sur /api/Addresses"
+      - "Logger toutes les addresses creees"
+    options_en:
+      - "Raise max field length to 1000 chars"
+      - "Server-side validation via a lib (Joi, Zod, class-validator) at the router level rejecting any body not matching the schema (regex pattern, max length, type) BEFORE reaching DB. Combined with a DOMPurify sanitizer at render time"
+      - "Force HTTPS on /api/Addresses"
+      - "Log every created address"
+    correct: 1
+    explanation_fr: |
+      Defense en profondeur. La validation server-side est la
+      copie EXACTE de la validation client + plus stricte. Le
+      sanitizer DOMPurify au render fournit la 2eme couche : meme
+      si un payload XSS leak en DB par bug, il est echappe a
+      l'affichage. Cette double defense est canonique en OWASP
+      XSS Prevention Cheat Sheet.
+    explanation_en: |
+      Defense in depth. Server-side validation is the EXACT
+      copy of client validation + stricter. DOMPurify sanitizer
+      at render provides the 2nd layer: even if an XSS payload
+      leaks to DB through a bug, it's escaped at display. This
+      double defense is canonical in OWASP XSS Prevention Cheat
+      Sheet.

@@ -1,0 +1,116 @@
+challenge_key: "feedbackChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Fais en sorte que la moyenne des feedbacks affichee dans la footer
+  passe a 5 etoiles. Pour cela, tu dois supprimer les feedbacks
+  existants qui plombent la moyenne (notes 1-3 etoiles), ce qui
+  necessite de chainer DEUX vulnerabilites : d'abord obtenir un JWT
+  admin (par SQLi sur le login), puis exploiter un Broken Access
+  Control sur l'endpoint de suppression. C'est un challenge de
+  COMPOSITION DE VULNERABILITES.
+
+  Methode recommandee : pre-requis = challenge loginAdmin valide (JWT
+  admin en main). Avec ce JWT, ouvre l'onglet Network, repere
+  l'endpoint DELETE /api/Feedbacks/:id (probablement appele depuis la
+  section /administration). Appelle-le directement (curl, Postman,
+  fetch) pour chaque feedback de note basse. Quand la moyenne devient
+  5/5, le challenge se valide automatiquement.
+
+  Note la chaine d'attaque (SQLi -> escalade admin -> BAC -> DELETE)
+  et reflechis aux defenses qui auraient casse la chaine. Tu en
+  parleras dans le journal "apres".
+
+mission_en: |
+  Push the feedback average displayed in the footer to 5 stars. To do
+  so, delete the existing low-rated feedbacks (1-3 stars) that drag
+  the average down, which requires chaining TWO vulnerabilities:
+  first obtain an admin JWT (via login SQLi), then exploit a Broken
+  Access Control on the deletion endpoint. This is a VULNERABILITY
+  COMPOSITION challenge.
+
+  Recommended method: prerequisite = solved loginAdmin (admin JWT in
+  hand). With that JWT, open the Network tab, spot the DELETE
+  /api/Feedbacks/:id endpoint (likely called from the /administration
+  section). Hit it directly (curl, Postman, fetch) for each
+  low-rated feedback. When the average becomes 5/5, the challenge
+  validates automatically.
+
+  Note the attack chain (SQLi -> admin escalation -> BAC -> DELETE)
+  and think about the defenses that would have broken the chain.
+  You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Composition de vulnerabilites : 1 + 1 = catastrophique"
+    title_en: "Vulnerability composition: 1 + 1 = catastrophic"
+    body_fr: |
+      Une SQLi seule est mauvaise mais souvent contenue (le user reste
+      non-admin). Un BAC seul peut etre tolere si l'app n'a pas
+      d'utilisateurs sensibles. La COMPOSITION change tout : SQLi pour
+      escalader, BAC pour exploiter les privileges escaledes. C'est la
+      regle du pentest reel : les vulns isolees mineures s'additionnent
+      en risque majeur. Auditer chaque vuln SEULE n'est pas
+      suffisant, il faut auditer les CHAINES possibles.
+    body_en: |
+      A lone SQLi is bad but often contained (the user stays
+      non-admin). A lone BAC may be tolerable if the app has no
+      sensitive users. COMPOSITION changes everything: SQLi to
+      escalate, BAC to exploit the escalated privileges. The real
+      pentest rule: minor isolated vulns add up to a major risk.
+      Auditing each vuln ALONE is not enough, you must audit
+      possible CHAINS.
+
+  - title_fr: "Soft delete + audit log : transformer la perte en evenement reversible"
+    title_en: "Soft delete + audit log: turn loss into a reversible event"
+    body_fr: |
+      Pour toute action destructive en production (delete user,
+      delete order, delete feedback), le pattern recommande est le
+      soft delete : marquer la ligne deleted_at = NOW() au lieu de la
+      supprimer physiquement. Couple a un audit log (qui, quand,
+      pourquoi, IP, JWT id), cela transforme une perte definitive en
+      evenement reversible et auditable. La purge physique reelle se
+      fait par un job de retention separe, parametre.
+    body_en: |
+      For any destructive production action (delete user, delete
+      order, delete feedback), the recommended pattern is soft
+      delete: mark the row deleted_at = NOW() instead of physically
+      deleting. Combined with an audit log (who, when, why, IP, JWT
+      id), this turns a definitive loss into a reversible auditable
+      event. Real physical purge runs via a separate parameterized
+      retention job.
+
+  - title_fr: "Detection blue team : SIEM + anomaly detection"
+    title_en: "Blue team detection: SIEM + anomaly detection"
+    body_fr: |
+      Trois niveaux d'observation : audit log (trace de chaque
+      DELETE), SIEM avec alerte temps reel sur burst de DELETE
+      depuis un meme JWT, anomaly detection sur les compteurs metier
+      (chute brutale du nombre de feedbacks rating in [1,2,3]).
+      Aucun ne PREVENT l'attaque, mais le mean time to detect (MTTD)
+      passe de plusieurs jours a quelques minutes. Combiner avec un
+      processus d'incident response qui peut restaurer les soft-deletes.
+    body_en: |
+      Three observation levels: audit log (trace every DELETE), SIEM
+      with real-time alert on a burst of DELETEs from the same JWT,
+      anomaly detection on business counters (sudden drop in
+      feedback count with rating in [1,2,3]). None PREVENTS the
+      attack, but mean time to detect (MTTD) drops from days to
+      minutes. Pair with an incident response process that can
+      restore soft-deletes.
+
+  - title_fr: "OWASP A04:2021 — Insecure Design (au-dela du code)"
+    title_en: "OWASP A04:2021 — Insecure Design (beyond code)"
+    body_fr: |
+      Cette categorie cible les choix d'architecture qui rendent
+      l'application vulnerable INDEPENDAMMENT de la qualite du code.
+      Ici : choisir un hard-delete plutot qu'un soft-delete + audit,
+      ou ne pas modeliser les controles d'autorisation comme un
+      composant separe et reutilisable. Pas un bug a fixer ligne par
+      ligne, un pattern d'architecture a revoir au design review.
+    body_en: |
+      This category targets architectural choices that make the
+      application vulnerable REGARDLESS of code quality. Here:
+      choosing hard-delete over soft-delete + audit, or failing to
+      model authorization as a separate reusable component. Not a
+      bug to fix line by line, an architectural pattern to revisit
+      at design review.

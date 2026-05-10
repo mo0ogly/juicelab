@@ -1,0 +1,157 @@
+challenge_key: "uploadSizeChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Upload un fichier plus grand que 100 kB. Description
+  OWASP. Hints officiels : (1) "You can attach a small
+  file to the Complaint form. Investigate how this
+  upload actually works". (2) "First you should try to
+  understand how the file upload is actually handled
+  on the client and server side". (3) "With this
+  understanding you need to find a 'weak spot' in the
+  right place and have to craft an exploit for it".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/fileUpload.ts:62 (verifie source). Code
+  exact : `challengeUtils.solveIf(challenges.upload
+  SizeChallenge, () => { return file?.size > 100000 })`
+  apres handleZipFileUpload. Le frontend Angular
+  bloque les fichiers > 100kB ET le file picker
+  filtre via `accept` attribute. Mais le backend
+  n'utilise PAS de Express middleware
+  multer-size-limit. Workflow : (1) bypass le
+  frontend via curl/Burp avec un fichier > 100kB.
+  (2) POST /file-upload avec multipart/form-data.
+  (3) Le backend accepte et execute le
+  challenge solve via solveIf.
+
+mission_en: |
+  Upload a file larger than 100 kB. OWASP
+  description. Official hints: (1) "You can attach a
+  small file to the Complaint form. Investigate how
+  this upload actually works". (2) "First you should
+  try to understand how the file upload is actually
+  handled on the client and server side". (3) "With
+  this understanding you need to find a 'weak spot'
+  in the right place and have to craft an exploit
+  for it". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/fileUpload.
+  ts:62 (verified source). Exact code: `challengeUtils.
+  solveIf(challenges.uploadSizeChallenge, () => {
+  return file?.size > 100000 })` after
+  handleZipFileUpload. Angular frontend blocks files >
+  100kB AND file picker filters via `accept`
+  attribute. But backend doesn't use
+  multer-size-limit Express middleware. Workflow:
+  (1) bypass frontend via curl/Burp with > 100kB
+  file. (2) POST /file-upload with multipart/
+  form-data. (3) Backend accepts and executes
+  challenge solve via solveIf.
+
+concepts:
+  - title_fr: "File upload limits : layers multiple"
+    title_en: "File upload limits: multiple layers"
+    body_fr: |
+      Source canonique : OWASP File Upload Cheat
+      Sheet (mitigationUrl). Les limits de taille
+      doivent etre ENFORCED a plusieurs niveaux :
+      (1) HTML accept + JS check : UX uniquement.
+      (2) Multer middleware Express avec `limits:
+      { fileSize: 100 * 1024 }` : ENFORCEMENT
+      server-side. (3) Reverse proxy (nginx
+      `client_max_body_size`) : defense en profondeur.
+      (4) Disk quota OS-level. Bug Juice Shop : le
+      multer middleware est sans `limits` config,
+      donc accept files de any size. Pattern :
+      ENABLE explicitly les limits, never rely sur
+      defaults.
+    body_en: |
+      Canonical source: OWASP File Upload Cheat
+      Sheet (mitigationUrl). Size limits must be
+      ENFORCED at multiple levels: (1) HTML accept
+      + JS check: UX only. (2) Multer middleware
+      Express with `limits: { fileSize: 100 *
+      1024 }`: server-side ENFORCEMENT. (3)
+      Reverse proxy (nginx
+      `client_max_body_size`): defense in depth.
+      (4) OS-level disk quota. Juice Shop bug:
+      multer middleware without `limits` config,
+      accepts files of any size. Pattern: ENABLE
+      explicitly limits, never rely on defaults.
+
+  - title_fr: "DoS via large uploads : le risque cache"
+    title_en: "DoS via large uploads: hidden risk"
+    body_fr: |
+      Le challenge cible 100kB mais le risque reel
+      est LARGER : un attaquant qui uploade des
+      fichiers de 1GB+ peut DoS le serveur (memory
+      exhaustion, disk fill). Cas reels : ZIP
+      bomb (10TB decompress en quelques GB
+      compressed), ImageMagick processing
+      (CVE-2016-3714 ImageTragick : RCE via image
+      avec command injection), XXE bomb dans XML
+      uploads (yamlBomb / xxeDos challenges
+      Lot 9). Pattern reusable : tout file upload
+      sans size limit = DoS surface.
+    body_en: |
+      Challenge targets 100kB but real risk is
+      LARGER: attacker uploading 1GB+ files can
+      DoS server (memory exhaustion, disk fill).
+      Real cases: ZIP bomb (10TB decompress in few
+      GB compressed), ImageMagick processing
+      (CVE-2016-3714 ImageTragick: RCE via image
+      with command injection), XXE bomb in XML
+      uploads (yamlBomb / xxeDos challenges
+      Lot 9). Reusable pattern: any file upload
+      without size limit = DoS surface.
+
+  - title_fr: "Defense canonique : middleware multer correctement configure"
+    title_en: "Canonical defense: properly configured multer middleware"
+    body_fr: |
+      Pattern Express + multer correct :
+      ```js
+      const upload = multer({
+        limits: {
+          fileSize: 100 * 1024,  // 100 kB
+          files: 1,
+          fields: 10
+        },
+        fileFilter: (req, file, cb) => {
+          const allowed = ['.pdf', '.zip'];
+          const ext = path.extname(
+            file.originalname).toLowerCase();
+          cb(null, allowed.includes(ext));
+        }
+      });
+      app.post('/file-upload',
+        upload.single('file'), handler);
+      ```
+      Combine avec : reverse proxy nginx
+      `client_max_body_size 100k` + body-parser
+      `limit: '100kb'` + DB BLOB constraints.
+      Defense en profondeur 4-layers minimum.
+    body_en: |
+      Correct Express + multer pattern:
+      ```js
+      const upload = multer({
+        limits: {
+          fileSize: 100 * 1024,  // 100 kB
+          files: 1,
+          fields: 10
+        },
+        fileFilter: (req, file, cb) => {
+          const allowed = ['.pdf', '.zip'];
+          const ext = path.extname(
+            file.originalname).toLowerCase();
+          cb(null, allowed.includes(ext));
+        }
+      });
+      app.post('/file-upload',
+        upload.single('file'), handler);
+      ```
+      Combine with: nginx reverse proxy
+      `client_max_body_size 100k` + body-parser
+      `limit: '100kb'` + DB BLOB constraints.
+      4-layer minimum defense in depth.

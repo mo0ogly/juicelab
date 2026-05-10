@@ -1,0 +1,107 @@
+challenge_key: "leakedApiKeyChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le challenge cible un secret leak HORS de la webapp
+      (script automation). Pourquoi est-ce un anti-pattern
+      different de exposedCredentialsChallenge (secret dans
+      le bundle JS) ?
+    question_en: |
+      Challenge targets an off-webapp secret leak (automation
+      script). Why is it a different anti-pattern from
+      exposedCredentialsChallenge (secret in JS bundle)?
+    options_fr:
+      - "Aucune difference, c'est le meme bug"
+      - "exposedCredentials = secret SHIPPED au navigateur (publique-by-design). leakedApiKey = secret dans un script automation HORS webapp mais dans un repo Git PUBLIC. Surface differente : audit code application vs audit repo entier (incluant scripts, CI configs, deploy)"
+      - "exposedCredentials est plus dangereux que leakedApiKey"
+      - "Les deux ne concernent que les apps Node.js"
+    options_en:
+      - "No difference, same bug"
+      - "exposedCredentials = secret SHIPPED to browser (public-by-design). leakedApiKey = secret in automation script OFF-webapp but in PUBLIC Git repo. Different surface: app code audit vs entire repo audit (including scripts, CI configs, deploy)"
+      - "exposedCredentials is more dangerous"
+      - "Both only concern Node.js apps"
+    correct: 1
+    explanation_fr: |
+      Distinction critique pour les outils de detection.
+      Trufflehog et gitleaks scannent TOUT le repo, pas
+      seulement le code applicatif. Une defense complete
+      doit couvrir : (a) audit du code app, (b) audit des
+      scripts automation, (c) audit des CI/CD configs, (d)
+      audit des Dockerfiles, (e) audit de l'historique Git.
+    explanation_en: |
+      Critical distinction for detection tools. Trufflehog
+      and gitleaks scan the WHOLE repo, not just app code.
+      Complete defense must cover: (a) app code audit, (b)
+      automation scripts audit, (c) CI/CD configs audit, (d)
+      Dockerfiles audit, (e) Git history audit.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      GitHub native secret scanning est actif par defaut sur
+      les repos publics depuis 2018. Que detecte-t-il et que
+      RATE-t-il ?
+    question_en: |
+      GitHub native secret scanning is on by default for
+      public repos since 2018. What does it detect and what
+      does it MISS?
+    options_fr:
+      - "Detecte tout secret"
+      - "Detecte les patterns DECLARES par les services partenaires (AWS keys, Stripe, Slack tokens, etc., 100+ patterns). RATE : (a) secrets custom non declares, (b) secrets dans des forks deja fait, (c) historique Git pre-2018, (d) secrets obfuscated. Defense complementaire : trufflehog/gitleaks en CI"
+      - "Detecte uniquement les passwords"
+      - "Ne detecte que les fichiers .env"
+    options_en:
+      - "Detects every secret"
+      - "Detects patterns DECLARED by partner services (AWS keys, Stripe, Slack tokens, etc., 100+ patterns). MISSES: (a) custom undeclared secrets, (b) secrets in already-made forks, (c) pre-2018 Git history, (d) obfuscated secrets. Complementary defense: trufflehog/gitleaks in CI"
+      - "Detects only passwords"
+      - "Only detects .env files"
+    correct: 1
+    explanation_fr: |
+      GitHub secret scanning est utile mais pas suffisant.
+      Defense en profondeur : combiner avec un scanner local
+      (trufflehog avec entropy detection pour les secrets
+      custom). Pour les secrets deja leakes : key rotation
+      systematique apres tout incident, avec key manager
+      pour faciliter la rotation.
+    explanation_en: |
+      GitHub secret scanning is useful but insufficient.
+      Defense in depth: combine with local scanner
+      (trufflehog with entropy detection for custom secrets).
+      For already-leaked secrets: systematic key rotation
+      after any incident, with key manager easing rotation.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique selon OWASP Secrets Management
+      Cheat Sheet (mitigationUrl du challenge) : 3 piliers ?
+    question_en: |
+      Canonical defense per OWASP Secrets Management Cheat
+      Sheet (challenge mitigationUrl): 3 pillars?
+    options_fr:
+      - "(1) AES, (2) RSA, (3) ECC"
+      - "(1) Secret manager (HashiCorp Vault, AWS Secrets Manager, GCP Secret Manager) — JAMAIS hardcoded en repo. (2) CI gate (trufflehog/gitleaks) qui fail le build si secret detecte. (3) Key rotation reguliere (30/90j). Defense en profondeur"
+      - "(1) HTTPS, (2) HSTS, (3) CSP"
+      - "(1) Backup, (2) restore, (3) replicate"
+    options_en:
+      - "(1) AES, (2) RSA, (3) ECC"
+      - "(1) Secret manager (HashiCorp Vault, AWS Secrets Manager, GCP Secret Manager) — NEVER hardcoded in repo. (2) CI gate (trufflehog/gitleaks) failing build on secret detection. (3) Regular key rotation (30/90d). Defense in depth"
+      - "(1) HTTPS, (2) HSTS, (3) CSP"
+      - "(1) Backup, (2) restore, (3) replicate"
+    correct: 1
+    explanation_fr: |
+      Source : OWASP Secrets Management Cheat Sheet sections
+      "Secret Storage", "Secret Detection", "Key Lifecycle".
+      Les 3 piliers sont structurels : on ne peut pas se
+      contenter d'un seul (storage sans rotation = secret
+      eternel ; rotation sans storage = panique a chaque
+      rotation).
+    explanation_en: |
+      Source: OWASP Secrets Management Cheat Sheet sections
+      "Secret Storage", "Secret Detection", "Key Lifecycle".
+      3 pillars are structural: can't rely on one alone
+      (storage without rotation = eternal secret; rotation
+      without storage = panic at each rotation).

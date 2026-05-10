@@ -1,0 +1,93 @@
+challenge_key: "bullyChatbotChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un chatbot qui pige aleatoirement une reponse parmi
+      plusieurs (dont une favorable) ne devrait JAMAIS gerer une
+      decision business critique comme l'attribution de coupons ?
+    question_en: |
+      Why should a chatbot that randomly picks a reply among several
+      (including a positive one) NEVER manage a critical business
+      decision like coupon attribution?
+    options_fr:
+      - "Parce que les utilisateurs preferent les chatbots deterministes pour des raisons d'experience"
+      - "Parce qu'un attaquant qui insiste finit par gagner statistiquement : la decision business doit etre deterministe (regles), pas probabiliste"
+      - "Parce que les chatbots probabilistes consomment trop de tokens"
+      - "Parce que le RGPD interdit les decisions automatisees probabilistes"
+    options_en:
+      - "Because users prefer deterministic chatbots for UX reasons"
+      - "Because an attacker who insists eventually wins statistically: a business decision must be deterministic (rules), not probabilistic"
+      - "Because probabilistic chatbots consume too many tokens"
+      - "Because GDPR forbids probabilistic automated decisions"
+    correct: 1
+    explanation_fr: |
+      Une probabilite non nulle de "yes" combinee a un nombre illimite
+      d'essais converge vers la certitude. Les decisions business doivent
+      etre des regles deterministes, pas des tirages probabilistes.
+    explanation_en: |
+      A non-zero "yes" probability combined with unlimited attempts
+      converges to certainty. Business decisions must be
+      deterministic rules, not probabilistic samplings.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelle architecture est la plus robuste pour permettre a un
+      chatbot d'attribuer un coupon dans certaines conditions, sans
+      etre exploitable par insistance ?
+    question_en: |
+      What architecture is most robust to let a chatbot attribute a
+      coupon under certain conditions, without being exploitable by
+      insistence?
+    options_fr:
+      - "Augmenter la diversite des reponses de refus dans le dataset"
+      - "Le bot detecte l'intent, mais un service deterministe externe decide selon des regles business (eligibilite, periode, stock)"
+      - "Bloquer les utilisateurs qui demandent plus de 10 fois"
+      - "Mettre le bot derriere un captcha"
+    options_en:
+      - "Increase the diversity of refusal replies in the dataset"
+      - "The bot detects intent, but an external deterministic service decides based on business rules (eligibility, period, stock)"
+      - "Block users who ask more than 10 times"
+      - "Put the bot behind a captcha"
+    correct: 1
+    explanation_fr: |
+      Separer la detection d'intent (probabiliste, OK pour le bot) de
+      la decision business (deterministe, OK pour un service dedie).
+      C'est l'architecture standard moderne pour les agents IA.
+    explanation_en: |
+      Separate intent detection (probabilistic, fine for the bot) from
+      business decision (deterministic, fine for a dedicated service).
+      This is the modern standard architecture for AI agents.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Si on garde un bot LLM moderne (Claude, GPT) qui peut
+      potentiellement donner un coupon via prompt injection, quelle
+      defense est la plus robuste a ajouter ?
+    question_en: |
+      If we keep a modern LLM bot (Claude, GPT) that could potentially
+      give a coupon via prompt injection, which defense is most robust to
+      add?
+    options_fr:
+      - "Augmenter la temperature pour rendre les reponses plus diverses"
+      - "Combiner system prompt strict + post-processing/validation des reponses + red teaming adverse continu"
+      - "Forcer le bot a repondre uniquement en majuscules"
+      - "Limiter les reponses a 50 caracteres"
+    options_en:
+      - "Increase the temperature to diversify replies"
+      - "Combine strict system prompt + post-process/validation of replies + continuous adversarial red teaming"
+      - "Force the bot to reply only in uppercase"
+      - "Limit replies to 50 characters"
+    correct: 1
+    explanation_fr: |
+      Defense en profondeur : system prompt verrouille les contraintes,
+      post-processing filtre les sorties suspectes, red teaming detecte
+      les nouveaux contournements. Aucune mesure isolee ne suffit.
+    explanation_en: |
+      Defense in depth: locked system prompt enforces constraints,
+      post-processing filters suspicious outputs, red teaming detects
+      new bypasses. No isolated measure suffices.

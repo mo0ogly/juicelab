@@ -1,0 +1,115 @@
+challenge_key: "reflectedXssChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Fais executer un script JavaScript injecte via un parametre d'URL.
+  La cible : la page /track-result, qui prend un id en query string
+  et le re-affiche dans le DOM. Si l'id est traite sans echappement
+  cote serveur ou cote client, ton payload est execute. C'est un
+  Reflected XSS, weaponizable par URL partageable (spear phishing).
+
+  Methode recommandee : repere d'abord la page de tracking (entree
+  Account ou bouton "Track Order"). Identifie le parametre URL qui
+  controle l'affichage (par exemple ?id=...). Remplace la valeur par
+  un payload XSS classique avec balise <iframe> + javascript: ou
+  <img src=x onerror=alert(1)>. Visite l'URL malicieuse : le script
+  s'execute, le challenge se valide.
+
+  Note l'URL malicieuse complete que tu pourrais envoyer a un
+  collegue, et reflechis a la difference d'impact spear-phishing
+  entre Reflected et DOM XSS. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Trigger an injected JavaScript script via a URL parameter. Target:
+  the /track-result page, which takes an id query string and
+  re-displays it in the DOM. If the id is processed without escaping
+  server-side or client-side, your payload runs. This is a Reflected
+  XSS, weaponizable via shareable URL (spear phishing).
+
+  Recommended method: locate the tracking page first (Account entry
+  or "Track Order" button). Identify the URL parameter controlling
+  the display (e.g. ?id=...). Replace its value with a classic XSS
+  payload using an <iframe> + javascript: tag or
+  <img src=x onerror=alert(1)>. Visit the malicious URL: the script
+  runs, the challenge solves.
+
+  Note the full malicious URL you could mail to a colleague, and
+  reflect on the spear-phishing impact difference between Reflected
+  and DOM XSS. You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Reflected XSS : weaponizable a distance"
+    title_en: "Reflected XSS: remotely weaponizable"
+    body_fr: |
+      La force du Reflected XSS pour un attaquant cible : il fabrique
+      une URL malicieuse, l'envoie en mail/Slack/SMS, et au clic la
+      victime execute du code dans son contexte authentifie. Le DOM
+      XSS pur necessite que la victime tape ELLE-MEME dans un champ
+      ou interagisse avec un objet local : non weaponizable a
+      distance. Le Reflected combine charge utile (XSS) et vecteur
+      (URL partageable) en une seule unite.
+    body_en: |
+      The strength of Reflected XSS for a targeted attacker: they
+      craft a malicious URL, send it via mail/Slack/SMS, and at
+      click time the victim runs code in their authenticated
+      context. Pure DOM XSS requires the victim to type THEMSELVES
+      or interact with a local object: not remotely weaponizable.
+      Reflected combines payload (XSS) and vector (shareable URL)
+      in a single unit.
+
+  - title_fr: "Defense premiere : validation de schema en entree"
+    title_en: "First defense: schema validation on input"
+    body_fr: |
+      Un parametre id qui devrait etre numerique ou un UUID doit
+      etre VALIDE comme tel au niveau du router : tout ce qui ne
+      matche pas le schema est refuse en 400. Aucun XSS ne passe
+      meme dans le rendering. Le filtrage par caracteres dangereux
+      (regex blacklist) est fragile, l'authentification ne bloque
+      pas un user authentifie qui clique sur l'URL, le base64
+      deplace le probleme. La validation par schema est structurelle
+      et facile a appliquer.
+    body_en: |
+      A parameter id that should be numeric or a UUID must be
+      VALIDATED as such at the router level: anything not matching
+      the schema is refused with 400. No XSS even reaches the
+      rendering. Dangerous-character filtering (regex blacklist) is
+      fragile, authentication does not block an authenticated user
+      clicking the URL, base64 just moves the problem. Schema
+      validation is structural and easy to apply.
+
+  - title_fr: "Defense en profondeur : HttpOnly + Secure + SameSite"
+    title_en: "Defense in depth: HttpOnly + Secure + SameSite"
+    body_fr: |
+      Si le payload XSS s'execute, les attributs du cookie de
+      session decident de l'impact. HttpOnly : retire le cookie de
+      document.cookie cote JS (l'XSS ne peut pas le lire pour
+      l'exfiltrer). Secure : transmis uniquement en HTTPS, pas de
+      fuite reseau. SameSite=Strict ou Lax : empeche l'envoi
+      cross-origin (CSRF couple a XSS). Combinaison : la session
+      survit meme a une primitive XSS partielle.
+    body_en: |
+      If the XSS payload runs, the session cookie attributes decide
+      the impact. HttpOnly: removes the cookie from document.cookie
+      in JS (the XSS cannot read it to exfiltrate). Secure:
+      transmitted only over HTTPS, no network leak.
+      SameSite=Strict or Lax: prevents cross-origin sending (CSRF
+      coupled with XSS). Combined: the session survives even a
+      partial XSS primitive.
+
+  - title_fr: "OWASP A03:2021 — Injection (Reflected XSS)"
+    title_en: "OWASP A03:2021 — Injection (Reflected XSS)"
+    body_fr: |
+      Tous les XSS sont sous A03 Injection depuis 2021. Le
+      Reflected est le plus ancien et le plus connu, et reste tres
+      present dans les CTF et bug bounty. Defense moderne combinant
+      framework qui echappe par defaut, validation de schema en
+      entree, CSP + Trusted Types en navigateur. La detection
+      automatique en CI (DAST) est efficace pour le Reflected car
+      le payload aller-retour est observable.
+    body_en: |
+      All XSS sit under A03 Injection since 2021. Reflected is the
+      oldest and best-known, still very present in CTF and bug
+      bounty. Modern defense combines a framework escaping by
+      default, schema validation on input, CSP + Trusted Types in
+      the browser. Automated CI detection (DAST) is effective for
+      Reflected because the round-trip payload is observable.

@@ -1,0 +1,139 @@
+challenge_key: "forgottenDevBackupChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Recupere le fichier de sauvegarde oublie du DEV (typiquement
+  package.json.bak qui revele les dependances et leurs versions).
+  Description OWASP officielle : "Access a developer's forgotten
+  backup file". Les hints OWASP officiels te guident : (1) "trick
+  a security mechanism into thinking that the file you want has a
+  valid file type", (2) "tamper with links in the application
+  that deliver a file directly", (3) "the file is not directly
+  accessible because a security mechanism prevents access to it",
+  (5) "there is only one approach to pull this trick".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : meme surface que easterEggLevelOne et
+  Confidential Document — le folder /ftp/ avec directory listing.
+  Le fichier vise est /ftp/package.json.bak (presence verifiee
+  dans le repo). Le serveur applique un filtre regex qui bloque
+  les extensions .bak (verifie cote routes Express). Bypass
+  classique : poison null byte avec %00 (ou %2500 double-encode)
+  qui fait croire au filtre que le fichier finit par une
+  extension whitelistee (.md), tandis que le filesystem en C
+  truncate sur le null byte et ouvre le vrai .bak.
+
+  Note la composition pedagogique : meme bypass que
+  easterEggLevelOne (null byte sur /ftp/) mais cible differente
+  (package.json.bak vs eastere.gg). Ce challenge est un
+  PREREQUIS recurrent (persistedXssFeedback, forgottenBackup,
+  parfois videoXss/sstiChallenge). Tu en parleras dans le
+  journal "apres".
+
+mission_en: |
+  Retrieve the forgotten DEV backup file (typically package.json.
+  bak revealing dependencies and their versions). Official OWASP
+  description: "Access a developer's forgotten backup file".
+  Official hints guide: (1) "trick a security mechanism into
+  thinking that the file you want has a valid file type", (2)
+  "tamper with links in the application that deliver a file
+  directly", (3) "the file is not directly accessible because a
+  security mechanism prevents access to it", (5) "there is only
+  one approach to pull this trick". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: same surface as easterEggLevelOne and
+  Confidential Document — the /ftp/ folder with directory
+  listing. Target file is /ftp/package.json.bak (presence
+  verified in the repo). The server applies a regex filter
+  blocking .bak extensions (verified in Express routes).
+  Classic bypass: poison null byte with %00 (or %2500
+  double-encoded) tricks the filter into thinking the file
+  ends with an allowlisted extension (.md), while the C
+  filesystem truncates on the null byte and opens the real
+  .bak.
+
+  Note the pedagogical composition: same bypass as
+  easterEggLevelOne (null byte on /ftp/) but different target
+  (package.json.bak vs eastere.gg). This challenge is a
+  recurrent PREREQUISITE (persistedXssFeedback,
+  forgottenBackup, sometimes videoXss/sstiChallenge). You will
+  report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Composition triviale : meme exploit, cible differente"
+    title_en: "Trivial composition: same exploit, different target"
+    body_fr: |
+      C'est le meme bypass que easterEggLevelOne (null byte
+      bypass sur /ftp/), juste avec un nom de fichier different.
+      Le pattern d'attaque est identique. La pedagogie ici n'est
+      pas la mecanique mais la VARIATION : le student apprend
+      qu'une vulnerabilite ouvre N portes, pas une seule. Le
+      directory listing /ftp/ est le HUB de plusieurs
+      challenges : Confidential Document (.md regular),
+      easterEggLevelOne (.gg via null byte), forgottenDevBackup
+      (.bak via null byte), forgottenBackup (autre .bak via
+      null byte). Defense : retention strategy + audit periodique
+      du folder, pas de fix a chercher dans le bypass technique.
+    body_en: |
+      Same bypass as easterEggLevelOne (null-byte bypass on
+      /ftp/), just with a different filename. Identical attack
+      pattern. Pedagogy here isn't the mechanic but the
+      VARIATION: student learns that one vulnerability opens N
+      doors, not one. The /ftp/ directory listing is the HUB
+      of several challenges: Confidential Document (regular
+      .md), easterEggLevelOne (.gg via null byte),
+      forgottenDevBackup (.bak via null byte), forgottenBackup
+      (another .bak via null byte). Defense: retention strategy
+      + periodic folder audit, not a fix in the technical
+      bypass.
+
+  - title_fr: "package.json.bak : la mine d'or pour la kill chain attaquant"
+    title_en: "package.json.bak: a goldmine for the attacker kill chain"
+    body_fr: |
+      Pourquoi le DEV backup est-il important au-dela d'une
+      validation de challenge ? package.json liste TOUTES les
+      dependances + versions exactes. Pour un attaquant en phase
+      de reconnaissance, c'est la porte d'entree vers les CVEs
+      connues. Workflow reel : (1) recuperer package.json.bak,
+      (2) parser les versions, (3) cross-reference avec snyk.io
+      ou nvd.nist.gov, (4) selectionner une CVE high/critical
+      avec un PoC public. Pattern utilise dans
+      persistedXssFeedbackChallenge (sanitize-html version
+      ancienne) et exposable a beaucoup d'autres comme
+      knownVulnerableComponentChallenge.
+    body_en: |
+      Why is the DEV backup valuable beyond challenge
+      validation? package.json lists ALL dependencies + exact
+      versions. For an attacker in recon phase, it's the
+      gateway to known CVEs. Real workflow: (1) retrieve
+      package.json.bak, (2) parse versions, (3) cross-reference
+      with snyk.io or nvd.nist.gov, (4) pick a high/critical
+      CVE with a public PoC. Pattern used in
+      persistedXssFeedbackChallenge (old sanitize-html version)
+      and exposable to many others like
+      knownVulnerableComponentChallenge.
+
+  - title_fr: "Defense : retention asset strategy + CI gate sur backups"
+    title_en: "Defense: retention asset strategy + CI gate on backups"
+    body_fr: |
+      Trois couches. (1) Le folder /ftp/ ne devrait JAMAIS
+      contenir de .bak en production. Audit periodique
+      automatique (cron qui grep les extensions sensibles dans
+      les folders publics) + alerte au security team. (2) CI
+      gate qui fail le build si l'image Docker contient des
+      fichiers .bak / .swp / ~ / .git en zones publiques. (3)
+      Defense en profondeur : meme avec un fichier qui leak,
+      les SECRETS dedans devraient etre rotates/invalides
+      (secret manager, pas hardcoded en repo). Reference :
+      OWASP A05 Security Misconfiguration + A06 Vulnerable
+      Components.
+    body_en: |
+      Three layers. (1) The /ftp/ folder should NEVER contain
+      .bak in production. Automatic periodic audit (cron grep
+      sensitive extensions in public folders) + security team
+      alert. (2) CI gate failing build if the Docker image
+      contains .bak / .swp / ~ / .git in public zones. (3)
+      Defense in depth: even with a leaked file, the SECRETS
+      inside should be rotated/invalidated (secret manager,
+      not hardcoded in repo). Reference: OWASP A05 Security
+      Misconfiguration + A06 Vulnerable Components.

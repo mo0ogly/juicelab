@@ -1,0 +1,106 @@
+challenge_key: "forgedReviewChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Forged Feedback (SQL) et Forged Review (MongoDB) partagent
+      la meme racine de bug. Quelle est-elle ?
+    question_en: |
+      Forged Feedback (SQL) and Forged Review (MongoDB) share the
+      same bug root. What is it?
+    options_fr:
+      - "Les deux exploitent une SQL Injection"
+      - "Les deux font confiance a un input client (hidden form pour Feedback, body field author pour Review) pour determiner l'identite, alors que l'identite doit etre derived du JWT serveur-side"
+      - "Les deux necessitent un compte admin prealable"
+      - "Les deux exploitent un bug specifique a MongoDB"
+    options_en:
+      - "Both exploit a SQL Injection"
+      - "Both trust a client input (hidden form for Feedback, body author field for Review) to determine identity, while identity must be derived from the server-side JWT"
+      - "Both require a prior admin account"
+      - "Both exploit a MongoDB-specific bug"
+    correct: 1
+    explanation_fr: |
+      La similarite est conceptuelle : trust client. La difference
+      est uniquement la SURFACE (form HTML vs body JSON) et le
+      stockage (SQL vs MongoDB). La defense est identique : derive
+      identity from JWT, override any client-supplied identity
+      field. Reference : hint OWASP officiel #4 forgedReview qui
+      explicite ce parallele.
+    explanation_en: |
+      Conceptual similarity: trust client. Difference is purely
+      SURFACE (HTML form vs JSON body) and storage (SQL vs
+      MongoDB). Defense identical: derive identity from JWT,
+      override any client-supplied identity field. Reference:
+      official OWASP hint #4 forgedReview spelling out this
+      parallel.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pour un endpoint PATCH /rest/products/reviews qui update un
+      review, quels DEUX checks sont OBLIGATOIRES cote serveur ?
+    question_en: |
+      For a PATCH /rest/products/reviews endpoint updating a
+      review, which TWO checks are MANDATORY server-side?
+    options_fr:
+      - "Authentication seule + rate limit"
+      - "Authentication (qui est-tu, JWT verifie) + Ownership (cet objet t'appartient-il, filter par author=JWT.email dans la query). Sans le 2eme, le challenge est resolu trivialement"
+      - "Captcha + 2FA sur chaque update"
+      - "TLS 1.3 + chiffrement du body"
+    options_en:
+      - "Authentication alone + rate limit"
+      - "Authentication (who are you, verified JWT) + Ownership (does this object belong to you, filter by author=JWT.email in the query). Without the 2nd, challenge solves trivially"
+      - "Captcha + 2FA on every update"
+      - "TLS 1.3 + body encryption"
+    correct: 1
+    explanation_fr: |
+      Authentication != Authorization. JWT verifie repond "qui
+      est l'utilisateur" mais pas "a-t-il le droit sur cet
+      objet". Le check d'ownership est l'autre moitie. C'est le
+      pattern OWASP API1:2023 (Broken Object Level Authorization)
+      applique aux operations write.
+    explanation_en: |
+      Authentication != Authorization. Verified JWT answers "who
+      is the user" but not "do they have rights on this object".
+      Ownership check is the other half. That's OWASP API1:2023
+      (Broken Object Level Authorization) applied to write
+      operations.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Le codefixes officiel OWASP propose 3 fixes pour ce
+      challenge. Le fix CORRECT est le #2. Pourquoi le fix #1
+      ("Reassigning an updated review to the last editor") n'est-il
+      qu'un palliatif partiel ?
+    question_en: |
+      Official OWASP codefixes proposes 3 fixes for this challenge.
+      Correct fix is #2. Why is fix #1 ("Reassigning an updated
+      review to the last editor") only a partial workaround?
+    options_fr:
+      - "Parce que le fix #1 introduit une race condition"
+      - "Parce qu'il reattribue le review apres modification mais N'EMPECHE PAS l'attaquant de modifier les reviews d'autres users en premier lieu — l'integrite des donnees historiques est cassee"
+      - "Parce que le fix #1 ne fonctionne qu'en MySQL"
+      - "Parce que le fix #1 leak des donnees PII"
+    options_en:
+      - "Because fix #1 introduces a race condition"
+      - "Because it reassigns the review after modification but DOES NOT PREVENT the attacker from modifying other users' reviews in the first place — historical data integrity is broken"
+      - "Because fix #1 only works on MySQL"
+      - "Because fix #1 leaks PII"
+    correct: 1
+    explanation_fr: |
+      Source : codefixes/forgedReviewChallenge.info.yml fix #1 in
+      extenso : "This solution would reassign an updated review
+      to the last editor, but it would not prevent to change
+      other user's reviews in the first place". La defense correcte
+      empeche la modification, ne se contente pas de track qui a
+      modifie quoi.
+    explanation_en: |
+      Source: codefixes/forgedReviewChallenge.info.yml fix #1 in
+      full: "This solution would reassign an updated review to
+      the last editor, but it would not prevent to change other
+      user's reviews in the first place". Correct defense
+      prevents modification, doesn't just track who modified
+      what.

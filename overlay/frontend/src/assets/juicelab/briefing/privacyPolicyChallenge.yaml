@@ -1,0 +1,98 @@
+challenge_key: "privacyPolicyChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Trouve et ouvre la page Privacy Policy de Juice Shop. Elle est
+  reglementairement obligatoire (RGPD article 12 : information transparente)
+  et donc forcement accessible quelque part dans l'UI. C'est un challenge
+  de RECONNAISSANCE / NAV, pas un challenge de code.
+
+  Methode recommandee : explore le menu hamburger en haut a gauche, puis
+  les sous-menus Account et Privacy & Security. Variante : tape l'URL
+  directement dans la barre d'adresse (la table de routage Angular est
+  dans le bundle JS et expose le path complet). La validation du
+  challenge se declenche automatiquement quand la page se charge.
+
+  Note la methode que tu utilises et ce que la politique revele d'utile
+  pour un attaquant en phase OSINT : sous-traitants, technologies,
+  juridictions, contacts. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Find and open the Juice Shop Privacy Policy page. It is legally
+  mandated (GDPR article 12: transparent information) and therefore must
+  be reachable somewhere in the UI. This is a RECON / NAV challenge, not
+  a code challenge.
+
+  Recommended method: explore the hamburger menu at the top-left, then
+  the Account and Privacy & Security sub-menus. Variant: type the URL
+  directly in the address bar (the Angular routing table is in the JS
+  bundle and exposes the full path). The challenge is automatically
+  validated when the page loads.
+
+  Remember which method you used and what the policy discloses that is
+  useful to an attacker in OSINT: subprocessors, technologies,
+  jurisdictions, contacts. You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Reconnaissance institutionnelle (avant le code)"
+    title_en: "Institutional reconnaissance (before code)"
+    body_fr: |
+      Un red teamer professionnel ne saute pas directement sur les
+      formulaires. Il commence par lire le contenu PUBLIC : Privacy
+      Policy, Terms of Service, mentions legales, page About,
+      offres d'emploi. Ces documents revelent la stack technique,
+      les sous-traitants, l'organigramme, les contacts. C'est gratuit,
+      legal, et tres rentable.
+    body_en: |
+      A professional red teamer does not dive straight into forms. They
+      start by reading PUBLIC content: Privacy Policy, Terms of Service,
+      legal notice, About page, job postings. These documents reveal
+      the technical stack, subprocessors, organisational chart,
+      contacts. Free, legal, and very profitable.
+
+  - title_fr: "RGPD article 12 : transparence imposee"
+    title_en: "GDPR article 12: mandated transparency"
+    body_fr: |
+      Le RGPD impose que les informations aux personnes concernees
+      soient concises, transparentes, comprehensibles et facilement
+      accessibles. Concretement : un lien menu visible, pas un PDF
+      cache derriere un login. Cette obligation legale FAIT du document
+      une cible OSINT garantie sur toute application europeenne.
+    body_en: |
+      GDPR requires information to data subjects to be concise,
+      transparent, intelligible, and easily accessible. In practice:
+      a visible menu link, not a PDF behind a login. This legal duty
+      MAKES the document a guaranteed OSINT target on any European
+      application.
+
+  - title_fr: "OWASP A01:2021 — Information disclosure cote defense"
+    title_en: "OWASP A01:2021 — Information disclosure on the defense side"
+    body_fr: |
+      Cote defense, la regle est simple : ne publie QUE ce qui est
+      legalement requis. Pas de noms d'employes inutiles, pas de
+      versions de framework, pas d'IPs ou de chemins internes, pas
+      de coordonnees personnelles d'admins. Une politique compliant
+      bien redigee est neutre, mise a jour, et ne donne RIEN au
+      reconnaissance team au-dela du minimum legal.
+    body_en: |
+      On the defense side, the rule is simple: publish ONLY what is
+      legally required. No needless employee names, no framework
+      versions, no internal IPs or paths, no personal admin contacts.
+      A well-written compliant policy is neutral, kept up to date,
+      and gives the recon team NOTHING beyond the legal minimum.
+
+  - title_fr: "Patterns d'emplacement dans une SPA marchande"
+    title_en: "Location patterns in a commerce SPA"
+    body_fr: |
+      Les pages institutionnelles d'une SPA Angular vivent presque
+      toujours au meme endroit : footer, sidenav hamburger, ou
+      menu Account. Sur Juice Shop, la Privacy Policy est dans la
+      sidenav (icone hamburger en haut a gauche), groupee avec About
+      Us et Customer Feedback. La meme heuristique fonctionne sur
+      90% des sites e-commerce.
+    body_en: |
+      Institutional pages of an Angular SPA almost always live in the
+      same spots: footer, hamburger sidenav, or Account menu. On
+      Juice Shop, the Privacy Policy sits in the sidenav (hamburger
+      icon at the top-left), grouped with About Us and Customer
+      Feedback. The same heuristic works on 90% of e-commerce sites.

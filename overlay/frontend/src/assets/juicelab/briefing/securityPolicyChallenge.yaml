@@ -1,0 +1,87 @@
+challenge_key: "securityPolicyChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Trouver et acceder au fichier security.txt declarant la politique de
+  reporting de vulnerabilite. Tag : Miscellaneous. Hint OWASP : "discover
+  security policy". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/verify.ts:70 :
+  `solveIf(() => endsWith(url, '/security.txt'))`. Selon RFC 9116, le
+  fichier doit etre a /.well-known/security.txt. C'est un standard
+  industriel pour declarer les contacts de securite, hall of fame, PGP,
+  etc. Workflow : (1) Connaitre le standard. (2) Naviguer vers
+  /.well-known/security.txt. Pattern : connaitre les RFC well-known
+  augmente l'attack surface awareness.
+
+mission_en: |
+  Find and access the security.txt file declaring vulnerability reporting
+  policy. Tag: Miscellaneous. OWASP hint: "discover security policy".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/verify.ts:70:
+  `solveIf(() => endsWith(url, '/security.txt'))`. Per RFC 9116, file must
+  be at /.well-known/security.txt. This is industry standard for declaring
+  security contacts, hall of fame, PGP, etc. Workflow: (1) Know the
+  standard. (2) Navigate to /.well-known/security.txt. Pattern: knowing
+  well-known RFCs increases attack surface awareness.
+
+concepts:
+  - title_fr: "RFC 9116 : security.txt comme standard industriel"
+    title_en: "RFC 9116: security.txt as industry standard"
+    body_fr: |
+      Source canonique : RFC 9116 (April 2022). Le fichier security.txt
+      est a /.well-known/security.txt et declare : Contact (email/PGP),
+      Encryption (lien PGP key), Acknowledgments (hall of fame),
+      Preferred-Languages, Canonical (URL canonique du fichier),
+      Policy (URL de la responsible disclosure policy), Hiring
+      (optionnel). Pattern reusable : checker /.well-known/* sur toute
+      cible (security.txt, change-password, openid-configuration).
+    body_en: |
+      Canonical source: RFC 9116 (April 2022). security.txt file at
+      /.well-known/security.txt declares: Contact (email/PGP), Encryption
+      (PGP key link), Acknowledgments (hall of fame), Preferred-Languages,
+      Canonical (canonical URL of file), Policy (responsible disclosure
+      policy URL), Hiring (optional). Reusable pattern: check
+      /.well-known/* on any target (security.txt, change-password,
+      openid-configuration).
+
+  - title_fr: "Well-known URIs : surface d'enumeration standard"
+    title_en: "Well-known URIs: standard enumeration surface"
+    body_fr: |
+      RFC 8615 definit /.well-known/* comme namespace pour URIs decouvertes
+      automatiquement. Les plus interessantes pour pentesters : (1)
+      security.txt (RFC 9116). (2) openid-configuration (OIDC discovery -
+      revele endpoints OAuth, signing keys URL). (3) change-password (RFC
+      8615 - URL pour password change). (4) acme-challenge (Let's Encrypt
+      validation). (5) host-meta (XRD, RFC 6415). Defense : auditer ce que
+      chaque endpoint expose, ne PAS leak d'info sensible (ex. internal
+      hostnames dans openid-configuration).
+    body_en: |
+      RFC 8615 defines /.well-known/* as namespace for auto-discovered
+      URIs. Most interesting for pentesters: (1) security.txt (RFC 9116).
+      (2) openid-configuration (OIDC discovery - reveals OAuth endpoints,
+      signing keys URL). (3) change-password (RFC 8615 - password change
+      URL). (4) acme-challenge (Let's Encrypt validation). (5) host-meta
+      (XRD, RFC 6415). Defense: audit what each endpoint exposes, don't
+      leak sensitive info (e.g. internal hostnames in
+      openid-configuration).
+
+  - title_fr: "Defense canonique : security.txt bien renseigne"
+    title_en: "Canonical defense: well-populated security.txt"
+    body_fr: |
+      (1) DEPLOYER security.txt (pas le cacher) car c'est une bonne
+      pratique - facilite le responsible disclosure. (2) Champs requis :
+      Contact (email security@), Expires (date max 1 an), Canonical (URL
+      complete). (3) Champs recommandes : Encryption (PGP), Policy,
+      Acknowledgments. (4) Tools de generation : securitytxt.org. (5)
+      Verification continue avec internet.nl ou audit manuel. Pattern :
+      transparency > obscurity pour security policy.
+    body_en: |
+      (1) DEPLOY security.txt (don't hide it) - good practice, facilitates
+      responsible disclosure. (2) Required fields: Contact (security@
+      email), Expires (max 1-year date), Canonical (full URL). (3)
+      Recommended fields: Encryption (PGP), Policy, Acknowledgments. (4)
+      Generation tools: securitytxt.org. (5) Continuous verification with
+      internet.nl or manual audit. Pattern: transparency > obscurity for
+      security policy.

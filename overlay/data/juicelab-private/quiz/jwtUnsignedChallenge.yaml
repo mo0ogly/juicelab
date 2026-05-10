@@ -1,0 +1,127 @@
+challenge_key: "jwtUnsignedChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi la spec JWT (RFC 7519) inclut-elle
+      `alg: "none"` comme algorithm valide ?
+    question_en: |
+      Why does JWT spec (RFC 7519) include `alg:
+      "none"` as valid algorithm?
+    options_fr:
+      - "Pour faciliter le debugging"
+      - "RFC 7515 (JWS) definit `alg: \"none\"` pour les cas ou la signature N'est PAS necessaire (transport en interne dans un canal deja securise, par exemple via mTLS). C'est une option legitime mais TRES DANGEREUSE en production publique. Le bug commun : library qui ACCEPTE alg=none dans le SAME code path que les algos signes -> tout JWT alg=none est accepte"
+      - "Parce que les developers paresseux le voulaient"
+      - "Parce que none est plus performant"
+    options_en:
+      - "To facilitate debugging"
+      - "RFC 7515 (JWS) defines `alg: \"none\"` for cases where signature is NOT necessary (internal transport in already-secured channel, e.g., via mTLS). Legitimate option but VERY DANGEROUS in public production. Common bug: library ACCEPTING alg=none in SAME code path as signed algos -> any alg=none JWT accepted"
+      - "Because lazy devs wanted it"
+      - "Because none is more performant"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la spec autorise des
+      options qui sont MORALEMENT INACCEPTABLES en
+      production (alg=none, plain HTTP, MD5
+      hashing). La defense est de FORCER la
+      configuration applicative a refuser ces
+      options par defaut. Pattern : opt-in security
+      < default-secure. Les libraries modernes
+      (jsonwebtoken v9+, express-jwt v6+) ont
+      change le default pour FORCER une whitelist
+      d'algorithms. Source : RFC 7515 + CVE-2015-
+      9235.
+    explanation_en: |
+      Reusable pattern: spec authorizes options
+      that are MORALLY UNACCEPTABLE in production
+      (alg=none, plain HTTP, MD5 hashing). Defense
+      is to FORCE app config to refuse these
+      options by default. Pattern: opt-in security
+      < default-secure. Modern libraries
+      (jsonwebtoken v9+, express-jwt v6+) changed
+      default to FORCE algorithm whitelist. Source:
+      RFC 7515 + CVE-2015-9235.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le forge JWT exige `header.payload.` (avec un
+      point final + signature vide). Pourquoi ce
+      formatting precis ?
+    question_en: |
+      JWT forge requires `header.payload.` (with
+      trailing dot + empty signature). Why this
+      precise formatting?
+    options_fr:
+      - "Parce que JWT impose 3 parties separees par des points"
+      - "RFC 7515 specifie le format JWS Compact Serialization : `<header>.<payload>.<signature>` avec exactement 3 segments separes par 2 points. Pour alg=none, la signature est une empty string (juste rien apres le 2eme dot). Si tu omets le dot final, le parser refuse car il attend 3 segments. C'est un detail format-strict de la spec qui doit etre respecte"
+      - "Parce que les dots sont des separateurs URL-safe"
+      - "Parce que JWT est ASCII-only"
+    options_en:
+      - "Because JWT requires 3 parts separated by dots"
+      - "RFC 7515 specifies JWS Compact Serialization format: `<header>.<payload>.<signature>` with exactly 3 segments separated by 2 dots. For alg=none, signature is empty string (just nothing after 2nd dot). If you omit final dot, parser refuses as it expects 3 segments. Format-strict detail of spec that must be respected"
+      - "Because dots are URL-safe separators"
+      - "Because JWT is ASCII-only"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : les specs cryptographiques
+      sont format-strict. Une virgule en plus, un
+      espace, une casse incorrecte = refus. Cela
+      est par DESIGN (anti-tampering). Hint OWASP
+      #5 "Make sure your JWT is URL safe!" pointe
+      aussi vers ce detail : base64url (pas
+      base64 standard) avec `=` padding strippe.
+      Source : RFC 7515 JWS Compact Serialization.
+    explanation_en: |
+      Reusable pattern: cryptographic specs are
+      format-strict. Extra comma, space, incorrect
+      case = refusal. By DESIGN (anti-tampering).
+      OWASP hint #5 "Make sure your JWT is URL
+      safe!" also points to this detail: base64url
+      (not standard base64) with `=` padding
+      stripped. Source: RFC 7515 JWS Compact
+      Serialization.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la defense la plus EFFECTIVE pour
+      eliminer l'attaque alg=none de maniere
+      definitive ?
+    question_en: |
+      Most EFFECTIVE defense to eliminate alg=none
+      attack definitively?
+    options_fr:
+      - "Disabler les JWT entierement"
+      - "Specifier explicitement la WHITELIST des algorithms accepted dans `jwt.verify(token, key, {algorithms: ['RS256']})`. Cette option (depuis jsonwebtoken v9 et express-jwt v6) FORCE la library a rejeter tout alg non listee, y compris 'none'. Combine avec library moderne (auto-default secure). Pattern : explicit-is-better-than-implicit pour les crypto parameters"
+      - "Hashher les JWT avec MD5"
+      - "Stocker les JWT en plaintext"
+    options_en:
+      - "Disable JWT entirely"
+      - "Explicitly specify algorithm WHITELIST accepted in `jwt.verify(token, key, {algorithms: ['RS256']})`. This option (since jsonwebtoken v9 and express-jwt v6) FORCES library to reject any non-listed alg, including 'none'. Combined with modern library (auto-default secure). Pattern: explicit-is-better-than-implicit for crypto parameters"
+      - "Hash JWTs with MD5"
+      - "Store JWTs in plaintext"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : explicit allowlists >
+      blocklists pour la security. Allowlist
+      des algorithms accepted = approche fail-
+      closed (par defaut, refuser). Blocklist
+      d'algorithms interdits = approche fail-
+      open (par defaut, accepter, refuser sur la
+      blocklist). Toujours preferer fail-closed.
+      Source : OWASP JSON Web Token Cheat Sheet +
+      jsonwebtoken v9 docs + express-jwt v6
+      changelog.
+    explanation_en: |
+      Reusable pattern: explicit allowlists >
+      blocklists for security. Allowlist of
+      accepted algorithms = fail-closed approach
+      (default refuse). Blocklist of forbidden
+      algorithms = fail-open approach (default
+      accept, refuse on blocklist). Always
+      prefer fail-closed. Source: OWASP JSON Web
+      Token Cheat Sheet + jsonwebtoken v9 docs +
+      express-jwt v6 changelog.

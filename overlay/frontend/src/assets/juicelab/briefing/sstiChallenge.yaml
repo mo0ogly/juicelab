@@ -1,0 +1,123 @@
+challenge_key: "sstiChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Infecte le serveur avec un malware (non-malicieux mais reel) en
+  abusant d'une execution de commande arbitraire via Server-Side
+  Template Injection (SSTI). La description OWASP officielle :
+  "Infect the server with juicy malware by abusing arbitrary command
+  execution". Hint #1 : "SSTi is a clear indicator that this has
+  nothing to do with anything Angular. Also, make sure to use only
+  our non-malicious malware". Hint #2 : "find the juicy malware via
+  a very obvious Google search or by stumbling into a very
+  ill-placed quarantine folder".
+
+  Methode recommandee : trouve d'abord le malware autorise par
+  OWASP Juice Shop. Hint OWASP officiel #2 te suggere une
+  recherche Google ou un dossier quarantine sur le serveur Juice
+  Shop. Le repo OWASP Juice Shop fournit un fichier juicy.efb (le
+  malware fictif). Identifie ensuite l'endpoint SSTI vulnerable :
+  une feature de B2B order processing accepte un body JSON dont
+  certains champs sont passes a un moteur de template (vm.
+  runInNewContext en backend Express). En injectant un payload
+  template qui force le serveur a download le malware, tu valides
+  le challenge.
+
+  Note la difference entre SSTI (template injection) et XSS
+  (client-side). SSTI = code execution serveur, beaucoup plus
+  grave qu'un XSS. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Infect the server with malware (non-malicious but real) by
+  abusing arbitrary command execution via Server-Side Template
+  Injection (SSTI). Official OWASP description: "Infect the
+  server with juicy malware by abusing arbitrary command
+  execution". Hint #1: "SSTi is a clear indicator that this has
+  nothing to do with anything Angular. Also, make sure to use
+  only our non-malicious malware". Hint #2: "find the juicy
+  malware via a very obvious Google search or by stumbling into
+  a very ill-placed quarantine folder".
+
+  Recommended method: first find the malware approved by OWASP
+  Juice Shop. Official OWASP hint #2 suggests a Google search or
+  a quarantine folder on the Juice Shop server. The OWASP Juice
+  Shop repo provides a juicy.efb file (the fictitious malware).
+  Then identify the vulnerable SSTI endpoint: a B2B order
+  processing feature accepts a JSON body whose fields go to a
+  template engine (vm.runInNewContext in the Express backend).
+  Injecting a template payload that forces the server to download
+  the malware solves the challenge.
+
+  Note the difference between SSTI (template injection) and XSS
+  (client-side). SSTI = server-side code execution, much more
+  severe than XSS. You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "SSTI : pas Angular client mais template engine serveur"
+    title_en: "SSTI: not Angular client but server template engine"
+    body_fr: |
+      Hint OWASP officiel #1 met en garde : SSTi != XSS Angular.
+      Le client Angular utilise des templates, mais l'execution est
+      cote navigateur (XSS si bypass). SSTI cible un template engine
+      EXECUTE COTE SERVEUR (Pug, EJS, Handlebars, Twig, vm Node, et
+      plus rare : Jinja2, ERB). Quand un input utilisateur arrive
+      directement dans une string template engine.render(template),
+      le payload est interprete comme code et execute. Familles :
+      Node.js (vm.runInNewContext), Python (Jinja2 {% %}), Ruby
+      (ERB <%= %>). Sur Juice Shop, c'est vm Node sur la feature
+      B2B.
+    body_en: |
+      Official OWASP hint #1 warns: SSTi != Angular XSS. The
+      Angular client uses templates, but execution is browser-side
+      (XSS if bypass). SSTI targets a template engine EXECUTED
+      SERVER-SIDE (Pug, EJS, Handlebars, Twig, vm Node, rarer:
+      Jinja2, ERB). When user input lands directly in a string
+      template engine.render(template), the payload is
+      interpreted as code and executed. Families: Node.js (vm.
+      runInNewContext), Python (Jinja2 {% %}), Ruby (ERB
+      <%= %>). On Juice Shop, it's Node vm on the B2B feature.
+
+  - title_fr: "B2B order processing : la surface peu visible"
+    title_en: "B2B order processing: the low-visibility surface"
+    body_fr: |
+      Pourquoi cette feature ? Beaucoup d'apps marchandes ont une
+      voie B2B (entreprise vers entreprise) avec des formats
+      d'echange complexes (JSON, XML, EDI). Souvent codee plus
+      vite, moins testee, peu visible aux red teamers qui se
+      concentrent sur l'UI. Sur Juice Shop, l'endpoint B2B est
+      sous /b2b/v2/orders et accepte des champs (orderLinesData
+      par ex) qui sont injectes dans un template Node vm. C'est
+      un pattern recurrent en pentest reel : les voies B2B
+      contiennent des bugs majoritaires que les voies UI.
+    body_en: |
+      Why this feature? Many commerce apps have a B2B (business-
+      to-business) channel with complex exchange formats (JSON,
+      XML, EDI). Often coded faster, less tested, low-visibility
+      to red teamers focused on UI. On Juice Shop, the B2B
+      endpoint sits under /b2b/v2/orders and accepts fields
+      (orderLinesData e.g.) injected into a Node vm template.
+      Recurring real-pentest pattern: B2B channels carry the
+      majority of bugs vs UI channels.
+
+  - title_fr: "Defense canonique : ne JAMAIS templater de l'input utilisateur"
+    title_en: "Canonical defense: NEVER template user input"
+    body_fr: |
+      Regle absolue. Un template DOIT etre un template statique
+      controle par le developpeur. L'input utilisateur DOIT etre
+      passe comme DATA via le mecanisme de variables/binding du
+      template engine (handlebars {{ name }}, EJS <%= name %>),
+      jamais COMME le template lui-meme. Si vraiment besoin de
+      compiler une expression dynamique (ex calculatrice user-
+      provided), utiliser un sandbox dedie (vm2, nodejs vm avec
+      contextify, isolated-vm). Reference OWASP : Server-Side
+      Template Injection cheatsheet.
+    body_en: |
+      Absolute rule. A template MUST be a static template
+      controlled by the developer. User input MUST be passed as
+      DATA via the template engine variables/binding mechanism
+      (handlebars {{ name }}, EJS <%= name %>), never AS the
+      template itself. If truly needed to compile dynamic
+      expressions (e.g. user-provided calculator), use a
+      dedicated sandbox (vm2, Node vm with contextify,
+      isolated-vm). OWASP reference: Server-Side Template
+      Injection cheatsheet.

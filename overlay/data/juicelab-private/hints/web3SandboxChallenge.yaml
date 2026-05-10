@@ -1,0 +1,99 @@
+challenge_key: "web3SandboxChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "It is just as easy as finding the
+      Score Board". Donc tu sais ce qu'il faut faire — c'est une
+      ROUTE CACHEE a trouver via inspection du bundle. Le mot a
+      chercher est "web3" ou "sandbox". Si tu n'as pas resolu
+      Score Board, va le faire en premier (scoreBoardChallenge),
+      la technique est identique.
+    text_en: |
+      Official OWASP hint #1: "It is just as easy as finding the
+      Score Board". So you know what to do — it's a HIDDEN ROUTE
+      to find via bundle inspection. Search keyword is "web3" or
+      "sandbox". If you haven't solved Score Board, do that
+      first (scoreBoardChallenge), the technique is identical.
+    pedagogical_intent: |
+      Connect to scoreBoardChallenge prerequisite knowledge.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Source officielle codefixes/web3SandboxChallenge.info.yml
+      hint #3 : "Searching for 'web3' should bring up some
+      interesting route mappings". Donc dans les DevTools onglet
+      Sources, ouvre main.js, Ctrl-F sur "web3" — tu vas tomber
+      sur la table de routage Angular contenant le path.
+    text_en: |
+      Official source codefixes/web3SandboxChallenge.info.yml
+      hint #3: "Searching for 'web3' should bring up some
+      interesting route mappings". So in DevTools Sources tab,
+      open main.js, Ctrl-F on "web3" — you'll land on the
+      Angular routing table containing the path.
+    pedagogical_intent: |
+      Spell the exact search keyword.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Dans le bundle, tu trouveras typiquement plusieurs routes
+      web3 : 'wallet-web3' (le portefeuille legitime exposed dans
+      l'UI), et 'web3-sandbox' (la sandbox de dev cachée). La
+      sandbox est celle qui n'apparait dans aucun menu UI.
+      Elle est volontairement nommee de maniere descriptive
+      (sandbox = environnement de test).
+    text_en: |
+      In the bundle, you'll find several web3 routes typically:
+      'wallet-web3' (legit wallet exposed in UI), and
+      'web3-sandbox' (the hidden dev sandbox). The sandbox is the
+      one not appearing in any UI menu. It's deliberately named
+      descriptively (sandbox = test environment).
+    pedagogical_intent: |
+      Disambiguate web3 routes; pin down web3-sandbox.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le path dans la routing table est { path: 'web3-sandbox',
+      loadChildren: ... }. Le path complet est /#/web3-sandbox
+      (prefix de hash route Angular comme pour score-board).
+      Tape l'URL directement dans la barre d'adresse du
+      navigateur. Aucun hack additionnel necessaire — la route
+      est libre d'acces, juste cachée du menu.
+    text_en: |
+      Path in the routing table is { path: 'web3-sandbox',
+      loadChildren: ... }. Full path is /#/web3-sandbox (Angular
+      hash route prefix as for score-board). Type the URL
+      directly in the browser address bar. No extra hack — the
+      route is freely accessible, just hidden from the menu.
+    pedagogical_intent: |
+      Spell the exact URL.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      URL exacte qui resout le challenge :
+      http://127.0.0.1:3000/#/web3-sandbox
+      La page sandbox web3 s'affiche, le challenge se valide
+      automatiquement quand le router Angular detecte la
+      navigation. Note : c'est une code sandbox pour ecrire et
+      tester des smart contracts on-the-fly — l'interet
+      pedagogique est de demontrer que les features de DEV
+      peuvent leak en PROD si pas de feature flag / strip au
+      build. Source : codefixes/web3SandboxChallenge.info.yml
+      fix #1.
+    text_en: |
+      Exact URL solving the challenge:
+      http://127.0.0.1:3000/#/web3-sandbox
+      The web3 sandbox page renders, challenge auto-solves when
+      the Angular router detects the navigation. Note: it's a
+      code sandbox for writing and testing smart contracts
+      on-the-fly — pedagogical value is showing that DEV features
+      can leak into PROD without feature flag / build stripping.
+      Source: codefixes/web3SandboxChallenge.info.yml fix #1.
+    pedagogical_intent: |
+      Quasi-solution : full URL + pedagogical takeaway.

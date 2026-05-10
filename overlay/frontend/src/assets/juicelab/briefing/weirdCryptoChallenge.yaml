@@ -1,0 +1,168 @@
+challenge_key: "weirdCryptoChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Informer le shop (via /#/contact) d'un algorithm
+  ou library qu'il NE DEVRAIT PAS utiliser de la
+  facon dont il le fait. Description OWASP. Hints
+  officiels : (1) "Report one of five possible
+  answers via the 'Customer Feedback' form". (2)
+  "Cryptographic functions only used in the 'Apply
+  some advanced cryptanalysis' challenge do not
+  count as they are only a developer's prank".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/verify.ts:253-267 (verifie source). Code
+  exact : `function weirdCryptoChallenge () { void
+  checkPatternInFeedbackAndComplaints(challenges.
+  weirdCryptoChallenge, { [Op.or]: weirdCryptos()
+  }) }` avec 5 patterns acceptes : `%z85%`,
+  `%base85%`, `%hashids%`, `%md5%`, `%base64%`.
+  Workflow : (1) Pre-requis recommande :
+  forgottenDevBackup pour avoir package.json.bak +
+  bundle Angular pour identifier les libraries
+  utilisees. (2) Identifier une des 5 libraries
+  comme suspecte (z85/base85/base64 = encodings,
+  pas crypto ; md5 = hash mais broken depuis 2004
+  pour collision ; hashids = encoding non-crypto).
+  (3) Submit feedback /#/contact mentionnant l'un
+  des 5 noms.
+
+mission_en: |
+  Inform shop (via /#/contact) of an algorithm or
+  library it SHOULD NOT use the way it does.
+  OWASP description. Official hints: (1) "Report
+  one of five possible answers via the 'Customer
+  Feedback' form". (2) "Cryptographic functions
+  only used in the 'Apply some advanced
+  cryptanalysis' challenge do not count as they
+  are only a developer's prank".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  verify.ts:253-267 (verified source). Exact
+  code: `function weirdCryptoChallenge () { void
+  checkPatternInFeedbackAndComplaints(challenges.
+  weirdCryptoChallenge, { [Op.or]: weirdCryptos()
+  }) }` with 5 accepted patterns: `%z85%`,
+  `%base85%`, `%hashids%`, `%md5%`, `%base64%`.
+  Workflow: (1) Recommended prerequisite:
+  forgottenDevBackup to get package.json.bak +
+  Angular bundle to identify used libraries. (2)
+  Identify one of 5 libraries as suspicious
+  (z85/base85/base64 = encodings, not crypto;
+  md5 = hash but broken since 2004 for
+  collisions; hashids = non-crypto encoding).
+  (3) Submit feedback /#/contact mentioning one
+  of 5 names.
+
+concepts:
+  - title_fr: "Misuse of crypto-adjacent libraries : 5 categories"
+    title_en: "Misuse of crypto-adjacent libraries: 5 categories"
+    body_fr: |
+      Les 5 reponses acceptees decrivent 5 anti-
+      patterns courants : (1) `z85` (ZeroMQ Base-85
+      encoding) - encoding non-crypto utilise pour
+      coupon codes (cf. forgedCoupon Lot 8).
+      Reversible. (2) `base85` (general Base-85)
+      - meme classe, encoding non-crypto. (3)
+      `hashids` - encoding integers obfusquee (cf.
+      continueCode Lot 8). Pas crypto, reversible.
+      (4) `md5` - hash function broken depuis
+      2004 (CVE-2004-2761 Wang & Yu collisions
+      pratiques). NE DOIT PAS etre utilise pour
+      la cryptographie/security depuis 20+ ans
+      (mais utilise pour checksum non-secure).
+      (5) `base64` - encoding standard, pas
+      crypto, mais souvent confondu avec
+      "encryption".
+    body_en: |
+      5 accepted answers describe 5 common anti-
+      patterns: (1) `z85` (ZeroMQ Base-85
+      encoding) - non-crypto encoding used for
+      coupon codes (cf. forgedCoupon Lot 8).
+      Reversible. (2) `base85` (general Base-85)
+      - same class, non-crypto encoding. (3)
+      `hashids` - obfuscated integer encoding
+      (cf. continueCode Lot 8). Not crypto,
+      reversible. (4) `md5` - hash function
+      broken since 2004 (CVE-2004-2761 Wang &
+      Yu practical collisions). MUST NOT be
+      used for cryptography/security for 20+
+      years (but used for non-secure checksum).
+      (5) `base64` - standard encoding, not
+      crypto, but often confused with
+      "encryption".
+
+  - title_fr: "Encoding vs Hashing vs Crypto : distinction critique"
+    title_en: "Encoding vs Hashing vs Crypto: critical distinction"
+    body_fr: |
+      Source canonique : OWASP Cryptographic
+      Storage Cheat Sheet + crypto fundamentals.
+      Distinction essentielle : (a) ENCODING
+      (base64, hex, z85, hashids) = transformation
+      reversible pour transport / display. ZERO
+      security property. (b) HASHING (SHA256,
+      BLAKE2, bcrypt) = one-way function pour
+      verification password / integrity. (c)
+      ENCRYPTION (AES, ChaCha20) = reversible
+      avec key pour confidentialite. (d) SIGNING
+      (RSA, Ed25519) = authenticity verification.
+      Confusion entre les categories = bugs
+      catastrophiques. Cas reels : Sony BMG 2005
+      (rootkit "encrypted" avec base64), Adobe
+      2013 (passwords ECB-encrypted instead of
+      hashed - 130M leaked).
+    body_en: |
+      Canonical source: OWASP Cryptographic
+      Storage Cheat Sheet + crypto fundamentals.
+      Essential distinction: (a) ENCODING
+      (base64, hex, z85, hashids) = reversible
+      transformation for transport / display.
+      ZERO security property. (b) HASHING
+      (SHA256, BLAKE2, bcrypt) = one-way
+      function for password verification /
+      integrity. (c) ENCRYPTION (AES, ChaCha20)
+      = reversible with key for confidentiality.
+      (d) SIGNING (RSA, Ed25519) = authenticity
+      verification. Confusion between categories
+      = catastrophic bugs. Real cases: Sony BMG
+      2005 (rootkit "encrypted" with base64),
+      Adobe 2013 (passwords ECB-encrypted
+      instead of hashed - 130M leaked).
+
+  - title_fr: "MD5 historique : decennies de warnings ignored"
+    title_en: "MD5 historical: decades of ignored warnings"
+    body_fr: |
+      MD5 est broken depuis 2004 (Wang & Yu
+      practical collision attack), mais utilise
+      encore en production aujourd'hui (anti-
+      pattern persistent). Cas reels : Flame
+      malware 2012 (Microsoft signing
+      compromised via MD5 chosen-prefix collision),
+      multiple banking apps 2018 (passwords
+      MD5-hashed). Pour Juice Shop, le check
+      `%md5%` accepte cette reponse car md5 est
+      probablement utilise pour quelque hashing
+      non-securitaire. Pattern reusable : MD5
+      n'est plus crypto-safe ; utiliser SHA-256
+      minimum (SHA-3, BLAKE2 modern).
+      mitigationUrl : OWASP Vulnerability
+      Disclosure Cheat Sheet (le challenge
+      demande de DECLARER au shop la vuln).
+    body_en: |
+      MD5 broken since 2004 (Wang & Yu practical
+      collision attack), but still used in
+      production today (persistent anti-pattern).
+      Real cases: Flame malware 2012 (Microsoft
+      signing compromised via MD5 chosen-prefix
+      collision), multiple banking apps 2018
+      (MD5-hashed passwords). For Juice Shop,
+      `%md5%` check accepts this answer as md5
+      probably used for some non-security
+      hashing. Reusable pattern: MD5 no longer
+      crypto-safe; use minimum SHA-256 (SHA-3,
+      modern BLAKE2). mitigationUrl: OWASP
+      Vulnerability Disclosure Cheat Sheet
+      (challenge asks to DECLARE vuln to shop).

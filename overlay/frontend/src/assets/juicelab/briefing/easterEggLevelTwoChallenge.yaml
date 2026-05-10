@@ -1,0 +1,161 @@
+challenge_key: "easterEggLevelTwoChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Apply some advanced cryptanalysis to find THE
+  REAL easter egg. Tags : Shenanigans, Good for
+  Demos. Description OWASP. Hints officiels : (1)
+  "You might have to peel through several layers of
+  tough-as-nails encryption for this challenge".
+  (2) "Make sure you solve Find the hidden easter
+  egg first". (3) "You might have to peel through
+  several layers of tough-as-nails encryption for
+  this challenge". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/easterEgg.ts:13 (verifie source). Le
+  serveur sert un fichier sur GET de l'URL ROT13-
+  encoded. Source verifiee (lib/antiCheat.ts:34) :
+  l'URL est `/gur/qrif/ner/fb/shaal/gurl/uvq/na/
+  rnfgre/rtt/jvguva/gur/rnfgre/rtt`. ROT13 inverse
+  donne : `/the/devs/are/so/funny/they/hid/an/
+  easter/egg/within/the/easter/egg`. Workflow :
+  (1) Pre-requis : easterEggLevelOneChallenge
+  resolu (Lot 2, acces a /ftp/eastere.gg via null
+  byte). (2) Lire le contenu de eastere.gg
+  (typiquement contient l'URL ROT13-encoded comme
+  message decoratif). (3) Decoder ROT13. (4) GET
+  l'URL decodee -> serve la threejs-demo.html du
+  vrai easter egg + solve auto.
+
+mission_en: |
+  Apply some advanced cryptanalysis to find THE
+  REAL easter egg. Tags: Shenanigans, Good for
+  Demos. OWASP description. Official hints: (1)
+  "You might have to peel through several layers
+  of tough-as-nails encryption for this
+  challenge". (2) "Make sure you solve Find the
+  hidden easter egg first". (3) "You might have
+  to peel through several layers of tough-as-
+  nails encryption for this challenge".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  easterEgg.ts:13 (verified source). Server
+  serves file on GET of ROT13-encoded URL.
+  Verified source (lib/antiCheat.ts:34): URL is
+  `/gur/qrif/ner/fb/shaal/gurl/uvq/na/rnfgre/
+  rtt/jvguva/gur/rnfgre/rtt`. ROT13 inverse
+  gives: `/the/devs/are/so/funny/they/hid/an/
+  easter/egg/within/the/easter/egg`. Workflow:
+  (1) Prerequisite: easterEggLevelOneChallenge
+  solved (Lot 2, /ftp/eastere.gg access via
+  null byte). (2) Read eastere.gg content
+  (typically contains ROT13-encoded URL as
+  decorative message). (3) Decode ROT13. (4)
+  GET decoded URL -> serves threejs-demo.html
+  of real easter egg + auto solves.
+
+concepts:
+  - title_fr: "Cryptanalyse decorative : ROT13 + base64 layers"
+    title_en: "Decorative cryptanalysis: ROT13 + base64 layers"
+    body_fr: |
+      Source canonique : lib/antiCheat.ts:34
+      verbatim : `urlFragments: ['/ftp', '/gur/
+      qrif/ner/fb/shaal/gurl/uvq/na/rnfgre/rtt/
+      jvguva/gur/rnfgre/rtt']`. La 2eme URL est
+      ROT13-encoded. Caesar cipher avec rotation
+      13 : `g`->`t`, `u`->`h`, `r`->`e`, etc. Le
+      message decode est le path final + un
+      message humoristique. Hint OWASP #1 +
+      #3 : "tough-as-nails encryption" est
+      ironique - ROT13 est l'encryption la plus
+      faible historiquement, datant des Romains.
+      Pattern reusable : ROT13 et autres simple
+      ciphers (Caesar, Atbash, Vigenere) sont
+      des classiques de CTFs et "easter eggs"
+      mais NE sont PAS de la cryptography
+      seriouse.
+    body_en: |
+      Canonical source: lib/antiCheat.ts:34
+      verbatim: `urlFragments: ['/ftp', '/gur/
+      qrif/ner/fb/shaal/gurl/uvq/na/rnfgre/rtt/
+      jvguva/gur/rnfgre/rtt']`. 2nd URL is
+      ROT13-encoded. Caesar cipher with
+      rotation 13: `g`->`t`, `u`->`h`, `r`->
+      `e`, etc. Decoded message is final path
+      + humorous message. OWASP hints #1 + #3:
+      "tough-as-nails encryption" is ironic -
+      ROT13 is historically weakest encryption,
+      dating to Romans. Reusable pattern:
+      ROT13 and other simple ciphers (Caesar,
+      Atbash, Vigenere) are CTF classics and
+      "easter eggs" but NOT serious
+      cryptography.
+
+  - title_fr: "Composition obligatoire : easterEggLevelOne first"
+    title_en: "Mandatory composition: easterEggLevelOne first"
+    body_fr: |
+      Hint OWASP #2 explicite : "Make sure you
+      solve Find the hidden easter egg first".
+      C'est easterEggLevelOneChallenge (Lot 2)
+      qui ouvre l'acces a /ftp/eastere.gg via
+      null byte bypass (cf. nullByteChallenge
+      Lot 7). Le contenu de eastere.gg contient
+      le ROT13-encoded URL. Pattern reusable :
+      les Juice Shop challenges peuvent etre
+      enchaines (kill chain) - solve N1 unlock
+      N2 unlock N3. Pour l'easter egg, le path
+      est : nullByte (Lot 7) -> easterEggLevel
+      One (Lot 2) -> easterEggLevelTwo (Lot 8).
+      Defense canonique : eviter les hidden
+      paths comme features ; documenter
+      explicitement les easter eggs.
+    body_en: |
+      OWASP hint #2 explicit: "Make sure you
+      solve Find the hidden easter egg first".
+      It's easterEggLevelOneChallenge (Lot 2)
+      opening /ftp/eastere.gg access via null
+      byte bypass (cf. nullByteChallenge Lot
+      7). eastere.gg content has ROT13-encoded
+      URL. Reusable pattern: Juice Shop
+      challenges can be chained (kill chain) -
+      solve N1 unlocks N2 unlocks N3. For
+      easter egg, path is: nullByte (Lot 7) ->
+      easterEggLevelOne (Lot 2) ->
+      easterEggLevelTwo (Lot 8). Canonical
+      defense: avoid hidden paths as features;
+      explicitly document easter eggs.
+
+  - title_fr: "Difficulty 4 + Shenanigans tag : pedagogie OWASP"
+    title_en: "Difficulty 4 + Shenanigans tag: OWASP pedagogy"
+    body_fr: |
+      Le challenge est tagged "Shenanigans" +
+      "Good for Demos" + diff 4. Cela signale
+      qu'il est INTENDED to be playful + fun
+      pendant des demos OWASP, pas une
+      vulnerabilite serieuse. La leçon
+      pedagogique : reconnaitre les "easter
+      egg patterns" (ROT13, base64 layers,
+      hidden paths) qui sont divertissants
+      mais NON-representatifs des bugs reels.
+      Pattern reusable : pour les pentesters,
+      distinguer les "shenanigans" challenges
+      des "Danger Zone" challenges. Les
+      premiers sont educatifs/recreatifs ;
+      les seconds sont serious vulnerabilites
+      classes.
+    body_en: |
+      Challenge tagged "Shenanigans" + "Good
+      for Demos" + diff 4. Signals it's
+      INTENDED to be playful + fun during
+      OWASP demos, not serious vulnerability.
+      Pedagogical lesson: recognize "easter
+      egg patterns" (ROT13, base64 layers,
+      hidden paths) that are entertaining
+      but NON-representative of real bugs.
+      Reusable pattern: for pentesters,
+      distinguish "shenanigans" challenges
+      from "Danger Zone" challenges. First
+      are educational/recreational; second
+      are serious vulnerability classes.

@@ -1,0 +1,133 @@
+challenge_key: "loginSupportChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP #1 : "human error than
+      technical weakness". Hint #4 : "3rd party
+      tool which every support engineer can
+      access". Donc le password est dans un
+      shared tool/file accessible.
+    text_en: |
+      OWASP hint #1: "human error than technical
+      weakness". Hint #4: "3rd party tool which
+      every support engineer can access". So
+      password in shared accessible tool/file.
+    pedagogical_intent: |
+      Activate shared-tool reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Pre-requis : directoryListing pour /ftp/.
+      Lister /ftp/. Tu vois `incident-support.
+      kdbx` (KeePass database). C'est le "3rd
+      party tool" du hint #4.
+    text_en: |
+      Prerequisite: directoryListing for /ftp/.
+      List /ftp/. You see `incident-support.
+      kdbx` (KeePass database). It's the "3rd
+      party tool" from hint #4.
+    pedagogical_intent: |
+      Spell file location.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (routes/fileServer.ts:27) :
+      `if (... || file === 'incident-support.
+      kdbx')`. Le serveur a une exception
+      explicite pour ce fichier. GET /ftp/
+      incident-support.kdbx -> download du
+      KeePass database. Tu dois ensuite cracker
+      le master password.
+    text_en: |
+      Server source (routes/fileServer.ts:27):
+      `if (... || file === 'incident-support.
+      kdbx')`. Server has explicit exception
+      for this file. GET /ftp/incident-support.
+      kdbx -> download KeePass database. You
+      then need to crack master password.
+    pedagogical_intent: |
+      Reveal file access mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Cracking le KeePass : (1)
+      `keepass2john incident-support.kdbx >
+      hash.txt` extrait le hash format. (2)
+      `hashcat -m 13400 hash.txt rockyou.txt`
+      (KeePass = mode 13400). Avec wordlist
+      basic + low-cost team weakness, le
+      master password est probablement court /
+      simple ("123456", "support", "juice").
+      (3) Open keepass2 GUI avec master
+      password -> entry "support@juice-sh.op"
+      apparait avec le password.
+    text_en: |
+      KeePass cracking: (1) `keepass2john
+      incident-support.kdbx > hash.txt`
+      extracts hash format. (2) `hashcat -m
+      13400 hash.txt rockyou.txt` (KeePass =
+      mode 13400). With basic wordlist + low-
+      cost team weakness, master password
+      likely short / simple ("123456",
+      "support", "juice"). (3) Open keepass2
+      GUI with master password -> "support@
+      juice-sh.op" entry appears with
+      password.
+    pedagogical_intent: |
+      Spell cracking method.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow :
+      1. GET /ftp/incident-support.kdbx ->
+         download KeePass file (allowlist
+         exception fileServer.ts:27).
+      2. `keepass2john incident-support.kdbx
+         > hash.txt`.
+      3. `hashcat -m 13400 hash.txt
+         rockyou.txt` -> master password.
+      4. Open keepass2 GUI avec le password
+         -> support entry visible.
+      5. Extract password : `J6aVjTgOpRs@?5l!
+         Zkq2AYnCE@RF$P` (verifie source
+         login.ts:61).
+      6. /#/login avec support@juice-sh.op +
+         le password. Solve auto.
+      Source : routes/login.ts:61 + fileServer.
+      ts:27 + KeePass docs.
+      Defense : (a) password manager
+      INDIVIDUAL per employee (1Password
+      Business), (b) PAM/JIT access pour
+      shared accounts, (c) MFA mandatory, (d)
+      audit log.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow:
+      1. GET /ftp/incident-support.kdbx ->
+         download KeePass file (allowlist
+         exception fileServer.ts:27).
+      2. `keepass2john incident-support.kdbx
+         > hash.txt`.
+      3. `hashcat -m 13400 hash.txt
+         rockyou.txt` -> master password.
+      4. Open keepass2 GUI with password ->
+         support entry visible.
+      5. Extract password: `J6aVjTgOpRs@?5l!
+         Zkq2AYnCE@RF$P` (verified source
+         login.ts:61).
+      6. /#/login with support@juice-sh.op +
+         password. Auto solves.
+      Source: routes/login.ts:61 + fileServer.
+      ts:27 + KeePass docs.
+      Defense: (a) INDIVIDUAL password manager
+      per employee (1Password Business), (b)
+      PAM/JIT access for shared accounts, (c)
+      MFA mandatory, (d) audit log.
+    pedagogical_intent: |
+      Solution complete + defense.

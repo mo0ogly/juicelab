@@ -1,0 +1,80 @@
+challenge_key: "rceChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi `vm.runInContext + safeEval` sur user
+      input est dangereux ?
+    question_en: |
+      Why is `vm.runInContext + safeEval` on user
+      input dangerous?
+    options_fr:
+      - "Slow"
+      - "Toute fonction qui execute du JS provenant du user (`eval`, `Function`, `vm.runInContext`, `safeEval`) = arbitrary code execution si l'attaquant trouve un bypass du sandbox. Cas reels : vm2 deprecated 2023 (multiple CVE sandbox escapes), Confluence CVE-2022-26134 OGNL injection"
+      - "Pretty"
+      - "Bug Node.js"
+    options_en:
+      - "Slow"
+      - "Any function executing user-provided JS (`eval`, `Function`, `vm.runInContext`, `safeEval`) = arbitrary code execution if attacker finds sandbox bypass. Real cases: vm2 deprecated 2023 (multiple CVE sandbox escapes), Confluence CVE-2022-26134 OGNL injection"
+      - "Pretty"
+      - "Node.js bug"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : data is data, not code.
+      Source : OWASP A08 + CWE-502.
+    explanation_en: |
+      Reusable pattern: data is data, not code.
+      Source: OWASP A08 + CWE-502.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelles JS sandboxes sont disponibles
+      aujourd'hui ?
+    question_en: |
+      Which JS sandboxes available today?
+    options_fr:
+      - "Aucune"
+      - "(1) vm2 - DEPRECATED 2023, multiple CVE sandbox escapes (CVE-2023-29017). (2) isolated-vm - Node.js-only, plus solide mais lourd, memory + CPU limits. (3) Deno subprocess avec permissions explicites. (4) WebWorker browser-only. (5) WASM (sandbox CPU mais pas de DOM/network access). Pattern : aucune sandbox JS n'est 100% safe"
+      - "Trop de choix"
+      - "Bug repandu"
+    options_en:
+      - "None"
+      - "(1) vm2 - DEPRECATED 2023, multiple CVE sandbox escapes (CVE-2023-29017). (2) isolated-vm - Node.js-only, more solid but heavy, memory + CPU limits. (3) Deno subprocess with explicit permissions. (4) WebWorker browser-only. (5) WASM (CPU sandbox but no DOM/network access). Pattern: no JS sandbox is 100% safe"
+      - "Too many choices"
+      - "Common bug"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : sandbox != safety.
+      Source : OWASP A08.
+    explanation_en: |
+      Reusable pattern: sandbox != safety. Source:
+      OWASP A08.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour endpoint qui processe
+      user data structure ?
+    question_en: |
+      Canonical defense for endpoint processing user
+      data structure?
+    options_fr:
+      - "eval()"
+      - "(1) Definir JSON Schema strict pour le shape attendu (orderLinesData = array d'items, chaque item = quantity + productId). (2) Ajv ou Zod pour validation declarative. (3) Aucun eval, aucun runInContext - juste process des fields valides. (4) Limiter taille payload. Mantra : data is data, not code"
+      - "Plus de processing"
+      - "Encrypter le payload"
+    options_en:
+      - "eval()"
+      - "(1) Define strict JSON Schema for expected shape (orderLinesData = array of items, each item = quantity + productId). (2) Ajv or Zod for declarative validation. (3) No eval, no runInContext - just process valid fields. (4) Limit payload size. Mantra: data is data, not code"
+      - "No more processing"
+      - "Encrypt payload"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : declarative > eval. Source :
+      OWASP A08 + Ajv docs.
+    explanation_en: |
+      Reusable pattern: declarative > eval. Source:
+      OWASP A08 + Ajv docs.

@@ -1,0 +1,102 @@
+challenge_key: "exposedMetricsChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP unique : "Guessing the path
+      is probably just as quick as taking the
+      RTFM route via prometheus.io/docs". Donc
+      le path est standard Prometheus.
+    text_en: |
+      Single OWASP hint: "Guessing the path
+      is probably just as quick as taking
+      the RTFM route via prometheus.io/
+      docs". So path is Prometheus standard.
+    pedagogical_intent: |
+      Activate convention reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      La convention Prometheus = endpoint
+      `/metrics` (text/plain format). C'est
+      bien-known dans la community DevOps.
+      Tu peux aussi RTFM sur prometheus.io/
+      docs/instrumenting/exposition_formats/.
+    text_en: |
+      Prometheus convention = endpoint
+      `/metrics` (text/plain format). Well-
+      known in DevOps community. You can
+      also RTFM on prometheus.io/docs/
+      instrumenting/exposition_formats/.
+    pedagogical_intent: |
+      Spell convention.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (server.ts:727) :
+      `app.get('/metrics', metrics.serve
+      Metrics())`. Donc GET /metrics expose
+      les metrics. Pas d'auth requise.
+    text_en: |
+      Server source (server.ts:727):
+      `app.get('/metrics', metrics.serve
+      Metrics())`. So GET /metrics exposes
+      metrics. No auth required.
+    pedagogical_intent: |
+      Reveal endpoint.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Test : `curl http://localhost:3000/
+      metrics`. Tu obtiens un Prometheus
+      text-format output (metrics names +
+      values). Le solveIf trigger sur cet
+      access. Solve auto.
+    text_en: |
+      Test: `curl http://localhost:3000/
+      metrics`. You get Prometheus text-
+      format output (metric names +
+      values). solveIf triggers on this
+      access. Auto solves.
+    pedagogical_intent: |
+      Spell test.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow :
+      1. Naviguer http://localhost:3000/
+         metrics OU `curl http://localhost:
+         3000/metrics`.
+      2. Le serveur retourne les Prometheus
+         metrics + solveIf trigger ->
+         challenge solve auto.
+      Source : server.ts:727 + metrics.ts:68
+      + Prometheus docs.
+      Defense : (a) auth required (basic
+      auth ou client cert), (b) network
+      segmentation, (c) reverse proxy ACL,
+      (d) sanitize les metrics (no PII,
+      no version disclosure precise).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow:
+      1. Navigate http://localhost:3000/
+         metrics OR `curl http://localhost:
+         3000/metrics`.
+      2. Server returns Prometheus metrics
+         + solveIf triggers -> challenge
+         auto solves.
+      Source: server.ts:727 + metrics.ts:68
+      + Prometheus docs.
+      Defense: (a) auth required (basic
+      auth or client cert), (b) network
+      segmentation, (c) reverse proxy ACL,
+      (d) sanitize metrics (no PII, no
+      precise version disclosure).
+    pedagogical_intent: |
+      Solution + defense.

@@ -1,0 +1,128 @@
+challenge_key: "ssrfChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Force le serveur Juice Shop a faire une requete a une de ses
+  PROPRES ressources internes que tu ne peux pas atteindre
+  directement depuis ton navigateur. Description OWASP officielle :
+  "Request a hidden resource on server through server". Hint
+  OWASP officiel #3 : "For this to count as an SSRF attack you
+  need to make the Juice Shop server attack itself". Pre-requis
+  pedagogique : avoir resolu sstiChallenge (le malware juicy.efb
+  est lie a ce challenge).
+
+  Methode recommandee : hint #1 "Reverse engineering something
+  bad can make good things happen" + hint #4 "Take it apart with
+  classic reverse-engineering techniques" pointent vers le
+  malware juicy.efb. C'est un fichier que tu peux desassembler.
+  Hint #2 : "Using whatever you find inside the malware directly
+  will not do you any good" — le malware contient une URL
+  INTERNE (typiquement http://localhost:3000/internal/...) que
+  seul le serveur peut atteindre (loopback). Tu dois trouver un
+  endpoint Juice Shop qui accepte une URL parameter et fait une
+  requete HTTP cote serveur, puis lui passer cette URL interne.
+
+  Note la difference entre une attaque depuis l'exterieur (toi
+  vers le serveur) et une attaque interne (serveur vers
+  lui-meme). Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Force the Juice Shop server to request one of its OWN internal
+  resources you can't reach directly from your browser. Official
+  OWASP description: "Request a hidden resource on server through
+  server". Official OWASP hint #3: "For this to count as an
+  SSRF attack you need to make the Juice Shop server attack
+  itself". Pedagogical prerequisite: solved sstiChallenge (the
+  juicy.efb malware is linked to this challenge).
+
+  Recommended method: hint #1 "Reverse engineering something bad
+  can make good things happen" + hint #4 "Take it apart with
+  classic reverse-engineering techniques" point to the juicy.efb
+  malware. It's a disassemble-able file. Hint #2: "Using whatever
+  you find inside the malware directly will not do you any good"
+  — the malware contains an INTERNAL URL (typically
+  http://localhost:3000/internal/...) only the server can reach
+  (loopback). You must find a Juice Shop endpoint accepting a
+  URL parameter and making a server-side HTTP request, then pass
+  it that internal URL.
+
+  Note the difference between an attack from outside (you to
+  server) and an internal attack (server to itself). You will
+  report it in the "after" logbook.
+
+concepts:
+  - title_fr: "SSRF : forcer le serveur a etre l'attaquant"
+    title_en: "SSRF: forcing the server to be the attacker"
+    body_fr: |
+      Server-Side Request Forgery. Le serveur fait une requete
+      HTTP a une URL fournie par l'utilisateur. Mauvais quand :
+      (1) l'URL n'est pas validee, l'attaquant peut pointer vers
+      des ressources INTERNES (loopback localhost, IP private
+      10.x/172.16.x/192.168.x, AWS metadata 169.254.169.254). (2)
+      Ces ressources internes sont typiquement non protegees
+      (pas de auth, considere comme zone de confiance). Resultat :
+      l'attaquant utilise le serveur comme proxy pour atteindre
+      des cibles inaccessibles depuis Internet. Source : OWASP
+      SSRF Prevention Cheat Sheet.
+    body_en: |
+      Server-Side Request Forgery. The server makes an HTTP
+      request to a user-provided URL. Bad when: (1) the URL isn't
+      validated, the attacker can point to INTERNAL resources
+      (loopback localhost, private IP 10.x/172.16.x/192.168.x,
+      AWS metadata 169.254.169.254). (2) These internal resources
+      are typically unprotected (no auth, considered trusted
+      zone). Result: attacker uses the server as a proxy to
+      reach targets unreachable from the Internet. Source: OWASP
+      SSRF Prevention Cheat Sheet.
+
+  - title_fr: "Composition avec sstiChallenge : malware -> reverse -> SSRF"
+    title_en: "Composition with sstiChallenge: malware -> reverse -> SSRF"
+    body_fr: |
+      Ce challenge necessite que tu aies installe juicy.efb sur le
+      serveur (resultat de sstiChallenge). Maintenant tu vas
+      reverse-engineer ce binaire pour decouvrir l'URL interne
+      qu'il contacte. Hint OWASP officiel #4 : "classic
+      reverse-engineering techniques" - strings, hexdump,
+      objdump, ou un disassembler comme Ghidra/IDA. Le malware
+      contient probablement une URL hardcodee de la forme
+      http://localhost:3000/<chemin-interne>. Cette URL ne te
+      sert pas DIRECTEMENT (hint #2) — tu dois trouver un
+      endpoint Juice Shop avec un parametre URL pour la passer
+      au serveur.
+    body_en: |
+      This challenge requires you to have placed juicy.efb on the
+      server (sstiChallenge result). Now reverse-engineer this
+      binary to discover the internal URL it contacts. Official
+      OWASP hint #4: "classic reverse-engineering techniques" —
+      strings, hexdump, objdump, or a disassembler like Ghidra/
+      IDA. The malware likely holds a hardcoded URL like
+      http://localhost:3000/<internal-path>. This URL doesn't
+      help you DIRECTLY (hint #2) — you must find a Juice Shop
+      endpoint with a URL parameter to pass it to the server.
+
+  - title_fr: "Defense canonique : allowlist de hosts + bloque les ranges internes"
+    title_en: "Canonical defense: host allowlist + block internal ranges"
+    body_fr: |
+      Source : OWASP SSRF Prevention Cheat Sheet
+      (cheatsheetseries.owasp.org/cheatsheets/Server_Side_
+      Request_Forgery_Prevention_Cheat_Sheet.html). Trois couches.
+      (1) Allowlist explicite des hosts autorises (ex :
+      images.juice-sh.op pour des thumbnails). Tout host non
+      whitelist est rejete. (2) Pour ranges privees: bloquer
+      127.0.0.0/8 (loopback), 10.0.0.0/8, 172.16.0.0/12,
+      192.168.0.0/16, 169.254.0.0/16 (link-local + AWS metadata),
+      ::1, fc00::/7. (3) Faire la resolution DNS et VERIFIER que
+      l'IP resolue n'est pas dans les ranges privees AVANT de
+      faire la requete (sinon DNS rebinding bypass possible).
+    body_en: |
+      Source: OWASP SSRF Prevention Cheat Sheet
+      (cheatsheetseries.owasp.org/cheatsheets/Server_Side_
+      Request_Forgery_Prevention_Cheat_Sheet.html). Three layers.
+      (1) Explicit allowlist of authorized hosts (e.g.
+      images.juice-sh.op for thumbnails). Any non-whitelisted
+      host is refused. (2) For private ranges: block 127.0.0.0/8
+      (loopback), 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16,
+      169.254.0.0/16 (link-local + AWS metadata), ::1, fc00::/7.
+      (3) Do DNS resolution and CHECK the resolved IP isn't in
+      private ranges BEFORE making the request (otherwise DNS
+      rebinding bypass possible).

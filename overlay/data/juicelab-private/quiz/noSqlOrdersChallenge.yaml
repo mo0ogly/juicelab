@@ -1,0 +1,98 @@
+challenge_key: "noSqlOrdersChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un endpoint REST nomme /resource/:id (semantique
+      "un seul row") peut-il leak la collection entiere via NoSQLi ?
+    question_en: |
+      Why can a REST endpoint named /resource/:id (semantically
+      "one row") leak the whole collection via NoSQLi?
+    options_fr:
+      - "Parce que MongoDB ignore le param :id quand il est trop court"
+      - "Parce que cote backend, le :id est typiquement passe brut a Resource.findOne({ id }) sans validation de type — un objet operateur ($ne, $gt, $where) qui matche tout transforme la query 'find one matching id' en 'find any'"
+      - "Parce que l'URL parser de Express ne supporte pas les ObjectIds"
+      - "Parce que l'API renvoie automatiquement la collection si :id est vide"
+    options_en:
+      - "Because MongoDB ignores :id when it's too short"
+      - "Because server-side, :id is typically passed raw to Resource.findOne({ id }) with no type validation — an operator object ($ne, $gt, $where) matching everything turns 'find one matching id' into 'find any'"
+      - "Because Express's URL parser doesn't support ObjectIds"
+      - "Because the API auto-returns the collection if :id is empty"
+    correct: 1
+    explanation_fr: |
+      Pattern de bug structurel. La semantique "one" du nom de
+      l'endpoint ne se traduit pas en garantie technique. Sans
+      validation de type au router (regex ObjectId, UUID, integer),
+      n'importe quel JSON valide passe au query layer.
+    explanation_en: |
+      Structural bug pattern. The "one" semantics in the endpoint
+      name doesn't translate to a technical guarantee. Without
+      router-level type validation (ObjectId regex, UUID, integer),
+      any valid JSON makes it to the query layer.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quel operateur MongoDB fournit la primitive "match tout"
+      avec un payload minimal et une compatibilite maximale ?
+    question_en: |
+      Which MongoDB operator provides the "match everything"
+      primitive with minimal payload and maximum compatibility?
+    options_fr:
+      - "$gt (greater than) avec une string vide"
+      - "$ne (not equal) avec une valeur que l'id n'a jamais (-1, null, ou une string improbable) — tout id different match, donc tout id. Court, type-agnostique, fonctionne sans javascriptEnabled"
+      - "$exists qui match tous les documents"
+      - "$type qui match tous les types"
+    options_en:
+      - "$gt (greater than) with an empty string"
+      - "$ne (not equal) with a value the id never has (-1, null, or an improbable string) — any id different matches, hence any id. Short, type-agnostic, works without javascriptEnabled"
+      - "$exists matching all documents"
+      - "$type matching all types"
+    correct: 1
+    explanation_fr: |
+      $ne est la primitive universelle. $gt fonctionne aussi mais
+      depend du type (compare strings vs ints differemment).
+      $exists est correct pour matcher des champs presents/absents
+      mais pas un id specifique. $where necessite javascriptEnabled
+      qui peut etre desactive.
+    explanation_en: |
+      $ne is the universal primitive. $gt also works but depends
+      on type (string vs int compares differently). $exists is
+      correct for present/absent fields but not for a specific id.
+      $where requires javascriptEnabled which may be disabled.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Au-dela de la validation de type au router, quelle defense
+      bloque structurellement ce challenge MEME si le type du :id
+      n'est pas valide ?
+    question_en: |
+      Beyond router-level type validation, which defense
+      structurally blocks this challenge EVEN if :id type is
+      not validated?
+    options_fr:
+      - "Augmenter la longueur du JWT secret"
+      - "Ownership check : Order.findOne({ id, userId: jwt.userId }) au lieu de Order.findOne({ id }). Meme un operateur injecte sur id ne peut pas matcher des orders d'autres users car le userId est filtre par le JWT"
+      - "Activer HTTP/2 sur le serveur"
+      - "Compresser les responses en gzip"
+    options_en:
+      - "Increase the JWT secret length"
+      - "Ownership check: Order.findOne({ id, userId: jwt.userId }) instead of Order.findOne({ id }). Even an injected operator on id cannot match other users' orders because userId is filtered by the JWT"
+      - "Enable HTTP/2 on the server"
+      - "Gzip-compress responses"
+    correct: 1
+    explanation_fr: |
+      Defense en profondeur. Ownership check est equivalent au
+      pattern /api/me/<resource> mais conserve l'URL :id pour
+      compatibilite. Combine type validation + ownership = aucun
+      bypass possible. C'est le pattern OWASP API1:2023 (Broken
+      Object Level Authorization) applique au scope NoSQL.
+    explanation_en: |
+      Defense in depth. Ownership check equals the /api/me/<resource>
+      pattern but keeps the :id URL for compatibility. Combined
+      with type validation + ownership = no bypass possible. This
+      is OWASP API1:2023 (Broken Object Level Authorization)
+      applied to the NoSQL scope.

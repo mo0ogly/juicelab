@@ -1,0 +1,100 @@
+challenge_key: "sstiChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la difference fondamentale entre une XSS et une
+      SSTI ?
+    question_en: |
+      What is the fundamental difference between an XSS and an
+      SSTI?
+    options_fr:
+      - "XSS et SSTI sont synonymes, juste des terminologies differentes"
+      - "XSS execute du JavaScript COTE NAVIGATEUR de la victime (impact : un seul utilisateur). SSTI execute du code COTE SERVEUR (impact : tous les utilisateurs + acces filesystem + RCE potentielle). SSTI est typiquement classee severite critique"
+      - "XSS necessite le cookie de la victime, SSTI non"
+      - "XSS fonctionne sur HTTPS, SSTI seulement sur HTTP"
+    options_en:
+      - "XSS and SSTI are synonyms, just different terminologies"
+      - "XSS runs JavaScript on the VICTIM'S BROWSER (impact: one user). SSTI runs code SERVER-SIDE (impact: all users + filesystem access + potential RCE). SSTI is typically rated critical severity"
+      - "XSS requires the victim's cookie, SSTI does not"
+      - "XSS works on HTTPS, SSTI only on HTTP"
+    correct: 1
+    explanation_fr: |
+      Distinction fondamentale qui determine la severite. XSS = un
+      utilisateur compromis a la fois, le scope est limite a son
+      browser. SSTI = le SERVEUR compromis, donc TOUS les
+      utilisateurs et toutes les ressources backend (DB, secrets,
+      filesystem). Hint OWASP #1 le souligne : "SSTi has nothing
+      to do with anything Angular".
+    explanation_en: |
+      Fundamental distinction driving severity. XSS = one user
+      compromised at a time, scope limited to their browser.
+      SSTI = the SERVER compromised, hence ALL users and all
+      backend resources (DB, secrets, filesystem). OWASP hint #1
+      stresses: "SSTi has nothing to do with anything Angular".
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un endpoint B2B (business-to-business) est-il
+      typiquement plus vulnerable que les endpoints UI publics
+      d'une application marchande ?
+    question_en: |
+      Why is a B2B (business-to-business) endpoint typically more
+      vulnerable than the public UI endpoints of a commerce app?
+    options_fr:
+      - "Parce qu'il est expose en clair sur Internet"
+      - "Parce que les voies B2B sont souvent codees plus vite, moins testees, et low-visibility aux red teamers (formats complexes JSON/XML/EDI). Pattern reel : la majorite des bugs en pentest se trouvent en B2B, pas en UI"
+      - "Parce que les comptes B2B ont des privileges admin"
+      - "Parce que le trafic B2B n'est pas chiffre"
+    options_en:
+      - "Because it is exposed in cleartext on the Internet"
+      - "Because B2B channels are often coded faster, less tested, and low-visibility to red teamers (complex JSON/XML/EDI formats). Real pattern: majority of pentest bugs are found in B2B, not UI"
+      - "Because B2B accounts have admin privileges"
+      - "Because B2B traffic isn't encrypted"
+    correct: 1
+    explanation_fr: |
+      Realite operationnelle. B2B utilise par 1-10 partenaires
+      vs UI utilisee par 10000 visiteurs. Le test load etant
+      naturellement biaise vers l'UI, les bugs B2B passent
+      souvent jusqu'en production. Le red teamer averti commence
+      par cartographier les endpoints B2B avant l'UI.
+    explanation_en: |
+      Operational reality. B2B used by 1-10 partners vs UI used
+      by 10000 visitors. Load testing being naturally UI-biased,
+      B2B bugs often slip into production. A seasoned red teamer
+      maps B2B endpoints before UI.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la regle absolue pour eviter SSTI lors de
+      l'utilisation d'un template engine cote serveur ?
+    question_en: |
+      What is the absolute rule to avoid SSTI when using a
+      server-side template engine?
+    options_fr:
+      - "Utiliser uniquement des templates compiles statiquement"
+      - "Le TEMPLATE doit etre un fichier statique controle par le developpeur. L'INPUT utilisateur doit etre passe comme DATA via le mecanisme de variables (handlebars {{ name }}, EJS <%= name %>), JAMAIS comme le template lui-meme. Si vraiment compiler du code user-provided, utiliser un sandbox dedie (vm2, isolated-vm)"
+      - "Auditer le code template chaque trimestre"
+      - "Forcer l'usage de TLS 1.3 sur l'endpoint qui template"
+    options_en:
+      - "Use only statically compiled templates"
+      - "The TEMPLATE must be a static file controlled by the developer. USER input must be passed as DATA via the variable binding mechanism (handlebars {{ name }}, EJS <%= name %>), NEVER as the template itself. If truly compiling user-provided code, use a dedicated sandbox (vm2, isolated-vm)"
+      - "Audit template code every quarter"
+      - "Force TLS 1.3 on the templating endpoint"
+    correct: 1
+    explanation_fr: |
+      Source : OWASP Server-Side Template Injection cheatsheet.
+      Pattern qui s'applique a TOUS les template engines (Jinja2,
+      ERB, Handlebars, EJS, Pug, vm Node). La separation
+      TEMPLATE/DATA est l'equivalent des prepared statements pour
+      SQLi : structurelle, indeniable.
+    explanation_en: |
+      Source: OWASP Server-Side Template Injection cheatsheet.
+      Pattern applicable to ALL template engines (Jinja2, ERB,
+      Handlebars, EJS, Pug, vm Node). TEMPLATE/DATA separation is
+      the SSTI equivalent of prepared statements for SQLi:
+      structural, undeniable.

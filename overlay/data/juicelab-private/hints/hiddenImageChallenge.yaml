@@ -1,0 +1,81 @@
+challenge_key: "hiddenImageChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "find the easter egg image". Une image specifique du
+      shop cache un nom (steganographie ou nom evident). Le solve passe
+      par feedback /#/contact.
+    text_en: |
+      OWASP hint: "find the easter egg image". A specific shop image hides
+      a name (steganography or obvious name). Solve goes through feedback
+      /#/contact.
+    pedagogical_intent: |
+      Activate steg + easter egg reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Inspecter les products du shop : certains ont des nom de personnages
+      (Bender, Bjoern, Morty). Une image planque le nom d'un personnage
+      culte d'animation.
+    text_en: |
+      Inspect shop products: some have character names (Bender, Bjoern,
+      Morty). An image hides the name of an animation cult character.
+    pedagogical_intent: |
+      Spell pop culture clue.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Une image contient le nom "Pickle Rick" (Rick & Morty episode S03E03
+      cult). Cherche dans les images de products + cast / banners. Tu
+      peux aussi grep le bundle pour "rick" / "pickle".
+    text_en: |
+      An image contains "Pickle Rick" name (Rick & Morty S03E03 cult
+      episode). Look in product images + cast / banners. You can also
+      grep bundle for "rick" / "pickle".
+    pedagogical_intent: |
+      Reveal target name.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Une fois identifie : (1) Naviguer /#/contact (Customer Feedback).
+      (2) Submit feedback avec "pickle rick" dans le comment. Le serveur
+      verify.ts:284-289 detecte le pattern et solve.
+    text_en: |
+      Once identified: (1) Navigate /#/contact (Customer Feedback). (2)
+      Submit feedback with "pickle rick" in comment. Server
+      verify.ts:284-289 detects pattern and solves.
+    pedagogical_intent: |
+      Spell exact action.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) DevTools > Network > scroll
+      le shop -> liste des images. (2) Inspect chaque image (Right-click
+      > Save) ou direct grep nom dans le HTML/bundle. (3) Trouve une image
+      type "/assets/public/images/products/holographic_squiddy.jpg" ou
+      similaire. (4) Le pattern recherche est "pickle rick" (Rick & Morty
+      S03E03). (5) /#/contact > comment "pickle rick" + 5 etoiles >
+      Submit. (6) verify.ts:284-289 declenche solve. Defense : (a)
+      ASSETS_MANIFEST.md de tous les fichiers legitimes. (b) Build CI
+      strip metadata. (c) Steg test reguliere (zsteg). Source :
+      verify.ts:284-289 + config challenges.hiddenImageChallengePassword.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) DevTools > Network > scroll
+      shop -> image list. (2) Inspect each image (Right-click > Save) or
+      direct grep name in HTML/bundle. (3) Find image like
+      "/assets/public/images/products/holographic_squiddy.jpg" or similar.
+      (4) Pattern searched is "pickle rick" (Rick & Morty S03E03). (5)
+      /#/contact > comment "pickle rick" + 5 stars > Submit. (6)
+      verify.ts:284-289 triggers solve. Defense: (a) ASSETS_MANIFEST.md of
+      all legitimate files. (b) Build CI strip metadata. (c) Regular steg
+      test (zsteg). Source: verify.ts:284-289 + config
+      challenges.hiddenImageChallengePassword.
+    pedagogical_intent: |
+      Solution + steg defense.

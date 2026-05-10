@@ -1,0 +1,153 @@
+challenge_key: "registerAdminChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "You have to assign the
+      unassignable". Donc tu dois assigner un attribut
+      (role admin) qui ne devrait PAS etre assignable
+      via le formulaire registration. Hint #2 :
+      "Register as an ordinary user to learn what API
+      endpoints are involved" - intercepte la requete.
+    text_en: |
+      Official OWASP hint #1: "You have to assign the
+      unassignable". So you must assign an attribute
+      (admin role) that should NOT be assignable via
+      registration form. Hint #2: "Register as an
+      ordinary user to learn what API endpoints are
+      involved" - intercept request.
+    pedagogical_intent: |
+      Activate mass assignment reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Open DevTools Network tab. Sur /#/register,
+      remplis le formulaire (email, password, security
+      question/answer). Submit. Inspecte la requete
+      POST /api/Users : tu verras le body JSON contient
+      email, password, securityQuestion, etc. Question
+      : que se passe-t-il si tu AJOUTES un champ qui
+      n'est PAS dans le formulaire UI ?
+    text_en: |
+      Open DevTools Network tab. On /#/register, fill
+      form (email, password, security question/
+      answer). Submit. Inspect POST /api/Users
+      request: you'll see JSON body contains email,
+      password, securityQuestion, etc. Question: what
+      happens if you ADD a field that's NOT in UI
+      form?
+    pedagogical_intent: |
+      Spell empirical investigation.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Hint OWASP #3 : "Think of the simplest possible
+      implementations". La distinction admin/user dans
+      la base de donnees est typiquement un champ
+      `role` (string : "customer" / "admin" /
+      "deluxe"). Si tu peux INJECTER ce champ dans le
+      body JSON de POST /api/Users, le serveur peut
+      l'enregistrer tel quel = mass assignment.
+    text_en: |
+      OWASP hint #3: "Think of the simplest possible
+      implementations". Admin/user distinction in DB
+      is typically a `role` field (string: "customer"
+      / "admin" / "deluxe"). If you INJECT this field
+      in POST /api/Users JSON body, server can store
+      it as-is = mass assignment.
+    pedagogical_intent: |
+      Reveal `role` field name + injection mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      (routes/verify.ts:50-55) : `challengeUtils.
+      solveIf(challenges.registerAdminChallenge, () =>
+      { return req.body && req.body.role ===
+      security.roles.admin })`. Donc le serveur
+      verifie literalement `role === "admin"` (la
+      string). Submit POST /api/Users avec un body
+      contenant `"role": "admin"` (en plus des autres
+      champs requis email/password/etc).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server source
+      (routes/verify.ts:50-55): `challengeUtils.
+      solveIf(challenges.registerAdminChallenge, ()
+      => { return req.body && req.body.role ===
+      security.roles.admin })`. So server checks
+      literally `role === "admin"` (the string).
+      Submit POST /api/Users with body containing
+      `"role": "admin"` (plus other required fields
+      email/password/etc).
+    pedagogical_intent: |
+      Reveal exact server check.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Open Burp Suite (proxy intercepter) ou prepare
+         curl direct.
+      2. Construire la requete POST /api/Users :
+         ```bash
+         curl -X POST http://localhost:3000/api/Users
+         -H "Content-Type: application/json" -d '{
+           "email": "evil@juice-sh.op",
+           "password": "evilPassword123",
+           "passwordRepeat": "evilPassword123",
+           "securityQuestion": {"id": 1},
+           "securityAnswer": "Random",
+           "role": "admin"
+         }'
+         ```
+         Le champ critical = `"role": "admin"` ajoute
+         au body.
+      3. Le serveur (server.ts:510-515 + verify.ts:51)
+         enregistre l'user avec role="admin" + le
+         middleware verify declenche solveIf.
+      4. Match -> challenge solve auto.
+      5. Login subsequent avec evil@juice-sh.op +
+         evilPassword123 te donne un compte admin.
+      Source canonique : routes/verify.ts:50-55 +
+      server.ts:510-515 (Sequelize before hook
+      vulnerable) + codefixes/
+      registerAdminChallenge.info.yml fix #3.
+      Defense canonique : DTO allowlist explicit.
+      Override role default = "customer".
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Open Burp Suite (proxy intercepter) or
+         prepare direct curl.
+      2. Build POST /api/Users request:
+         ```bash
+         curl -X POST http://localhost:3000/api/Users
+         -H "Content-Type: application/json" -d '{
+           "email": "evil@juice-sh.op",
+           "password": "evilPassword123",
+           "passwordRepeat": "evilPassword123",
+           "securityQuestion": {"id": 1},
+           "securityAnswer": "Random",
+           "role": "admin"
+         }'
+         ```
+         Critical field = `"role": "admin"` added to
+         body.
+      3. Server (server.ts:510-515 + verify.ts:51)
+         registers user with role="admin" + verify
+         middleware triggers solveIf.
+      4. Match -> challenge auto solves.
+      5. Subsequent login with evil@juice-sh.op +
+         evilPassword123 gives you admin account.
+      Canonical source: routes/verify.ts:50-55 +
+      server.ts:510-515 (vulnerable Sequelize before
+      hook) + codefixes/
+      registerAdminChallenge.info.yml fix #3.
+      Canonical defense: explicit DTO allowlist.
+      Override role default = "customer".
+    pedagogical_intent: |
+      Quasi-solution : workflow + curl + defense.

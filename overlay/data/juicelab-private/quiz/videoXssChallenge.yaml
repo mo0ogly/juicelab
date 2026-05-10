@@ -1,0 +1,108 @@
+challenge_key: "videoXssChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un static asset (video promo, image, PDF) peut-il
+      devenir un vector XSS, alors qu'on pense souvent que XSS
+      ne concerne que les champs user textuels ?
+    question_en: |
+      Why can a static asset (promo video, image, PDF) become an
+      XSS vector, when we usually think XSS only concerns
+      textual user fields?
+    options_fr:
+      - "Les static assets ne peuvent jamais etre XSS"
+      - "Plusieurs vecteurs : (a) MIME-type sniffing sans X-Content-Type-Options nosniff, (b) subtitle VTT contenant du HTML, (c) PDF avec JavaScript embedded, (d) SVG avec scripts. Si l'asset est servi avec un Content-Type interpretable, le navigateur execute"
+      - "Les static assets sont toujours bloquees par CSP"
+      - "Les static assets ne sont pas servies par le serveur web"
+    options_en:
+      - "Static assets can never be XSS"
+      - "Multiple vectors: (a) MIME-type sniffing without X-Content-Type-Options nosniff, (b) VTT subtitle containing HTML, (c) PDF with embedded JavaScript, (d) SVG with scripts. If asset is served with interpretable Content-Type, browser executes"
+      - "Static assets are always blocked by CSP"
+      - "Static assets aren't served by the web server"
+    correct: 1
+    explanation_fr: |
+      Pattern recurrent en pentest : la surface d'attaque
+      depasse les forms et inputs evidents. Les uploads, les
+      assets, les metadata, les backup files sont tous des
+      surfaces. Defense : X-Content-Type-Options: nosniff sur
+      TOUS les assets non-HTML + scan des uploads + CSP
+      restrictive.
+    explanation_en: |
+      Recurrent pentest pattern: attack surface exceeds
+      obvious forms and inputs. Uploads, assets, metadata,
+      backup files are all surfaces. Defense:
+      X-Content-Type-Options: nosniff on ALL non-HTML assets +
+      upload scanning + restrictive CSP.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Ce challenge est explicitement marque comme necessitant
+      la composition avec un autre challenge 6-stars. Pourquoi
+      cette composition cree-t-elle la severite MAXIMALE ?
+    question_en: |
+      This challenge is explicitly marked as requiring
+      composition with another 6-star. Why does this
+      composition create MAXIMUM severity?
+    options_fr:
+      - "Parce que les challenges 6-stars donnent plus de points"
+      - "Composition de primitives : (1) RCE/file-write donne acces filesystem serveur, (2) overwrite asset distributed = XSS persiste pour TOUS les visiteurs. La combinaison = compromission backend + mass-affecting frontend payload. Severite maximale en CVSS"
+      - "Parce que c'est un bug dans le navigateur"
+      - "Parce que les 6-stars sont les seuls vrais bugs"
+    options_en:
+      - "Because 6-star challenges give more points"
+      - "Primitive composition: (1) RCE/file-write gives server filesystem access, (2) overwriting distributed asset = persisted XSS for ALL visitors. Combination = backend compromise + mass-affecting frontend payload. Max CVSS severity"
+      - "Because it's a browser bug"
+      - "Because 6-stars are the only real bugs"
+    correct: 1
+    explanation_fr: |
+      Pattern documente OWASP : kill chain composition. RCE
+      seule = backend compromis (mauvais). XSS persiste seul =
+      tous les users compromis (mauvais). Combine = TOUT
+      compromis. C'est pour ca que les challenges les plus
+      difficiles necessitent cette composition.
+    explanation_en: |
+      Documented OWASP pattern: kill chain composition. RCE
+      alone = backend compromised (bad). Persisted XSS alone =
+      all users compromised (bad). Combined = EVERYTHING
+      compromised. Why hardest challenges require this
+      composition.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense d'architecture cloud-native empeche
+      structurellement la composition RCE -> asset overwrite -> XSS
+      ?
+    question_en: |
+      Which cloud-native architectural defense structurally
+      prevents the composition RCE -> asset overwrite -> XSS?
+    options_fr:
+      - "Augmenter la taille du JWT secret"
+      - "Separer asset storage et write surface : assets prod (videos, images marketing) sur un CDN/S3 bucket IMMUTABLE accessible read-only par le frontend. Write paths (user uploads) sur un bucket SEPARE. Ainsi une RCE sur le frontend ne peut pas modifier les assets prod"
+      - "Forcer HTTP/2 sur le serveur"
+      - "Utiliser MongoDB au lieu de SQL"
+    options_en:
+      - "Increase JWT secret size"
+      - "Separate asset storage and write surface: prod assets (videos, marketing images) on a CDN/S3 IMMUTABLE bucket read-only accessible by the frontend. Write paths (user uploads) on a SEPARATE bucket. Thus an RCE on the frontend can't modify prod assets"
+      - "Force HTTP/2 on the server"
+      - "Use MongoDB instead of SQL"
+    correct: 1
+    explanation_fr: |
+      Pattern "no single point of compromise" applique au content
+      delivery. Les assets prod sont signed/versioned, ne
+      peuvent pas etre alteres meme avec acces filesystem
+      frontend. Reference : AWS S3 object lock + bucket
+      policies, GCS object holds, Cloudflare R2 immutability.
+      Le pattern coute peu cher mais defeat la composition la
+      plus dangereuse.
+    explanation_en: |
+      "No single point of compromise" pattern applied to
+      content delivery. Prod assets are signed/versioned,
+      can't be altered even with frontend filesystem access.
+      Reference: AWS S3 object lock + bucket policies, GCS
+      object holds, Cloudflare R2 immutability. Pattern is
+      cheap but defeats the most dangerous composition.

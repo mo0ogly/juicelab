@@ -1,0 +1,128 @@
+challenge_key: "typosquattingNpmChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la mecanique technique d'un typosquat
+      npm comme `epilogue-js` ?
+    question_en: |
+      What's the technical mechanic of an npm typosquat
+      like `epilogue-js`?
+    options_fr:
+      - "Le typosquat est un malware qui infecte les machines de developpement"
+      - "L'attaquant publie sur npm un package au nom visuellement similaire a un package legitime (epilogue -> epilogue-js, cross-env -> crossenv). Quand un developer fait `npm install epilogue-js` (typo ou copy-paste pollue), il installe le malicious package qui execute `postinstall` script pour exfiltrer env vars/SSH keys/AWS credentials. Le pattern repose sur l'inattention humaine"
+      - "Le typosquat est une vulnerabilite NodeJS"
+      - "Le typosquat fait crash le serveur"
+    options_en:
+      - "Typosquat is malware infecting dev machines"
+      - "Attacker publishes on npm a package with visually similar name to legitimate package (epilogue -> epilogue-js, cross-env -> crossenv). When developer does `npm install epilogue-js` (typo or polluted copy-paste), they install malicious package executing `postinstall` script to exfiltrate env vars/SSH keys/AWS credentials. Pattern relies on human inattention"
+      - "Typosquat is a NodeJS vulnerability"
+      - "Typosquat crashes server"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : le typosquatting est une
+      vulnerabilite SOCIALE (target les humains)
+      delivered via TECHNICAL channel (npm registry).
+      Cas reels : event-stream incident 2018 (3M
+      downloads/week, malware injecte par le mainteneur
+      apres rachat), ua-parser-js incident 2021,
+      colors.js sabotage 2022. Defense en profondeur
+      necessaire car aucune couche unique ne suffit.
+      Source : Ivan Akulov "Malicious packages in npm" +
+      OWASP cite.
+    explanation_en: |
+      Reusable pattern: typosquatting is SOCIAL
+      vulnerability (targets humans) delivered via
+      TECHNICAL channel (npm registry). Real cases:
+      event-stream incident 2018 (3M downloads/week,
+      malware injected by maintainer after acquisition),
+      ua-parser-js incident 2021, colors.js sabotage
+      2022. Defense in depth necessary as no single
+      layer suffices. Source: Ivan Akulov "Malicious
+      packages in npm" + OWASP cited.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #1 : "Investigate the forgotten
+      developer's backup file instead". Pourquoi
+      l'historical artifact (package.json.bak) est-il
+      pertinent alors que le current package.json est
+      accessible ?
+    question_en: |
+      OWASP hint #1: "Investigate the forgotten
+      developer's backup file instead". Why is
+      historical artifact (package.json.bak) relevant
+      while current package.json is accessible?
+    options_fr:
+      - "Parce que le current package.json est encrypte"
+      - "Parce que le typosquat a probablement ete CORRIGE dans la version courante (devs alertes par security audit). Mais le backup file historise une version anterieure ou le typosquat etait present (v6.2.0-SNAPSHOT mentionne dans description). Pattern reusable : les .bak files, git history, Docker layer caches, registry caches sont des historical artifacts qui revelent les vulnerabilites passees"
+      - "Parce que .bak est plus simple a parser"
+      - "Parce que les developers preferent les .bak"
+    options_en:
+      - "Because current package.json is encrypted"
+      - "Because typosquat was likely FIXED in current version (devs alerted by security audit). But backup file historizes earlier version where typosquat was present (v6.2.0-SNAPSHOT mentioned in description). Reusable pattern: .bak files, git history, Docker layer caches, registry caches are historical artifacts revealing past vulnerabilities"
+      - "Because .bak is simpler to parse"
+      - "Because developers prefer .bak"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : les vulnerabilites peuvent
+      etre OBSERVABLES dans des artifacts historiques
+      meme apres patch. Cela illustre l'importance de
+      (a) ne pas exposer les artifacts historiques en
+      production (.bak, .swp, .orig, .git/), (b)
+      automated removal des fichiers temporaires lors
+      du build, (c) audit du Docker COPY pour
+      n'inclure que les files necessaires. Source :
+      analyse forgottenDevBackup + typosquattingNpm.
+    explanation_en: |
+      Reusable pattern: vulnerabilities can be
+      OBSERVABLE in historical artifacts even after
+      patch. Illustrates importance of (a) not
+      exposing historical artifacts in production
+      (.bak, .swp, .orig, .git/), (b) automated
+      removal of temporary files during build, (c)
+      Docker COPY audit to include only necessary
+      files. Source: forgottenDevBackup +
+      typosquattingNpm analysis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense supply-chain est la plus EFFECTIVE
+      contre les typosquats npm ?
+    question_en: |
+      Which supply-chain defense is MOST EFFECTIVE
+      against npm typosquats?
+    options_fr:
+      - "Mots de passe forts pour les developers npm"
+      - "Defense en profondeur multi-couches : (1) Socket.dev / Snyk security analysis (detection automatique de typosquats par similarite de noms), (2) npm provenance attestation (npm v9+ verifie le build pipeline du package), (3) private registry mirror avec pre-validation, (4) lockfile integrity hash, (5) developer awareness + linter VS Code. Aucune couche unique ne suffit"
+      - "Toujours utiliser yarn au lieu de npm"
+      - "Disabler `npm install`"
+    options_en:
+      - "Strong passwords for npm developers"
+      - "Multi-layer defense in depth: (1) Socket.dev / Snyk security analysis (automatic typosquat detection by name similarity), (2) npm provenance attestation (npm v9+ verifies package build pipeline), (3) private registry mirror with pre-validation, (4) lockfile integrity hash, (5) developer awareness + VS Code linter. No single layer suffices"
+      - "Always use yarn instead of npm"
+      - "Disable `npm install`"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la supply chain security est
+      un probleme systemique, pas un probleme de tool.
+      npm provenance attestation (Sigstore) est l'outil
+      moderne pour le tracabilite. Mais la couche
+      humaine reste critique : un linter qui flag les
+      noms douteux + double-check humain est la derniere
+      ligne. Source : OWASP Vulnerable Dependency
+      Management Cheat Sheet + Socket.dev case
+      studies.
+    explanation_en: |
+      Reusable pattern: supply chain security is
+      systemic problem, not tool problem. npm provenance
+      attestation (Sigstore) is modern tool for
+      traceability. But human layer stays critical:
+      linter flagging suspicious names + human
+      double-check is last line. Source: OWASP
+      Vulnerable Dependency Management Cheat Sheet +
+      Socket.dev case studies.

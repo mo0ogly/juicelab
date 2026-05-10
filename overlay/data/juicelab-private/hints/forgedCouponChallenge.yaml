@@ -1,0 +1,186 @@
+challenge_key: "forgedCouponChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Try either a)
+      knowledgeable brute force, b) reverse
+      engineering, or c) cloud research". 3
+      approaches possibles. Tags : Good for Demos,
+      Code Analysis. Cible : coupon code donnant
+      80%+ discount.
+    text_en: |
+      Official OWASP hint #1: "Try either a)
+      knowledgeable brute force, b) reverse
+      engineering, or c) cloud research". 3
+      possible approaches. Tags: Good for Demos,
+      Code Analysis. Target: coupon code giving
+      80%+ discount.
+    pedagogical_intent: |
+      Activate 3-approach strategic thinking.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Source serveur (routes/order.ts:185) :
+      `solveIf(() => discount >= 80)`. La fonction
+      `security.discountFromCoupon(coupon)` dans
+      lib/insecurity.ts decrypte le coupon. Donc
+      le code de generation/decryption est
+      visible dans le bundle Angular OU dans le
+      source backend (Code Analysis tag).
+    text_en: |
+      Server source (routes/order.ts:185):
+      `solveIf(() => discount >= 80)`.
+      `security.discountFromCoupon(coupon)` in
+      lib/insecurity.ts decrypts coupon. So
+      generation/decryption code visible in
+      Angular bundle OR backend source (Code
+      Analysis tag).
+    pedagogical_intent: |
+      Spell solve check + investigation surface.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Inspecte lib/insecurity.ts (Juice Shop
+      source). La fonction generateCoupon utilise
+      typiquement z85 encoding + symmetric XOR ou
+      shift cipher avec un seed predictible. Le
+      format est generalement
+      `<DATE>-<DISCOUNT>-<NAME>` encoded. Pour
+      reverse-engineer : copy la fonction generate
+      Coupon, exporter localement, generer un
+      coupon avec discount=80 et today's date.
+    text_en: |
+      Inspect lib/insecurity.ts (Juice Shop
+      source). generateCoupon function typically
+      uses z85 encoding + symmetric XOR or shift
+      cipher with predictable seed. Format
+      generally `<DATE>-<DISCOUNT>-<NAME>`
+      encoded. To reverse-engineer: copy
+      generateCoupon function, export locally,
+      generate coupon with discount=80 and
+      today's date.
+    pedagogical_intent: |
+      Reveal investigation method.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Approche reverse :
+      ```js
+      // Pseudo-code basé sur Juice Shop pattern
+      const z85 = require('z85');
+      const today = new Date();
+      const month = today.getMonth(); // 0-indexed
+      const year = today.getFullYear() % 100;
+      const couponString = `${monthName}-
+        ${year}80%`;
+      const xored = couponString.split('').map(
+        (c, i) => String.fromCharCode(c.charCodeAt
+        (0) ^ year));
+      const coupon = z85.encode(Buffer.from(
+        xored.join('')));
+      ```
+      Submit le coupon via /#/basket coupon
+      input. Le serveur decrypte via z85 +
+      reverse XOR -> discount = 80 -> solve.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Reverse approach:
+      ```js
+      // Pseudo-code based on Juice Shop pattern
+      const z85 = require('z85');
+      const today = new Date();
+      const month = today.getMonth(); // 0-indexed
+      const year = today.getFullYear() % 100;
+      const couponString = `${monthName}-
+        ${year}80%`;
+      const xored = couponString.split('').map(
+        (c, i) => String.fromCharCode(c.charCodeAt
+        (0) ^ year));
+      const coupon = z85.encode(Buffer.from(
+        xored.join('')));
+      ```
+      Submit coupon via /#/basket coupon input.
+      Server decrypts via z85 + reverse XOR ->
+      discount = 80 -> solve.
+    pedagogical_intent: |
+      Spell reverse engineering pattern.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet
+      (3 approches) :
+      1. Approche reverse engineering :
+         (a) Lire lib/insecurity.ts (Juice Shop
+             source) - fonction generateCoupon.
+         (b) Reproduire la fonction localement
+             en Node.js (z85 + XOR pattern).
+         (c) Generer un coupon : `node -e "...
+             generateCoupon(today, 80) ..."`.
+         (d) Apply le coupon via UI checkout :
+             POST /rest/basket/:id/coupon avec
+             {coupon: "<generated>"}.
+         (e) Le serveur decrypte ->
+             discount=80 -> solveIf trigger.
+      2. Approche brute force :
+         (a) Burp Intruder POST /rest/basket/:
+             id/coupon avec wordlist coupon
+             patterns.
+         (b) Liste : 5-10 chars combinations
+             alphanumeric. ~10s avec 1000
+             requests.
+      3. Approche cloud research :
+         (a) Google "juice shop generateCoupon
+             github".
+         (b) Trouver le source officiel +
+             reproduire localement.
+      Source canonique : routes/order.ts:185 +
+      lib/insecurity.ts + OWASP Cryptographic
+      Storage Cheat Sheet.
+      Defense canonique : remplacer crypto
+      maison par JWT signed RS256 + DB
+      tracking + idempotent redemption +
+      audit log.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow (3
+      approaches):
+      1. Reverse engineering approach:
+         (a) Read lib/insecurity.ts (Juice
+             Shop source) - generateCoupon
+             function.
+         (b) Reproduce function locally in
+             Node.js (z85 + XOR pattern).
+         (c) Generate coupon: `node -e "...
+             generateCoupon(today, 80) ..."`.
+         (d) Apply coupon via UI checkout:
+             POST /rest/basket/:id/coupon with
+             {coupon: "<generated>"}.
+         (e) Server decrypts -> discount=80
+             -> solveIf triggers.
+      2. Brute force approach:
+         (a) Burp Intruder POST /rest/basket/
+             :id/coupon with coupon patterns
+             wordlist.
+         (b) List: 5-10 chars alphanumeric
+             combinations. ~10s with 1000
+             requests.
+      3. Cloud research approach:
+         (a) Google "juice shop
+             generateCoupon github".
+         (b) Find official source + reproduce
+             locally.
+      Canonical source: routes/order.ts:185 +
+      lib/insecurity.ts + OWASP Cryptographic
+      Storage Cheat Sheet.
+      Canonical defense: replace homemade
+      crypto with RS256-signed JWT + DB
+      tracking + idempotent redemption + audit
+      log.
+    pedagogical_intent: |
+      Solution complete + 3 approaches +
+      defense canonique.

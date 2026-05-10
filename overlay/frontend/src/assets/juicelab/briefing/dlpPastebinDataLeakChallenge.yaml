@@ -1,0 +1,131 @@
+challenge_key: "dlpPastebinDataLeakChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Identifie un produit "unsafe" qui a ete retire du shop, et
+  informe le shop quels ingredients sont dangereux.
+  Description OWASP. Hints : (1) "Your own SQLi and someone
+  else's Ctrl-V will be your accomplices", (2) "first identify
+  the unsafe product not available in the shop", (3) "Solving
+  the Christmas special offer challenge might give it as
+  by-catch", (4) "the actual data was leaked on the same
+  platform involved in 'Dumpster dive the Internet for a
+  leaked password'", (5) "Google is a particularly good
+  accomplice". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : la kill chain est en 3 etapes. (1)
+  Identifie le produit retire via christmasSpecialChallenge
+  (SQLi sur /rest/products/search avec OR true-- pour reveler
+  les produits soft-deleted). Note le nom du produit unsafe.
+  (2) Recherche ce nom de produit sur Pastebin (la "platform"
+  du hint #4 — Pastebin est le pastebin classique du leakage
+  digitale). Google "<nom produit> pastebin" ou recherche
+  directement sur pastebin.com. (3) Le pastebin contient les
+  ingredients dangereux du produit. (4) Va sur Customer
+  Feedback / Contact, mentionne ces ingredients dans ton
+  message.
+
+  Note la kill chain composite : SQLi (recon) + OSINT
+  externe (pastebin) + form submission. Tu en parleras dans
+  le journal "apres".
+
+mission_en: |
+  Identify an "unsafe" product removed from the shop, and
+  inform the shop which ingredients are dangerous. OWASP
+  description. Hints: (1) "Your own SQLi and someone else's
+  Ctrl-V will be your accomplices", (2) "first identify the
+  unsafe product not available in the shop", (3) "Solving
+  the Christmas special offer challenge might give it as
+  by-catch", (4) "the actual data was leaked on the same
+  platform involved in 'Dumpster dive the Internet for a
+  leaked password'", (5) "Google is a particularly good
+  accomplice". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: 3-step kill chain. (1) Identify the
+  removed product via christmasSpecialChallenge (SQLi on
+  /rest/products/search with OR true-- revealing
+  soft-deleted products). Note the unsafe product name. (2)
+  Search this product name on Pastebin (the "platform" from
+  hint #4 — Pastebin is the classic digital-leak pastebin).
+  Google "<product name> pastebin" or directly search on
+  pastebin.com. (3) The pastebin contains the product's
+  dangerous ingredients. (4) Go to Customer Feedback /
+  Contact, mention these ingredients in your message.
+
+  Note the composite kill chain: SQLi (recon) + external
+  OSINT (pastebin) + form submission. You will report it in
+  the "after" logbook.
+
+concepts:
+  - title_fr: "Composition kill chain : SQLi + OSINT externe + form submission"
+    title_en: "Kill chain composition: SQLi + external OSINT + form submission"
+    body_fr: |
+      Pattern pentest realiste : un attaquant ne s'arrete pas
+      a la webapp. Il combine plusieurs sources. Ici (1) SQLi
+      pour recon interne (produit soft-deleted), (2) OSINT
+      externe (Pastebin) pour completer l'info, (3) action
+      sur webapp avec les data assemblees. Defense :
+      monitoring multi-niveau (SIEM cote app + threat intel
+      cote externe pour detecter quand des leaks publics
+      mentionnent ton entreprise).
+    body_en: |
+      Realistic pentest pattern: attacker doesn't stop at
+      the webapp. They combine multiple sources. Here (1)
+      SQLi for internal recon (soft-deleted product), (2)
+      external OSINT (Pastebin) to complete info, (3)
+      webapp action with assembled data. Defense:
+      multi-level monitoring (SIEM app-side + external
+      threat intel to detect public leaks mentioning your
+      company).
+
+  - title_fr: "Pastebin et autres pastebins : surveillance externe obligatoire"
+    title_en: "Pastebin and other pastebins: mandatory external monitoring"
+    body_fr: |
+      Pastebin (et ses cousins ghostbin, justpaste.it,
+      hastebin) sont des sites de "paste" utilises legalement
+      mais aussi par les attaquants pour publier des leaks
+      (credentials, documents internes, code source). Threat
+      intelligence professionnelle : monitoring continu de
+      ces plateformes pour detecter quand le nom de
+      l'entreprise / des emails internes / des numero de
+      telephone apparaissent. Outils : DeHashed, Have I Been
+      Pwned, IntelX, services payants comme Recorded Future.
+      Pour ce challenge, le pattern enseigne aux students
+      l'existence de ces pastebins comme surface OSINT.
+    body_en: |
+      Pastebin (and cousins ghostbin, justpaste.it,
+      hastebin) are paste sites used legally but also by
+      attackers to publish leaks (credentials, internal
+      docs, source code). Professional threat intelligence:
+      continuous monitoring of these platforms to detect
+      when company name / internal emails / phone numbers
+      appear. Tools: DeHashed, Have I Been Pwned, IntelX,
+      paid services like Recorded Future. For this
+      challenge, the pattern teaches students about these
+      pastebins as OSINT surface.
+
+  - title_fr: "Defense : DLP (Data Loss Prevention) + threat intel"
+    title_en: "Defense: DLP (Data Loss Prevention) + threat intel"
+    body_fr: |
+      DLP couvre 3 aspects. (1) Prevention : empecher la
+      donnee de sortir (endpoint DLP, network DLP, cloud
+      DLP). (2) Detection : monitoring des plateformes
+      publiques (pastebins, GitHub, forums) avec alerts.
+      (3) Reaction : process incident response pour
+      remediate (takedown notice, rotation de secrets
+      compromis). Pour ce challenge, c'etait l'aspect (2)
+      qui a echoue : un employe interne a paste des
+      ingredients confidentiels sur Pastebin sans que
+      l'entreprise le detecte. Reference : NIST SP 800-46
+      (Telework + DLP) + outils CASB.
+    body_en: |
+      DLP covers 3 aspects. (1) Prevention: stop data from
+      leaving (endpoint DLP, network DLP, cloud DLP). (2)
+      Detection: monitor public platforms (pastebins,
+      GitHub, forums) with alerts. (3) Reaction: incident
+      response process to remediate (takedown notice,
+      rotation of compromised secrets). For this challenge,
+      aspect (2) failed: an internal employee pasted
+      confidential ingredients on Pastebin without company
+      detection. Reference: NIST SP 800-46 (Telework + DLP)
+      + CASB tools.

@@ -1,0 +1,137 @@
+challenge_key: "typosquattingNpmChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "This challenge has nothing
+      to do with mistyping web domains. Investigate the
+      forgotten developer's backup file instead". Donc
+      pre-requis : forgottenDevBackupChallenge resolu
+      (acces a /ftp/package.json.bak).
+    text_en: |
+      Official OWASP hint #1: "This challenge has nothing
+      to do with mistyping web domains. Investigate the
+      forgotten developer's backup file instead". So
+      prerequisite: forgottenDevBackupChallenge solved
+      (access to /ftp/package.json.bak).
+    pedagogical_intent: |
+      Activate dependency-history forensics reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Inspecte /ftp/package.json.bak. Cherche dans les
+      dependencies + devDependencies des noms qui
+      ressemblent a des packages connus mais avec des
+      caracteres en plus / en moins / decales (ex.
+      "lodash" -> "lodahs", "express" -> "expres",
+      "epilogue" -> "epilogue-js"). Hint OWASP #3 cite
+      Ivan Akulov "Malicious packages in npm" qui liste
+      les patterns courants.
+    text_en: |
+      Inspect /ftp/package.json.bak. Look in dependencies
+      + devDependencies for names resembling known
+      packages but with extra/missing/swapped characters
+      (e.g., "lodash" -> "lodahs", "express" -> "expres",
+      "epilogue" -> "epilogue-js"). OWASP hint #3 cites
+      Ivan Akulov "Malicious packages in npm" listing
+      common patterns.
+    pedagogical_intent: |
+      Spell typosquat detection method.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Pattern probable a chercher : `epilogue-js` (le
+      vrai package etait `epilogue`, framework REST API
+      pour Sequelize/Express). Verification : recherche
+      sur npm.js si le package `epilogue-js` existe et
+      sa nature (ou s'il a ete pris down par npm
+      security).
+    text_en: |
+      Probable pattern to search: `epilogue-js` (real
+      package was `epilogue`, REST API framework for
+      Sequelize/Express). Verification: search on
+      npm.js if `epilogue-js` package exists and its
+      nature (or if taken down by npm security).
+    pedagogical_intent: |
+      Reveal typosquat name.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      (routes/verify.ts:270-274) :
+      `void checkPatternInFeedbackAndComplaints(
+      challenges.typosquattingNpmChallenge,
+      { [Op.like]: '%epilogue-js%' })`. Donc le serveur
+      cherche le pattern `%epilogue-js%` (substring) dans
+      les feedback comments et complaint messages. Donc
+      submit un feedback (ou complaint B2B) avec un
+      commentaire qui contient ce nom exact.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server source
+      (routes/verify.ts:270-274):
+      `void checkPatternInFeedbackAndComplaints(
+      challenges.typosquattingNpmChallenge,
+      { [Op.like]: '%epilogue-js%' })`. So server looks
+      for `%epilogue-js%` pattern (substring) in
+      feedback comments and complaint messages. So
+      submit feedback (or B2B complaint) with comment
+      containing this exact name.
+    pedagogical_intent: |
+      Reveal exact server pattern check.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Resoudre forgottenDevBackupChallenge
+         (pre-requis OWASP hint #1).
+      2. Telecharger /ftp/package.json.bak via le
+         null byte trick (cf. forgottenDevBackup
+         briefing).
+      3. Ouvrir le file et grep dependencies pour
+         `epilogue-js` (ou similar typosquat). Tu
+         confirmes la presence.
+      4. Aller sur /#/contact (Customer Feedback form).
+      5. Remplir le form avec un commentaire incluant
+         "epilogue-js" (ex. "Found typosquatting
+         dependency epilogue-js in package.json.bak").
+      6. Soumettre le form. Le serveur fait
+         findAndCountAll() avec [Op.like] %epilogue-js%
+         dans les FeedbackModel et ComplaintModel.
+      7. Match -> challenge solve auto.
+      Source canonique : routes/verify.ts:270-274 (solve
+      check) + Ivan Akulov blog post + npm typosquat
+      detection patterns.
+      Defense canonique : automated dependency review
+      (Socket.dev), package signing (npm provenance
+      v9+), private mirror, developer awareness.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Solve forgottenDevBackupChallenge (OWASP hint
+         #1 prerequisite).
+      2. Download /ftp/package.json.bak via null byte
+         trick (cf. forgottenDevBackup briefing).
+      3. Open file and grep dependencies for
+         `epilogue-js` (or similar typosquat). Confirm
+         presence.
+      4. Go to /#/contact (Customer Feedback form).
+      5. Fill form with comment including "epilogue-
+         js" (e.g., "Found typosquatting dependency
+         epilogue-js in package.json.bak").
+      6. Submit form. Server does findAndCountAll()
+         with [Op.like] %epilogue-js% in FeedbackModel
+         and ComplaintModel.
+      7. Match -> challenge auto solves.
+      Canonical source: routes/verify.ts:270-274 (solve
+      check) + Ivan Akulov blog post + npm typosquat
+      detection patterns.
+      Canonical defense: automated dependency review
+      (Socket.dev), package signing (npm provenance
+      v9+), private mirror, developer awareness.
+    pedagogical_intent: |
+      Quasi-solution : workflow + UI form path + defense.

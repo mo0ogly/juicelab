@@ -1,0 +1,119 @@
+challenge_key: "web3SandboxChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Trouve la code sandbox Web3 deployee accidentellement par les
+  developpeurs Juice Shop. Description OWASP officielle : "Find an
+  accidentally deployed code sandbox for writing smart contracts
+  on the fly". Hint #1 : "It is just as easy as finding the Score
+  Board" — donc meme pattern qu'un challenge de RECONNAISSANCE,
+  trouve une route cachee non listee dans le menu.
+
+  Methode recommandee : ouvre les DevTools (F12) onglet Sources,
+  deroule le bundle main.js, fais Ctrl-F sur "web3" ou "sandbox".
+  Source officielle codefixes/web3SandboxChallenge.info.yml fix #1
+  (correct) : "This sandbox is for the developers of the
+  application and was added for easy testing and prototyping.
+  Functionality like this does under no circumstances belong into
+  an application when it goes into production". Donc le bug =
+  feature de DEV laissee en PROD. La route est /#/web3-sandbox.
+
+  Note la difference avec scoreBoardChallenge (route caché par
+  le team OWASP comme premier puzzle pedagogique) et
+  web3Sandbox (route deployed par accident par les devs comme
+  scenario realiste). Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Find the Web3 code sandbox accidentally deployed by Juice Shop
+  developers. Official OWASP description: "Find an accidentally
+  deployed code sandbox for writing smart contracts on the fly".
+  Hint #1: "It is just as easy as finding the Score Board" — same
+  RECONNAISSANCE pattern, find a hidden route not listed in the
+  menu.
+
+  Recommended method: open DevTools (F12) Sources tab, expand
+  main.js bundle, Ctrl-F on "web3" or "sandbox". Official source
+  codefixes/web3SandboxChallenge.info.yml fix #1 (correct): "This
+  sandbox is for the developers of the application and was added
+  for easy testing and prototyping. Functionality like this does
+  under no circumstances belong into an application when it goes
+  into production". So the bug = DEV feature left in PROD. The
+  route is /#/web3-sandbox.
+
+  Note the difference with scoreBoardChallenge (route hidden by
+  OWASP team as first pedagogical puzzle) and web3Sandbox (route
+  deployed by accident by devs as realistic scenario). You will
+  report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Dev features en prod : un anti-pattern recurrent"
+    title_en: "Dev features in prod: a recurrent anti-pattern"
+    body_fr: |
+      Ce challenge vise un cas tres frequent en pentest : le
+      sandbox de dev (REPL JS, GraphQL playground, API explorer,
+      hot-reload toggle) qui ne devrait pas exister en prod
+      mais reste deploye. Le code, les outils ou les routes
+      destinees au DEV se retrouvent en PROD parce que (1) le
+      build prod n'a pas de strip "dev only", (2) les feature
+      flags ne sont pas implementees, (3) le pipeline CI ne
+      verifie pas la presence de ces patterns. Source codefixes
+      fix #1 explicite : "does under no circumstances belong
+      into an application when it goes into production".
+    body_en: |
+      This challenge targets a very frequent pentest case: the
+      dev sandbox (JS REPL, GraphQL playground, API explorer,
+      hot-reload toggle) that shouldn't exist in prod but stays
+      deployed. Code, tools, or routes meant for DEV end up in
+      PROD because (1) the prod build lacks "dev only" stripping,
+      (2) feature flags aren't implemented, (3) CI pipeline
+      doesn't check these patterns. Source codefixes fix #1
+      explicit: "does under no circumstances belong into an
+      application when it goes into production".
+
+  - title_fr: "Code sandbox = surface de DOOM"
+    title_en: "Code sandbox = DOOM surface"
+    body_fr: |
+      Une code sandbox qui evalue du JavaScript / smart contract
+      / SQL fourni par l'utilisateur est une surface RCE
+      potentielle. Si la sandbox n'est pas isolee proprement
+      (vm2, isolated-vm, container per session), un attaquant
+      peut executer du code sur le serveur. La gravite est
+      MAXIMALE : compromission complete du serveur. Pour ce
+      challenge specifique, la gravite est limitee parce que la
+      sandbox est concue pour des smart contracts (qui s'executent
+      en EVM, pas sur le serveur Node), mais le pattern reste
+      dangereux et mention dans la doc OWASP.
+    body_en: |
+      A code sandbox evaluating user-provided JavaScript / smart
+      contract / SQL is a potential RCE surface. If the sandbox
+      isn't properly isolated (vm2, isolated-vm, container per
+      session), an attacker can execute code on the server.
+      Severity is MAXIMUM: full server compromise. For this
+      specific challenge, severity is limited because the
+      sandbox is for smart contracts (running in EVM, not the
+      Node server), but the pattern stays dangerous and is
+      mentioned in OWASP docs.
+
+  - title_fr: "Defense canonique : strip dev features au build prod"
+    title_en: "Canonical defense: strip dev features at prod build"
+    body_fr: |
+      Pattern de defense moderne. (1) Feature flags
+      conditionnels : if (process.env.NODE_ENV === 'production')
+      { skip dev routes }. (2) Webpack/Vite plugins qui
+      strippent les imports marques @dev-only. (3) CI gate :
+      grep le bundle prod pour des patterns dev (sandbox, repl,
+      playground, debug, dev) et fail le build si trouve. (4)
+      Static analysis : ESLint custom rule qui interdit
+      l'enregistrement de routes contenant ces mots cles dans
+      les fichiers prod. La defense en profondeur force le bug
+      a etre attrape avant le deploy.
+    body_en: |
+      Modern defense pattern. (1) Conditional feature flags:
+      if (process.env.NODE_ENV === 'production') { skip dev
+      routes }. (2) Webpack/Vite plugins stripping imports
+      marked @dev-only. (3) CI gate: grep prod bundle for dev
+      patterns (sandbox, repl, playground, debug, dev) and fail
+      build if found. (4) Static analysis: custom ESLint rule
+      forbidding registration of routes containing these
+      keywords in prod files. Defense in depth forces the bug
+      to be caught before deploy.

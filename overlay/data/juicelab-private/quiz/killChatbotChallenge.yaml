@@ -1,0 +1,129 @@
+challenge_key: "killChatbotChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le solve check est dans le DOUBLE CATCH du
+      routes/chatbot.ts:127. Pourquoi ce pattern
+      double catch est-il le SIGNAL de
+      l'exploitation pour le challenge ?
+    question_en: |
+      Solve check is in DOUBLE CATCH of routes/
+      chatbot.ts:127. Why is this double catch
+      pattern the SIGNAL of exploitation for
+      challenge?
+    options_fr:
+      - "Parce que JavaScript catch est rapide"
+      - "Le double catch indique un PATH DE RECOVERY : si bot.respond(query) plante, le code essaie bot.respond(testCommand). L'attaquant doit casser BOTH paths. Pour cela, il exploit un STATE PARTAGE (le username persiste in-memory du bot). Une fois le state corrompu (template injection persistante), ALL paths qui touchent ce state plantent. Pattern : etat partage = single point of failure"
+      - "Parce que catch est inutile"
+      - "Parce que le bot a 2 modes"
+    options_en:
+      - "Because JavaScript catch is fast"
+      - "Double catch indicates RECOVERY PATH: if bot.respond(query) fails, code tries bot.respond(testCommand). Attacker must break BOTH paths. For this, exploits SHARED STATE (username persisted in-memory of bot). Once state corrupted (persistent template injection), ALL paths touching this state fail. Pattern: shared state = single point of failure"
+      - "Because catch is useless"
+      - "Because bot has 2 modes"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la persistance du state
+      malveillant est le multiplicateur d'impact.
+      Comparable a stored XSS vs reflected XSS,
+      web cache poisoning vs HTTP request smuggling.
+      Defense : recovery PATH state-independent
+      (utiliser un fresh bot instance pour la
+      testCommand au lieu de la meme instance).
+      Source : routes/chatbot.ts:119-132 + analyse
+      juicy-chat-bot library.
+    explanation_en: |
+      Reusable pattern: malicious state
+      persistence is impact multiplier. Comparable
+      to stored XSS vs reflected XSS, web cache
+      poisoning vs HTTP request smuggling.
+      Defense: state-independent recovery PATH
+      (use fresh bot instance for testCommand
+      instead of same instance). Source: routes/
+      chatbot.ts:119-132 + juicy-chat-bot library
+      analysis.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le tag du challenge est "Code Analysis".
+      Quelle est la LECON pedagogique sur la
+      methodologie de pentest ?
+    question_en: |
+      Challenge tag is "Code Analysis". What's
+      the pedagogical LESSON on pentest
+      methodology?
+    options_fr:
+      - "Toujours utiliser les automated scanners"
+      - "Pour les vulns sophistiquees (template injection persistante via library externe), les automated scanners (ZAP, Burp, Acunetix) FAILENT car ils ne peuvent pas raisonner sur le state partage du backend. Le code analysis HUMAIN (lire le source de la library externe) est NECESSAIRE. Pattern reusable : 80% des vulns sophistiquees sont trouvees via code review, pas scanners"
+      - "Code analysis est inutile"
+      - "Les scanners trouvent tout"
+    options_en:
+      - "Always use automated scanners"
+      - "For sophisticated vulns (persistent template injection via external library), automated scanners (ZAP, Burp, Acunetix) FAIL as they can't reason on backend shared state. HUMAN code analysis (reading external library source) is NECESSARY. Reusable pattern: 80% of sophisticated vulns found via code review, not scanners"
+      - "Code analysis is useless"
+      - "Scanners find everything"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la maitrise du code
+      analysis (reading complex source code,
+      identifier les state machines, identifier
+      les invariants brisables) est le skill
+      ULTIMATE de tout security engineer
+      experimente. Les scanners aident pour le
+      low-hanging fruit. Les bugs profonds (race
+      conditions, state corruption, type
+      confusion) demandent humain. Source : OWASP
+      Testing Guide + analyse killChatbot.
+    explanation_en: |
+      Reusable pattern: code analysis mastery
+      (reading complex source code, identifying
+      state machines, identifying breakable
+      invariants) is ULTIMATE skill of any
+      experienced security engineer. Scanners
+      help with low-hanging fruit. Deep bugs
+      (race conditions, state corruption, type
+      confusion) need human. Source: OWASP
+      Testing Guide + killChatbot analysis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense canonique aurait empeche le
+      template injection persistant via username ?
+    question_en: |
+      What canonical defense would have prevented
+      persistent template injection via username?
+    options_fr:
+      - "Encrypter le username"
+      - "Defense en profondeur : (1) Whitelist alphanumeric+espaces sur username (rejeter `${`, backticks, autres special chars). (2) Eviter template literal eval sur user input - utiliser plain string concatenation OU template engine sandboxe (no eval). (3) Rate limiting sur setUserName (1 changement par hour). (4) Recovery testCommand utilise un fresh bot instance (state-independent). Pattern : multi-layer pour une vuln multi-pattern"
+      - "Disabler le chatbot"
+      - "Hasher le username"
+    options_en:
+      - "Encrypt username"
+      - "Defense in depth: (1) Whitelist alphanumeric+spaces on username (reject `${`, backticks, other special chars). (2) Avoid template literal eval on user input - use plain string concatenation OR sandboxed template engine (no eval). (3) Rate limit setUserName (1 change per hour). (4) Recovery testCommand uses fresh bot instance (state-independent). Pattern: multi-layer for multi-pattern vuln"
+      - "Disable chatbot"
+      - "Hash username"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la defense en profondeur
+      pour les vulns d'injection covers
+      input-side (sanitization, whitelist),
+      processing-side (no eval, sandbox),
+      architecture-side (state-independent
+      recovery, rate limiting). Aucune couche
+      unique ne suffit. Source : analyse
+      killChatbot + OWASP Input Validation
+      Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: defense in depth for
+      injection vulns covers input-side
+      (sanitization, whitelist), processing-side
+      (no eval, sandbox), architecture-side
+      (state-independent recovery, rate
+      limiting). No single layer suffices.
+      Source: killChatbot analysis + OWASP Input
+      Validation Cheat Sheet.

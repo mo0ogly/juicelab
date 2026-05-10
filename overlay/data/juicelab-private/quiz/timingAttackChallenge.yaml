@@ -1,0 +1,78 @@
+challenge_key: "timingAttackChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Qu'est-ce qu'une race condition TOCTOU ?
+    question_en: |
+      What is a TOCTOU race condition?
+    options_fr:
+      - "Une attaque DDoS"
+      - "Time Of Check Time Of Use (CWE-367) : (1) check une condition (read state), (2) act sur la condition (write state). Entre (1) et (2), l'attaquant change l'etat. Cas reels : Coinbase 2018 (double-spend), Twitter 2014 (force-follow). Defense : operations atomic + locks"
+      - "Bug de typo"
+      - "ISO standard"
+    options_en:
+      - "DDoS attack"
+      - "Time Of Check Time Of Use (CWE-367): (1) check condition (read state), (2) act on condition (write state). Between (1) and (2), attacker changes state. Real cases: Coinbase 2018 (double-spend), Twitter 2014 (force-follow). Defense: atomic operations + locks"
+      - "Typo bug"
+      - "ISO standard"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : check+act doit etre atomic.
+      Source : CWE-367 + Bishop & Dilger 1996.
+    explanation_en: |
+      Reusable pattern: check+act must be atomic.
+      Source: CWE-367 + Bishop & Dilger 1996.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quels mecanismes DB rendent un check+act
+      atomic ?
+    question_en: |
+      What DB mechanisms make a check+act atomic?
+    options_fr:
+      - "Aucun"
+      - "(1) ACID transactions PostgreSQL `SELECT ... FOR UPDATE`. (2) Atomic UPDATE conditionne `UPDATE ... WHERE ...` (returning rowCount). (3) Optimistic locking (version column + retry). (4) Pessimistic locking (advisory lock par user_id). (5) NoSQL : MongoDB findAndModify, DynamoDB conditional"
+      - "Bug repandu"
+      - "Trop slow"
+    options_en:
+      - "None"
+      - "(1) PostgreSQL ACID transactions `SELECT ... FOR UPDATE`. (2) Conditional atomic UPDATE `UPDATE ... WHERE ...` (returning rowCount). (3) Optimistic locking (version column + retry). (4) Pessimistic locking (advisory lock per user_id). (5) NoSQL: MongoDB findAndModify, DynamoDB conditional"
+      - "Common bug"
+      - "Too slow"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : DB primitives atomic. Source :
+      PostgreSQL docs + MongoDB docs.
+    explanation_en: |
+      Reusable pattern: atomic DB primitives. Source:
+      PostgreSQL docs + MongoDB docs.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique multi-layer pour like
+      endpoint ?
+    question_en: |
+      Canonical multi-layer defense for like
+      endpoint?
+    options_fr:
+      - "Pas de likes"
+      - "(1) UPDATE atomique conditionne (last_like_at < NOW() - INTERVAL 5s). (2) Idempotency keys (X-Idempotency-Key header, cache 24h). (3) Distributed lock Redis (SETNX) si pas DB transactions. (4) Rate limit + debounce client (UI disable button). Pattern : check+act = 1 operation atomic"
+      - "Encrypter likes"
+      - "1 like par jour"
+    options_en:
+      - "No likes"
+      - "(1) Conditional atomic UPDATE (last_like_at < NOW() - INTERVAL 5s). (2) Idempotency keys (X-Idempotency-Key header, 24h cache). (3) Redis distributed lock (SETNX) if no DB transactions. (4) Rate limit + client debounce (UI disables button). Pattern: check+act = 1 atomic operation"
+      - "Encrypt likes"
+      - "1 like per day"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : atomic + idempotent.
+      Source : OWASP API Security + PostgreSQL.
+    explanation_en: |
+      Reusable pattern: atomic + idempotent. Source:
+      OWASP API Security + PostgreSQL.

@@ -1,0 +1,78 @@
+challenge_key: "extraLanguageChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "find hidden language file". Le UI propose plusieurs
+      langues mais une langue extra existe en backend.
+    text_en: |
+      OWASP hint: "find hidden language file". UI offers several languages
+      but an extra language exists in backend.
+    pedagogical_intent: |
+      Activate i18n + STO reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Les langues UI viennent de fichiers JSON dans /assets/i18n/. Lister
+      ce dossier directement (Network tab quand tu changes de langue, ou
+      DevTools > Sources > assets > i18n).
+    text_en: |
+      UI languages come from JSON files in /assets/i18n/. List this
+      folder directly (Network tab when you change language, or DevTools >
+      Sources > assets > i18n).
+    pedagogical_intent: |
+      Spell technique.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Compare la liste de fichiers i18n dans le bundle vs les langues du
+      selecteur UI. Une langue Klingon (tlh_AA) est presente mais pas
+      proposee.
+    text_en: |
+      Compare i18n file list in bundle vs UI selector languages. A Klingon
+      language (tlh_AA) is present but not offered.
+    pedagogical_intent: |
+      Reveal target file.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Naviguer vers /assets/i18n/tlh_AA.json. Le fichier se charge
+      directement (200 OK). Le serveur verify.ts:68 verifie via
+      `endsWith(url, '/tlh_AA.json')`.
+    text_en: |
+      Navigate to /assets/i18n/tlh_AA.json. File loads directly (200 OK).
+      Server verify.ts:68 checks via `endsWith(url, '/tlh_AA.json')`.
+    pedagogical_intent: |
+      Spell exact URL.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Network tab > selectionner
+      Anglais -> voit GET /assets/i18n/en.json. (2) DevTools > Sources >
+      assets > i18n -> liste tous les fichiers. (3) Identifier tlh_AA.json
+      qui n'est pas dans le selecteur UI. (4) Navigateur :
+      http://localhost:3000/assets/i18n/tlh_AA.json. (5) Le serveur
+      verify.ts:68 `solveIf(() => endsWith(url, '/tlh_AA.json'))`
+      declenche. (6) Notification "Solved Extra Language". Defense : (a)
+      Manifest i18n-available.json. (b) Build CI fail si fichiers non-
+      manifestes. (c) Backend route /api/languages comme source de verite.
+      Source : verify.ts:68.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Network tab > select English
+      -> sees GET /assets/i18n/en.json. (2) DevTools > Sources > assets >
+      i18n -> lists all files. (3) Identify tlh_AA.json not in UI
+      selector. (4) Browser:
+      http://localhost:3000/assets/i18n/tlh_AA.json. (5) Server
+      verify.ts:68 `solveIf(() => endsWith(url, '/tlh_AA.json'))`
+      triggers. (6) "Solved Extra Language" notification. Defense: (a)
+      i18n-available.json manifest. (b) Build CI fail if non-manifested
+      files. (c) Backend /api/languages as truth source. Source:
+      verify.ts:68.
+    pedagogical_intent: |
+      Solution + defense.

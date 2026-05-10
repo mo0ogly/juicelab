@@ -1,0 +1,105 @@
+challenge_key: "dbSchemaChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Le hint OWASP officiel #1 dit "find out where this information
+      could come from. Then craft an attack string against an
+      endpoint that offers an unnecessary way to filter data". Quel
+      endpoint Juice Shop accepte un parametre de recherche libre,
+      sans validation de schema, et alimente directement une requete
+      SQL ?
+    text_en: |
+      Official OWASP hint #1 says "find out where this information
+      could come from. Then craft an attack string against an
+      endpoint that offers an unnecessary way to filter data".
+      Which Juice Shop endpoint accepts a free search parameter
+      with no schema validation, feeding directly into a SQL query?
+    pedagogical_intent: |
+      Direct the reflex toward search-style endpoints with free-text input.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      L'endpoint /rest/products/search?q=<value> est ton angle. Le
+      hint OWASP officiel #5 te previent : "this cannot be achieved
+      through the application frontend". Tu dois taper directement
+      l'URL avec le parametre q crafte, dans la barre d'adresse,
+      curl, ou Burp. Quel type de SQLi te permet d'EXFILTRER des
+      donnees d'une AUTRE table que celle requetee initialement ?
+    text_en: |
+      The /rest/products/search?q=<value> endpoint is your angle.
+      Official OWASP hint #5 warns: "this cannot be achieved
+      through the application frontend". You must type the URL
+      with the crafted q parameter directly in the address bar,
+      curl, or Burp. Which SQLi type lets you EXFILTRATE data from
+      a DIFFERENT table than the one originally queried?
+    pedagogical_intent: |
+      Localize the endpoint, signal the API-only constraint, hint UNION SELECT.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      UNION SELECT. Mais quelle table cibler pour avoir le SCHEMA
+      complet ? Hint OWASP officiel #2 : "Find out which database
+      system is in use and where it would usually store its schema
+      definitions". Juice Shop utilise SQLite par defaut. SQLite
+      stocke ses schemas dans la table systeme sqlite_master,
+      colonne sql contenant le CREATE TABLE de chaque entite.
+    text_en: |
+      UNION SELECT. But which table to target for the FULL schema?
+      Official OWASP hint #2: "Find out which database system is
+      in use and where it would usually store its schema
+      definitions". Juice Shop uses SQLite by default. SQLite
+      stores schemas in the sqlite_master system table, column sql
+      holding each entity's CREATE TABLE.
+    pedagogical_intent: |
+      Pin down the system table by DB engine, give the column to read.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Pour faire passer ton UNION SELECT, il faut le bon nombre de
+      colonnes. Hint OWASP officiel #4 : "tackle some query syntax
+      issues step-by-step, basically hopping from one error to the
+      next". Methode : test progressif avec NULL en augmentant. Par
+      exemple :
+      /rest/products/search?q=apple')) UNION SELECT NULL--
+      puis NULL,NULL  puis NULL,NULL,NULL ... jusqu'a 200 OK.
+      Le nombre de colonnes de products vaut typiquement 7-10.
+    text_en: |
+      For your UNION SELECT to go through, you need the right
+      column count. Official OWASP hint #4: "tackle some query
+      syntax issues step-by-step, basically hopping from one error
+      to the next". Method: progressive testing with NULLs. For
+      example:
+      /rest/products/search?q=apple')) UNION SELECT NULL--
+      then NULL,NULL  then NULL,NULL,NULL ... until 200 OK.
+      The Products column count is typically 7-10.
+    pedagogical_intent: |
+      Spell out the iterative alignment method with concrete URLs.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Une fois aligne (typiquement 9 colonnes pour Products dans
+      Juice Shop), exfiltre le schema avec :
+      /rest/products/search?q=qwert')) UNION SELECT sql,2,3,4,5,6,7,8,9
+      FROM sqlite_master--
+      Le champ sql de chaque ligne sqlite_master contient le CREATE
+      TABLE. Tu obtiens le schema complet de toutes les tables
+      Juice Shop : Users, Products, Baskets, Feedbacks, etc. Avec
+      colonnes et types.
+    text_en: |
+      Once aligned (typically 9 columns for Products in Juice
+      Shop), exfiltrate the schema with:
+      /rest/products/search?q=qwert')) UNION SELECT sql,2,3,4,5,6,7,8,9
+      FROM sqlite_master--
+      The sql field of each sqlite_master row holds the CREATE
+      TABLE. You get the full schema of every Juice Shop table:
+      Users, Products, Baskets, Feedbacks, etc. With columns and
+      types.
+    pedagogical_intent: |
+      Quasi-solution : full URL payload with exact column count.

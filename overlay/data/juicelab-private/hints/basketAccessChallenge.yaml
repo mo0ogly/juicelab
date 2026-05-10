@@ -1,0 +1,94 @@
+challenge_key: "basketAccessChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Quand tu es connecte sur un site marchand, l'application sait quel
+      panier est le tien. Mais comment fait-elle pour s'en souvenir ? Si
+      la reponse est "elle stocke un identifiant cote client", alors un
+      utilisateur peut potentiellement modifier cet identifiant pour faire
+      croire au site qu'il est quelqu'un d'autre.
+    text_en: |
+      When you are logged in to a shopping site, the app knows which
+      basket is yours. But how does it remember? If the answer is "it
+      stores an identifier on the client", then a user might modify that
+      identifier to make the site think they are someone else.
+    pedagogical_intent: |
+      Activate the trust reflex: client-side state must not authorize.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Sur Juice Shop, ouvre les DevTools, va dans l'onglet Application
+      (sur Chrome) ou Storage (sur Firefox). Regarde le contenu de
+      LocalStorage et SessionStorage pour le domaine 127.0.0.1:3000.
+      Cherche des cles dont le nom evoque l'identifiant d'un panier ou
+      d'un utilisateur.
+    text_en: |
+      On Juice Shop, open DevTools, go to the Application tab (Chrome) or
+      Storage tab (Firefox). Look at the LocalStorage and SessionStorage
+      content for the 127.0.0.1:3000 domain. Search for keys whose name
+      evokes a basket or user identifier.
+    pedagogical_intent: |
+      Localize the surface: browser storage as authorization carrier.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Une cle nommee bid (basket id) est presente dans SessionStorage
+      apres ton login. Sa valeur est l'ID numerique de TON panier en
+      base. Si tu changes cette valeur pour un autre nombre, la prochaine
+      requete vers /rest/basket/<id> demandera le panier d'un autre
+      utilisateur. Le serveur ne fait pas de verification que ce panier
+      t'appartient bien : il fait confiance au client.
+    text_en: |
+      A key named bid (basket id) sits in SessionStorage after login. Its
+      value is YOUR basket numeric ID in the database. If you change it
+      to another number, the next request to /rest/basket/<id> will ask
+      for someone else's basket. The server does not verify ownership: it
+      trusts the client.
+    pedagogical_intent: |
+      Localize the exact key (bid in sessionStorage) and the trust flaw.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Pour modifier la valeur, ouvre la console DevTools et execute
+      sessionStorage.setItem('bid', 'X') ou X est un autre numero
+      (essaie 1, 2, ou 3). Puis recharge la page panier ou navigue vers
+      /#/basket. Le frontend va emettre une requete GET /rest/basket/X.
+      Si la requete reussit, le panier d'un autre utilisateur s'affiche.
+    text_en: |
+      To change the value, open the DevTools console and run
+      sessionStorage.setItem('bid', 'X') where X is another number (try
+      1, 2, or 3). Then reload the basket page or navigate to /#/basket.
+      The frontend issues GET /rest/basket/X. If the request succeeds,
+      another user's basket is displayed.
+    pedagogical_intent: |
+      Give the syntactic shape of the manipulation and the navigation step.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      1. Connecte-toi avec un compte normal (par exemple le compte testing
+         decouvert au challenge Exposed Credentials).
+      2. Ouvre la console DevTools (F12 puis onglet Console).
+      3. Tape : sessionStorage.setItem('bid', '1') puis Entree.
+      4. Navigue vers http://127.0.0.1:3000/#/basket. Le panier de
+         l'utilisateur 1 (admin@juice-sh.op) apparait. Juice Shop
+         valide automatiquement le challenge View Basket des qu'une
+         requete GET /rest/basket/X reussit avec X different de ton
+         propre basket id.
+    text_en: |
+      1. Log in with a normal account (for example the testing account
+         from the Exposed Credentials challenge).
+      2. Open the DevTools console (F12 then Console tab).
+      3. Type: sessionStorage.setItem('bid', '1') then Enter.
+      4. Navigate to http://127.0.0.1:3000/#/basket. User 1's basket
+         (admin@juice-sh.op) appears. Juice Shop automatically validates
+         the View Basket challenge as soon as a GET /rest/basket/X
+         succeeds with X different from your own basket id.
+    pedagogical_intent: |
+      Quasi-solution: full step-by-step with the storage key and value.

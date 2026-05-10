@@ -1,0 +1,104 @@
+challenge_key: "easterEggLevelOneChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "If you solved one of the four file
+      access challenges, you already know where to find the easter
+      egg". Donc : as-tu deja resolu un challenge qui implique
+      d'acceder a un fichier sur /ftp/ ? Si oui, tu connais le
+      pattern. Si non, commence par Confidential Document
+      (directoryListingChallenge) qui te donnera la cle.
+    text_en: |
+      Official OWASP hint #1: "If you solved one of the four file
+      access challenges, you already know where to find the
+      easter egg". So: have you solved a challenge involving file
+      access on /ftp/? If yes, you know the pattern. If not,
+      start with Confidential Document (directoryListingChallenge)
+      which gives you the key.
+    pedagogical_intent: |
+      Activate prerequisite reflex on /ftp/ surface.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le directory listing /ftp/ contient plusieurs fichiers,
+      certains accessibles librement (.md, .pdf), d'autres bloques
+      par le serveur (.bak typiquement, sauvegardes confidentielles).
+      L'easter egg est probablement dans la categorie BLOQUEE :
+      pourquoi le cacher s'il est accessible directement ? Hint
+      OWASP #2 : "reuse the trick that already worked for the
+      files above" suggere une technique de bypass.
+    text_en: |
+      The /ftp/ directory listing contains several files, some
+      freely accessible (.md, .pdf), others blocked by the server
+      (.bak typically, confidential backups). The easter egg is
+      probably in the BLOCKED category: why hide it if directly
+      accessible? OWASP hint #2: "reuse the trick that already
+      worked for the files above" suggests a bypass technique.
+    pedagogical_intent: |
+      Reframe the question: what extension is blocked, and how to bypass.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Quand un serveur applique un filtre d'extension par regex
+      (bloquer tout ce qui finit par .bak), des bypass classiques
+      existent : poison null byte %00 et query string suffix
+      ?.md. Ces techniques exploitent une difference de parsing
+      entre le filtre (regex sur la chaine recue) et le filesystem
+      (qui ouvre le vrai fichier). L'easter egg est probablement un
+      fichier .bak dans /ftp/ avec un nom evocateur.
+    text_en: |
+      When a server applies an extension filter via regex (block
+      anything ending in .bak), classic bypasses exist: poison
+      null byte %00 and query string suffix ?.md. These exploit a
+      parsing difference between the filter (regex on the
+      received string) and the filesystem (opening the real
+      file). The easter egg is probably a .bak file in /ftp/
+      with an evocative name.
+    pedagogical_intent: |
+      Spell the bypass techniques.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Sur /ftp/, regarde les fichiers .bak qui sont listes mais
+      retournent 403 quand tu les requetes directement. Le fichier
+      cible s'appelle typiquement eastere.gg ou similaire (extension
+      .gg, jeu de mots avec good game). Tente l'URL :
+      /ftp/eastere.gg%2500.md (le %2500 est l'URL-encoding double
+      du null byte %00).
+    text_en: |
+      On /ftp/, look at .bak files that are listed but return 403
+      when requested directly. The target file is typically named
+      eastere.gg or similar (.gg extension, pun on good game).
+      Try the URL: /ftp/eastere.gg%2500.md (the %2500 is the
+      double URL-encoding of the null byte %00).
+    pedagogical_intent: |
+      Give the file naming hint and exact null-byte bypass syntax.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      URL exacte qui valide le challenge (apres avoir resolu
+      Confidential Document) :
+      http://127.0.0.1:3000/ftp/eastere.gg%2500.md
+      Le serveur (1) le filtre regex sur l'extension voit ".md"
+      finale, accepte. (2) Le filesystem decode %2500 -> %00 ->
+      truncation C-string sur le first null byte, ouvre
+      "eastere.gg". Le contenu apparait dans le navigateur, le
+      challenge se valide automatiquement.
+    text_en: |
+      Exact URL solving the challenge (after solving Confidential
+      Document):
+      http://127.0.0.1:3000/ftp/eastere.gg%2500.md
+      The server: (1) the regex extension filter sees ".md"
+      final, accepts. (2) The filesystem decodes %2500 -> %00 ->
+      C-string truncation on the first null byte, opens
+      "eastere.gg". Content shows in the browser, challenge
+      auto-solves.
+    pedagogical_intent: |
+      Quasi-solution : full URL with double-encoding explanation.

@@ -1,0 +1,106 @@
+challenge_key: "persistedXssFeedbackChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le conseil "use a maintained sanitizer like DOMPurify or
+      sanitize-html" est juste mais incomplet. Que faut-il
+      ajouter pour que la defense soit reellement effective ?
+    question_en: |
+      The advice "use a maintained sanitizer like DOMPurify or
+      sanitize-html" is correct but incomplete. What must be
+      added for the defense to be truly effective?
+    options_fr:
+      - "Le sanitizer doit etre obfuscate"
+      - "La VERSION : un sanitizer maintenu mais en version vieille (2+ ans) a probablement une CVE. La defense complete necessite (a) sanitizer maintenu + (b) version recente + (c) CI gate qui fail le build sur npm audit high/critical sur les deps de sanitization"
+      - "Le sanitizer doit tourner en isolated-vm"
+      - "Le sanitizer doit etre teste manuellement chaque mois"
+    options_en:
+      - "The sanitizer must be obfuscated"
+      - "VERSION: a maintained sanitizer in old version (2+ years) likely has a CVE. Complete defense requires (a) maintained sanitizer + (b) recent version + (c) CI gate failing build on npm audit high/critical on sanitization deps"
+      - "The sanitizer must run in isolated-vm"
+      - "The sanitizer must be manually tested monthly"
+    correct: 1
+    explanation_fr: |
+      Pattern critique : "maintenu" sans "a jour" = vulnerable.
+      Sanitize-html, DOMPurify, jsoup ont eu plusieurs CVEs
+      historiques. Defense en profondeur = automatiser la
+      verification via Dependabot/Renovate + CI gate sur npm
+      audit. Reference : OWASP A06:2021 - Vulnerable and
+      Outdated Components.
+    explanation_en: |
+      Critical pattern: "maintained" without "up-to-date" =
+      vulnerable. Sanitize-html, DOMPurify, jsoup had several
+      historic CVEs. Defense in depth = automate verification
+      via Dependabot/Renovate + CI gate on npm audit. Reference:
+      OWASP A06:2021 - Vulnerable and Outdated Components.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Ce challenge necessite la composition de plusieurs
+      vulnerabilites. Quelle est la kill chain canonique ?
+    question_en: |
+      This challenge requires composing multiple vulnerabilities.
+      What's the canonical kill chain?
+    options_fr:
+      - "(1) SQLi pour escalader admin, (2) admin section, (3) feedback poster"
+      - "(1) File disclosure (/ftp/, null byte bypass) pour obtenir package.json.bak, (2) lire la version du sanitizer, (3) lookup CVE de cette version specifique, (4) appliquer le payload bypass connu sur le Comment field"
+      - "(1) DDoS le serveur, (2) profiter du chaos, (3) injecter"
+      - "(1) Phishing l'admin, (2) recuperer son JWT, (3) post avec son identite"
+    options_en:
+      - "(1) SQLi to escalate admin, (2) admin section, (3) post feedback"
+      - "(1) File disclosure (/ftp/, null byte bypass) for package.json.bak, (2) read sanitizer version, (3) lookup CVE of that specific version, (4) apply known bypass payload on Comment field"
+      - "(1) DDoS the server, (2) profit from chaos, (3) inject"
+      - "(1) Phish admin, (2) get their JWT, (3) post with their identity"
+    correct: 1
+    explanation_fr: |
+      Kill chain pentest realiste : RECON (file disclosure ->
+      dependency inventory -> CVE lookup) puis EXPLOIT (payload
+      cible). Sans la phase recon, l'attaquant teste des bypass
+      generiques qui ne marchent pas. Avec la recon, l'exploit
+      est instantane. Source : hint OWASP officiel #4.
+    explanation_en: |
+      Realistic pentest kill chain: RECON (file disclosure ->
+      dependency inventory -> CVE lookup) then EXPLOIT (targeted
+      payload). Without recon phase, attacker tries generic
+      bypasses that don't work. With recon, exploit is
+      instant. Source: official OWASP hint #4.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Le pattern "mutation XSS" exploit une difference de parsing
+      entre le sanitizer et le navigateur. Pourquoi est-ce
+      possible meme avec un sanitizer "complete" ?
+    question_en: |
+      The "mutation XSS" pattern exploits a parsing difference
+      between the sanitizer and the browser. Why is it possible
+      even with a "complete" sanitizer?
+    options_fr:
+      - "Parce que les sanitizers ne supportent pas Unicode"
+      - "Parce que sanitize la string SOURCE retourne une OUTPUT que le NAVIGATEUR re-parse. Si les deux parsers ont des state machines differentes (HTML5 spec vs sanitizer simplifie), une string benigne pour le sanitizer peut etre maligne pour le navigateur. Defense : utiliser un sanitizer qui fait parse + serialize complet pour idempotence"
+      - "Parce que les regex sont trop lentes"
+      - "Parce que les browsers caches le HTML 24h"
+    options_en:
+      - "Because sanitizers don't support Unicode"
+      - "Because sanitizer parses SOURCE string returning OUTPUT that the BROWSER re-parses. If both parsers have different state machines (HTML5 spec vs simplified sanitizer), a benign string for the sanitizer can be malicious for the browser. Defense: use a sanitizer doing full parse + serialize for idempotence"
+      - "Because regexes are too slow"
+      - "Because browsers cache HTML 24h"
+    correct: 1
+    explanation_fr: |
+      Mutation XSS = differential parsing. Reference : DOMPurify
+      paper "DOMPurify: Client-Side Sanitization Made Easy"
+      (Mario Heiderich et al., 2017). DOMPurify utilise le DOM
+      du navigateur pour parser ET serialize, garantissant
+      l'idempotence (sanitize(x) === sanitize(sanitize(x))). Les
+      sanitizers regex-based ne peuvent pas le garantir.
+    explanation_en: |
+      Mutation XSS = differential parsing. Reference: DOMPurify
+      paper "DOMPurify: Client-Side Sanitization Made Easy"
+      (Mario Heiderich et al., 2017). DOMPurify uses the
+      browser DOM for both parse AND serialize, guaranteeing
+      idempotence (sanitize(x) === sanitize(sanitize(x))).
+      Regex-based sanitizers can't guarantee this.

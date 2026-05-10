@@ -1,0 +1,146 @@
+challenge_key: "emptyUserRegistration"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Register un user avec un email VIDE et un password
+  VIDE. Description OWASP. Hints officiels : (1)
+  "Consider intercepting and playing with the request
+  payload". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/verify.ts:21-26 (verifie source). Code exact :
+  `req.body && req.body.email === '' && req.body.
+  password === ''`. Donc le serveur attend literalement
+  email="" ET password="". La protection cote frontend
+  (Angular reactive forms validators required + email
+  pattern) bloque la submit, MAIS la protection cote
+  serveur n'existe pas (Sequelize User.create accepte
+  les empty strings). Workflow : (1) Bypass le frontend
+  via curl/Burp. (2) POST /api/Users avec body
+  `{"email":"","password":"","passwordRepeat":""}`. (3)
+  Le serveur cree l'user (avec quelques NULL constraints
+  potentiels) -> challenge solve auto.
+
+mission_en: |
+  Register a user with EMPTY email AND EMPTY password.
+  OWASP description. Official hints: (1) "Consider
+  intercepting and playing with the request payload".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/verify.ts:
+  21-26 (verified source). Exact code: `req.body &&
+  req.body.email === '' && req.body.password === ''`.
+  So server literally expects email="" AND
+  password="". Frontend protection (Angular reactive
+  forms validators required + email pattern) blocks
+  submit, BUT server protection doesn't exist
+  (Sequelize User.create accepts empty strings).
+  Workflow: (1) Bypass frontend via curl/Burp. (2)
+  POST /api/Users with body `{"email":"","password":
+  "","passwordRepeat":""}`. (3) Server creates user
+  (with some NULL constraints potentially) ->
+  challenge auto solves.
+
+concepts:
+  - title_fr: "Client-side validation : NEVER une defense"
+    title_en: "Client-side validation: NEVER a defense"
+    body_fr: |
+      Source canonique : OWASP Input Validation Cheat
+      Sheet (mitigationUrl du challenge). Principe
+      fundamental : la validation cote CLIENT est UX
+      uniquement, JAMAIS une defense de securite.
+      L'attaquant peut envoyer N'IMPORTE QUEL payload
+      via curl, Burp, Postman, fetch() de console
+      DevTools. Cas Juice Shop : le formulaire
+      register utilise Angular reactive forms avec
+      Validators.required + Validators.email. Si
+      l'attaquant fait POST /api/Users via curl, ces
+      validators NE S'APPLIQUENT PAS (ils tournent
+      uniquement dans le browser). La defense correcte
+      = validation OBLIGATOIRE cote serveur.
+    body_en: |
+      Canonical source: OWASP Input Validation Cheat
+      Sheet (challenge mitigationUrl). Fundamental
+      principle: CLIENT-side validation is UX only,
+      NEVER a security defense. Attacker can send ANY
+      payload via curl, Burp, Postman, fetch() from
+      DevTools console. Juice Shop case: register
+      form uses Angular reactive forms with
+      Validators.required + Validators.email. If
+      attacker does POST /api/Users via curl, these
+      validators DO NOT APPLY (they run only in
+      browser). Correct defense = MANDATORY
+      server-side validation.
+
+  - title_fr: "Server-side validation : Sequelize allowNull/validate"
+    title_en: "Server-side validation: Sequelize allowNull/validate"
+    body_fr: |
+      Defense canonique pour Juice Shop (Sequelize
+      ORM) : utiliser les Sequelize model
+      validations. Pattern :
+      ```js
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+          isEmail: true
+        }
+      }
+      ```
+      Avec ce schema, `User.create({email: ""})` throw
+      avant l'insert DB. Combine avec joi/zod schema
+      validator au niveau du middleware Express. Pour
+      le password : `validate: {len: [8, 100],
+      notEmpty: true}` + bcrypt hash with salt round
+      >= 12. Defense en profondeur : validators
+      multiples (Sequelize + middleware + DB
+      constraints).
+    body_en: |
+      Canonical defense for Juice Shop (Sequelize
+      ORM): use Sequelize model validations.
+      Pattern:
+      ```js
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+          isEmail: true
+        }
+      }
+      ```
+      With this schema, `User.create({email: ""})`
+      throws before DB insert. Combined with joi/zod
+      schema validator at Express middleware level.
+      For password: `validate: {len: [8, 100],
+      notEmpty: true}` + bcrypt hash with salt round
+      >= 12. Defense in depth: multiple validators
+      (Sequelize + middleware + DB constraints).
+
+  - title_fr: "Test methodology : intercepter et payloader"
+    title_en: "Test methodology: intercept and payload"
+    body_fr: |
+      Hint OWASP unique : "Consider intercepting and
+      playing with the request payload". Workflow
+      pentest standard : (1) Burp Proxy en
+      intercept-mode. (2) Fill normal form -> capture
+      la requete. (3) Forward avec modifications
+      (empty fields, NULL bytes, special chars,
+      multi-MB strings). (4) Observer la response.
+      Pattern reusable : automatiser cela via Burp
+      Intruder (fuzzing les fields un par un avec
+      payload list). Pour les students : commencer
+      avec curl/fetch manual avant les tools.
+    body_en: |
+      Single OWASP hint: "Consider intercepting and
+      playing with the request payload". Standard
+      pentest workflow: (1) Burp Proxy in
+      intercept-mode. (2) Fill normal form -> capture
+      request. (3) Forward with modifications (empty
+      fields, NULL bytes, special chars, multi-MB
+      strings). (4) Observe response. Reusable
+      pattern: automate via Burp Intruder (fuzz
+      fields one-by-one with payload list). For
+      students: start with manual curl/fetch before
+      tools.

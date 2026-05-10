@@ -1,0 +1,158 @@
+challenge_key: "typosquattingNpmChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Informe le shop (via /#/contact) d'un trick de
+  typosquatting dont il a ete victime au moins en
+  v6.2.0-SNAPSHOT. Mentionne le nom EXACT du culprit dans
+  le commentaire feedback. Description OWASP. Hints
+  officiels : (1) "This challenge has nothing to do with
+  mistyping web domains. Investigate the forgotten
+  developer's backup file instead". (2) "Investigating the
+  forgotten developer's backup file might bring some
+  insight". (3) "'Malicious packages in npm' is a
+  worthwhile read on Ivan Akulov's blog". [KILL_CHAIN_
+  DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans routes/
+  verify.ts:270-274 (verifie source). Code exact :
+  `checkPatternInFeedbackAndComplaints(challenges.
+  typosquattingNpmChallenge, { [Op.like]: '%epilogue-js%' })
+  `. Donc le culprit cherche est `epilogue-js`. Pre-requis
+  (hint #1) : forgottenDevBackupChallenge resolu pour
+  acceder a /ftp/package.json.bak (le backup file
+  developpeur). Workflow : (1) Resoudre forgottenDevBackup
+  pour avoir package.json.bak. (2) Inspecter les
+  dependencies pour trouver `epilogue-js` (un typosquat de
+  `epilogue` ou similar). (3) Submit feedback /#/contact
+  avec le commentaire mentionnant "epilogue-js". (4) Solve
+  auto via le pattern matching cote serveur.
+
+mission_en: |
+  Inform shop (via /#/contact) about typosquatting trick
+  it was victim of at least in v6.2.0-SNAPSHOT. Mention
+  EXACT culprit name in feedback comment. OWASP
+  description. Official hints: (1) "This challenge has
+  nothing to do with mistyping web domains. Investigate
+  the forgotten developer's backup file instead". (2)
+  "Investigating the forgotten developer's backup file
+  might bring some insight". (3) "'Malicious packages in
+  npm' is a worthwhile read on Ivan Akulov's blog".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/verify.ts:
+  270-274 (verified source). Exact code:
+  `checkPatternInFeedbackAndComplaints(challenges.
+  typosquattingNpmChallenge, { [Op.like]: '%epilogue-js%'
+  })`. So sought culprit is `epilogue-js`. Prerequisite
+  (hint #1): forgottenDevBackupChallenge solved to access
+  /ftp/package.json.bak (developer backup file).
+  Workflow: (1) Solve forgottenDevBackup to get
+  package.json.bak. (2) Inspect dependencies to find
+  `epilogue-js` (typosquat of `epilogue` or similar).
+  (3) Submit feedback /#/contact with comment mentioning
+  "epilogue-js". (4) Auto solve via server-side pattern
+  matching.
+
+concepts:
+  - title_fr: "Typosquatting npm : pattern d'attaque supply chain"
+    title_en: "npm typosquatting: supply chain attack pattern"
+    body_fr: |
+      Source canonique : Ivan Akulov "Malicious packages
+      in npm" (iamakulov.com/notes/npm-malicious-packages)
+      cite litteralement dans hint OWASP #3. Pattern :
+      l'attaquant publie sur npm un package au nom
+      visuellement similaire a un package legitime
+      (typosquat) : `epilogue` -> `epilogue-js` ou
+      `cross-env` -> `crossenv`, `babel-cli` ->
+      `babelcli`. Quand un developer fait `npm install
+      epilogue-js` (typo de `epilogue`), il installe le
+      malicious package qui execute `postinstall` script
+      pour exfiltrer creds, env vars, SSH keys. Defense :
+      (1) `npm audit` regulier (bien que pas focalise
+      typosquat), (2) lockfile signature (npm v9+
+      audit signatures), (3) private registry mirror,
+      (4) socket.dev / snyk security supply chain
+      monitoring.
+    body_en: |
+      Canonical source: Ivan Akulov "Malicious packages
+      in npm" (iamakulov.com/notes/npm-malicious-
+      packages) literally cited in OWASP hint #3.
+      Pattern: attacker publishes on npm a package with
+      visually similar name to legitimate package
+      (typosquat): `epilogue` -> `epilogue-js` or
+      `cross-env` -> `crossenv`, `babel-cli` ->
+      `babelcli`. When developer does `npm install
+      epilogue-js` (typo for `epilogue`), they install
+      malicious package executing `postinstall` script
+      to exfiltrate creds, env vars, SSH keys. Defense:
+      (1) regular `npm audit` (though not typosquat-
+      focused), (2) lockfile signature (npm v9+ audit
+      signatures), (3) private registry mirror, (4)
+      socket.dev / snyk security supply chain
+      monitoring.
+
+  - title_fr: "Composition pre-requise : forgottenDevBackup"
+    title_en: "Required composition: forgottenDevBackup"
+    body_fr: |
+      Hint OWASP #1 explicite : "Investigate the forgotten
+      developer's backup file instead". Donc le pre-requis
+      est forgottenDevBackupChallenge resolu pour acceder
+      a /ftp/package.json.bak. C'est l'historic snapshot
+      du package.json (potentiellement v6.2.0-SNAPSHOT
+      vu la description). En l'inspectant, on trouve une
+      dependency au nom suspect : `"epilogue-js": "..."`.
+      Pattern reusable : les old versions du package.json
+      (committed dans git history, dans .bak files,
+      dans Docker layers caches) revelent souvent les
+      typosquats temporaires qui ont ete corriges. Le
+      challenge pedagogiquement insiste sur l'historical
+      forensics, pas sur l'analyse runtime.
+    body_en: |
+      OWASP hint #1 explicit: "Investigate the forgotten
+      developer's backup file instead". So prerequisite
+      is forgottenDevBackupChallenge solved to access
+      /ftp/package.json.bak. Historical snapshot of
+      package.json (potentially v6.2.0-SNAPSHOT given
+      description). Inspecting reveals suspicious-named
+      dependency: `"epilogue-js": "..."`. Reusable
+      pattern: old package.json versions (committed in
+      git history, .bak files, Docker layer caches)
+      often reveal temporary typosquats that were fixed.
+      Challenge pedagogically insists on historical
+      forensics, not runtime analysis.
+
+  - title_fr: "Defense canonique : OWASP Vulnerable Dependency Management"
+    title_en: "Canonical defense: OWASP Vulnerable Dependency Management"
+    body_fr: |
+      mitigationUrl du challenge :
+      cheatsheetseries.owasp.org/cheatsheets/Vulnerable_
+      Dependency_Management_Cheat_Sheet.html. Defenses
+      anti-typosquatting : (1) Pinning des dependencies
+      par version exacte + integrity hash dans
+      package-lock.json. (2) Dependency review CI/CD
+      (GitHub Dependency Review Action, Snyk, Socket).
+      (3) Limiting les indirect dependencies via
+      `--package-lock-only` ou `npm ci`. (4) Internal
+      mirror (Verdaccio, JFrog Artifactory) avec
+      validation prealable des packages. (5)
+      Code-signing des packages publies (npm provenance
+      attestation, sigstore). (6) Awareness training
+      developer pour double-check les noms de packages
+      avant install (extension VS Code + linter).
+    body_en: |
+      Challenge mitigationUrl:
+      cheatsheetseries.owasp.org/cheatsheets/Vulnerable_
+      Dependency_Management_Cheat_Sheet.html. Anti-
+      typosquatting defenses: (1) Pin dependencies by
+      exact version + integrity hash in package-lock.
+      json. (2) CI/CD dependency review (GitHub
+      Dependency Review Action, Snyk, Socket). (3)
+      Limit indirect dependencies via `--package-lock-
+      only` or `npm ci`. (4) Internal mirror (Verdaccio,
+      JFrog Artifactory) with pre-validation of
+      packages. (5) Code-signing of published packages
+      (npm provenance attestation, sigstore). (6)
+      Developer awareness training to double-check
+      package names before install (VS Code extension
+      + linter).

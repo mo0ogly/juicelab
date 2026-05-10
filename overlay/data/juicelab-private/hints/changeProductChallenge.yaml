@@ -1,0 +1,126 @@
+challenge_key: "changeProductChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 enumere 3 voies theoriques : (a)
+      broken admin functionality, (b) RESTful API holes, (c) SQL
+      Injection. Hint #2 te previent : 2 sur 3 sont des dead ends.
+      Donc UNE seule voie marche en pratique. Reflechis : si tu
+      essaies SQLi sur /rest/products/search, tu peux LIRE des
+      donnees mais peux-tu MODIFIER une row precise via ce vector
+      ? Et un admin functionality, est-ce que Juice Shop t'expose
+      un /admin/products UI ?
+    text_en: |
+      Official OWASP hint #1 enumerates 3 theoretical paths: (a)
+      broken admin functionality, (b) RESTful API holes, (c) SQL
+      Injection. Hint #2 warns: 2 out of 3 are dead ends. So
+      ONLY ONE works in practice. Think: if you try SQLi on
+      /rest/products/search, can you READ data but can you
+      MODIFY a specific row via that vector? And admin
+      functionality, does Juice Shop expose a /admin/products UI?
+    pedagogical_intent: |
+      Eliminate dead ends, focus on RESTful API.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      L'API RESTful est l'angle. Juice Shop expose
+      /api/Products/:id avec les 4 verbs HTTP par defaut (GET POST
+      PUT DELETE) sans restriction. Source : codefixes/
+      changeProductChallenge.info.yml fix #2 (incorrect) explique
+      : "the default permissions of the underlying API generator
+      will be used: Allowing GET, POST, PUT and DELETE - without
+      any restrictions". Quel verb modifie un row existant ?
+    text_en: |
+      The RESTful API is the angle. Juice Shop exposes
+      /api/Products/:id with all 4 HTTP verbs by default (GET POST
+      PUT DELETE) with no restriction. Source: codefixes/
+      changeProductChallenge.info.yml fix #2 (incorrect) explains:
+      "the default permissions of the underlying API generator
+      will be used: Allowing GET, POST, PUT and DELETE - without
+      any restrictions". Which verb modifies an existing row?
+    pedagogical_intent: |
+      Spell auto-generation default behavior, hint PUT.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      PUT /api/Products/:id update le row. Tu dois trouver l'id
+      du produit "OWASP SSL Advanced Forensic Tool (O-Saft)".
+      Methode : GET /api/Products et grep le name pour trouver
+      l'id. Ou plus directement : navigate dans le catalogue
+      Juice Shop, ouvre le produit O-Saft, l'URL contient l'id
+      (typiquement #/search?q=O-Saft mais le vrai id est dans le
+      JSON network).
+    text_en: |
+      PUT /api/Products/:id updates the row. You must find the
+      id of "OWASP SSL Advanced Forensic Tool (O-Saft)". Method:
+      GET /api/Products and grep name to find the id. Or more
+      directly: browse the Juice Shop catalog, open the O-Saft
+      product, the URL contains the id (typically
+      #/search?q=O-Saft but the real id is in the JSON network).
+    pedagogical_intent: |
+      Help locate the target product id.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      L'id de O-Saft est typiquement 9 (peut varier selon la
+      seed). Le payload PUT consiste a remplacer le champ
+      description avec un nouveau lien :
+      curl -X PUT http://127.0.0.1:3000/api/Products/9
+        -H "Authorization: Bearer <ton_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"description":"...<a href=\"https://owasp.slack.com\">...</a>..."}'
+      Le serveur accepte le PUT sans verifier l'autorisation
+      admin. Le produit est modifie en DB. Le challenge se valide
+      automatiquement quand le serveur detecte le href cible
+      https://owasp.slack.com sur le produit O-Saft.
+    text_en: |
+      O-Saft id is typically 9 (may vary by seed). The PUT
+      payload replaces the description field with a new link:
+      curl -X PUT http://127.0.0.1:3000/api/Products/9
+        -H "Authorization: Bearer <your_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"description":"...<a href=\"https://owasp.slack.com\">...</a>..."}'
+      Server accepts the PUT without admin auth check. Product
+      is modified in DB. Challenge auto-solves when server
+      detects target href https://owasp.slack.com on O-Saft.
+    pedagogical_intent: |
+      Spell exact PUT command with target URL.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet :
+      1. GET /api/Products  -> trouve l'id de O-Saft (typiquement 9)
+      2. GET /api/Products/9  -> note la description actuelle
+      3. PUT /api/Products/9 avec description modifiee :
+         curl -X PUT http://127.0.0.1:3000/api/Products/9
+           -H "Authorization: Bearer <ton_jwt>"
+           -H "Content-Type: application/json"
+           -d '{"description":"Free, open-source tool... <a href=\"https://owasp.slack.com\">More...</a>"}'
+      Important : preserve la structure HTML de la description,
+      remplace JUSTE le href du lien O-Saft avec
+      https://owasp.slack.com. Verifie ensuite avec un nouveau
+      GET /api/Products/9. Source de validation : la route
+      backend Juice Shop check le href cible.
+    text_en: |
+      Complete workflow:
+      1. GET /api/Products -> find O-Saft id (typically 9)
+      2. GET /api/Products/9 -> note current description
+      3. PUT /api/Products/9 with modified description:
+         curl -X PUT http://127.0.0.1:3000/api/Products/9
+           -H "Authorization: Bearer <your_jwt>"
+           -H "Content-Type: application/json"
+           -d '{"description":"Free, open-source tool... <a href=\"https://owasp.slack.com\">More...</a>"}'
+      Important: preserve description's HTML structure, ONLY
+      replace the O-Saft link href with
+      https://owasp.slack.com. Verify with a new
+      GET /api/Products/9. Validation source: Juice Shop backend
+      route checks target href.
+    pedagogical_intent: |
+      Quasi-solution : full workflow + warning on HTML structure.

@@ -1,0 +1,142 @@
+challenge_key: "ephemeralAccountantChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Connecte-toi en tant qu'utilisateur acc0unt4nt@juice-sh.op qui
+  N'EXISTE PAS en base de donnees. La description OWASP officielle
+  precise : "without ever registering that user". Les hints officiels
+  ferment toutes les portes triviales : registration normale refusee
+  par le shop, INSERT dans la DB invalide le challenge, restart
+  necessaire pour reset. La categorie Injection donne l'angle attendu :
+  une SQLi UNION-based sur le formulaire de login qui FABRIQUE un row
+  utilisateur a la volee, sans persistance.
+
+  Methode recommandee : sur le login form, dans le champ email,
+  injecte un payload UNION SELECT qui retourne un row imitant la
+  structure de la table users — id, email = acc0unt4nt@juice-sh.op,
+  password, role, etc. Le backend, qui n'est pas verifie le
+  resultat-vs-DB-vraiment, fabrique un JWT pour ce "user" et te le
+  rend. Tu es connecte sous une identite ephemere : pas en DB, pas
+  persistee, mais session active jusqu'au logout.
+
+  Note la structure exacte du UNION (combien de columns ?), les
+  difficultes de syntaxe rencontrees, et reflechis a la difference
+  entre "SQLi comment" (Login Bender) et "SQLi UNION" (ce challenge).
+  Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Log in as user acc0unt4nt@juice-sh.op who DOES NOT EXIST in the
+  database. The official OWASP description states: "without ever
+  registering that user". Official hints close all trivial doors:
+  normal registration refused by the shop, INSERT into the DB
+  invalidates the challenge, restart needed to reset. The Injection
+  category gives the expected angle: a UNION-based SQLi on the login
+  form that FABRICATES a user row on the fly, with no persistence.
+
+  Recommended method: on the login form, in the email field, inject
+  a UNION SELECT payload that returns a row mimicking the users
+  table structure — id, email = acc0unt4nt@juice-sh.op, password,
+  role, etc. The backend, which does not verify the result against
+  the actual DB, mints a JWT for this "user" and hands it back. You
+  are logged in under an ephemeral identity: not in DB, not
+  persisted, but the session is active until logout.
+
+  Note the exact UNION structure (how many columns?), the syntax
+  difficulties encountered, and reflect on the difference between
+  "comment SQLi" (Login Bender) and "UNION SQLi" (this challenge).
+  You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "SQLi UNION-based : fabriquer des donnees plutot que filtrer"
+    title_en: "UNION-based SQLi: fabricate data rather than filter"
+    body_fr: |
+      Deux familles principales de SQLi sur SELECT. (1) Comment-based
+      (Login Bender, Login Admin) : on commente la fin de la requete
+      pour ignorer les conditions restantes. La requete reste sur la
+      meme table, on retourne juste un row reel. (2) UNION-based : on
+      ajoute un nouveau SELECT dont les valeurs sont CHOISIES par
+      l'attaquant. Le resultat combine inclut les rows reels ET les
+      rows fabriques. Pour le login, c'est puissant : on peut
+      fabriquer un user qui n'existe pas. Cheatsheet OWASP :
+      cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+    body_en: |
+      Two main SQLi families on SELECT. (1) Comment-based (Login
+      Bender, Login Admin): comment out the rest of the query to
+      ignore remaining conditions. The query stays on the same
+      table, just returns an actual row. (2) UNION-based: append a
+      new SELECT whose values are CHOSEN by the attacker. The
+      combined result includes real rows AND fabricated ones. For
+      login, this is powerful: you can fabricate a non-existing
+      user. OWASP cheatsheet:
+      cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+
+  - title_fr: "Alignment des colonnes : la difficulte technique du UNION"
+    title_en: "Column alignment: the technical UNION difficulty"
+    body_fr: |
+      Pour qu'un UNION SELECT soit valide, le SELECT injecte DOIT
+      avoir le meme nombre de colonnes ET des types compatibles
+      avec le SELECT original. Si la requete originale est SELECT *
+      FROM users WHERE email='...', il faut deviner combien de
+      colonnes a la table users (souvent 8-12). Methode : tester
+      avec des SELECT NULL,NULL,... en augmentant le nombre jusqu'a
+      ce que l'erreur SQL disparaisse (error-based hopping, hint
+      OWASP officiel). Une fois aligned, on remplace les NULL par
+      les valeurs voulues.
+    body_en: |
+      For a UNION SELECT to be valid, the injected SELECT MUST have
+      the same column count AND types compatible with the original
+      SELECT. If the original is SELECT * FROM users WHERE
+      email='...', you must guess how many columns the users table
+      has (often 8-12). Method: test SELECT NULL,NULL,... increasing
+      the count until the SQL error vanishes (error-based hopping,
+      official OWASP hint). Once aligned, replace NULLs with the
+      desired values.
+
+  - title_fr: "Identite ephemere : la session sans rangement DB"
+    title_en: "Ephemeral identity: the session with no DB row"
+    body_fr: |
+      Le mot "ephemeral" du nom du challenge est litteral : le user
+      acc0unt4nt n'existe que LE TEMPS d'une session. Mecanique :
+      le SELECT injecte fabrique un row, le backend signe un JWT
+      avec les claims de ce row, le client conserve le JWT. La
+      session vit tant que le JWT vit (typiquement 1h). Pas de row
+      en DB, pas d'enregistrement, le restart de l'app ne change
+      rien (rien a effacer). C'est une demonstration concrete que
+      la session JWT est decouplee de la persistance DB — un faux
+      user peut avoir des droits reels pendant la duree du JWT.
+    body_en: |
+      The "ephemeral" in the challenge name is literal: the user
+      acc0unt4nt only exists FOR THE DURATION of a session.
+      Mechanic: the injected SELECT fabricates a row, the backend
+      signs a JWT with that row's claims, the client keeps the
+      JWT. The session lives as long as the JWT lives (typically
+      1h). No DB row, no record, an app restart changes nothing
+      (nothing to clear). This concretely shows that the JWT
+      session is decoupled from DB persistence — a fake user can
+      hold real rights for the JWT lifetime.
+
+  - title_fr: "Defense : ne pas faire confiance au resultat SQL pour le JWT"
+    title_en: "Defense: do not trust SQL results for the JWT"
+    body_fr: |
+      La defense canonique reste les prepared statements (Sequelize
+      binding, hint #2 du codefixes officiel). Mais pour ce
+      challenge specifique, une defense secondaire utile : NE PAS
+      utiliser le resultat brut du SELECT pour signer le JWT.
+      Pattern correct : (1) le SELECT retourne un user_id, (2) on
+      RE-FETCH les claims (role, permissions) avec une seconde
+      query parametree par cet user_id, (3) on signe le JWT avec
+      les claims re-fetchees. Une SQLi sur le SELECT initial ne
+      peut alors pas controler les claims du JWT, seulement
+      potentiellement le user_id (qui doit pointer vers un user
+      reel pour la seconde query).
+    body_en: |
+      The canonical defense remains prepared statements (Sequelize
+      binding, fix #2 of the official codefixes). But for this
+      specific challenge, a useful secondary defense: DO NOT use
+      the raw SELECT result to sign the JWT. Right pattern: (1)
+      the SELECT returns a user_id, (2) RE-FETCH claims (role,
+      permissions) via a second parameterized query keyed on that
+      user_id, (3) sign the JWT with the re-fetched claims. SQLi
+      on the initial SELECT can no longer control JWT claims, only
+      potentially the user_id (which must point to a real user for
+      the second query).

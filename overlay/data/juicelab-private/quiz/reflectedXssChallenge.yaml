@@ -1,0 +1,94 @@
+challenge_key: "reflectedXssChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi le Reflected XSS est-il considere comme particulierement
+      dangereux pour des attaques ciblees, comparativement au DOM XSS ?
+    question_en: |
+      Why is Reflected XSS considered particularly dangerous for
+      targeted attacks, compared to DOM XSS?
+    options_fr:
+      - "Parce qu'il est detecte par moins d'outils que le DOM XSS"
+      - "Parce qu'il est weaponizable via une URL partageable, donc utilisable en spear phishing pour cibler une victime specifique"
+      - "Parce qu'il est plus discret dans les logs serveur"
+      - "Parce qu'il bypasse la majorite des CSP"
+    options_en:
+      - "Because it is detected by fewer tools than DOM XSS"
+      - "Because it is weaponizable via a shareable URL, hence usable in spear phishing to target a specific victim"
+      - "Because it is stealthier in server logs"
+      - "Because it bypasses most CSPs"
+    correct: 1
+    explanation_fr: |
+      L'URL malveillante peut etre envoyee par mail/Slack/SMS a une
+      victime ciblee. Le DOM XSS necessite que la victime tape elle-meme
+      dans un champ ou interagisse avec un objet local : impossible a
+      weaponiser a distance.
+    explanation_en: |
+      The malicious URL can be sent by email/Slack/SMS to a targeted
+      victim. DOM XSS requires the victim to type into a field or
+      interact with a local object: impossible to weaponize remotely.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Sur le challenge Reflected XSS, le payload arrive via le parametre
+      URL `id` de la page /track-result. Quelle validation server-side
+      simple aurait suffi a bloquer la majorite des payloads ?
+    question_en: |
+      In the Reflected XSS challenge, the payload arrives via the URL
+      parameter `id` of /track-result. What simple server-side
+      validation would have blocked most payloads?
+    options_fr:
+      - "Verifier que id est une chaine de moins de 1000 caracteres"
+      - "Verifier que id correspond a un schema attendu (numerique ou UUID)"
+      - "Mettre la page derriere une authentification"
+      - "Encoder en base64 le parametre id"
+    options_en:
+      - "Verify that id is a string under 1000 characters"
+      - "Verify that id matches the expected schema (numeric or UUID)"
+      - "Put the page behind authentication"
+      - "Base64-encode the id parameter"
+    correct: 1
+    explanation_fr: |
+      Une validation de schema (numeric, UUID) refuse au niveau du
+      router toute valeur de type texte libre. Le payload XSS ne passe
+      meme pas dans le rendering. La longueur n'aide pas, l'auth ne
+      bloque pas un user authentifie, base64 deplace le probleme.
+    explanation_en: |
+      Schema validation (numeric, UUID) refuses any free-text value at
+      the router level. The XSS payload does not even reach the
+      rendering. Length does not help, auth does not block an
+      authenticated user, base64 just moves the problem.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quel attribut de cookie limite l'impact d'un XSS qui chercherait a
+      voler le cookie de session ?
+    question_en: |
+      Which cookie attribute limits the impact of an XSS attempting to
+      steal the session cookie?
+    options_fr:
+      - "Path=/"
+      - "HttpOnly (empeche document.cookie de lire le cookie cote JS)"
+      - "Domain=.example.com"
+      - "Max-Age=86400"
+    options_en:
+      - "Path=/"
+      - "HttpOnly (prevents document.cookie from reading the cookie in JS)"
+      - "Domain=.example.com"
+      - "Max-Age=86400"
+    correct: 1
+    explanation_fr: |
+      HttpOnly retire le cookie de document.cookie cote navigateur, donc
+      un payload XSS ne peut pas le lire pour l'exfiltrer. Defense
+      essentielle (avec Secure et SameSite). Path/Domain/Max-Age ne
+      protegent pas contre le vol via XSS.
+    explanation_en: |
+      HttpOnly removes the cookie from document.cookie in the browser,
+      so an XSS payload cannot read it to exfiltrate. Essential
+      defense (with Secure and SameSite). Path/Domain/Max-Age do not
+      protect against theft via XSS.

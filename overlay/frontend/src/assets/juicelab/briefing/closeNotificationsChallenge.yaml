@@ -1,0 +1,86 @@
+challenge_key: "closeNotificationsChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Fermer plusieurs notifications "challenge solved" en un seul clic en
+  manipulant la requete WebSocket. Tag : Miscellaneous. Hint OWASP :
+  "close multiple notifications". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans lib/startup/registerWebsocketEvents.ts:51 :
+  `solveIf(closeNotificationsChallenge, () => Array.isArray(data) &&
+  data.length > 1)`. Le client WebSocket peut envoyer un Array de
+  notification IDs au lieu d'un single ID. Le serveur trust le payload
+  et solve si Array.length > 1. Workflow : (1) Solver plusieurs
+  challenges (2+). (2) Override le WebSocket emit cote client pour
+  envoyer un Array. (3) Click "close all" notifications.
+
+mission_en: |
+  Close multiple "challenge solved" notifications in single click by
+  manipulating WebSocket request. Tag: Miscellaneous. OWASP hint:
+  "close multiple notifications". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in lib/startup/registerWebsocketEvents.ts:51:
+  `solveIf(closeNotificationsChallenge, () => Array.isArray(data) &&
+  data.length > 1)`. Client WebSocket can send Array of notification IDs
+  instead of single ID. Server trusts payload and solves if Array.length
+  > 1. Workflow: (1) Solve several challenges (2+). (2) Override client
+  WebSocket emit to send Array. (3) Click "close all" notifications.
+
+concepts:
+  - title_fr: "WebSocket payload trust : type confusion attack"
+    title_en: "WebSocket payload trust: type confusion attack"
+    body_fr: |
+      Source canonique : OWASP A08:2021 + CWE-843 Type Confusion. JS
+      typing dynamique permet de passer Array la ou single ID est
+      attendu. Si le serveur ne valide pas le shape du payload, l'attaquant
+      peut envoyer Array et triggrer un comportement inattendu. Pattern
+      reusable : tout endpoint WebSocket DOIT valider le shape strict du
+      payload (TypeScript runtime check, Zod, Ajv). Cas reels : Slack RCE
+      via JSON deserialization 2019, Discord token exfil 2020.
+    body_en: |
+      Canonical source: OWASP A08:2021 + CWE-843 Type Confusion. JS
+      dynamic typing allows passing Array where single ID is expected. If
+      server doesn't validate payload shape, attacker can send Array and
+      trigger unexpected behavior. Reusable pattern: any WebSocket
+      endpoint MUST validate strict payload shape (TypeScript runtime
+      check, Zod, Ajv). Real cases: Slack RCE via JSON deserialization
+      2019, Discord token exfil 2020.
+
+  - title_fr: "DevTools WebSocket inspection + override"
+    title_en: "DevTools WebSocket inspection + override"
+    body_fr: |
+      Pattern reusable : inspect WebSocket via Chrome DevTools > Network >
+      WS tab. Voir frames in/out. Override possible via : (1) Console
+      monkey-patching :
+      `socket.emit = (event, data) => { ... }`. (2) Replay frames via
+      Burp Repeater (apres install Burp WebSocket plugin). (3) Custom
+      client en Python : `websockets.connect(url).send(json.dumps([1,2]))`.
+      Defense : binary protocol (protobuf) avec schema strict + JWT
+      auth + per-message integrity (HMAC).
+    body_en: |
+      Reusable pattern: inspect WebSocket via Chrome DevTools > Network >
+      WS tab. See frames in/out. Override possible via: (1) Console monkey-
+      patching: `socket.emit = (event, data) => { ... }`. (2) Frame
+      replay via Burp Repeater (after Burp WebSocket plugin install).
+      (3) Custom Python client: `websockets.connect(url).send(json.
+      dumps([1,2]))`. Defense: binary protocol (protobuf) with strict
+      schema + JWT auth + per-message integrity (HMAC).
+
+  - title_fr: "Defense canonique : runtime type validation"
+    title_en: "Canonical defense: runtime type validation"
+    body_fr: |
+      (1) Zod ou Ajv runtime schema validation : `const schema =
+      z.string().uuid(); schema.parse(data)`. Reject Array. (2) TypeScript
+      `if (typeof data !== 'string')` defensive check. (3) WebSocket
+      message envelope avec `type` field + per-type validation. (4) Rate
+      limit + auth per-socket. (5) Test fuzzing avec different types
+      (number, Array, Object, null, undefined). Pattern reusable : never
+      trust client data type.
+    body_en: |
+      (1) Zod or Ajv runtime schema validation: `const schema =
+      z.string().uuid(); schema.parse(data)`. Reject Array. (2)
+      TypeScript `if (typeof data !== 'string')` defensive check. (3)
+      WebSocket message envelope with `type` field + per-type validation.
+      (4) Per-socket rate limit + auth. (5) Fuzz testing with different
+      types (number, Array, Object, null, undefined). Reusable pattern:
+      never trust client data type.

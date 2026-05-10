@@ -1,0 +1,144 @@
+challenge_key: "registerAdminChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Register comme un user avec privileges administrator.
+  Description OWASP. Hints officiels : (1) "You have to
+  assign the unassignable". (2) "Register as an ordinary
+  user to learn what API endpoints are involved in this
+  use case". (3) "Think of the simplest possible
+  implementations of a distinction between regular users
+  and administrators". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/verify.ts:50-55 (verifie source). Code exact :
+  `req.body && req.body.role === security.roles.admin`.
+  Donc le serveur accepte un parametre `role` dans le
+  body de POST /api/Users et l'enregistre tel quel sans
+  filter. C'est l'archetypal MASS ASSIGNMENT vulnerability
+  (cf. mitigationUrl). Workflow : (1) Register normal via
+  /#/register pour observer la requete (DevTools Network).
+  (2) Replay la requete via Burp/curl en ajoutant
+  `"role": "admin"` au body JSON. (3) Le serveur cree le
+  user avec role admin -> challenge solve auto.
+
+mission_en: |
+  Register as a user with administrator privileges.
+  OWASP description. Official hints: (1) "You have to
+  assign the unassignable". (2) "Register as an
+  ordinary user to learn what API endpoints are
+  involved in this use case". (3) "Think of the
+  simplest possible implementations of a distinction
+  between regular users and administrators".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/verify.ts:
+  50-55 (verified source). Exact code: `req.body &&
+  req.body.role === security.roles.admin`. So server
+  accepts `role` parameter in POST /api/Users body and
+  registers it as-is without filter. Archetypal MASS
+  ASSIGNMENT vulnerability (cf. mitigationUrl).
+  Workflow: (1) Normal registration via /#/register to
+  observe request (DevTools Network). (2) Replay
+  request via Burp/curl adding `"role": "admin"` to
+  JSON body. (3) Server creates user with admin role
+  -> challenge auto solves.
+
+concepts:
+  - title_fr: "Mass Assignment : assigner tous les fields naivement"
+    title_en: "Mass Assignment: naively assigning all fields"
+    body_fr: |
+      Source canonique : OWASP Mass Assignment Cheat
+      Sheet (mitigationUrl du challenge). Definition :
+      le mass assignment se produit quand un endpoint
+      accept un object body et l'enregistre tel quel
+      dans la base de donnees (via ORM `Model.create(
+      req.body)` ou similar). Si l'object contient des
+      attributs SENSITIVES (role, isAdmin, balance,
+      verified) que le client ne devrait PAS pouvoir
+      controler, l'attaquant les inject simplement dans
+      le body. Cas classique : `User.create({email,
+      password, role: "admin"})`. Le code Juice Shop
+      ligne 510-515 du server.ts utilise un Sequelize
+      hook `before` qui ne filtre pas le `role`.
+    body_en: |
+      Canonical source: OWASP Mass Assignment Cheat
+      Sheet (challenge mitigationUrl). Definition:
+      mass assignment occurs when endpoint accepts an
+      object body and stores it as-is in database
+      (via ORM `Model.create(req.body)` or similar).
+      If object contains SENSITIVE attributes (role,
+      isAdmin, balance, verified) client should NOT
+      control, attacker simply injects them in body.
+      Classic case: `User.create({email, password,
+      role: "admin"})`. Juice Shop server.ts line
+      510-515 uses Sequelize `before` hook that
+      doesn't filter `role`.
+
+  - title_fr: "Defense canonique : DTO + allowlist explicit"
+    title_en: "Canonical defense: DTO + explicit allowlist"
+    body_fr: |
+      Defense canonique (codefixes/
+      registerAdminChallenge.info.yml fix #3) :
+      "overriding any value pre-set via the POST
+      request with a static 'customer' default role".
+      Pattern reusable : NEVER spread `req.body`
+      directly dans Model.create. Toujours passer par
+      un DTO (Data Transfer Object) qui ALLOWLIST les
+      champs autorises : `User.create({email:
+      req.body.email, password: req.body.password,
+      role: "customer"})`. Pour les frameworks ORM
+      (Sequelize, Mongoose), utiliser les
+      configurations whitelist (Sequelize `attributes`
+      filter) ou des libraries dedicated (express-
+      validator, joi, zod). Le fix #1 (codefixes) qui
+      "keep role if defined" est INSUFFISANT car
+      l'attaquant injecte toujours.
+    body_en: |
+      Canonical defense (codefixes/
+      registerAdminChallenge.info.yml fix #3):
+      "overriding any value pre-set via the POST
+      request with a static 'customer' default
+      role". Reusable pattern: NEVER spread
+      `req.body` directly in Model.create. Always go
+      through DTO (Data Transfer Object) ALLOWLISTING
+      authorized fields: `User.create({email:
+      req.body.email, password: req.body.password,
+      role: "customer"})`. For ORM frameworks
+      (Sequelize, Mongoose), use whitelist configs
+      (Sequelize `attributes` filter) or dedicated
+      libraries (express-validator, joi, zod).
+      Codefixes fix #1 "keep role if defined" is
+      INSUFFICIENT as attacker still injects.
+
+  - title_fr: "Pattern reusable : la simplicite naive du privilege escalation"
+    title_en: "Reusable pattern: naive simplicity of privilege escalation"
+    body_fr: |
+      Hint OWASP #3 : "Think of the simplest possible
+      implementations of a distinction between regular
+      users and administrators". L'insight pedagogique
+      : beaucoup de developpeurs pensent que la
+      distinction admin/user est COMPLEXE (RBAC, ABAC,
+      ACLs). Mais une implementation naive utilise
+      souvent un simple champ `role` ou `isAdmin`. Si
+      ce champ est dans la table Users et est
+      writable via l'endpoint registration, c'est
+      l'escalade triviale. Le challenge force le
+      student a TENTER cette assumption simpliste
+      avant de chercher des mecanismes complexes
+      (JWT forgery, etc.). Pattern : la SIMPLE
+      assumption est souvent vraie en pentest.
+    body_en: |
+      OWASP hint #3: "Think of the simplest possible
+      implementations of a distinction between
+      regular users and administrators". Pedagogical
+      insight: many developers think admin/user
+      distinction is COMPLEX (RBAC, ABAC, ACLs). But
+      naive implementation often uses simple `role`
+      or `isAdmin` field. If this field is in Users
+      table and writable via registration endpoint,
+      it's trivial escalation. Challenge forces
+      student to TRY this simplistic assumption
+      before searching complex mechanisms (JWT
+      forgery, etc.). Pattern: SIMPLE assumption is
+      often true in pentest.

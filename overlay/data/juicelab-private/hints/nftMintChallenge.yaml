@@ -1,0 +1,198 @@
+challenge_key: "nftMintChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel unique : "Discover NFT
+      wonders among the captivating visual
+      memories". Donc Photo Wall = la surface de
+      decouverte. Tags du challenge : Web3 +
+      Internet Traffic.
+    text_en: |
+      Official OWASP single hint: "Discover NFT
+      wonders among the captivating visual
+      memories". So Photo Wall = discovery
+      surface. Challenge tags: Web3 + Internet
+      Traffic.
+    pedagogical_intent: |
+      Activate Photo Wall + Web3 reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Pre-requis Web3 :
+      - Install MetaMask browser extension.
+      - Add Sepolia testnet.
+      - Get Sepolia ETH via faucet
+        (sepoliafaucet.com).
+      - Connect MetaMask a Juice Shop via /#/
+        wallet.
+      Smart contract Honey Pot adresse :
+      0x41427790c94E7a592B17ad694eD9c06A02bb9C39
+      (Sepolia testnet, verifie via routes/
+      nftMint.ts:9).
+    text_en: |
+      Web3 prerequisites:
+      - Install MetaMask browser extension.
+      - Add Sepolia testnet.
+      - Get Sepolia ETH via faucet
+        (sepoliafaucet.com).
+      - Connect MetaMask to Juice Shop via /#/
+        wallet.
+      Honey Pot smart contract address:
+      0x41427790c94E7a592B17ad694eD9c06A02bb9C39
+      (Sepolia testnet, verified via routes/
+      nftMint.ts:9).
+    pedagogical_intent: |
+      Spell Web3 setup.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Naviguer Photo Wall (/#/photo-wall). Cherche
+      des images avec hidden hints (steganography
+      potential, BEEs hidden in images). Le hint
+      OWASP "captivating visual memories" suggere
+      que les BEEs sont visualement decouvrables
+      dans le Photo Wall. Pour les BEEs, regarder
+      les EXIF data ou les pixel-level patterns.
+      Sources cles : challenges adjacents (faucet
+      module, hidden image stegano).
+    text_en: |
+      Navigate Photo Wall (/#/photo-wall). Look
+      for images with hidden hints (steganography
+      potential, BEEs hidden in images). OWASP
+      hint "captivating visual memories"
+      suggests BEEs visually discoverable in
+      Photo Wall. For BEEs, check EXIF data or
+      pixel-level patterns. Key sources:
+      adjacent challenges (faucet module,
+      hidden image stegano).
+    pedagogical_intent: |
+      Spell discovery method.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Source serveur
+      verifiee (routes/nftMint.ts:9-48) :
+      - WebSocket Provider sur Sepolia ecoute
+        l'evenement `NFTMinted`
+      - Quand triggered, le minter address est
+        added a addressesMinted Set in-memory
+      - POST /api/walletNFTVerify : verifie si
+        ton MetaMask address est dans le Set
+      - Si oui, solveIf trigger -> challenge
+        solve auto.
+      Donc le student doit MINT le NFT depuis
+      sa MetaMask address, puis verifier via
+      l'API.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Verified server
+      source (routes/nftMint.ts:9-48):
+      - WebSocket Provider on Sepolia listens
+        for `NFTMinted` event
+      - When triggered, minter address added
+        to in-memory addressesMinted Set
+      - POST /api/walletNFTVerify: checks if
+        your MetaMask address is in Set
+      - If yes, solveIf triggers -> challenge
+        auto solves.
+      So student must MINT the NFT from
+      MetaMask address, then verify via API.
+    pedagogical_intent: |
+      Reveal exact server flow.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Setup Web3 :
+         - Install MetaMask
+         - Add Sepolia network
+         - Get Sepolia ETH via faucet
+         - Connect to Juice Shop /#/wallet
+      2. Discover the Honey Pot contract
+         address :
+         0x41427790c94E7a592B17ad694eD9c06A02bb9C39
+         (visible dans routes/nftMint.ts ou via
+         le bundle Angular).
+      3. Inspect le contract sur Sepolia
+         Etherscan : sepolia.etherscan.io/
+         address/0x4142...9C39. Tu vois la
+         function `mint()` exposee.
+      4. Acquire les BEEs : selon hint OWASP
+         "captivating visual memories", elles
+         sont gathered via Photo Wall ou
+         adjacent challenges. Sources possibles
+         : EXIF data hidden, image pixel
+         steganography, separate Web3
+         transactions.
+      5. Call `mint()` de la Honey Pot contract
+         via MetaMask (avec les BEEs comme
+         input). Confirm la transaction +
+         pay gas en Sepolia ETH.
+      6. La transaction emit l'event
+         `NFTMinted(minterAddress)`. Le
+         WebSocket Juice Shop detecte
+         l'event, ajoute ton address dans
+         addressesMinted.
+      7. POST /api/walletNFTVerify avec ton
+         MetaMask address dans body :
+         `{walletAddress: "0xYourAddress"}`.
+      8. Le serveur check Set -> match ->
+         challenge solve auto + reset Set
+         (delete address).
+      Source canonique : routes/nftMint.ts +
+      codefixes/nftMintChallenge.info.yml +
+      Sepolia testnet docs.
+      Defense canonique : SafeMath sub() dans
+      Solidity contract pour eviter underflow
+      attacks (codefixes fix #4).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Web3 setup:
+         - Install MetaMask
+         - Add Sepolia network
+         - Get Sepolia ETH via faucet
+         - Connect to Juice Shop /#/wallet
+      2. Discover Honey Pot contract address:
+         0x41427790c94E7a592B17ad694eD9c06A02bb9C39
+         (visible in routes/nftMint.ts or
+         Angular bundle).
+      3. Inspect contract on Sepolia
+         Etherscan: sepolia.etherscan.io/
+         address/0x4142...9C39. You see
+         exposed `mint()` function.
+      4. Acquire BEEs: per OWASP hint
+         "captivating visual memories", they
+         are gathered via Photo Wall or
+         adjacent challenges. Possible
+         sources: hidden EXIF data, image
+         pixel steganography, separate Web3
+         transactions.
+      5. Call Honey Pot contract's `mint()`
+         via MetaMask (with BEEs as input).
+         Confirm transaction + pay gas in
+         Sepolia ETH.
+      6. Transaction emits `NFTMinted(
+         minterAddress)` event. Juice Shop
+         WebSocket detects event, adds your
+         address to addressesMinted.
+      7. POST /api/walletNFTVerify with
+         MetaMask address in body:
+         `{walletAddress: "0xYourAddress"}`.
+      8. Server checks Set -> match ->
+         challenge auto solves + resets Set
+         (deletes address).
+      Canonical source: routes/nftMint.ts +
+      codefixes/nftMintChallenge.info.yml +
+      Sepolia testnet docs.
+      Canonical defense: SafeMath sub() in
+      Solidity contract to avoid underflow
+      attacks (codefixes fix #4).
+    pedagogical_intent: |
+      Solution complete + Web3 setup +
+      Solidity defense.

@@ -1,0 +1,99 @@
+challenge_key: "geoStalkingMetaChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Toute photo prise par smartphone moderne contient par
+      defaut des metadata EXIF. Quelles informations
+      sensibles peuvent y figurer ?
+    question_en: |
+      Every modern-smartphone photo holds default EXIF
+      metadata. What sensitive info can be there?
+    options_fr:
+      - "Le mot de passe iCloud du proprietaire"
+      - "Coordonnees GPS exactes (lat/lng), heure precise (timezone), modele du device (iPhone 15 Pro), reglages camera, parfois orientation. Permet : identification du domicile, lieu de travail, habitudes, niveau de richesse via croisement"
+      - "L'historique de navigation web"
+      - "Les contacts du carnet d'adresses"
+    options_en:
+      - "Owner's iCloud password"
+      - "Exact GPS coords (lat/lng), precise time (timezone), device model (iPhone 15 Pro), camera settings, sometimes orientation. Enables: home identification, workplace, habits, wealth level via cross-correlation"
+      - "Web browsing history"
+      - "Address book contacts"
+    correct: 1
+    explanation_fr: |
+      EXIF est defini par ISO 12234-2 et expose par defaut sur
+      toutes les photos smartphone (sauf si l'user a desactive
+      le geo-tagging). Defense : strip EXIF a l'upload
+      (server-side), ne PAS faire confiance au client.
+    explanation_en: |
+      EXIF is defined by ISO 12234-2 and exposed by default on
+      every smartphone photo (unless user disabled
+      geo-tagging). Defense: strip EXIF at upload
+      (server-side), DON'T trust the client.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      L'OWASP Cheat Sheet "Choosing and Using Security
+      Questions" recommande explicitement quoi a propos des
+      security questions ?
+    question_en: |
+      The OWASP "Choosing and Using Security Questions" Cheat
+      Sheet explicitly recommends what about security
+      questions?
+    options_fr:
+      - "Utiliser des questions creatives pour eviter le brute force"
+      - "'If at all, they should not be used as the only factor for a security-relevant function'. Le knowledge-based auth est deprecated par NIST SP 800-63B 5.1.1.2 — remplace par 2FA (TOTP, WebAuthn) cryptographiquement lie au device"
+      - "Forcer les users a changer leur security question chaque mois"
+      - "Chiffrer les reponses aux security questions avec AES"
+    options_en:
+      - "Use creative questions to avoid brute force"
+      - "'If at all, they should not be used as the only factor for a security-relevant function'. Knowledge-based auth is deprecated by NIST SP 800-63B 5.1.1.2 — replaced by 2FA (TOTP, WebAuthn) cryptographically tied to device"
+      - "Force users to change security question monthly"
+      - "Encrypt security question answers with AES"
+    correct: 1
+    explanation_fr: |
+      Citation directe de la cheat sheet OWASP. Pattern moderne
+      : phase-out des security questions, replace par 2FA
+      hardware-backed. Reference : OWASP Authentication +
+      NIST SP 800-63B 2017+.
+    explanation_en: |
+      Direct OWASP cheat sheet citation. Modern pattern:
+      phase-out security questions, replace with hardware-
+      backed 2FA. Reference: OWASP Authentication + NIST SP
+      800-63B 2017+.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique cote APP contre le geo-stalking via
+      EXIF : 3 couches. Laquelle est la plus haute priorite
+      pour eviter le challenge ?
+    question_en: |
+      Canonical APP-side defense against EXIF geo-stalking: 3
+      layers. Which is highest priority to avoid the
+      challenge?
+    options_fr:
+      - "Forcer HTTPS sur le photo upload endpoint"
+      - "Strip EXIF SERVER-SIDE au moment de l'upload via sharp/.withMetadata(false) ou ImageMagick mogrify -strip. Defense transparent au user, applicable retroactivement aux photos existantes en re-process"
+      - "Limiter la taille des photos a 100KB"
+      - "Verifier le format avec un magic byte check"
+    options_en:
+      - "Force HTTPS on photo upload endpoint"
+      - "SERVER-SIDE strip EXIF at upload via sharp/.withMetadata(false) or ImageMagick mogrify -strip. User-transparent defense, applicable retroactively to existing photos via re-process"
+      - "Limit photos to 100KB"
+      - "Verify format with magic-byte check"
+    correct: 1
+    explanation_fr: |
+      Strip EXIF est une defense AUTOMATIQUE qui ne change
+      rien a l'UX (la photo s'affiche normalement). Cron de
+      re-processing pour les photos existantes en DB. C'est la
+      defense la plus efficiente cost/benefit. Les autres
+      options ne previennent pas le risque de fuite metadata.
+    explanation_en: |
+      Strip EXIF is an AUTOMATIC defense changing nothing in
+      UX (photo displays normally). Re-processing cron for
+      existing DB photos. Most efficient cost/benefit defense.
+      Other options don't prevent metadata leak risk.

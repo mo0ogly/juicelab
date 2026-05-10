@@ -1,0 +1,138 @@
+challenge_key: "unionSqlInjectionChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Recupere la liste complete des credentials utilisateurs (emails +
+  hashes de mots de passe) via SQL Injection. La description OWASP
+  officielle : "Retrieve a list of all user credentials via SQL
+  Injection". Le hint #5 fait le rapprochement direct avec
+  Christmas Special et Database Schema : meme angle (search
+  endpoint, frontend impossible), cible differente (table Users
+  cette fois).
+
+  Methode recommandee : meme endpoint /rest/products/search?q=... que
+  pour Database Schema. Tu reutilises l'alignment de colonnes deja
+  trouve (typiquement 9 colonnes pour Products), mais tu remplaces
+  sqlite_master par Users dans le UNION SELECT. Tu exfiltres email
+  et password (hash bcrypt) en les positionnant dans des columns
+  affichees par le frontend (typiquement name et description du
+  resultat search).
+
+  Note la difference avec dbSchema (cible Users vs sqlite_master) et
+  pourquoi obtenir des HASH bcrypt est dangereux meme si bcrypt
+  n'est pas reversible. Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Retrieve the full list of user credentials (emails + password
+  hashes) via SQL Injection. Official OWASP description: "Retrieve
+  a list of all user credentials via SQL Injection". Hint #5
+  directly relates this to Christmas Special and Database Schema:
+  same angle (search endpoint, frontend-impossible), different
+  target (Users table this time).
+
+  Recommended method: same /rest/products/search?q=... endpoint as
+  Database Schema. You reuse the already-found column alignment
+  (typically 9 columns for Products), but replace sqlite_master
+  with Users in the UNION SELECT. You exfiltrate email and
+  password (bcrypt hash) by placing them in columns displayed by
+  the frontend (typically name and description of the search
+  result).
+
+  Note the difference with dbSchema (target Users vs
+  sqlite_master) and why obtaining bcrypt hashes is dangerous
+  even though bcrypt is not reversible. You will report it in the
+  "after" logbook.
+
+concepts:
+  - title_fr: "Composition de SQLi : recon (dbSchema) puis exploit (Users)"
+    title_en: "SQLi composition: recon (dbSchema) then exploit (Users)"
+    body_fr: |
+      Ces deux challenges illustrent la kill chain SQLi en deux temps.
+      (1) dbSchema = recon, on apprend que la table s'appelle Users
+      et a une colonne email + password. (2) unionSqlInjection =
+      exploit, on cible directement Users. En pentest reel, sauter
+      la phase recon = travailler aveugle (deviner les noms de
+      tables/colonnes). Avec recon, l'attaque est ciblee et propre.
+      Hint OWASP #5 explicite cette progression : "As with the
+      Database Schema challenge, this cannot be achieved through
+      the application frontend".
+    body_en: |
+      These two challenges illustrate the two-step SQLi kill chain.
+      (1) dbSchema = recon, you learn the table is named Users
+      with an email + password column. (2) unionSqlInjection =
+      exploit, you target Users directly. In a real pentest,
+      skipping recon = working blind (guessing table/column
+      names). With recon, the attack is targeted and clean. OWASP
+      hint #5 makes this progression explicit: "As with the
+      Database Schema challenge, this cannot be achieved through
+      the application frontend".
+
+  - title_fr: "Mapping des columns : ou afficher email et password ?"
+    title_en: "Column mapping: where to display email and password?"
+    body_fr: |
+      Le SELECT injecte doit retourner 9 colonnes. Mais le frontend
+      n'affiche typiquement que name et description (ou
+      similaires) dans les resultats search. Strategie : positionne
+      l'email et le hash dans les columns affichees, mets NULL ou
+      dummy values dans les columns ignorees. Exemple : UNION
+      SELECT id,email,password,4,5,6,7,8,9 FROM Users-- met
+      email en column 2 (qui s'affiche comme "name") et hash en
+      column 3 (qui s'affiche comme "description"). C'est de l'art
+      de fuite par mapping de canal.
+    body_en: |
+      The injected SELECT must return 9 columns. But the frontend
+      typically only displays name and description (or similar) in
+      search results. Strategy: place email and hash in displayed
+      columns, put NULL or dummy in ignored columns. Example:
+      UNION SELECT id,email,password,4,5,6,7,8,9 FROM Users-- puts
+      email in column 2 (rendered as "name") and hash in column 3
+      (rendered as "description"). This is the art of channel
+      mapping for exfiltration.
+
+  - title_fr: "Hashes bcrypt qui leak : le brute force offline est non rate-limite"
+    title_en: "Leaked bcrypt hashes: offline brute force has no rate limit"
+    body_fr: |
+      bcrypt n'est PAS reversible (pas chiffre, c'est une fonction
+      de hachage avec sel). Mais une fois le hash en main,
+      l'attaquant lance hashcat ou john-the-ripper sur son GPU avec
+      une wordlist : pas de rate-limit reseau, pas de captcha. Un
+      mot de passe faible ("Password123") tombe en quelques
+      minutes ; meme un mot de passe moyen tombe en quelques jours
+      sur un cluster GPU. Conclusion : un hash leake equivaut au
+      mot de passe pour les utilisateurs aux passwords faibles.
+      Defense : politique de password forte + ne PAS leak le hash
+      en premier lieu (DTO/serializer cote API, hint cousin avec
+      passwordHashLeakChallenge).
+    body_en: |
+      bcrypt is NOT reversible (not encrypted, a hash with salt).
+      But once the hash is in hand, the attacker runs hashcat or
+      john-the-ripper on their GPU with a wordlist: no network
+      rate limit, no captcha. A weak password ("Password123")
+      falls in minutes; even a medium password falls in days on a
+      GPU cluster. Conclusion: a leaked hash equals the password
+      for users with weak credentials. Defense: strong password
+      policy + do NOT leak the hash in the first place
+      (DTO/serializer on the API side, sister hint with
+      passwordHashLeakChallenge).
+
+  - title_fr: "Defense en profondeur : monitoring sur queries volumineuses"
+    title_en: "Defense in depth: monitoring on bulk queries"
+    body_fr: |
+      Au-dela des prepared statements (defense canonique, codefixes
+      fix #2), une couche detection : monitorer les queries SELECT
+      qui retournent ANORMALEMENT beaucoup de rows. Une recherche
+      de produit normale retourne 1-50 rows ; une UNION sur Users
+      retourne tous les users d'un coup (200+ pour une instance
+      seedee). Alerte SIEM sur les queries qui depassent un seuil
+      par requete API, ou sur les queries dont le SQL contient
+      UNION sur les endpoints non-admin. Permet la DETECTION en
+      temps reel meme si la SQLi passe.
+    body_en: |
+      Beyond prepared statements (canonical defense, codefixes fix
+      #2), a detection layer: monitor SELECT queries that return
+      ABNORMALLY many rows. A normal product search returns 1-50
+      rows; a UNION on Users returns all users at once (200+ for a
+      seeded instance). SIEM alert on queries exceeding a
+      per-request threshold, or queries whose SQL contains UNION on
+      non-admin endpoints. Enables real-time DETECTION even if the
+      SQLi gets through.

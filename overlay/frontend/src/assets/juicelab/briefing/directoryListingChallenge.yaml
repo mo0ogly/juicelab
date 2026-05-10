@@ -1,0 +1,111 @@
+challenge_key: "directoryListingChallenge"
+schema_version: "juicelab.briefing.v1"
+
+mission_fr: |
+  Trouve et ouvre le document confidentiel sur l'acquisition de la
+  societe, qui n'est cite nulle part dans l'UI mais existe sur le
+  serveur. C'est un challenge de RECONNAISSANCE et d'URL TAMPERING,
+  pas un challenge de code.
+
+  Methode recommandee : observe les liens de telechargement legitimes
+  proposes par le shop (recus, factures, attachements) et identifie le
+  segment de chemin commun. Demande ensuite cette URL de DOSSIER, sans
+  nom de fichier apres le slash. Si le serveur autorise le directory
+  listing, le navigateur affiche l'index du dossier comme un explorateur
+  de fichiers : le document confidentiel est alors trivialement
+  identifiable.
+
+  Note la methode utilisee, le nom du document et les autres fichiers
+  presents dans le dossier. Tu en parleras dans le journal "apres" :
+  certains fichiers sont des reliquats (backup, exports, logs) qui ne
+  devraient JAMAIS etre exposes en production.
+
+mission_en: |
+  Find and open the confidential document about the company acquisition,
+  which is mentioned nowhere in the UI but exists on the server. This
+  is a RECONNAISSANCE and URL-TAMPERING challenge, not a code
+  challenge.
+
+  Recommended method: observe the legitimate download links offered by
+  the shop (receipts, invoices, attachments) and identify the common
+  path segment. Then request that FOLDER URL, with no filename after
+  the slash. If the server allows directory listing, the browser shows
+  the folder index like a file explorer: the confidential document is
+  then trivially identifiable.
+
+  Remember the method used, the document name, and the other files
+  present in the folder. You will report it in the "after" logbook:
+  some files are leftovers (backups, exports, logs) that should NEVER
+  be exposed in production.
+
+concepts:
+  - title_fr: "Directory listing : OWASP A05:2021 Security Misconfiguration"
+    title_en: "Directory listing: OWASP A05:2021 Security Misconfiguration"
+    body_fr: |
+      Quand un serveur HTTP recoit une requete GET sur un dossier sans
+      nom de fichier, il a trois comportements possibles : 403/404 (le
+      bon), servir un fichier par defaut comme index.html (acceptable),
+      ou afficher la liste des fichiers (mesconfiguration). Le 3eme
+      comportement est classe OWASP A05:2021 : il viole le principe
+      "n'expose que ce qui doit l'etre" et permet d'enumerer des
+      fichiers oublies.
+    body_en: |
+      When an HTTP server receives a GET on a folder with no filename,
+      three behaviors are possible: 403/404 (the right one), serve a
+      default file like index.html (acceptable), or display the file
+      list (misconfiguration). The 3rd behavior is OWASP A05:2021: it
+      violates the "expose only what must be exposed" principle and
+      enables enumerating forgotten files.
+
+  - title_fr: "URL tampering : du fichier au dossier"
+    title_en: "URL tampering: from file to folder"
+    body_fr: |
+      L'application te donne une URL legitime du genre /ftp/recu.pdf.
+      L'attaquant teste alors /ftp/ tout court. Cette manipulation
+      simple suffit a basculer du mode "fichier servi" au mode "index
+      liste". C'est la base de toute reconnaissance web : ne pas
+      consommer les liens passivement, mais les decomposer et tester
+      leurs variantes.
+    body_en: |
+      The application gives you a legitimate URL like /ftp/receipt.pdf.
+      The attacker tests /ftp/ alone. That simple manipulation flips
+      from "file served" to "folder listed". This is the bedrock of
+      any web recon: do not consume links passively, decompose them
+      and test their variants.
+
+  - title_fr: "Fichiers orphelins : backups, .git, exports"
+    title_en: "Orphan files: backups, .git, exports"
+    body_fr: |
+      Les cibles classiques d'un directory listing : .bak (backups
+      base de donnees), .git/ (historique complet, anciens secrets),
+      .env (variables d'environnement avec cles API), exports CSV
+      d'admin, dumps SQL. Le drame : ces fichiers ont ete crees pour
+      un besoin temporaire, oublies, et restent indefiniment
+      accessibles. La regle defensive est l'audit periodique des
+      assets statiques.
+    body_en: |
+      Classic directory-listing targets: .bak (database backups),
+      .git/ (full history with old secrets), .env (env vars with API
+      keys), admin CSV exports, SQL dumps. The drama: these files
+      were created for a temporary need, forgotten, and remain
+      indefinitely accessible. The defensive rule is periodic audit
+      of static assets.
+
+  - title_fr: "Hardening serveur : Apache, Nginx, Express"
+    title_en: "Server hardening: Apache, Nginx, Express"
+    body_fr: |
+      Trois lignes a connaitre par coeur : Apache "Options -Indexes"
+      (httpd.conf ou .htaccess), Nginx "autoindex off" (par defaut
+      depuis longtemps), Express "express.static()" SEUL sans le
+      middleware "serve-index". Sur Juice Shop, le directory listing
+      sur /ftp/ est volontaire (vulnerabilite pedagogique). En
+      production, la presence de cette config est detectable a la
+      revue (Trivy, OWASP ZAP, ou un simple curl /folder/).
+    body_en: |
+      Three lines to know by heart: Apache "Options -Indexes"
+      (httpd.conf or .htaccess), Nginx "autoindex off" (the default
+      for a long time now), Express "express.static()" ALONE without
+      the "serve-index" middleware. On Juice Shop, /ftp/ directory
+      listing is intentional (pedagogical vuln). In production, this
+      config is detectable in review (Trivy, OWASP ZAP, or a simple
+      curl /folder/).

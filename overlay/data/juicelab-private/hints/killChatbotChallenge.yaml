@@ -1,0 +1,183 @@
+challenge_key: "killChatbotChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #2 : "first get an
+      understanding of how it works under the hood".
+      Hint #3 : "third party, possibly open source
+      library". Hint #4 : "dumpster dive the internet
+      to get a hold of the bot's source". Donc :
+      (a) le chatbot est une library externe,
+      (b) le source est public (open source),
+      (c) il faut le lire pour identifier la vuln.
+    text_en: |
+      Official OWASP hint #2: "first get an
+      understanding of how it works under the
+      hood". Hint #3: "third party, possibly open
+      source library". Hint #4: "dumpster dive the
+      internet to get a hold of the bot's source".
+      So: (a) chatbot is external library, (b)
+      source is public (open source), (c) must
+      read it to identify vuln.
+    pedagogical_intent: |
+      Activate library source-code research reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Library cible : `juicy-chat-bot` (visible
+      dans package.json ou via /ftp/package.json.
+      bak si forgottenDevBackup resolu). Repo
+      GitHub : github.com/bkimminich/juicy-chat-bot
+      (ou similar). Lire le source pour identifier
+      les fonctions exposees : bot.greet, bot.
+      respond, bot.addUser. Cherche les eval,
+      template literals, regex - les surfaces
+      typiques de injection.
+    text_en: |
+      Target library: `juicy-chat-bot` (visible in
+      package.json or via /ftp/package.json.bak if
+      forgottenDevBackup solved). GitHub repo:
+      github.com/bkimminich/juicy-chat-bot (or
+      similar). Read source to identify exposed
+      functions: bot.greet, bot.respond, bot.
+      addUser. Look for eval, template literals,
+      regex - typical injection surfaces.
+    pedagogical_intent: |
+      Spell library identification.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Vuln identifiee : la fonction `bot.greet(
+      userId)` evalue le username comme template
+      string (template literal `${...}`). Si tu
+      change ton username via /rest/chatbot avec
+      action=setname et un payload contenant
+      `${...}` qui throw, le bot est mis en etat
+      casse. La recovery testCommand utilise aussi
+      greet -> meme exception -> double catch ->
+      solve.
+    text_en: |
+      Identified vuln: `bot.greet(userId)` function
+      evaluates username as template string
+      (template literal `${...}`). If you change
+      your username via /rest/chatbot with
+      action=setname and payload containing `${...
+      }` that throws, bot is put in broken state.
+      Recovery testCommand also uses greet -> same
+      exception -> double catch -> solve.
+    pedagogical_intent: |
+      Reveal injection mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Construction du
+      payload : un username qui contient un
+      template literal qui throw une exception
+      irrecoverable. Examples :
+      - `${(()=>{throw 'killed'})()}` - fonction
+        IIFE qui throw
+      - `${process.exit()}` - kill le process (peut
+        aussi crash le serveur)
+      - `${(_=>(_=>_)())()}` - parse error pour
+        crasher le template engine
+      Source serveur verifiee (routes/chatbot.ts:
+      127) : solveIf declenche dans le 2eme catch
+      (recovery testCommand failure).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Payload
+      construction: a username containing a
+      template literal throwing irrecoverable
+      exception. Examples:
+      - `${(()=>{throw 'killed'})()}` - IIFE
+        function that throws
+      - `${process.exit()}` - kills process (may
+        also crash server)
+      - `${(_=>(_=>_)())()}` - parse error
+        crashing template engine
+      Verified server source (routes/chatbot.ts:
+      127): solveIf triggers in 2nd catch
+      (recovery testCommand failure).
+    pedagogical_intent: |
+      Spell payload + server check.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Login Juice Shop (need authenticated user
+         pour /rest/chatbot).
+      2. Trigger setUserName via le chatbot
+         interface (cliquer sur le bot icon en bas
+         a droite, taper "set name" dans le chat,
+         ou directement via API).
+      3. Lorsque le chatbot demande ton nom, taper
+         le payload : `${(_=>(_=>_)())()}` (un
+         payload qui throw une exception au
+         template eval).
+      4. Pour declencher : envoyer une nouvelle
+         query au chatbot (ex. "hello"). Le serveur :
+         (a) bot.respond("hello", userId) appelle
+             bot.greet() avec le username
+             malicious -> exception persistante.
+         (b) catch (err) -> bot.respond(test
+             Command) -> meme exception (greet
+             interne).
+         (c) catch (err) interne -> challengeUtils.
+             solveIf(killChatbot) avec () => true
+             -> match -> challenge solve auto.
+      5. Le bot est definitivement KO : "Remember
+         to stay hydrated while I try to recover
+         from <error>...".
+      Source canonique : routes/chatbot.ts:127 +
+      juicy-chat-bot library source GitHub +
+      JavaScript template literal eval mecanique.
+      Defense canonique : (a) ne PAS evaluer les
+      template literals sur user input, (b)
+      sanitize username (whitelist alphanumeric +
+      espace), (c) isoler le template eval dans une
+      sandbox (vm with no globals, timeouts), (d)
+      avoir un recovery PATH qui n'utilise PAS le
+      same code path (state-independent recovery).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Login Juice Shop (need authenticated user
+         for /rest/chatbot).
+      2. Trigger setUserName via chatbot interface
+         (click bot icon bottom right, type "set
+         name" in chat, or directly via API).
+      3. When chatbot asks your name, type
+         payload: `${(_=>(_=>_)())()}` (payload
+         throwing exception at template eval).
+      4. To trigger: send new query to chatbot
+         (e.g., "hello"). Server:
+         (a) bot.respond("hello", userId) calls
+             bot.greet() with malicious username
+             -> persistent exception.
+         (b) catch (err) -> bot.respond(test
+             Command) -> same exception
+             (internal greet).
+         (c) internal catch (err) ->
+             challengeUtils.solveIf(killChatbot)
+             with () => true -> match ->
+             challenge auto solves.
+      5. Bot is definitively KO: "Remember to
+         stay hydrated while I try to recover
+         from <error>...".
+      Canonical source: routes/chatbot.ts:127 +
+      juicy-chat-bot library source GitHub +
+      JavaScript template literal eval mechanic.
+      Canonical defense: (a) DON'T evaluate
+      template literals on user input, (b)
+      sanitize username (whitelist alphanumeric +
+      space), (c) isolate template eval in
+      sandbox (vm with no globals, timeouts), (d)
+      have recovery PATH NOT using same code path
+      (state-independent recovery).
+    pedagogical_intent: |
+      Quasi-solution : workflow + payload + defense.

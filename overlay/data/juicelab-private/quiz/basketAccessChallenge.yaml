@@ -1,0 +1,89 @@
+challenge_key: "basketAccessChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Comment definirais-tu IDOR (Insecure Direct Object Reference) ?
+    question_en: |
+      How would you define IDOR (Insecure Direct Object Reference)?
+    options_fr:
+      - "Une URL devinable, donc trouvable par enumeration"
+      - "Une reference directe a un objet (id, slug) dans une URL ou un body, sans verification d'ownership cote serveur"
+      - "Une vulnerabilite specifique aux bases NoSQL"
+      - "Un cas particulier d'injection SQL sur les WHERE id = X"
+    options_en:
+      - "A guessable URL, hence findable by enumeration"
+      - "A direct reference to an object (id, slug) in a URL or body, without server-side ownership check"
+      - "A vulnerability specific to NoSQL databases"
+      - "A specific case of SQL injection on WHERE id = X"
+    correct: 1
+    explanation_fr: |
+      IDOR = absence de verification d'autorisation, pas absence d'URL
+      cachee. Un id sequentiel n'est pas le probleme : c'est l'absence
+      de check "cet objet appartient-il bien a l'utilisateur courant ?".
+    explanation_en: |
+      IDOR = missing authorization check, not a missing hidden URL. A
+      sequential id is not the problem: the issue is the missing
+      "does this object belong to the current user?" check.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quel pattern d'API permet d'eviter STRUCTURELLEMENT l'IDOR sur les
+      ressources d'un utilisateur (panier, commandes, profil) ?
+    question_en: |
+      What API pattern structurally avoids IDOR on user-scoped resources
+      (basket, orders, profile)?
+    options_fr:
+      - "Generer des UUIDv4 au lieu d'IDs sequentiels"
+      - "Utiliser /api/me/basket sans parametre, deduit du JWT cote serveur"
+      - "Chiffrer l'ID dans l'URL avec AES-GCM"
+      - "Mettre le bid en cookie httpOnly au lieu de SessionStorage"
+    options_en:
+      - "Generate UUIDv4 instead of sequential IDs"
+      - "Use /api/me/basket without parameter, deduced from the JWT server-side"
+      - "Encrypt the ID in the URL with AES-GCM"
+      - "Put the bid in an httpOnly cookie instead of SessionStorage"
+    correct: 1
+    explanation_fr: |
+      Le pattern /api/me/<resource> deduit l'objet du JWT, donc
+      l'utilisateur ne peut pas demander la ressource d'un autre par
+      construction. Les UUID, chiffrement et cookies sont des
+      ralentisseurs, pas des defenses structurelles.
+    explanation_en: |
+      The /api/me/<resource> pattern deduces the object from the JWT,
+      so the user cannot request another's resource by construction.
+      UUIDs, encryption, and cookies are slowdowns, not structural
+      defenses.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Si on garde une API style /api/basket/:id, quelle verification doit
+      absolument etre faite cote serveur pour bloquer l'IDOR ?
+    question_en: |
+      If we keep an /api/basket/:id style API, what verification must
+      absolutely happen server-side to block IDOR?
+    options_fr:
+      - "Verifier que :id est un entier positif"
+      - "Verifier que basket.userId === JWT.user.id avant de retourner l'objet, sinon 403"
+      - "Rate-limiter l'endpoint a 60 requetes par minute"
+      - "Loguer chaque acces au panier dans un audit log"
+    options_en:
+      - "Verify that :id is a positive integer"
+      - "Verify that basket.userId === JWT.user.id before returning the object, otherwise 403"
+      - "Rate-limit the endpoint to 60 requests per minute"
+      - "Log every basket access in an audit log"
+    correct: 1
+    explanation_fr: |
+      Le check d'ownership est la SEULE defense qui bloque l'IDOR. La
+      validation de format n'aide pas, le rate limit ralentit mais
+      n'empeche pas, l'audit log permet la detection apres coup mais pas
+      la prevention.
+    explanation_en: |
+      The ownership check is the ONLY defense that blocks IDOR.
+      Format validation does not help, rate limiting slows but does
+      not prevent, audit logging enables after-the-fact detection
+      but not prevention.

@@ -1,0 +1,90 @@
+challenge_key: "rceChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Provoquer une boucle infinie via le sandbox `notevil` du B2B endpoint
+  pour declencher la detection RCE. Tag : Insecure Deserialization. Hint
+  OWASP : "make notevil throw infinite loop". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/b2bOrder.ts:31 :
+  `solveIf(rceChallenge, () => getErrorMessage(err) === 'Infinite loop
+  detected - reached max iterations')`. Le serveur execute body.
+  orderLinesData via vm.runInContext + safeEval (notevil) avec timeout 2s.
+  Si le code provoque une boucle qui depasse max iterations (NOT timeout),
+  notevil throw "Infinite loop detected". Workflow : (1) Login. (2) POST
+  /api/b2b/v2/orders avec body.orderLinesData = JS code provoquant boucle.
+
+mission_en: |
+  Trigger infinite loop via B2B endpoint's `notevil` sandbox to fire RCE
+  detection. Tag: Insecure Deserialization. OWASP hint: "make notevil
+  throw infinite loop". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/b2bOrder.ts:31:
+  `solveIf(rceChallenge, () => getErrorMessage(err) === 'Infinite loop
+  detected - reached max iterations')`. Server executes body.
+  orderLinesData via vm.runInContext + safeEval (notevil) with 2s timeout.
+  If code causes loop exceeding max iterations (NOT timeout), notevil
+  throws "Infinite loop detected". Workflow: (1) Login. (2) POST
+  /api/b2b/v2/orders with body.orderLinesData = JS code causing loop.
+
+concepts:
+  - title_fr: "Insecure Deserialization : eval() de user input"
+    title_en: "Insecure Deserialization: eval() of user input"
+    body_fr: |
+      Source canonique : OWASP A08:2021 Software and Data Integrity Failures
+      + CWE-502 Deserialization of Untrusted Data. Le code Juice Shop
+      execute `safeEval(orderLinesData)` ou orderLinesData = body de la
+      requete user. Pattern reusable : tout `eval()` / `Function()` /
+      `vm.runInContext()` sur user input = code execution. Defense :
+      (1) JAMAIS eval sur user input. (2) Si vraiment necessaire, utiliser
+      des sandboxes hardcore (vm2-deprecated, isolated-vm, deno permissions).
+      (3) Limiter par schema (JSON Schema) au lieu d'eval.
+    body_en: |
+      Canonical source: OWASP A08:2021 Software and Data Integrity Failures
+      + CWE-502 Deserialization of Untrusted Data. Juice Shop code executes
+      `safeEval(orderLinesData)` where orderLinesData = user request body.
+      Reusable pattern: any `eval()` / `Function()` / `vm.runInContext()`
+      on user input = code execution. Defense: (1) NEVER eval on user
+      input. (2) If truly necessary, use hardcore sandboxes (vm2-deprecated,
+      isolated-vm, deno permissions). (3) Limit via schema (JSON Schema)
+      instead of eval.
+
+  - title_fr: "notevil : sandbox JS bypassable"
+    title_en: "notevil: bypassable JS sandbox"
+    body_fr: |
+      `notevil` est une lib npm qui pretend offrir safe eval - elle parse
+      l'AST et bloque certains patterns. Mais : (1) detection iteration
+      max (boucle infinie -> error). (2) detection timeout (long-running
+      -> error). (3) Mais bypassable par chained operations qui semblent
+      benignes. Sandbox JS history : vm2 (deprecated 2023, multiple CVE
+      sandbox escapes), isolated-vm (Node.js-only, mieux mais lourd),
+      Deno (subprocess avec permissions). Defense : si vraiment besoin de
+      executor du JS user, isolated-vm + memory limit + CPU limit + signal
+      escape detection.
+    body_en: |
+      `notevil` is npm lib claiming safe eval - parses AST and blocks
+      certain patterns. But: (1) max iteration detection (infinite loop ->
+      error). (2) timeout detection (long-running -> error). (3) But
+      bypassable by chained operations seeming benign. JS sandbox history:
+      vm2 (deprecated 2023, multiple CVE sandbox escapes), isolated-vm
+      (Node.js-only, better but heavy), Deno (subprocess with permissions).
+      Defense: if truly need to execute user JS, isolated-vm + memory limit
+      + CPU limit + escape signal detection.
+
+  - title_fr: "Defense canonique : JSON Schema, pas eval"
+    title_en: "Canonical defense: JSON Schema, not eval"
+    body_fr: |
+      Pour b2b orders, le bon pattern est : (1) Definir un JSON Schema
+      strict pour orderLinesData. (2) Ajv valide le shape. (3) Aucun eval,
+      aucun runInContext - juste process declaratif des fields. Pattern
+      reusable : pousser la flexibility en data, pas en code. Cas reels :
+      tous les CMS qui acceptent du `{{template}}` user-provided sont
+      vulnerables (Confluence CVE-2022-26134 OGNL injection). Mantra :
+      "data is data, not code".
+    body_en: |
+      For b2b orders, correct pattern: (1) Define strict JSON Schema for
+      orderLinesData. (2) Ajv validates shape. (3) No eval, no
+      runInContext - just declarative field processing. Reusable pattern:
+      push flexibility in data, not in code. Real cases: any CMS accepting
+      user-provided `{{template}}` is vulnerable (Confluence CVE-2022-26134
+      OGNL injection). Mantra: "data is data, not code".

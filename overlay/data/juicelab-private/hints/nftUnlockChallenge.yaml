@@ -1,0 +1,126 @@
+challenge_key: "nftUnlockChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel unique : "Find the seed phrase
+      posted accidentally". Donc une seed phrase BIP39 a ete
+      postee quelque part par accident. La seed est une suite
+      de 12 ou 24 mots qui controle un wallet entier. Ou
+      pourrait-elle avoir ete postee ?
+    text_en: |
+      Single official OWASP hint: "Find the seed phrase
+      posted accidentally". So a BIP39 seed phrase was
+      posted accidentally somewhere. Seed is a 12 or 24
+      word sequence controlling an entire wallet. Where
+      could it have been posted?
+    pedagogical_intent: |
+      Activate seed-OSINT reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Surfaces probables : (1) un commit Git du repo Juice
+      Shop public (devs qui paste accidentellement). (2) Un
+      Issue/Discussion GitHub. (3) Un tweet ou screenshot
+      Discord. (4) Un fichier de config oublie dans /ftp/ ou
+      assets. La methode pentest : recherche le pattern de 12
+      mots BIP39 sur le repo Juice Shop public et les
+      channels social media du projet.
+    text_en: |
+      Likely surfaces: (1) a Git commit in the public Juice
+      Shop repo (devs accidentally pasting). (2) A GitHub
+      Issue/Discussion. (3) A tweet or Discord screenshot.
+      (4) A forgotten config file in /ftp/ or assets.
+      Pentest method: search the 12-word BIP39 pattern in the
+      public Juice Shop repo and project social media
+      channels.
+    pedagogical_intent: |
+      Spell OSINT surfaces.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Pattern BIP39 detection : 12 mots tires de la wordlist
+      BIP39 standard (2048 mots anglais classiques :
+      "abandon ability able about above absent..."). Tools de
+      detection : trufflehog avec --include-detectors=bip39,
+      ou simple regex matchant 12+ mots de la wordlist
+      separes par espaces. Cherche dans le repo Juice Shop
+      public ou dans les /ftp/ leaks.
+    text_en: |
+      BIP39 detection pattern: 12 words drawn from the
+      standard BIP39 wordlist (2048 classic English words:
+      "abandon ability able about above absent..."). Detection
+      tools: trufflehog with --include-detectors=bip39, or
+      simple regex matching 12+ wordlist words separated by
+      spaces. Search the public Juice Shop repo or /ftp/
+      leaks.
+    pedagogical_intent: |
+      Spell BIP39 detection patterns.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_PROBABLE] La seed exacte depend de la
+      version Juice Shop. Pistes plausibles :
+      (1) Cherche dans /ftp/ apres avoir resolu directory
+          listing — un fichier .md ou .txt pourrait contenir
+          la seed.
+      (2) Cherche dans le repo GitHub Juice Shop officiel un
+          commit avec un message qui mentionne "wallet" ou
+          "seed".
+      (3) Inspecte le bundle JS pour des constantes type
+          MNEMONIC ou SEED.
+    text_en: |
+      [KILL_CHAIN_PROBABLE] Exact seed depends on Juice Shop
+      version. Plausible leads:
+      (1) Look in /ftp/ after solving directory listing —
+          a .md or .txt file may contain the seed.
+      (2) Look in official GitHub Juice Shop repo for a
+          commit message mentioning "wallet" or "seed".
+      (3) Inspect JS bundle for constants like MNEMONIC or
+          SEED.
+    pedagogical_intent: |
+      Spell investigation paths with version-dependency.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_PROBABLE] Workflow general (cle exacte a
+      OSINTer) :
+      1. Resous directoryListingChallenge pour acceder /ftp/.
+      2. Inspecte les fichiers : un fichier comme
+         announcement_encrypted.md ou similar pourrait
+         contenir la seed.
+      3. Si pas la : cherche dans le source GitHub officiel
+         du repo Juice Shop (commits, issues).
+      4. Une fois la seed trouvee : import dans MetaMask
+         (Chrome extension) -> "Import wallet" -> coller la
+         seed.
+      5. Le wallet apparait, contenant le SBT NFT officiel.
+      6. Le challenge se valide automatiquement (probablement
+         via un endpoint qui verifie l'adresse du wallet
+         courant).
+      Note : la version du Juice Shop installee determine OU
+      exactement la seed est leakee. Fais OSINT cible.
+    text_en: |
+      [KILL_CHAIN_PROBABLE] General workflow (exact key to
+      OSINT):
+      1. Solve directoryListingChallenge to access /ftp/.
+      2. Inspect files: a file like
+         announcement_encrypted.md or similar may hold the
+         seed.
+      3. If not there: search official GitHub Juice Shop
+         repo source (commits, issues).
+      4. Once seed found: import into MetaMask (Chrome
+         extension) -> "Import wallet" -> paste seed.
+      5. Wallet shows up, containing the official SBT NFT.
+      6. Challenge auto-solves (likely via an endpoint
+         checking the current wallet address).
+      Note: installed Juice Shop version determines WHERE
+      exactly the seed leaks. Do targeted OSINT.
+    pedagogical_intent: |
+      Quasi-solution : workflow + OSINT decay note.

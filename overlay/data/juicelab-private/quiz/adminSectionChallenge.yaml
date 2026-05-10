@@ -1,0 +1,93 @@
+challenge_key: "adminSectionChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi avoir un JWT valide ne suffit-il pas pour acceder a une
+      section reservee aux admins ?
+    question_en: |
+      Why does having a valid JWT not suffice to access an admin-only
+      section?
+    options_fr:
+      - "Parce qu'un JWT expire au bout de 5 minutes"
+      - "Parce que l'authentification (qui es-tu ?) et l'autorisation (que peux-tu faire ?) sont deux etapes distinctes : le JWT prouve l'identite, le role admin doit etre verifie en plus"
+      - "Parce qu'un JWT valide pour un user normal est mathematiquement different d'un JWT admin"
+      - "Parce que les admins doivent utiliser une 2FA, ce qui est un autre token"
+    options_en:
+      - "Because a JWT expires after 5 minutes"
+      - "Because authentication (who are you?) and authorization (what can you do?) are two distinct steps: JWT proves identity, the admin role must be checked in addition"
+      - "Because a valid JWT for a normal user is mathematically different from an admin JWT"
+      - "Because admins must use 2FA, which is another token"
+    correct: 1
+    explanation_fr: |
+      Authentification = qui. Autorisation = quoi. Le JWT confirme l'un,
+      mais le serveur doit verifier le role/permissions independamment
+      a chaque requete vers une ressource sensible.
+    explanation_en: |
+      Authentication = who. Authorization = what. The JWT confirms
+      one, but the server must check role/permissions independently
+      on every request to a sensitive resource.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Sur le challenge Admin Section, le composant Angular fait
+      canActivate() qui retourne false pour un user non-admin. Pourquoi
+      cette protection est-elle insuffisante ?
+    question_en: |
+      In the Admin Section challenge, the Angular component does
+      canActivate() returning false for a non-admin user. Why is this
+      protection insufficient?
+    options_fr:
+      - "Parce qu'on peut bypass canActivate avec une extension Chrome"
+      - "Parce que le controle est cote client, donc l'API admin reste accessible directement (curl, Postman)"
+      - "Parce que le JWT n'est pas signe en RS256"
+      - "Parce que canActivate ne fonctionne pas en mode lazy-loading"
+    options_en:
+      - "Because canActivate can be bypassed with a Chrome extension"
+      - "Because the check is client-side, so the admin API stays directly accessible (curl, Postman)"
+      - "Because the JWT is not signed with RS256"
+      - "Because canActivate does not work in lazy-loading mode"
+    correct: 1
+    explanation_fr: |
+      Un guard cote client peut empecher le rendu visuel mais n'empeche
+      pas curl ou Postman de taper directement les API admin. La defense
+      est server-side : middleware d'autorisation qui verifie le role
+      sur chaque endpoint admin.
+    explanation_en: |
+      A client-side guard can block visual rendering but does not stop
+      curl or Postman from hitting admin APIs directly. The defense is
+      server-side: an authorization middleware that checks the role on
+      every admin endpoint.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quel pattern d'architecture garantit qu'aucun endpoint admin n'est
+      accessible sans verification de role, meme si un developpeur oublie
+      de l'ajouter sur un nouvel endpoint ?
+    question_en: |
+      Which architecture pattern guarantees that no admin endpoint is
+      accessible without role check, even if a developer forgets to add
+      it on a new endpoint?
+    options_fr:
+      - "Une checklist de revue de code qui rappelle de proteger les routes admin"
+      - "Un middleware de verification de role applique globalement sur le prefix /api/admin/* (default deny)"
+      - "Un test unitaire qui couvre 100% des endpoints admin"
+      - "Une convention de nommage : tous les endpoints admin commencent par 'admin_'"
+    options_en:
+      - "A code review checklist that reminds to protect admin routes"
+      - "A role-check middleware applied globally on the /api/admin/* prefix (default deny)"
+      - "A unit test that covers 100% of admin endpoints"
+      - "A naming convention: all admin endpoints start with 'admin_'"
+    correct: 1
+    explanation_fr: |
+      Le middleware au niveau du router prefix s'applique automatiquement
+      a tout nouvel endpoint sous /api/admin/*. C'est du default deny
+      structurel, qui ne depend pas de la discipline du developpeur.
+    explanation_en: |
+      A router-prefix middleware applies automatically to any new
+      endpoint under /api/admin/*. This is structural default deny,
+      not relying on developer discipline.

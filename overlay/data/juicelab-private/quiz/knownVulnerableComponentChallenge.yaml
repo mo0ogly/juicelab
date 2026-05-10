@@ -1,0 +1,119 @@
+challenge_key: "knownVulnerableComponentChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le serveur accepte 2 reponses (Op.or sur 2
+      patterns Op.and). Quelle est la difference
+      pedagogique entre demander NOM seul vs NOM +
+      VERSION ?
+    question_en: |
+      Server accepts 2 answers (Op.or on 2 Op.and
+      patterns). What's the pedagogical difference
+      between asking NAME only vs NAME + VERSION?
+    options_fr:
+      - "Aucune difference"
+      - "Demander NOM + VERSION ensemble dans le meme commentaire (Op.and) force le student a verifier la version EXACTE dans package.json.bak. Une library peut etre vulnerable en version 1.4.2 mais securisee en 1.20.0. Sans la version, l'avis est inactionable. Pattern reusable : un CVE est toujours pour une RANGE de versions, jamais pour le name seul"
+      - "Le NOM est plus important que la VERSION"
+      - "Op.and est plus rapide que Op.or"
+    options_en:
+      - "No difference"
+      - "Asking NAME + VERSION together in same comment (Op.and) forces student to verify EXACT version in package.json.bak. Library can be vulnerable in 1.4.2 but secure in 1.20.0. Without version, advisory is unactionable. Reusable pattern: CVE is always for version RANGE, never for name alone"
+      - "NAME is more important than VERSION"
+      - "Op.and is faster than Op.or"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la version est l'attribut
+      critique d'une vulnerabilite. CVE format est
+      toujours `library@version` (range). Defense
+      operationnelle : un security advisory sans
+      version range est inactionable. Source :
+      routes/verify.ts:229-251 + CVE format spec
+      (Mitre).
+    explanation_en: |
+      Reusable pattern: version is the critical
+      attribute of vulnerability. CVE format is
+      always `library@version` (range). Operational
+      defense: security advisory without version
+      range is unactionable. Source: routes/verify.
+      ts:229-251 + CVE format spec (Mitre).
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi sanitize-html 1.4.2 est-elle PIRE
+      qu'avoir aucun sanitizer du tout (selon le
+      principe defensive) ?
+    question_en: |
+      Why is sanitize-html 1.4.2 WORSE than having
+      no sanitizer at all (per defensive principle)?
+    options_fr:
+      - "Parce que sanitize-html consomme de la RAM"
+      - "Parce qu'un sanitizer broken cree un FALSE SENSE OF SECURITY : les developpeurs et reviewers font confiance au sanitizer et n'ajoutent pas de defense layer additionnelle (CSP, output encoding context-specific). Quand le sanitizer est bypass, l'attaque reussit sur une codebase qui pensait etre protegee. Sans sanitizer, les devs auraient ajoute d'autres defenses"
+      - "Parce qu'il y a 2 librarires"
+      - "Parce que 1.4.2 est trop ancien"
+    options_en:
+      - "Because sanitize-html consumes RAM"
+      - "Because a broken sanitizer creates FALSE SENSE OF SECURITY: developers and reviewers trust the sanitizer and don't add additional defense layer (CSP, context-specific output encoding). When sanitizer is bypassed, attack succeeds on codebase thinking it was protected. Without sanitizer, devs would have added other defenses"
+      - "Because there are 2 libraries"
+      - "Because 1.4.2 is too old"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : un faux secret-keeper est
+      pire qu'aucun secret-keeper. Cela s'applique
+      aussi aux WAF (paywalls bypassed donnent
+      illusion de protection), aux input validators
+      (regex troue), aux auth tokens (JWT alg=none
+      accepted). Defense en profondeur = couches
+      INDEPENDANTES, jamais une seule. Source :
+      analyse persistedXssFeedbackChallenge +
+      sanitize-html CVE.
+    explanation_en: |
+      Reusable pattern: a false secret-keeper is
+      worse than no secret-keeper. Applies to WAFs
+      (bypassed paywalls give illusion of
+      protection), input validators (perforated
+      regex), auth tokens (JWT alg=none accepted).
+      Defense in depth = INDEPENDENT layers, never
+      single. Source: persistedXssFeedbackChallenge
+      + sanitize-html CVE analysis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la defense MODERNE la plus
+      EFFECTIVE pour DETECTER les vulnerable
+      libraries en production ?
+    question_en: |
+      What's the MOST EFFECTIVE MODERN defense to
+      DETECT vulnerable libraries in production?
+    options_fr:
+      - "Lire les changelogs manually"
+      - "CI/CD integration de scanners automatises (npm audit, Snyk, Dependabot, GitHub Dependency Review) qui : (a) scannent les dependencies a chaque build, (b) bloque les PRs introduisant des CVEs known-bad, (c) ouvrent automatiquement des PRs de patch, (d) generent un SBOM exporte au teams security. Combine avec policy review humaine pour accepter / dismiss les false positives. Pattern : automation + human review"
+      - "Encrypter les dependencies"
+      - "Disabler npm install"
+    options_en:
+      - "Read changelogs manually"
+      - "CI/CD integration of automated scanners (npm audit, Snyk, Dependabot, GitHub Dependency Review) that: (a) scan dependencies at each build, (b) block PRs introducing known-bad CVEs, (c) automatically open patch PRs, (d) generate SBOM exported to security teams. Combined with human review policy to accept / dismiss false positives. Pattern: automation + human review"
+      - "Encrypt dependencies"
+      - "Disable npm install"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la security automation est
+      la SEULE approche scalable pour les modern
+      codebases (1000+ dependencies indirectes
+      typique). Le manual review est l'exception
+      (decisions de scope), pas la regle (detection
+      mecanique). Source : OWASP Vulnerability
+      Disclosure Cheat Sheet + best practices CI/CD
+      security.
+    explanation_en: |
+      Reusable pattern: security automation is the
+      ONLY scalable approach for modern codebases
+      (typical 1000+ indirect dependencies). Manual
+      review is exception (scope decisions), not
+      rule (mechanical detection). Source: OWASP
+      Vulnerability Disclosure Cheat Sheet + CI/CD
+      security best practices.

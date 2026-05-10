@@ -1,0 +1,125 @@
+challenge_key: "typosquattingAngularChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #3 dit que package.json.bak NE PAS
+      aider. Pourquoi le typosquat Angular est dans une
+      surface DIFFERENTE du typosquat npm
+      (typosquattingNpmChallenge) ?
+    question_en: |
+      OWASP hint #3 says package.json.bak does NOT
+      help. Why is Angular typosquat in DIFFERENT
+      surface from npm typosquat (typosquattingNpm
+      Challenge)?
+    options_fr:
+      - "Parce que Angular a son propre registry"
+      - "Parce qu'un projet hybride backend+frontend a souvent DEUX package.json (backend root + frontend folder). Le typosquatting Angular cible les frontend deps (ngx-cookie -> ngy-cookie). Le current frontend package.json est en general expose au build, et les import statements sont visibles dans le bundle Angular shippe au browser. Pattern reusable : auditer LES DEUX package.json"
+      - "Parce que Angular n'utilise pas npm"
+      - "Parce que les .bak ne contiennent pas Angular deps"
+    options_en:
+      - "Because Angular has own registry"
+      - "Because hybrid backend+frontend project often has TWO package.json (backend root + frontend folder). Angular typosquatting targets frontend deps (ngx-cookie -> ngy-cookie). Current frontend package.json is generally exposed at build, and import statements are visible in Angular bundle shipped to browser. Reusable pattern: audit BOTH package.json"
+      - "Because Angular doesn't use npm"
+      - "Because .bak files don't contain Angular deps"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la dependency surface d'un
+      projet web moderne est multi-couche : backend
+      package.json + frontend package.json + Docker
+      base images + system packages OS. Chacune a sa
+      surface d'attaque supply chain propre. Source :
+      OWASP Vulnerable Dependency Management Cheat
+      Sheet + analyse Juice Shop architecture.
+    explanation_en: |
+      Reusable pattern: dependency surface of modern
+      web project is multi-layered: backend package.
+      json + frontend package.json + Docker base
+      images + OS system packages. Each has own
+      supply chain attack surface. Source: OWASP
+      Vulnerable Dependency Management Cheat Sheet +
+      Juice Shop architecture analysis.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un typosquat dans le frontend bundle est
+      potentiellement PIRE qu'un typosquat dans le
+      backend (en termes d'impact) ?
+    question_en: |
+      Why is typosquat in frontend bundle potentially
+      WORSE than typosquat in backend (in terms of
+      impact)?
+    options_fr:
+      - "Parce que le frontend est plus visible"
+      - "Parce que le bundle frontend est shippe au browser de CHAQUE visitor du site. Un typosquat malveillant peut exfiltrer cookies, sessions, form data, payment data depuis chaque user du site - blast radius de N users (potentiellement milliers/millions). Un typosquat backend infecte le serveur (1 instance). Frontend = mass user compromise"
+      - "Parce que les frontend devs sont incompetents"
+      - "Le frontend n'a pas d'access reseau"
+    options_en:
+      - "Because frontend is more visible"
+      - "Because frontend bundle is shipped to EACH visitor's browser. Malicious typosquat can exfiltrate cookies, sessions, form data, payment data from each site user - blast radius of N users (potentially thousands/millions). Backend typosquat infects server (1 instance). Frontend = mass user compromise"
+      - "Because frontend devs are incompetent"
+      - "Frontend has no network access"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : le blast radius differe selon
+      la couche compromise. Frontend = blast radius
+      utilisateurs (mass exfil possible via XSS-like
+      patterns). Backend = blast radius infrastructure
+      (1 server, mais privileged access). Defense
+      anti-frontend-supply-chain : (1) SRI hash sur
+      tout asset shippe, (2) CSP strict, (3) DOM
+      sandboxing. Source : analyse cross-impact +
+      OWASP Top 10.
+    explanation_en: |
+      Reusable pattern: blast radius differs by
+      compromised layer. Frontend = user blast radius
+      (mass exfil possible via XSS-like patterns).
+      Backend = infrastructure blast radius (1 server,
+      but privileged access). Anti-frontend-supply-
+      chain defense: (1) SRI hash on every shipped
+      asset, (2) strict CSP, (3) DOM sandboxing.
+      Source: cross-impact analysis + OWASP Top 10.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la defense la plus EFFECTIVE
+      specifique au frontend supply chain
+      (en addition aux defenses generic comme SBOM) ?
+    question_en: |
+      What's the MOST EFFECTIVE frontend-specific
+      supply chain defense (in addition to generic
+      defenses like SBOM)?
+    options_fr:
+      - "Forcer HTTPS"
+      - "Sub-Resource Integrity (SRI) : chaque asset shippe (CSS, JS, fonts) a un hash SHA-384/SHA-512 dans son tag <script integrity=\"sha384-...\">. Le browser refuse l'execution si le hash ne match pas. Combine avec CSP `script-src 'self'` + style-src + connect-src strict, cela rend le frontend supply chain attack TRES dur. Source : W3C SRI spec + OWASP CSP Cheat Sheet"
+      - "Encrypter le bundle"
+      - "Disabler JavaScript"
+    options_en:
+      - "Force HTTPS"
+      - "Sub-Resource Integrity (SRI): each shipped asset (CSS, JS, fonts) has SHA-384/SHA-512 hash in <script integrity=\"sha384-...\"> tag. Browser refuses execution if hash doesn't match. Combined with CSP `script-src 'self'` + strict style-src + connect-src, makes frontend supply chain attack VERY hard. Source: W3C SRI spec + OWASP CSP Cheat Sheet"
+      - "Encrypt the bundle"
+      - "Disable JavaScript"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : SRI est la defense layer
+      browser-side qui complete le SBOM (audit-side).
+      Si un typosquat est inadvertently bundlee, le
+      hash SHIPPED au CSP de l'app cassera. Reverse
+      le permet : un attaquant qui compromet un CDN
+      ne peut pas modifier le content delivere car le
+      browser verifiera. Combine avec CSP strict, c'est
+      la defense en profondeur frontend. Source : W3C
+      SRI spec + OWASP CSP.
+    explanation_en: |
+      Reusable pattern: SRI is browser-side defense
+      layer complementing SBOM (audit-side). If
+      typosquat is inadvertently bundled, SHIPPED
+      hash to app's CSP will break. Reverse allows:
+      attacker compromising CDN cannot modify
+      delivered content as browser will verify.
+      Combined with strict CSP, it's frontend defense
+      in depth. Source: W3C SRI spec + OWASP CSP.

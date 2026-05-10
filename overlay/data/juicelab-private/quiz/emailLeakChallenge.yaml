@@ -1,0 +1,105 @@
+challenge_key: "emailLeakChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP officiel #3 mentionne "an old way which is no
+      longer recommended" pour acceder aux donnees
+      cross-domain. Quelle technique est-ce ?
+    question_en: |
+      Official OWASP hint #3 mentions "an old way which is no
+      longer recommended" for cross-domain data access.
+      Which technique?
+    options_fr:
+      - "TLS 1.0 (deprecated en 2020)"
+      - "JSONP (JSON with Padding) : technique pre-CORS exploitant l'absence de same-origin sur <script src=...>. Le serveur retourne du JS executable callback({...data...}). Aujourd'hui DEPRECATED par CORS qui fait le cross-domain proprement avec headers"
+      - "HTTP Basic Auth"
+      - "FTP avec credentials embarques"
+    options_en:
+      - "TLS 1.0 (deprecated in 2020)"
+      - "JSONP (JSON with Padding): pre-CORS technique exploiting <script src=...> lack of same-origin. Server returns executable JS callback({...data...}). Today DEPRECATED by CORS doing cross-domain cleanly with headers"
+      - "HTTP Basic Auth"
+      - "FTP with embedded credentials"
+    correct: 1
+    explanation_fr: |
+      JSONP est canoniquement deprecated depuis CORS (2014).
+      Le pattern recurrent en pentest moderne : trouver des
+      endpoints JSONP heritae que l'app a oublie de
+      decommissionner. Reference : MDN JSONP deprecation
+      notice, OWASP XS-Leaks Cheat Sheet.
+    explanation_en: |
+      JSONP is canonically deprecated since CORS (2014).
+      Recurrent modern-pentest pattern: find legacy JSONP
+      endpoints the app forgot to decommission. Reference:
+      MDN JSONP deprecation notice, OWASP XS-Leaks Cheat
+      Sheet.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      L'OWASP XS-Leaks Cheat Sheet (mitigationUrl du challenge)
+      regroupe quelles autres categories d'attaque cross-site
+      au-dela de JSONP ?
+    question_en: |
+      The OWASP XS-Leaks Cheat Sheet (challenge
+      mitigationUrl) covers which other cross-site attack
+      categories beyond JSONP?
+    options_fr:
+      - "SQL injection cross-database"
+      - "(1) Iframe events / window references, (2) Browser side-channels (cache timing, ressource size), (3) Postmessage abuse, (4) JSONP callbacks. Defense moderne : COOP / COEP / CORP qui isolent strictement les origines"
+      - "Buffer overflow cross-process"
+      - "DNS cache poisoning"
+    options_en:
+      - "Cross-database SQL injection"
+      - "(1) Iframe events / window references, (2) Browser side-channels (cache timing, resource size), (3) Postmessage abuse, (4) JSONP callbacks. Modern defense: COOP / COEP / CORP strictly isolating origins"
+      - "Cross-process buffer overflow"
+      - "DNS cache poisoning"
+    correct: 1
+    explanation_fr: |
+      XS-Leaks est une famille riche d'attaques. Defense
+      moderne via 3 headers HTTP : Cross-Origin-Opener-Policy
+      (controle window references), Cross-Origin-Embedder-
+      Policy (controle ressources embedded), Cross-Origin-
+      Resource-Policy (controle qui peut load une ressource).
+      Reference : web.dev/why-coop-coep, OWASP XS-Leaks Cheat
+      Sheet.
+    explanation_en: |
+      XS-Leaks is a rich attack family. Modern defense via 3
+      HTTP headers: Cross-Origin-Opener-Policy (controls
+      window references), Cross-Origin-Embedder-Policy
+      (controls embedded resources), Cross-Origin-Resource-
+      Policy (controls who can load a resource). Reference:
+      web.dev/why-coop-coep, OWASP XS-Leaks Cheat Sheet.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Plan de migration JSONP -> CORS pour une app legacy. Quel
+      ordre est CORRECT ?
+    question_en: |
+      JSONP -> CORS migration plan for a legacy app. Which
+      order is CORRECT?
+    options_fr:
+      - "(1) Retirer JSONP, (2) ajouter CORS, (3) migrer les clients"
+      - "(1) Identifier tous les endpoints JSONP (grep callback= dans handlers), (2) Migrate vers CORS avec Access-Control-Allow-Origin allowlist explicite (jamais '*' pour user data), (3) Migrer les clients consumers, (4) Une fois 100% migre, retirer le support JSONP du code"
+      - "(1) Retirer toutes les routes, (2) recoder en GraphQL, (3) deployer"
+      - "(1) Renommer JSONP en CORS dans la doc"
+    options_en:
+      - "(1) Remove JSONP, (2) add CORS, (3) migrate clients"
+      - "(1) Identify all JSONP endpoints (grep callback= in handlers), (2) Migrate to CORS with explicit Access-Control-Allow-Origin allowlist (never '*' for user data), (3) Migrate client consumers, (4) Once 100% migrated, remove JSONP support from code"
+      - "(1) Remove all routes, (2) recode in GraphQL, (3) deploy"
+      - "(1) Rename JSONP to CORS in docs"
+    correct: 1
+    explanation_fr: |
+      Pattern de migration legacy classique : ajouter le
+      replacement AVANT de retirer l'ancien (zero-downtime).
+      Le retrait de JSONP est l'etape finale, jamais la
+      premiere. Reference : pattern strangler fig (Martin
+      Fowler) applique aux APIs.
+    explanation_en: |
+      Classic legacy-migration pattern: add replacement
+      BEFORE removing old (zero-downtime). JSONP removal is
+      the final step, never first. Reference: strangler-fig
+      pattern (Martin Fowler) applied to APIs.

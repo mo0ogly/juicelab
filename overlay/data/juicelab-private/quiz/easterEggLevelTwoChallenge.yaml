@@ -1,0 +1,124 @@
+challenge_key: "easterEggLevelTwoChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #1 : "tough-as-nails
+      encryption". Pourquoi cette description
+      est-elle PEDAGOGIQUEMENT ironique ?
+    question_en: |
+      OWASP hint #1: "tough-as-nails
+      encryption". Why is this description
+      PEDAGOGICALLY ironic?
+    options_fr:
+      - "Parce que tough est un adjectif"
+      - "Parce que ROT13 est l'encryption la PLUS FAIBLE historiquement (Caesar cipher avec rotation 13, datant des Romains). Aucun usage serieux de cryptography depuis 100+ ans. Le mot 'tough-as-nails' est sarcastique : OWASP signale que ROT13 est intentionnellement TRIVIAL pour le challenge. Pattern reusable : reconnaitre les ironies dans les hints OWASP comme indices semantiques"
+      - "Parce que les nails sont durs"
+      - "ROT13 est militaire"
+    options_en:
+      - "Because tough is an adjective"
+      - "Because ROT13 is HISTORICALLY WEAKEST encryption (Caesar cipher with rotation 13, dating to Romans). No serious cryptography use for 100+ years. 'Tough-as-nails' is sarcastic: OWASP signals ROT13 is intentionally TRIVIAL for challenge. Reusable pattern: recognize ironies in OWASP hints as semantic clues"
+      - "Because nails are hard"
+      - "ROT13 is military"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la pedagogie OWASP
+      utilise souvent des sarcasmes /
+      hyperboles pour signaler le contexte
+      reel (ironie cybersec). Cas reels :
+      "the most secure password" = password
+      faible, "tough-as-nails encryption" =
+      ROT13. Cette ironie est utile pour
+      les students familiers avec la culture
+      hacker. Source : OWASP hint #1 +
+      pedagogical wordplays.
+    explanation_en: |
+      Reusable pattern: OWASP pedagogy often
+      uses sarcasm/hyperbole to signal real
+      context (cybersec irony). Real cases:
+      "the most secure password" = weak
+      password, "tough-as-nails encryption"
+      = ROT13. Irony useful for students
+      familiar with hacker culture. Source:
+      OWASP hint #1 + pedagogical wordplays.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le challenge est tagged "Shenanigans" +
+      "Good for Demos". Quelle est la lecon
+      pedagogique distinguant ces challenges
+      des "Danger Zone" ?
+    question_en: |
+      Challenge tagged "Shenanigans" + "Good
+      for Demos". Pedagogical LESSON
+      distinguishing these from "Danger Zone"?
+    options_fr:
+      - "Shenanigans = pas important"
+      - "Shenanigans/Good for Demos = challenges divertissants/educatifs, pas representatifs des bugs reels en production. Danger Zone = challenges qui executent du code potentiellement dangereux (RCE, file overwrite). Pattern reusable : pour les pentesters, distinguer les CTF-style challenges des real-world vulnerabilites en lisant les tags. Source : OWASP Juice Shop tags taxonomy"
+      - "Shenanigans = obligatoires"
+      - "Tags sont random"
+    options_en:
+      - "Shenanigans = unimportant"
+      - "Shenanigans/Good for Demos = entertaining/educational challenges, not representative of real production bugs. Danger Zone = challenges executing potentially dangerous code (RCE, file overwrite). Reusable pattern: for pentesters, distinguish CTF-style challenges from real-world vulnerabilities by reading tags. Source: OWASP Juice Shop tags taxonomy"
+      - "Shenanigans = mandatory"
+      - "Tags are random"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la pedagogie OWASP
+      Juice Shop classifie les challenges par
+      tags semantiques. Pour les students,
+      utile de prioriser les Danger Zone +
+      OSINT + Code Analysis (real-world
+      relevance) over Shenanigans + Good for
+      Demos (educational fun). Source : OWASP
+      Juice Shop docs.
+    explanation_en: |
+      Reusable pattern: OWASP Juice Shop
+      pedagogy classifies challenges by
+      semantic tags. For students, useful to
+      prioritize Danger Zone + OSINT + Code
+      Analysis (real-world relevance) over
+      Shenanigans + Good for Demos
+      (educational fun). Source: OWASP Juice
+      Shop docs.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la chaine de challenges menant
+      a easterEggLevelTwo ? Reflechir a la
+      composition de challenges Juice Shop.
+    question_en: |
+      What's the challenge chain leading to
+      easterEggLevelTwo? Think about Juice
+      Shop challenge composition.
+    options_fr:
+      - "easterEggLevelTwo est solo"
+      - "Kill chain : (1) directoryListingChallenge (acces /ftp/), (2) nullByteChallenge (bypass extension allowlist), (3) easterEggLevelOneChallenge (read /ftp/eastere.gg via null byte), (4) easterEggLevelTwoChallenge (decode ROT13 + GET URL). Pattern reusable : Juice Shop encourages chained exploitation. Pour les pentesters, identifier ces chains EN AVANCE pour prioriser les pre-requis"
+      - "Solve dans n'importe quel ordre"
+      - "Pas de pre-requis"
+    options_en:
+      - "easterEggLevelTwo is solo"
+      - "Kill chain: (1) directoryListingChallenge (/ftp/ access), (2) nullByteChallenge (bypass extension allowlist), (3) easterEggLevelOneChallenge (read /ftp/eastere.gg via null byte), (4) easterEggLevelTwoChallenge (ROT13 decode + GET URL). Reusable pattern: Juice Shop encourages chained exploitation. For pentesters, identify chains in ADVANCE to prioritize prerequisites"
+      - "Solve in any order"
+      - "No prerequisites"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la kill chain
+      thinking est essentielle pour le
+      pentest efficace. Identifier les
+      pre-requis avant de tenter un
+      challenge evite frustration et
+      optimise le path. Source : OWASP hint
+      #2 + analyse Juice Shop architecture.
+    explanation_en: |
+      Reusable pattern: kill chain thinking
+      essential for efficient pentest.
+      Identifying prerequisites before
+      attempting challenge avoids
+      frustration and optimizes path.
+      Source: OWASP hint #2 + Juice Shop
+      architecture analysis.

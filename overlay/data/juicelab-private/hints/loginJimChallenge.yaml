@@ -1,0 +1,88 @@
+challenge_key: "loginJimChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Login Jim ressemble a Login Bender. La mecanique d'attaque finale
+      sera la meme (SQLi sur login). Mais la source d'OSINT pour
+      decouvrir l'email est differente. Indice : About Us t'a aide
+      pour Bender — quelle autre surface UI affiche du texte ecrit
+      DIRECTEMENT par les utilisateurs ?
+    text_en: |
+      Login Jim looks like Login Bender. The final attack mechanic
+      is identical (SQLi on login). But the OSINT source to find
+      the email differs. Hint: About Us helped for Bender — what
+      other UI surface displays text written DIRECTLY by users?
+    pedagogical_intent: |
+      Build on prior knowledge (Bender) and pivot to a new OSINT class.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      User-generated content : feedback (page About Us), product
+      reviews (sous chaque produit dans le catalogue), Q&A,
+      commentaires. Sur Juice Shop, c'est sous chaque produit que tu
+      trouveras les reviews — clique sur un produit pour ouvrir son
+      dialog de details.
+    text_en: |
+      User-generated content: feedback (About Us page), product
+      reviews (under each catalog product), Q&A, comments. On
+      Juice Shop, reviews live under each product — click a product
+      to open its details dialog.
+    pedagogical_intent: |
+      Localize the OSINT surface (product details dialog → reviews).
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Ouvre plusieurs produits. Pour chacun, regarde la section
+      Reviews dans le dialog de details. Cherche l'auteur "Jim" ou un
+      texte ou il s'attribue lui-meme. Dans Juice Shop, l'auteur du
+      review est affiche avec son email complet (pas un alias) — donc
+      des que tu vois "jim@..." c'est gagne. Source : tutoriel OWASP
+      loginJim.ts ligne 51-54.
+    text_en: |
+      Open several products. For each, look at the Reviews section
+      in the details dialog. Look for an author "Jim" or text where
+      he attributes himself. In Juice Shop, the review author is
+      displayed with the full email (not an alias) — so as soon as
+      you see "jim@..." you win. Source: OWASP tutorial loginJim.ts
+      line 51-54.
+    pedagogical_intent: |
+      Reduce the search scope and explain the leak mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Si l'OSINT t'embete, sache que la convention email business
+      donne presque toujours firstName@domain. Donc jim@juice-sh.op
+      est l'email a tester (hint officiel OWASP : "smart-guess Jim's
+      email"). La SQLi a appliquer ensuite est identique a Bender :
+      apostrophe + double tiret en fin de l'email pour commenter le
+      AND password = ....
+    text_en: |
+      If OSINT bothers you, know that the business email convention
+      almost always yields firstName@domain. So jim@juice-sh.op is
+      the email to try (official OWASP hint: "smart-guess Jim's
+      email"). The SQLi to apply next is identical to Bender:
+      single quote + double dash at the end of the email to comment
+      out the AND password = ... clause.
+    pedagogical_intent: |
+      Offer a fallback path (guessing) and pre-spell the SQLi shape.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Sur le formulaire de login, tape email = jim@juice-sh.op'--
+      (sans espace apres l'apostrophe), password = n'importe quoi
+      (commente). Clique Login. Tu es Jim. Source exacte : tutoriel
+      hacking-instructor loginJim.ts ligne 87-90 et 99-101.
+    text_en: |
+      On the login form, type email = jim@juice-sh.op'-- (no space
+      after the quote), password = anything (commented out). Click
+      Login. You are Jim. Exact source: hacking-instructor tutorial
+      loginJim.ts line 87-90 and 99-101.
+    pedagogical_intent: |
+      Quasi-solution : exact payload + source citation.

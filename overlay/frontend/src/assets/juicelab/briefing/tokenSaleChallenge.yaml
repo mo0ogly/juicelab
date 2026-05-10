@@ -1,0 +1,83 @@
+challenge_key: "tokenSaleChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Acceder a la page de vente de token (Juicy Token Sale) qui n'a aucun lien
+  visible dans le UI. Aucun login admin requis. Tag : Security Through
+  Obscurity. Hint OWASP : "find a hidden URL". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve check dans routes/verify.ts:66 :
+  `solveIf(() => endsWith(url, '/56px.png'))`. La page existe en tant que
+  route Angular hidden, et la requete pour son favicon (56px.png) declenche
+  le solve. Workflow : (1) Inspecter le bundle Angular (main.js) ou les
+  fichiers statiques. (2) Decouvrir la route /#/tokensale. (3) Naviguer.
+  Astuce reusable : Angular routes ne sont pas en clair dans le HTML, il
+  faut grep le bundle.
+
+mission_en: |
+  Access the Juicy Token Sale page that has no visible UI link. No admin
+  login required. Tag: Security Through Obscurity. OWASP hint: "find a
+  hidden URL". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve check in routes/verify.ts:66:
+  `solveIf(() => endsWith(url, '/56px.png'))`. Page exists as hidden Angular
+  route, request for its favicon (56px.png) triggers the solve. Workflow:
+  (1) Inspect Angular bundle (main.js) or static files. (2) Discover
+  /#/tokensale route. (3) Navigate. Reusable tip: Angular routes are not
+  plaintext in HTML, must grep the bundle.
+
+concepts:
+  - title_fr: "Security Through Obscurity : illusion de protection"
+    title_en: "Security Through Obscurity: illusion of protection"
+    body_fr: |
+      Source canonique : OWASP Top 10 + NIST SP 800-160. STO (cacher une
+      ressource sans la proteger par un controle d'acces) n'est PAS une
+      defense. L'attaquant peut decouvrir l'URL via : grep bundle JS, fuzzing
+      de routes (ffuf, gobuster), monitoring DNS, scrap de archive.org,
+      analyse de logs. Defense reelle : ACL/RBAC sur la ressource. Cas reel :
+      US Census Bureau 2020 (URL "secrete" indexee Google).
+    body_en: |
+      Canonical source: OWASP Top 10 + NIST SP 800-160. STO (hiding a
+      resource without protecting it via access control) is NOT a defense.
+      Attacker discovers URL via: JS bundle grep, route fuzzing (ffuf,
+      gobuster), DNS monitoring, archive.org scrape, log analysis. Real
+      defense: ACL/RBAC on the resource. Real case: US Census Bureau 2020
+      ("secret" URL indexed by Google).
+
+  - title_fr: "Bundle Angular reverse engineering"
+    title_en: "Angular bundle reverse engineering"
+    body_fr: |
+      Angular generates main.js avec toutes les routes en clair (apres
+      minification mais lisibles). Pattern : `path:'tokensale'`,
+      `loadChildren`, `RouterModule.forRoot`. Tools : Chrome DevTools
+      Sources tab, beautify-js, Wappalyzer, retire.js. Defense : ne JAMAIS
+      assumer qu'une route Angular est secrete. Si elle est dans le bundle
+      shippe au client, elle est publique. Source : OWASP Mobile Top 10
+      M9 Reverse Engineering (s'applique aussi aux SPA).
+    body_en: |
+      Angular generates main.js with all routes plaintext (post-minification
+      but readable). Pattern: `path:'tokensale'`, `loadChildren`,
+      `RouterModule.forRoot`. Tools: Chrome DevTools Sources tab,
+      beautify-js, Wappalyzer, retire.js. Defense: NEVER assume an Angular
+      route is secret. If it's in the bundle shipped to client, it's public.
+      Source: OWASP Mobile Top 10 M9 Reverse Engineering (also applies to
+      SPAs).
+
+  - title_fr: "Defense canonique : auth + ACL, pas obscurite"
+    title_en: "Canonical defense: auth + ACL, not obscurity"
+    body_fr: |
+      (1) Toute ressource sensible derriere middleware auth (`requireLogin`)
+      ET autorisation (`requireRole`). (2) Routes admin/finance dans un
+      bundle separe lazy-loaded uniquement apres auth verification cote
+      serveur. (3) Server-side rendering qui ne ship pas les routes
+      sensibles au client non-auth. (4) Audit reguliere : `grep -rn
+      "path:" frontend/src/app/` pour lister TOUTES les routes et auditer
+      leur protection. Pattern : zero trust sur le client.
+    body_en: |
+      (1) Any sensitive resource behind auth middleware (`requireLogin`)
+      AND authorization (`requireRole`). (2) Admin/finance routes in
+      separate bundle lazy-loaded only after server-side auth verification.
+      (3) Server-side rendering that doesn't ship sensitive routes to
+      unauthenticated clients. (4) Regular audit: `grep -rn "path:"
+      frontend/src/app/` to list ALL routes and audit their protection.
+      Pattern: zero trust on client.

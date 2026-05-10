@@ -1,0 +1,87 @@
+challenge_key: "scoreBoardChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Tu viens de trouver /score-board en inspectant le bundle JS. Quelle
+      affirmation explique le mieux pourquoi cacher un lien dans le menu
+      n'est pas une mesure de securite ?
+    question_en: |
+      You just found /score-board by inspecting the JS bundle. Which
+      statement best explains why hiding a menu link is not a security
+      measure?
+    options_fr:
+      - "Le navigateur ne peut atteindre que les URLs presentes dans le menu de l'application."
+      - "Le code client est public, seule la verification d'autorisation cote serveur protege une page."
+      - "Sans lien dans le menu, les moteurs de recherche n'indexent pas la page, donc personne ne la trouve."
+      - "Une page sans lien renvoie automatiquement un 404 si on tape son URL."
+    options_en:
+      - "The browser can only reach URLs present in the application menu."
+      - "Client code is public; only server-side authorization checks protect a page."
+      - "Without a menu link, search engines don't index the page, so nobody finds it."
+      - "A page without a link automatically returns 404 if you type its URL."
+    correct: 1
+    explanation_fr: |
+      Le bundle JS et toutes les routes de la SPA sont livres au navigateur.
+      Seule une verification cote serveur (auth, role, JWT) peut bloquer
+      l'acces a une URL.
+    explanation_en: |
+      The JS bundle and every SPA route ship to the browser. Only a
+      server-side check (auth, role, JWT) can block access to a URL.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Quelle est la maniere la plus efficace de decouvrir une route cachee
+      dans une SPA Angular ?
+    question_en: |
+      What is the most effective way to discover a hidden route in an
+      Angular SPA?
+    options_fr:
+      - "Utiliser nmap pour scanner le serveur"
+      - "Tester toutes les URLs possibles avec un dictionnaire web (dirb, ffuf)"
+      - "Inspecter le bundle JavaScript via les DevTools (onglet Sources)"
+      - "Demander a un administrateur de l'application"
+    options_en:
+      - "Use nmap to scan the server"
+      - "Try every possible URL with a web wordlist (dirb, ffuf)"
+      - "Inspect the JavaScript bundle via DevTools (Sources tab)"
+      - "Ask an administrator of the application"
+    correct: 2
+    explanation_fr: |
+      Une SPA livre toutes ses routes dans le bundle JS au navigateur.
+      L'inspection du bundle est plus rapide et exhaustive qu'un brute
+      force d'URL.
+    explanation_en: |
+      A SPA ships every route in the JS bundle to the browser. Bundle
+      inspection is faster and more exhaustive than URL brute-forcing.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense backend reste efficace MEME si toutes les routes sont
+      visibles dans le bundle JS du client ?
+    question_en: |
+      Which backend defense remains effective EVEN if all routes are
+      visible in the client JS bundle?
+    options_fr:
+      - "Mettre les routes sensibles derriere un middleware d'autorisation (verification de role JWT)."
+      - "Servir le bundle compresse (gzip) pour qu'il soit plus difficile a lire."
+      - "Renommer la route /score-board en /scr-brd pour la rendre moins evidente."
+      - "Ajouter un commentaire 'do not access' au-dessus de la route."
+    options_en:
+      - "Put sensitive routes behind an authorization middleware (JWT role check)."
+      - "Serve the bundle gzipped so it is harder to read."
+      - "Rename /score-board to /scr-brd to make it less obvious."
+      - "Add a 'do not access' comment above the route."
+    correct: 0
+    explanation_fr: |
+      L'authorization middleware (RBAC, JWT guard) refuse la requete cote
+      serveur quel que soit le moyen par lequel l'attaquant a trouve l'URL.
+      Les autres options sont de la securite par obscurite.
+    explanation_en: |
+      Authorization middleware (RBAC, JWT guard) refuses the request
+      server-side whatever route the attacker used to find the URL.
+      The other options are security by obscurity.

@@ -1,0 +1,170 @@
+challenge_key: "negativeOrderChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "You literally need to
+      make the shop owe you any amount of money".
+      Donc objectif = totalPrice negatif ou shop
+      paye le user. Hint #2 : "Investigate the
+      shopping basket closely". Surface = basket /
+      checkout endpoints.
+    text_en: |
+      Official OWASP hint #1: "You literally need to
+      make the shop owe you any amount of money". So
+      objective = negative totalPrice or shop pays
+      user. Hint #2: "Investigate the shopping
+      basket closely". Surface = basket / checkout
+      endpoints.
+    pedagogical_intent: |
+      Activate negative-price attack reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Quels sont les inputs qui contribuent au
+      totalPrice ? Reponse : `quantity` et `price`.
+      `price` est server-side (pas modifiable). Mais
+      `quantity` est user-side (input via le
+      basket). Test : peut-on mettre quantity
+      negative ?
+    text_en: |
+      What inputs contribute to totalPrice? Answer:
+      `quantity` and `price`. `price` is
+      server-side (not modifiable). But `quantity`
+      is user-side (input via basket). Test: can we
+      set negative quantity?
+    pedagogical_intent: |
+      Spell investigation method.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Endpoint cible : PUT /api/BasketItems/:id (modifie
+      le quantity d'un item du basket). Le frontend
+      Angular empeche via `min="1"` mais le backend
+      ne valide PAS. Test via curl/Burp :
+      modifie un BasketItem existant avec quantity
+      = -10. Source serveur : routes/order.ts:138
+      verifie totalPrice < 0.
+    text_en: |
+      Target endpoint: PUT /api/BasketItems/:id
+      (modifies basket item quantity). Angular
+      frontend prevents via `min="1"` but backend
+      doesn't validate. Test via curl/Burp: modify
+      existing BasketItem with quantity = -10.
+      Server source: routes/order.ts:138 checks
+      totalPrice < 0.
+    pedagogical_intent: |
+      Reveal endpoint + bypass mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow detaille :
+      1. Login Juice Shop (need authenticated user
+         pour basket).
+      2. Adder un produit normal au basket via UI.
+      3. Inspecter Network tab : GET /api/Basket/:id
+         te donne le BasketItem id (ex. {id: 5,
+         quantity: 1, ProductId: 1, BasketId: 6}).
+      4. PUT /api/BasketItems/5 avec body
+         `{"quantity": -10}` :
+         ```bash
+         curl -X PUT http://localhost:3000/api/BasketItems/5
+           -H "Authorization: Bearer <token>"
+           -H "Content-Type: application/json"
+           -d '{"quantity": -10}'
+         ```
+      5. Le backend accepte (pas de validation).
+      6. Checkout : POST /api/Orders avec le basket
+         id. Le serveur calcule totalPrice =
+         (-10 * price) = negatif.
+      7. routes/order.ts:138 : `solveIf(()` =>
+         `totalPrice < 0)` = true -> challenge
+         solve auto.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Detailed workflow:
+      1. Login Juice Shop (need authenticated user
+         for basket).
+      2. Add normal product to basket via UI.
+      3. Inspect Network tab: GET /api/Basket/:id
+         gives BasketItem id (e.g., {id: 5,
+         quantity: 1, ProductId: 1, BasketId: 6}).
+      4. PUT /api/BasketItems/5 with body
+         `{"quantity": -10}`:
+         ```bash
+         curl -X PUT http://localhost:3000/api/BasketItems/5
+           -H "Authorization: Bearer <token>"
+           -H "Content-Type: application/json"
+           -d '{"quantity": -10}'
+         ```
+      5. Backend accepts (no validation).
+      6. Checkout: POST /api/Orders with basket
+         id. Server calculates totalPrice =
+         (-10 * price) = negative.
+      7. routes/order.ts:138: `solveIf(() =>
+         totalPrice < 0)` = true -> challenge auto
+         solves.
+    pedagogical_intent: |
+      Spell complete kill chain.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Solution canonique
+      complete (resume) :
+      1. Login + add product au basket via UI.
+      2. PUT /api/BasketItems/<id> avec quantity =
+         -10 (via curl/Burp).
+      3. Checkout via UI ou POST /api/Orders.
+      4. Le serveur calcul totalPrice = qty *
+         price + delivery, qui devient negatif.
+      5. solveIf check ligne 138 -> challenge solve
+         auto.
+      Note : le user obtient un order avec
+      totalPrice negatif (ironie : la wallet est
+      DEBITEE de cette valeur negative, donc
+      potentiellement INCREASE la balance si
+      WalletModel.decrement(negativeAmount) =
+      effectivement increment). Cf. order.ts:144 :
+      `WalletModel.decrement({ balance: totalPrice
+      }, ...)`.
+      Source canonique : routes/order.ts:138 +
+      OWASP Input Validation Cheat Sheet.
+      Defense canonique : (a) joi/zod schema
+      `quantity: positive integer`, (b) Sequelize
+      validators `min: 1`, (c) DB CHECK
+      constraint, (d) business logic check
+      `totalPrice < 0 -> 400`, (e) anomaly
+      monitoring.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Canonical complete
+      solution (summary):
+      1. Login + add product to basket via UI.
+      2. PUT /api/BasketItems/<id> with quantity =
+         -10 (via curl/Burp).
+      3. Checkout via UI or POST /api/Orders.
+      4. Server calculates totalPrice = qty *
+         price + delivery, becoming negative.
+      5. solveIf check line 138 -> challenge auto
+         solves.
+      Note: user gets order with negative
+      totalPrice (irony: wallet is DEBITED of
+      this negative value, so potentially
+      INCREASES balance if WalletModel.decrement(
+      negativeAmount) = effectively increment).
+      Cf. order.ts:144: `WalletModel.decrement({
+      balance: totalPrice }, ...)`.
+      Canonical source: routes/order.ts:138 +
+      OWASP Input Validation Cheat Sheet.
+      Canonical defense: (a) joi/zod schema
+      `quantity: positive integer`, (b) Sequelize
+      validators `min: 1`, (c) DB CHECK
+      constraint, (d) business logic check
+      `totalPrice < 0 -> 400`, (e) anomaly
+      monitoring.
+    pedagogical_intent: |
+      Solution complete + economic side-effect.

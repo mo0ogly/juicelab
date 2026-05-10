@@ -1,0 +1,100 @@
+challenge_key: "dataExportChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le bug exact dans routes/dataExport.ts est de query
+      orders par email APRES deformation (vowels -> '*').
+      Quelle propriete mathematique de cette deformation cree
+      la vulnerabilite ?
+    question_en: |
+      Exact bug in routes/dataExport.ts: querying orders by
+      email AFTER deformation (vowels -> '*'). Which
+      mathematical property of this deformation creates the
+      vulnerability?
+    options_fr:
+      - "La deformation est trop rapide a calculer"
+      - "La deformation est LOSSY (non-injective) : differents emails source produisent le meme email deforme. 'alice', 'elice', 'olice', 'ulice' donnent tous '*l*c*'. Donc la query par email deforme matche plusieurs users — collision exploitable"
+      - "La deformation est non-deterministe"
+      - "La deformation est cryptographique"
+    options_en:
+      - "Deformation is too fast to compute"
+      - "Deformation is LOSSY (non-injective): different source emails produce the same deformed email. 'alice', 'elice', 'olice', 'ulice' all yield '*l*c*'. So the deformed-email query matches multiple users — exploitable collision"
+      - "Deformation is non-deterministic"
+      - "Deformation is cryptographic"
+    correct: 1
+    explanation_fr: |
+      Concept mathematique : une fonction injective preserve
+      l'unicite (a != b => f(a) != f(b)). La deformation
+      vowels-to-stars n'est PAS injective. Reference :
+      CWE-639 Authorization Bypass Through User-Controlled
+      Key, et OWASP A04:2021 Insecure Design.
+    explanation_en: |
+      Mathematical concept: an injective function preserves
+      uniqueness (a != b => f(a) != f(b)). Vowels-to-stars
+      deformation is NOT injective. Reference: CWE-639
+      Authorization Bypass Through User-Controlled Key, and
+      OWASP A04:2021 Insecure Design.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi le developpeur a-t-il probablement ajoute la
+      deformation ?
+    question_en: |
+      Why did the developer probably add the deformation?
+    options_fr:
+      - "Pour accelerer la query"
+      - "Probablement par effort de PRIVACY mal compris : eviter de mettre l'email en clair dans les logs ou la query. Mais le pattern correct est de query par PRIMARY KEY STABLE (user.id) ET de redacter l'email pour DISPLAY si necessaire. Mixer transformation pour privacy + query est un anti-pattern"
+      - "Pour respecter le RGPD"
+      - "Pour reduire la taille de la base de donnees"
+    options_en:
+      - "To speed up the query"
+      - "Likely a misunderstood PRIVACY effort: avoid putting cleartext email in logs or query. But correct pattern is querying by STABLE PRIMARY KEY (user.id) AND redacting email for DISPLAY if needed. Mixing transformation for privacy + query is anti-pattern"
+      - "To comply with GDPR"
+      - "To reduce database size"
+    correct: 1
+    explanation_fr: |
+      Pattern d'erreur recurrent : confondre privacy logging
+      (UI/logs) et query identity. Reference : OWASP Privacy
+      Cheat Sheet section "Data Minimization" qui distingue
+      explicitement les deux usages. Le pattern correct est
+      "query by primary key, redact for display".
+    explanation_en: |
+      Recurrent error pattern: confusing privacy logging
+      (UI/logs) and query identity. Reference: OWASP Privacy
+      Cheat Sheet "Data Minimization" section explicitly
+      distinguishing both. Correct pattern is "query by
+      primary key, redact for display".
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour Data Export endpoint en
+      conformite GDPR : pattern correct ?
+    question_en: |
+      Canonical defense for Data Export endpoint in GDPR
+      compliance: correct pattern?
+    options_fr:
+      - "Chiffrer les exports avec AES-256"
+      - "router.get('/dataerasure', auth, (req, res) => { const orders = await db.ordersCollection.find({ UserId: req.user.id }) }) — query par primary key STABLE du JWT verifie, jamais par valeur transforme. Email peut etre redacte UNIQUEMENT pour display secondaire"
+      - "Forcer HTTPS sur l'endpoint"
+      - "Limiter a 1 export par jour par user"
+    options_en:
+      - "Encrypt exports with AES-256"
+      - "router.get('/dataerasure', auth, (req, res) => { const orders = await db.ordersCollection.find({ UserId: req.user.id }) }) — query by STABLE primary key from verified JWT, never by transformed value. Email may be redacted ONLY for secondary display"
+      - "Force HTTPS on endpoint"
+      - "Limit to 1 export per user per day"
+    correct: 1
+    explanation_fr: |
+      Pattern correct = primary-key-driven query. Reference :
+      OWASP A01:2021 Broken Access Control + OWASP A04:2021
+      Insecure Design. La defense est ARCHITECTURALE (choix
+      de design), pas un patch ligne-par-ligne.
+    explanation_en: |
+      Correct pattern = primary-key-driven query. Reference:
+      OWASP A01:2021 Broken Access Control + OWASP A04:2021
+      Insecure Design. Defense is ARCHITECTURAL (design
+      choice), not line-by-line patch.

@@ -1,0 +1,93 @@
+challenge_key: "xssBonusChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Si tu as deja resolu le challenge DOM XSS, tu sais que le champ de
+      recherche en haut de page interprete les balises HTML soumises
+      comme du HTML execute dans la page. Ce challenge bonus exploite
+      exactement la meme vulnerabilite, mais demande un payload
+      specifique qui produit un effet plus complet qu'un simple alert.
+    text_en: |
+      If you already solved the DOM XSS challenge, you know the top
+      search bar interprets submitted HTML tags as HTML executed on the
+      page. This bonus challenge exploits the same vulnerability, but
+      asks for a specific payload that produces a richer effect than a
+      simple alert.
+    pedagogical_intent: |
+      Frame the challenge as a variation on DOM XSS, with a specific payload.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Au lieu d'un alert, le payload bonus injecte un iframe legitime
+      qui charge une ressource externe : une lecture audio depuis
+      Soundcloud. C'est une demonstration que le DOM XSS peut servir a
+      bien plus qu'a afficher une popup : on peut faire executer
+      n'importe quoi dans le contexte de la page.
+    text_en: |
+      Instead of an alert, the bonus payload injects a legitimate iframe
+      that loads an external resource: an audio playback from Soundcloud.
+      It demonstrates that DOM XSS can do much more than a popup: it can
+      run anything in the page context.
+    pedagogical_intent: |
+      Show the impact spectrum: from alert to embedded media to anything.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Le payload exact est documente dans la description du challenge sur
+      le score-board (clique sur le challenge pour le voir). C'est un
+      iframe qui charge w.soundcloud.com avec un track-id specifique
+      (771984076). Tu n'as pas a inventer le payload, tu dois le copier
+      depuis la description et le coller dans le champ de recherche.
+    text_en: |
+      The exact payload is documented in the challenge description on
+      the score-board (click the challenge to see it). It is an iframe
+      loading w.soundcloud.com with a specific track-id (771984076). You
+      do not need to invent the payload, you must copy it from the
+      description and paste it into the search bar.
+    pedagogical_intent: |
+      Localize the source of truth: the challenge description on the score-board.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le payload est tres long, tient en une seule ligne, et commence par
+      <iframe width="100%" height="166" scrolling="no" frameborder="no"
+      allow="autoplay" src="https://w.soundcloud.com/player/?url=...
+      Les double-quotes peuvent passer car le champ de recherche les
+      accepte. Avant de coller, augmente le volume de tes haut-parleurs.
+    text_en: |
+      The payload is very long, fits in a single line, and starts with
+      <iframe width="100%" height="166" scrolling="no" frameborder="no"
+      allow="autoplay" src="https://w.soundcloud.com/player/?url=...
+      Double quotes are fine in the search field. Before pasting, raise
+      your speaker volume.
+    pedagogical_intent: |
+      Give the start of the payload and the operational tip (volume).
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      1. Va sur le score-board, deroule le challenge "Bonus Payload",
+         copie le payload exact qui s'affiche dans la description (un
+         iframe Soundcloud avec autoplay).
+      2. Colle ce payload dans le champ de recherche en haut de page.
+      3. Appuie sur Entree. Une lecture audio commence dans la page.
+         Juice Shop valide automatiquement le challenge Bonus Payload
+         des qu'il detecte ce payload specifique en argument de
+         recherche traite par bypassSecurityTrustHtml.
+    text_en: |
+      1. Go to the score-board, expand the "Bonus Payload" challenge,
+         copy the exact payload shown in the description (a Soundcloud
+         iframe with autoplay).
+      2. Paste that payload into the top search bar.
+      3. Press Enter. An audio playback starts on the page. Juice Shop
+         auto-validates the Bonus Payload challenge as soon as it
+         detects this specific payload in the search argument processed
+         by bypassSecurityTrustHtml.
+    pedagogical_intent: |
+      Quasi-solution: explicit copy-paste workflow + scoring mechanism.

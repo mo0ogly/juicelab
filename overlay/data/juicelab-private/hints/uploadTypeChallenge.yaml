@@ -1,0 +1,188 @@
+challenge_key: "uploadTypeChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 : "You can attach a PDF
+      or ZIP file to the Complaint form". Surface =
+      Complaint form. Hint #2 : "If you solved Upload
+      a file larger than 100 kB, apply the same
+      solution here". Donc meme bypass approach (curl
+      bypass frontend).
+    text_en: |
+      Official OWASP hint #1: "You can attach a PDF
+      or ZIP file to the Complaint form". Surface =
+      Complaint form. Hint #2: "If you solved Upload
+      a file larger than 100 kB, apply the same
+      solution here". So same bypass approach (curl
+      bypass frontend).
+    pedagogical_intent: |
+      Activate same-pattern reuse reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le frontend filtre via `accept="application/
+      pdf,application/zip"` HTML attribute. Le
+      backend verifie aussi mais SEULEMENT pour le
+      solve check, pas pour rejeter. Si tu uploades
+      un .png via curl, le serveur accept et
+      declenche le solve.
+    text_en: |
+      Frontend filters via `accept="application/
+      pdf,application/zip"` HTML attribute. Backend
+      also checks but ONLY for solve check, not to
+      reject. If you upload .png via curl, server
+      accepts and triggers solve.
+    pedagogical_intent: |
+      Spell mechanic distinction.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (routes/fileUpload.ts:67-71) :
+      `function checkFileType({file}) { const
+      fileType = file?.originalname.substr(
+      file.originalname.lastIndexOf('.') + 1).
+      toLowerCase(); challengeUtils.solveIf(
+      challenges.uploadTypeChallenge, () => { return
+      !(fileType === 'pdf' || fileType === 'xml' ||
+      fileType === 'zip' || fileType === 'yml' ||
+      fileType === 'yaml') }) }`. Donc le solve
+      trigger si extension N'EST PAS dans
+      {pdf,xml,zip,yml,yaml}. Solution : upload .png
+      par exemple.
+    text_en: |
+      Server source (routes/fileUpload.ts:67-71):
+      `function checkFileType({file}) { const
+      fileType = file?.originalname.substr(
+      file.originalname.lastIndexOf('.') + 1).
+      toLowerCase(); challengeUtils.solveIf(
+      challenges.uploadTypeChallenge, () => {
+      return !(fileType === 'pdf' || fileType ===
+      'xml' || fileType === 'zip' || fileType ===
+      'yml' || fileType === 'yaml') }) }`. So solve
+      triggers if extension NOT in
+      {pdf,xml,zip,yml,yaml}. Solution: upload .png
+      for example.
+    pedagogical_intent: |
+      Reveal exact server check.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Construction du
+      payload : prepare un fichier .png/.txt/.exe
+      (toute extension SAUF pdf/xml/zip/yml/yaml).
+      ```bash
+      # Generer un .png factice
+      echo "fake png content" > exploit.png
+      ```
+      Submit via curl :
+      ```bash
+      curl -X POST http://localhost:3000/file-upload
+        -H "Authorization: Bearer <token>"
+        -F "file=@exploit.png"
+      ```
+      Le serveur :
+      (a) checkFileType extract extension "png"
+      (b) `!(png in {pdf,xml,zip,yml,yaml})` = true
+      (c) solveIf trigger -> challenge solve auto.
+      Note : le file passe checkUploadSize aussi
+      (declenche aussi uploadSizeChallenge si >
+      100kB - peux les solve ensemble).
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Payload construction:
+      prepare .png/.txt/.exe file (any extension
+      EXCEPT pdf/xml/zip/yml/yaml).
+      ```bash
+      # Generate fake .png
+      echo "fake png content" > exploit.png
+      ```
+      Submit via curl:
+      ```bash
+      curl -X POST http://localhost:3000/file-upload
+        -H "Authorization: Bearer <token>"
+        -F "file=@exploit.png"
+      ```
+      Server:
+      (a) checkFileType extracts "png" extension
+      (b) `!(png in {pdf,xml,zip,yml,yaml})` = true
+      (c) solveIf triggers -> challenge auto
+          solves.
+      Note: file passes checkUploadSize too (also
+      triggers uploadSizeChallenge if > 100kB - can
+      solve them together).
+    pedagogical_intent: |
+      Spell exact payload + side-effect note.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Login Juice Shop pour avoir un JWT.
+      2. Generer un fichier avec extension non-
+         autorisee : `echo "test" > evil.png`
+         (ou .txt, .exe, etc.).
+      3. Submit via curl :
+         ```bash
+         curl -X POST
+           http://localhost:3000/file-upload
+           -H "Authorization: Bearer <token>"
+           -F "file=@evil.png"
+         ```
+      4. Le serveur :
+         (a) multer accepts (no extension filter)
+         (b) checkFileType extract "png"
+         (c) solveIf check `!(png in {pdf,xml,
+             zip,yml,yaml})` = true
+         (d) challenge solve auto.
+      5. Optimization : si tu utilises un fichier
+         > 100kB en .png, tu solves AUSSI
+         uploadSizeChallenge en meme temps :
+         `dd if=/dev/urandom of=evil.png bs=1k
+         count=200`.
+      Source canonique : routes/fileUpload.ts:
+      67-71 + OWASP File Upload Cheat Sheet.
+      Defense canonique : (a) extension allowlist
+      (rejection sur miss). (b) MIME type detection
+      via file-type library (server-side). (c)
+      magic bytes verification. (d) sandboxed
+      processing (Docker container). 4-layer
+      defense in depth.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. Login Juice Shop to get JWT.
+      2. Generate file with non-allowed
+         extension: `echo "test" > evil.png`
+         (or .txt, .exe, etc.).
+      3. Submit via curl:
+         ```bash
+         curl -X POST
+           http://localhost:3000/file-upload
+           -H "Authorization: Bearer <token>"
+           -F "file=@evil.png"
+         ```
+      4. Server:
+         (a) multer accepts (no extension filter)
+         (b) checkFileType extracts "png"
+         (c) solveIf check `!(png in {pdf,xml,
+             zip,yml,yaml})` = true
+         (d) challenge auto solves.
+      5. Optimization: if you use > 100kB .png
+         file, you ALSO solve uploadSizeChallenge
+         simultaneously: `dd if=/dev/urandom
+         of=evil.png bs=1k count=200`.
+      Canonical source: routes/fileUpload.ts:
+      67-71 + OWASP File Upload Cheat Sheet.
+      Canonical defense: (a) extension allowlist
+      (reject on miss). (b) MIME type detection
+      via file-type library (server-side). (c)
+      magic bytes verification. (d) sandboxed
+      processing (Docker container). 4-layer
+      defense in depth.
+    pedagogical_intent: |
+      Solution complete + 2-in-1 optimization +
+      defense.

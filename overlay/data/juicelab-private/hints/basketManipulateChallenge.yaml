@@ -1,0 +1,107 @@
+challenge_key: "basketManipulateChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Pre-requis pedagogique : as-tu deja resolu basketAccessChallenge
+      (View Basket) ? Si oui, tu connais le pattern IDOR sur les
+      paniers. Difference ici : ce n'est plus une lecture (voir le
+      panier) mais une ECRITURE (modifier le panier). Hint OWASP
+      officiel #2 te previent : pas un simple update quantity,
+      pas un steal, mais ajouter un nouveau produit.
+    text_en: |
+      Pedagogical prerequisite: have you solved basketAccessChallenge
+      (View Basket)? If yes, you know the IDOR pattern on baskets.
+      Difference here: not a read (viewing the basket) but a
+      WRITE (modifying it). Official OWASP hint #2 warns: not a
+      simple quantity update, not a steal, but adding a new
+      product.
+    pedagogical_intent: |
+      Connect to basketAccess (read) and pivot to write IDOR.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP officiel #1 : "Have an eye on the HTTP traffic
+      while placing products in the shopping basket". Va sur la
+      page produits, ouvre les DevTools onglet Network. Ajoute UN
+      produit a TON basket. Observe la requete generee : quel
+      endpoint ? Quel body ?
+    text_en: |
+      Official OWASP hint #1: "Have an eye on the HTTP traffic
+      while placing products in the shopping basket". Go to
+      products page, open DevTools Network tab. Add ONE product
+      to YOUR basket. Observe the generated request: which
+      endpoint? What body?
+    pedagogical_intent: |
+      Localize the endpoint via traffic observation.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      L'endpoint est POST /api/BasketItems/ avec body :
+      { "ProductId": <X>, "BasketId": <ton_bid>, "quantity": 1 }
+      Question : qu'est-ce que ton bid ? Tu peux le voir dans le
+      sessionStorage (cle "bid") ou dans la response de
+      /rest/basket. C'est typiquement 6 ou 7 pour un user
+      nouvellement inscrit. Que se passerait-il si tu changeais
+      le BasketId du body en 1, 2 ou 3 ?
+    text_en: |
+      Endpoint is POST /api/BasketItems/ with body:
+      { "ProductId": <X>, "BasketId": <your_bid>, "quantity": 1 }
+      Question: what's your bid? You can see it in sessionStorage
+      (key "bid") or in the /rest/basket response. Typically 6 or
+      7 for a newly-registered user. What if you changed the body
+      BasketId to 1, 2, or 3?
+    pedagogical_intent: |
+      Spell the body shape and trigger enumeration thinking.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Le serveur n'a pas de check d'ownership sur le BasketId du
+      body. Si tu envoies un BasketId qui n'est pas le tien
+      (typiquement les bids 1-3 appartiennent aux users seedes
+      admin/jim/bender), le serveur cree quand meme le BasketItem
+      avec ce BasketId. Donc il ajoute le produit au basket de
+      l'autre user. Workflow attaque : intercepter la requete
+      legitime (Burp ou simplement re-emit via fetch console),
+      changer BasketId, re-emit.
+    text_en: |
+      The server has no ownership check on the body BasketId. If
+      you send a BasketId not yours (typically bids 1-3 belong to
+      seeded users admin/jim/bender), the server still creates
+      the BasketItem with that BasketId. Hence it adds the
+      product to the other user's basket. Attack workflow:
+      intercept the legitimate request (Burp or simply re-emit
+      via fetch console), change BasketId, re-emit.
+    pedagogical_intent: |
+      Explain absence of ownership check + spell attack workflow.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Workflow concret avec curl ou fetch console :
+      curl -X POST http://127.0.0.1:3000/api/BasketItems/
+        -H "Authorization: Bearer <ton_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"ProductId":1,"BasketId":2,"quantity":1}'
+      Le BasketId=2 appartient a un autre user (typiquement
+      jim@juice-sh.op). Le serveur retourne 200 et stocke le
+      BasketItem. Le challenge se valide automatiquement quand le
+      serveur detecte un BasketItem cree avec BasketId different
+      du JWT user.
+    text_en: |
+      Concrete workflow via curl or fetch console:
+      curl -X POST http://127.0.0.1:3000/api/BasketItems/
+        -H "Authorization: Bearer <your_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"ProductId":1,"BasketId":2,"quantity":1}'
+      BasketId=2 belongs to another user (typically
+      jim@juice-sh.op). Server returns 200 and stores the
+      BasketItem. Challenge auto-solves when server detects a
+      BasketItem created with BasketId different from JWT user.
+    pedagogical_intent: |
+      Quasi-solution : full curl command + expected behavior.

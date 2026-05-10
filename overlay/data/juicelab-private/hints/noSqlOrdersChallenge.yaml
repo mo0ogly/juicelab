@@ -1,0 +1,115 @@
+challenge_key: "noSqlOrdersChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      La description OWASP officielle dit "All your orders are belong
+      to us! Even the ones which don't". Le hint #2 confirme :
+      "This challenge requires a classic Injection attack". Le hint
+      #3 te localise : "find an API endpoint with the intent of
+      delivering a SINGLE order to the user". Lequel des endpoints
+      Juice Shop est concu pour retourner UN seul order ?
+    text_en: |
+      Official OWASP description says "All your orders are belong
+      to us! Even the ones which don't". Hint #2 confirms: "This
+      challenge requires a classic Injection attack". Hint #3
+      localizes: "find an API endpoint with the intent of
+      delivering a SINGLE order to the user". Which Juice Shop
+      endpoint is designed to return ONE single order?
+    pedagogical_intent: |
+      Direct the student to a single-row endpoint vs a list endpoint.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      L'endpoint /rest/track-order/:orderId. Tu peux le voir en
+      navigant vers la page Track Order depuis ton account. Le
+      backend execute une query MongoDB sur la collection Orders,
+      avec le orderId comme filtre. Hint OWASP officiel #1 : "Take
+      a close look on how the $where query operator works in
+      MongoDB". Que se passe-t-il si tu remplaces le orderId
+      string par un OBJET MongoDB ?
+    text_en: |
+      The /rest/track-order/:orderId endpoint. You can see it
+      navigating to Track Order from your account. The backend
+      runs a MongoDB query on the Orders collection, with orderId
+      as filter. Official OWASP hint #1: "Take a close look on
+      how the $where query operator works in MongoDB". What
+      happens if you replace the orderId string with a MongoDB
+      OBJECT?
+    pedagogical_intent: |
+      Connect the endpoint to operator injection.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Tu peux passer un objet MongoDB dans l'URL via JSON encoding.
+      Operateurs always-true classiques :
+      {"$ne":-1} - id different de -1, donc tout
+      {"$gt":""} - id "plus grand" qu'une string vide, donc tout
+      {"$where":"true"} - evalue toujours true
+      L'endpoint /rest/track-order/:orderId accepte le param brut.
+      URL exemple : /rest/track-order/{"$ne":-1}
+      Le serveur parse cet objet comme filter, retourne potentiel-
+      lement plusieurs orders.
+    text_en: |
+      You can pass a MongoDB object in the URL via JSON encoding.
+      Classic always-true operators:
+      {"$ne":-1} - id different from -1, hence all
+      {"$gt":""} - id "greater than" empty string, hence all
+      {"$where":"true"} - always evaluates true
+      The /rest/track-order/:orderId endpoint accepts the raw
+      param. Sample URL: /rest/track-order/{"$ne":-1}
+      The server parses this object as filter, potentially returns
+      multiple orders.
+    pedagogical_intent: |
+      Spell common operators with concrete syntax.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Pour ce challenge, le payload qui retourne TOUS les orders
+      avec un seul appel est :
+      /rest/track-order/{"$ne":-1}
+      ou
+      /rest/track-order/{"$where":"true"}
+      L'URL doit etre URL-encoded, donc :
+      /rest/track-order/%7B%22%24ne%22%3A-1%7D
+      Pour le tester, tape l'URL dans la barre d'adresse du
+      navigateur (le navigateur fera l'encoding) ou utilise curl
+      avec --data-urlencode.
+    text_en: |
+      For this challenge, the payload returning ALL orders in a
+      single call is:
+      /rest/track-order/{"$ne":-1}
+      or
+      /rest/track-order/{"$where":"true"}
+      The URL must be URL-encoded, hence:
+      /rest/track-order/%7B%22%24ne%22%3A-1%7D
+      Test it by typing the URL in the browser address bar (the
+      browser handles encoding) or use curl with --data-urlencode.
+    pedagogical_intent: |
+      Spell exact URL with encoding.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      curl 'http://127.0.0.1:3000/rest/track-order/%7B%22%24ne%22%3A-1%7D'
+      -H 'Authorization: Bearer <ton_jwt>'
+      Response : JSON array contenant TOUS les orders de tous les
+      users. Le challenge se valide automatiquement quand le
+      serveur detecte la requete avec un objet operateur sur
+      track-order. Source de validation : la route route.ts du
+      track-order verifie le pattern de l'attaque cote backend.
+    text_en: |
+      curl 'http://127.0.0.1:3000/rest/track-order/%7B%22%24ne%22%3A-1%7D'
+      -H 'Authorization: Bearer <your_jwt>'
+      Response: JSON array containing ALL orders from every user.
+      The challenge solves automatically when the server detects
+      the request with an operator object on track-order.
+      Validation source: the track-order route.ts checks the
+      attack pattern server-side.
+    pedagogical_intent: |
+      Quasi-solution : full curl + result expectation.

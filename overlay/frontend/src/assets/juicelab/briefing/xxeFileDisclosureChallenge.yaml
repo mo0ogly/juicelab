@@ -1,0 +1,123 @@
+challenge_key: "xxeFileDisclosureChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Retrieve le content de C:\Windows\system.ini OU
+  /etc/passwd depuis le serveur. Tag : Danger
+  Zone. Description OWASP. Hints : (1) "leverage
+  point is the deprecated B2B interface". (2) "
+  challenge sounds harder than it is". (3) "
+  research on typical XXE attack patterns gives
+  away the solution". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve dans routes/fileUpload.ts:85.
+  Code : `solveIf(() =>
+  utils.matchesEtcPasswdFile(xmlString) ||
+  utils.matchesSystemIniFile(xmlString))`. Le
+  serveur parse XML avec libxml `noent: true`
+  (entities expanded). Pre-requis :
+  deprecatedInterface (XML upload accepted).
+  Workflow : upload XML avec XXE payload :
+  `<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:
+  ///etc/passwd">]><foo>&xxe;</foo>`. Le
+  serveur expand l'entity, lit /etc/passwd,
+  retourne le content. Solve auto.
+
+mission_en: |
+  Retrieve C:\Windows\system.ini OR /etc/passwd
+  content from server. Tag: Danger Zone. OWASP
+  description. Hints: (1) "leverage point is
+  deprecated B2B interface". (2) "challenge
+  sounds harder than it is". (3) "research on
+  typical XXE attack patterns gives away
+  solution". [KILL_CHAIN_DOCUMENTED]
+
+  Method: Solve in routes/fileUpload.ts:85.
+  Code: `solveIf(() =>
+  utils.matchesEtcPasswdFile(xmlString) ||
+  utils.matchesSystemIniFile(xmlString))`.
+  Server parses XML with libxml `noent: true`
+  (entities expanded). Prerequisite:
+  deprecatedInterface (XML upload accepted).
+  Workflow: upload XML with XXE payload:
+  `<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:
+  ///etc/passwd">]><foo>&xxe;</foo>`. Server
+  expands entity, reads /etc/passwd, returns
+  content. Auto solves.
+
+concepts:
+  - title_fr: "XXE : XML External Entity attack"
+    title_en: "XXE: XML External Entity attack"
+    body_fr: |
+      Source canonique : OWASP XML External
+      Entity Prevention Cheat Sheet
+      (mitigationUrl). Mecanique : XML
+      definit "external entities" pouvant
+      pointer vers des files locaux ou URLs.
+      Si le parser autorise l'expansion
+      (default dans nombreuses libraries
+      anciennes), l'attaquant peut LIRE des
+      files arbitraires sur le serveur. Cas
+      reels : Facebook 2014 (XXE bug bounty
+      $40K), Apple 2018 (XXE in iCal).
+    body_en: |
+      Canonical source: OWASP XML External
+      Entity Prevention Cheat Sheet
+      (mitigationUrl). Mechanic: XML defines
+      "external entities" that can point to
+      local files or URLs. If parser allows
+      expansion (default in many old
+      libraries), attacker can READ arbitrary
+      files on server. Real cases: Facebook
+      2014 (XXE bug bounty $40K), Apple 2018
+      (XXE in iCal).
+
+  - title_fr: "libxml noent: true : the bug"
+    title_en: "libxml noent: true: the bug"
+    body_fr: |
+      Source verifiee (routes/fileUpload.ts:
+      83) : `vm.runInContext('libxml.
+      parseXml(data, { noblanks: true,
+      noent: true, nocdata: true })', sandbox
+      ...)`. Le option `noent: true` active
+      l'expansion des entities = XXE
+      vulnerable. Defense : `noent: false`
+      par defaut + entity processing OFF +
+      DOCTYPE rejection.
+    body_en: |
+      Verified source (routes/fileUpload.ts:
+      83): `vm.runInContext('libxml.
+      parseXml(data, { noblanks: true,
+      noent: true, nocdata: true })', sandbox
+      ...)`. `noent: true` option enables
+      entity expansion = XXE vulnerable.
+      Defense: `noent: false` by default +
+      entity processing OFF + DOCTYPE
+      rejection.
+
+  - title_fr: "Defense canonique : OWASP XXE Prevention Cheat Sheet"
+    title_en: "Canonical defense: OWASP XXE Prevention Cheat Sheet"
+    body_fr: |
+      Defense en profondeur : (1) Disable
+      DOCTYPE entirely : `parseXml(data, {
+      doctype: false })` (libxml). (2)
+      Disable external entities : `noent:
+      false` (libxml default). (3) Use a
+      modern parser pre-configured safe (
+      defusedxml Python, etree). (4) Avoid
+      XML if possible (use JSON). (5)
+      Sandbox le parser (Docker container,
+      no network egress). Cf. OWASP XXE
+      Prevention.
+    body_en: |
+      Defense in depth: (1) Disable DOCTYPE
+      entirely: `parseXml(data, { doctype:
+      false })` (libxml). (2) Disable
+      external entities: `noent: false`
+      (libxml default). (3) Use modern
+      pre-configured safe parser
+      (defusedxml Python, etree). (4) Avoid
+      XML if possible (use JSON). (5)
+      Sandbox parser (Docker container, no
+      network egress). Cf. OWASP XXE
+      Prevention.

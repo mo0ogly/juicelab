@@ -1,0 +1,108 @@
+challenge_key: "web3SandboxChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quel pattern d'erreur cree des routes "accidentellement
+      deployees" comme la web3 sandbox de Juice Shop ?
+    question_en: |
+      Which error pattern creates "accidentally deployed" routes
+      like the Juice Shop web3 sandbox?
+    options_fr:
+      - "Une fuite de credentials Git"
+      - "Le build prod ne strip pas les features de DEV : (1) absence de feature flags conditionnels, (2) pas de plugin webpack/vite supprimant les imports @dev-only, (3) CI gate manquant pour grep les patterns dev (sandbox, repl, playground)"
+      - "Un mauvais reglage du firewall"
+      - "Un certificat TLS expire"
+    options_en:
+      - "A Git credentials leak"
+      - "The prod build doesn't strip DEV features: (1) no conditional feature flags, (2) no webpack/vite plugin removing @dev-only imports, (3) missing CI gate to grep dev patterns (sandbox, repl, playground)"
+      - "Bad firewall setting"
+      - "Expired TLS certificate"
+    correct: 1
+    explanation_fr: |
+      Le bug n'est pas dans le code lui-meme mais dans le
+      PIPELINE de deploy. La defense en profondeur force la
+      detection avant prod : feature flags, build stripping, CI
+      grep, static analysis. Reference codefixes fix #1 :
+      "Functionality like this does under no circumstances
+      belong into an application when it goes into production".
+    explanation_en: |
+      The bug isn't in the code itself but in the deploy
+      PIPELINE. Defense in depth forces detection before prod:
+      feature flags, build stripping, CI grep, static analysis.
+      Reference codefixes fix #1: "Functionality like this does
+      under no circumstances belong into an application when it
+      goes into production".
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi un code sandbox accessible publiquement est-il
+      potentiellement dangereux meme si elle n'expose pas de
+      donnees sensibles directement ?
+    question_en: |
+      Why is a publicly-accessible code sandbox potentially
+      dangerous even if it doesn't expose sensitive data
+      directly?
+    options_fr:
+      - "Parce qu'elle ralentit le serveur"
+      - "Parce qu'elle peut etre une surface RCE potentielle si l'isolation n'est pas correcte (vm2, isolated-vm, container par session). Un attaquant qui execute du code sur le serveur compromet TOUT (DB, secrets, filesystem)"
+      - "Parce qu'elle viole le RGPD"
+      - "Parce qu'elle force l'usage de WebSockets"
+    options_en:
+      - "Because it slows the server"
+      - "Because it can be a potential RCE surface if isolation isn't proper (vm2, isolated-vm, container per session). An attacker executing code on the server compromises EVERYTHING (DB, secrets, filesystem)"
+      - "Because it violates GDPR"
+      - "Because it forces WebSocket usage"
+    correct: 1
+    explanation_fr: |
+      Pattern recurrent en pentest : un eval() ou vm.run sur du
+      code utilisateur sans isolation propre = RCE. Pour ce
+      challenge specifique, la severite est limitee (smart
+      contracts s'executent en EVM, pas sur Node), mais le
+      pattern general est critique. Toujours sandboxer dans un
+      contexte isole quand on accepte du code utilisateur.
+    explanation_en: |
+      Recurrent pentest pattern: eval() or vm.run on user code
+      without proper isolation = RCE. For this specific
+      challenge, severity is limited (smart contracts run in
+      EVM, not Node), but the general pattern is critical.
+      Always sandbox in an isolated context when accepting user
+      code.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense empeche STRUCTURELLEMENT le deploy d'une
+      route sandbox/dev en production ?
+    question_en: |
+      Which defense STRUCTURALLY prevents deploying a sandbox/
+      dev route in production?
+    options_fr:
+      - "Audit manuel du code par un security engineer chaque release"
+      - "CI gate automatique qui grep le bundle prod pour des patterns dev (sandbox, repl, playground, debug) et fail le build si match. Combine a un build flag NODE_ENV=production qui strippe les imports marques @dev-only"
+      - "Forcer HTTPS sur les routes sandbox"
+      - "Documenter dans le README qu'il ne faut pas deployer la sandbox en prod"
+    options_en:
+      - "Manual code audit by a security engineer each release"
+      - "Automatic CI gate grepping prod bundle for dev patterns (sandbox, repl, playground, debug) and failing build on match. Combined with a NODE_ENV=production build flag stripping @dev-only imports"
+      - "Force HTTPS on sandbox routes"
+      - "Document in README that sandbox shouldn't be deployed to prod"
+    correct: 1
+    explanation_fr: |
+      Defense structurelle = automatisation, pas dependance
+      humaine. Audit manuel et documentation aident mais sont
+      faillibles (oubli, turnover des engineers). Le CI gate
+      automatique attrape le bug a chaque release sans
+      dependance sur la discipline d'une personne. C'est le
+      meme pattern que le hook file_size_check.cjs sur ce
+      projet.
+    explanation_en: |
+      Structural defense = automation, not human dependency.
+      Manual audit and documentation help but are fallible
+      (oversight, engineer turnover). Automated CI gate catches
+      the bug at every release without dependency on a single
+      person's discipline. Same pattern as the
+      file_size_check.cjs hook on this project.

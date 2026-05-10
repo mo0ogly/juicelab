@@ -1,0 +1,110 @@
+challenge_key: "changeProductChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      L'API auto-generee de Juice Shop expose les 4 verbs HTTP par
+      defaut sans restriction d'autorisation. Quel principe
+      d'architecture est viole ici ?
+    question_en: |
+      Juice Shop's auto-generated API exposes all 4 HTTP verbs by
+      default without authorization restriction. Which
+      architectural principle is violated here?
+    options_fr:
+      - "Single Responsibility Principle"
+      - "Default Deny / Principe du moindre privilege : un endpoint doit autoriser EXPLICITEMENT chaque verb necessaire et bloquer le reste, pas l'inverse. La generation automatique allow-all est l'oppose"
+      - "DRY (Don't Repeat Yourself)"
+      - "Separation of Concerns"
+    options_en:
+      - "Single Responsibility Principle"
+      - "Default Deny / Least Privilege: an endpoint must EXPLICITLY allow each needed verb and block the rest, not the opposite. Auto-generated allow-all is the opposite"
+      - "DRY (Don't Repeat Yourself)"
+      - "Separation of Concerns"
+    correct: 1
+    explanation_fr: |
+      Default Deny est un des principes fondamentaux de la
+      securite. Une API qui expose tous les verbs par defaut viole
+      ce principe a sa racine. La defense canonique est de
+      reverse le defaut : autoriser EXPLICITEMENT chaque
+      action necessaire.
+    explanation_en: |
+      Default Deny is one of the fundamental security principles.
+      An API exposing all verbs by default violates this at its
+      root. Canonical defense: reverse the default — EXPLICITLY
+      allow each needed action.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le codefixes officiel OWASP fournit 4 fixes pour ce challenge.
+      Le fix CORRECT est le #3 ("Disabling all HTTP verbs other
+      than GET for the products API"). Pourquoi le fix #4
+      ("removing PUT from anonymous API callers but keeping it for
+      authenticated users") n'est-il pas suffisant ?
+    question_en: |
+      Official OWASP codefixes provides 4 fixes. CORRECT fix is
+      #3 ("Disabling all HTTP verbs other than GET for the
+      products API"). Why is fix #4 ("removing PUT from
+      anonymous API callers but keeping it for authenticated
+      users") insufficient?
+    options_fr:
+      - "Parce que le fix #4 introduit un overhead de performance"
+      - "Parce que tout customer authentifie peut alors modifier les produits — la question est rhetorique : 'does the shop even want to allow its authenticated customers to change products themselves?' (codefixes fix #4 explanation)"
+      - "Parce que le fix #4 ne fonctionne pas avec HTTPS"
+      - "Parce que le fix #4 nécessite un compte admin"
+    options_en:
+      - "Because fix #4 introduces performance overhead"
+      - "Because any authenticated customer can then modify products — the question is rhetorical: 'does the shop even want to allow its authenticated customers to change products themselves?' (codefixes fix #4 explanation)"
+      - "Because fix #4 doesn't work with HTTPS"
+      - "Because fix #4 requires an admin account"
+    correct: 1
+    explanation_fr: |
+      Le fix #4 confond authentication et authorization. Etre
+      "logged in as customer" != "authorized to modify products".
+      Le pattern correct est SEPARATION : route public read-only
+      pour les customers, route admin-only pour les modifications.
+      Source : codefixes/changeProductChallenge.info.yml fix #4
+      explanation in extenso.
+    explanation_en: |
+      Fix #4 conflates authentication with authorization. Being
+      "logged in as customer" != "authorized to modify products".
+      Correct pattern is SEPARATION: public read-only route for
+      customers, admin-only route for modifications. Source:
+      codefixes/changeProductChallenge.info.yml fix #4
+      explanation in full.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      L'OWASP REST Security Cheat Sheet recommande quelle approche
+      pour gerer les HTTP verbs sur un endpoint REST ?
+    question_en: |
+      The OWASP REST Security Cheat Sheet recommends which
+      approach for HTTP verbs on a REST endpoint?
+    options_fr:
+      - "Accepter tous les verbs et faire le check d'autorisation dans le handler"
+      - "Whitelist explicite des verbs autorises, retourner 405 Method Not Allowed pour les autres. Pattern Express : router.get(...) explicite + app.all(path, () => 405) pour catch les non-handles"
+      - "Forcer HTTPS sur tous les endpoints REST"
+      - "Bloquer le verb DELETE pour des raisons RGPD"
+    options_en:
+      - "Accept all verbs and do auth check in the handler"
+      - "Explicit whitelist of allowed verbs, return 405 Method Not Allowed for others. Express pattern: explicit router.get(...) + app.all(path, () => 405) to catch non-handled"
+      - "Force HTTPS on all REST endpoints"
+      - "Block DELETE verb for GDPR reasons"
+    correct: 1
+    explanation_fr: |
+      Source : OWASP REST Security Cheat Sheet "Validate content
+      type and HTTP verb on each request". 405 Method Not Allowed
+      est un statut HTTP standard pour ce cas. Le pattern
+      explicite empeche structurellement les bugs d'oubli (un
+      developpeur qui ajoute un endpoint sans handler PUT herite
+      automatiquement du 405).
+    explanation_en: |
+      Source: OWASP REST Security Cheat Sheet "Validate content
+      type and HTTP verb on each request". 405 Method Not
+      Allowed is the standard HTTP status for this case. Explicit
+      pattern structurally prevents oversight bugs (a developer
+      adding an endpoint without a PUT handler automatically
+      inherits the 405).

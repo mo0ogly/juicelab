@@ -1,0 +1,7 @@
+{
+  "dashboard_url": "http://127.0.0.1:5050",
+  "cohort_id": "M2-IA-2026",
+  "instance_label": "td-default",
+  "default_language": "fr",
+  "_comment": "dashboard_url is the Flask receiver. cohort_id groups students for the teacher dashboard. instance_label is sent as X-Instance-Label header so the teacher can tell which Juice Shop container (in docker-compose) emitted an event."
+}

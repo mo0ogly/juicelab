@@ -1,0 +1,90 @@
+challenge_key: "feedbackChallenge"
+schema_version: "juicelab.quiz.v1"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Quelle chaine de vulnerabilites est necessaire pour resoudre Five-
+      Star Feedback (suppression d'un feedback existant) ?
+    question_en: |
+      Which vulnerability chain is needed to solve Five-Star Feedback
+      (deletion of an existing feedback)?
+    options_fr:
+      - "Une seule injection SQL suffit pour supprimer le feedback"
+      - "Une SQLi pour obtenir un JWT admin, puis un Broken Access Control sur l'endpoint de suppression"
+      - "Une attaque XSS persistante puis un CSRF"
+      - "Un DOS pour faire crasher le serveur, qui supprime ses logs au reboot"
+    options_en:
+      - "A single SQL injection is enough to delete the feedback"
+      - "A SQLi to obtain an admin JWT, then a Broken Access Control on the deletion endpoint"
+      - "A persistent XSS then a CSRF"
+      - "A DoS that crashes the server, which deletes logs on reboot"
+    correct: 1
+    explanation_fr: |
+      C'est typique en pentest reel : les vulns isolees sont souvent
+      tolerables, leur composition est catastrophique. Ici, SQLi pour
+      escalader en admin, puis BAC pour utiliser l'endpoint admin de
+      suppression.
+    explanation_en: |
+      Typical of real pentests: isolated vulns are often tolerable,
+      their composition is catastrophic. Here, SQLi to escalate to
+      admin, then BAC to abuse the admin deletion endpoint.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Pour proteger une action de suppression critique en production,
+      laquelle de ces mesures est la plus importante a implementer en
+      premier ?
+    question_en: |
+      To protect a critical deletion action in production, which of
+      these measures is most important to implement first?
+    options_fr:
+      - "Demander une confirmation par email avant suppression"
+      - "Soft delete avec journal d'audit (qui, quand, pourquoi)"
+      - "Limiter le nombre de suppressions par minute"
+      - "Chiffrer la base de donnees au repos"
+    options_en:
+      - "Require email confirmation before deletion"
+      - "Soft delete with audit log (who, when, why)"
+      - "Rate-limit deletions per minute"
+      - "Encrypt the database at rest"
+    correct: 1
+    explanation_fr: |
+      Le soft delete + journal permet la restauration ET la detection
+      d'abus a posteriori. C'est la mesure la plus importante car elle
+      transforme une perte definitive en evenement reversible et
+      auditable.
+    explanation_en: |
+      Soft delete + audit log enables restoration AND after-the-fact
+      abuse detection. This is the most important measure because it
+      turns a definitive loss into a reversible auditable event.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Comment un blue team peut-il detecter cette attaque APRES coup,
+      sans avoir empeche la suppression ?
+    question_en: |
+      How can a blue team detect this attack AFTER the fact, without
+      having prevented the deletion?
+    options_fr:
+      - "En rejouant manuellement chaque session utilisateur"
+      - "Audit log des DELETE + alerte SIEM sur burst de suppressions + anomaly detection sur le compte d'enregistrements"
+      - "En lancant un nmap sur le serveur en production"
+      - "En forcant tous les utilisateurs a se reconnecter"
+    options_en:
+      - "By manually replaying every user session"
+      - "DELETE audit log + SIEM alert on burst deletions + anomaly detection on record counts"
+      - "By running nmap against the production server"
+      - "By forcing all users to log out"
+    correct: 1
+    explanation_fr: |
+      Trois indicateurs concrets : audit log (trace), SIEM (alerte
+      temps reel sur volume anormal de DELETE), anomaly detection (chute
+      brutale du compte de feedbacks rating=5).
+    explanation_en: |
+      Three concrete indicators: audit log (trace), SIEM (real-time
+      alert on abnormal DELETE volume), anomaly detection (sharp drop
+      in the count of feedbacks with rating=5).

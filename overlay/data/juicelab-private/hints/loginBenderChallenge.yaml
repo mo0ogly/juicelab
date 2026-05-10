@@ -1,0 +1,91 @@
+challenge_key: "loginBenderChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      La description du challenge dit explicitement "without previously
+      changing his password, applying SQL Injection on another user, or
+      hacking his Google account". Toute defense par auth Google ou
+      reset etant exclue, qu'est-ce qui reste comme angle d'attaque
+      sur un formulaire de login ?
+    text_en: |
+      The challenge description explicitly says "without previously
+      changing his password, applying SQL Injection on another user,
+      or hacking his Google account". With Google auth and password
+      reset ruled out, what attack angle is left on a login form?
+    pedagogical_intent: |
+      Activate the elimination reflex via the OWASP wording itself.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Pour faire SQLi sur Bender, tu as besoin de son email — mais le
+      shop ne te le donne pas spontanement. Sur quelles pages
+      institutionnelles peut-on lire des messages publics signes par
+      des utilisateurs ? Pense aux pages "vitrine" du marketing : About
+      Us, Customer Feedback, Reviews.
+    text_en: |
+      To run SQLi against Bender, you need his email — but the shop
+      does not hand it to you. On which institutional pages can you
+      read public messages signed by users? Think about marketing
+      "showcase" pages: About Us, Customer Feedback, Reviews.
+    pedagogical_intent: |
+      Localize the OSINT surface (institutional pages with attribution).
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Va sur About Us. La page contient une carousel de user feedbacks.
+      Cherche celui signe par Bender. Le rendu fait fuiter une partie
+      visible de son email — assez pour deduire le pattern complet.
+      Convention business : 90% des entreprises utilisent
+      firstName@domain pour leurs emails internes.
+    text_en: |
+      Go to About Us. The page hosts a user-feedback carousel. Look
+      for the one signed by Bender. The render leaks a visible part
+      of his email — enough to deduce the full pattern. Business
+      convention: 90% of companies use firstName@domain for internal
+      email.
+    pedagogical_intent: |
+      Narrow OSINT surface to the exact element + give the email pattern.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      L'email est bender@juice-sh.op. Sur le formulaire de login, le
+      backend construit probablement quelque chose comme : SELECT *
+      FROM users WHERE email='<input>' AND password='<hash>'. Comment
+      ferais-tu pour faire disparaitre la clause AND password en
+      injectant dans le champ email ? Pense apostrophe + commentaire
+      SQL.
+    text_en: |
+      The email is bender@juice-sh.op. On the login form, the backend
+      probably builds something like: SELECT * FROM users WHERE
+      email='<input>' AND password='<hash>'. How would you make the
+      AND password clause vanish by injecting in the email field?
+      Think single quote + SQL comment.
+    pedagogical_intent: |
+      Give the SQL skeleton + the syntactic shape of the bypass.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Tape dans le champ email : bender@juice-sh.op'-- (avec
+      l'apostrophe puis deux tirets, sans espace apres l'apostrophe).
+      Mets n'importe quoi dans le champ password (il est commente,
+      ignore). Clique Login. Tu es connecte en tant que Bender. Le SQL
+      reconstruit est : SELECT * FROM users WHERE
+      email='bender@juice-sh.op'-- AND password='...'. Source :
+      tutoriel hacking-instructor OWASP loginBender.ts ligne 98-101.
+    text_en: |
+      Type in the email field: bender@juice-sh.op'-- (single quote
+      then two dashes, no space after the quote). Put anything in the
+      password field (it gets commented out, ignored). Click Login.
+      You are logged in as Bender. The reconstructed SQL is: SELECT
+      * FROM users WHERE email='bender@juice-sh.op'-- AND
+      password='...'. Source: OWASP hacking-instructor tutorial
+      loginBender.ts line 98-101.
+    pedagogical_intent: |
+      Quasi-solution : exact payload + SQL reconstruction explained.

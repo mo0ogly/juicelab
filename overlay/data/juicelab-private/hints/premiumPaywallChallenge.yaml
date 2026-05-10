@@ -1,0 +1,195 @@
+challenge_key: "premiumPaywallChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #1 + #4 : "You do not
+      have to pay anything to unlock this
+      challenge!" (repete 2 fois pour insistence).
+      Hint #2 : "no inappropriate, self-written
+      or misconfigured cryptographic library to be
+      exploited here" - donc la cryptography est
+      CORRECT, le problem est ailleurs.
+    text_en: |
+      Official OWASP hint #1 + #4: "You do not
+      have to pay anything to unlock this
+      challenge!" (repeated twice for emphasis).
+      Hint #2: "no inappropriate, self-written
+      or misconfigured cryptographic library to
+      be exploited here" - so cryptography is
+      CORRECT, problem is elsewhere.
+    pedagogical_intent: |
+      Activate non-crypto-bug reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #3 cite : "How much protection
+      does a sturdy top-quality door lock add to
+      your house if you put the key under the
+      door mat?". Metaphore claire : la
+      cryptography (door lock) est forte, mais
+      la clef est CACHEE de maniere triviale
+      (under the doormat). Cherche la clef AES
+      dans le source / bundle.
+    text_en: |
+      OWASP hint #3 quoted: "How much
+      protection does a sturdy top-quality door
+      lock add to your house if you put the
+      key under the door mat?". Clear metaphor:
+      cryptography (door lock) is strong, but
+      key HIDDEN trivially (under doormat).
+      Search AES key in source / bundle.
+    pedagogical_intent: |
+      Spell key location method.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Sur /#/score-board, regarde la description
+      du challenge "Premium Paywall". View
+      Source HTML (Ctrl+U ou DevTools Elements
+      tab). Tu verras un commentaire HTML caché :
+      `<!--IvLuRfBJYlmStf9XfL6ckJFngyd9LfV1JaaN/
+      KRTPQPidTuJ7FR+D/nkWJUF+0xUF07CeCeqYfxq+
+      OJVVa0gNbqgYkUNvn//UbE7e95C+6e+7GtdpqJ8mqm4
+      WcPvUGIUxmGLTTAC2+G9UuFCD1DUjg==-->`. C'est
+      le ciphertext AES base64-encoded.
+    text_en: |
+      On /#/score-board, look at "Premium
+      Paywall" challenge description. View
+      Source HTML (Ctrl+U or DevTools Elements
+      tab). You'll see hidden HTML comment:
+      `<!--IvLuRfBJYlmStf9XfL6ckJFngyd9LfV1J
+      aaN/KRTPQPidTuJ7FR+D/nkWJUF+0xUF07CeCeqY
+      fxq+OJVVa0gNbqgYkUNvn//UbE7e95C+6e+7GtdpqJ
+      8mqm4WcPvUGIUxmGLTTAC2+G9UuFCD1DUjg==-->`.
+      It's AES base64-encoded ciphertext.
+    pedagogical_intent: |
+      Reveal ciphertext location.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Trouver la clef
+      AES dans le bundle Angular : Open
+      DevTools Sources tab. Search dans les
+      .js bundles : "encryptionKey" /
+      "premiumKey" / "CryptoJS" / "decrypt".
+      La clef est typiquement hardcoded dans
+      ScoreBoardComponent ou similar. Si tu
+      trouves : `key = "lt2mNQ8mNL81QrKiFwGFjU
+      ymrNS4znW0"` (ou similar 32-char string),
+      c'est la clef AES.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Find AES key in
+      Angular bundle: Open DevTools Sources
+      tab. Search in .js bundles:
+      "encryptionKey" / "premiumKey" /
+      "CryptoJS" / "decrypt". Key typically
+      hardcoded in ScoreBoardComponent or
+      similar. If you find: `key =
+      "lt2mNQ8mNL81QrKiFwGFjUymrNS4znW0"` (or
+      similar 32-char string), that's AES key.
+    pedagogical_intent: |
+      Spell key search method.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      1. Sur /#/score-board, View Source HTML.
+         Trouve le commentaire HTML AES-
+         ciphertext `<!--...-->` dans la
+         description Premium Paywall.
+      2. Inspecter le bundle Angular pour la
+         clef AES :
+         - DevTools Sources tab
+         - Ctrl+Shift+F sur tous les bundles
+         - Search "decrypt" / "CryptoJS.AES"
+         - Identifier la fonction +
+           hardcoded key
+      3. Decrypter le ciphertext en local :
+         ```js
+         const CryptoJS = require('crypto-js');
+         const ciphertext = "IvLuRfBJYlm...";
+         const key = "<key found in bundle>";
+         const plaintext = CryptoJS.AES.decrypt
+           (ciphertext, key).toString(
+           CryptoJS.enc.Utf8);
+         console.log(plaintext);
+         // -> "/this/page/is/hidden/behind/
+         //     an/incredibly/high/paywall/that/
+         //     could/only/be/unlocked/by/a/
+         //     unique/coin"
+         ```
+      4. GET cette URL :
+         `http://localhost:3000/this/page/is/
+         hidden/behind/an/incredibly/high/
+         paywall/that/could/only/be/unlocked/
+         by/a/unique/coin`.
+      5. Le serveur :
+         (a) servePremiumContent route execute
+         (b) solveIf return true ->
+             challenge solve auto
+         (c) sendFile JuiceShop_Wallpaper_
+             1920x1080_VR.jpg -> tu vois le
+             premium reward (un wallpaper).
+      Source canonique : routes/premiumReward.
+      ts:13 + bundle Angular AES key + OWASP
+      Key Management Cheat Sheet.
+      Defense canonique : (a) clef AES via
+      env var / KMS / Vault, JAMAIS hardcoded.
+      (b) signed URLs time-limited (S3
+      presigned) plutot que decrypter client-
+      side. (c) audit log + key rotation.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      1. On /#/score-board, View Source HTML.
+         Find AES-ciphertext HTML comment
+         `<!--...-->` in Premium Paywall
+         description.
+      2. Inspect Angular bundle for AES key:
+         - DevTools Sources tab
+         - Ctrl+Shift+F on all bundles
+         - Search "decrypt" / "CryptoJS.AES"
+         - Identify function + hardcoded key
+      3. Decrypt ciphertext locally:
+         ```js
+         const CryptoJS = require('crypto-js');
+         const ciphertext = "IvLuRfBJYlm...";
+         const key = "<key found in bundle>";
+         const plaintext = CryptoJS.AES.
+           decrypt(ciphertext, key).toString(
+           CryptoJS.enc.Utf8);
+         console.log(plaintext);
+         // -> "/this/page/is/hidden/behind/
+         //     an/incredibly/high/paywall/
+         //     that/could/only/be/unlocked/
+         //     by/a/unique/coin"
+         ```
+      4. GET this URL: `http://localhost:3000/
+         this/page/is/hidden/behind/an/
+         incredibly/high/paywall/that/could/
+         only/be/unlocked/by/a/unique/coin`.
+      5. Server:
+         (a) servePremiumContent route
+             executes
+         (b) solveIf return true -> challenge
+             auto solves
+         (c) sendFile JuiceShop_Wallpaper_
+             1920x1080_VR.jpg -> you see
+             premium reward (a wallpaper).
+      Canonical source: routes/premiumReward.
+      ts:13 + Angular bundle AES key + OWASP
+      Key Management Cheat Sheet.
+      Canonical defense: (a) AES key via env
+      var / KMS / Vault, NEVER hardcoded. (b)
+      time-limited signed URLs (S3 presigned)
+      rather than client-side decrypt. (c)
+      audit log + key rotation.
+    pedagogical_intent: |
+      Solution complete + decryption +
+      defense.

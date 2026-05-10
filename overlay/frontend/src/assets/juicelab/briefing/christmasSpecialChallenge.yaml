@@ -1,0 +1,132 @@
+challenge_key: "christmasSpecialChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Ajoute le produit "Christmas special offer of 2014" dans ton
+  panier et finalise la commande. Probleme : ce produit n'apparait
+  PAS dans le catalogue search, parce qu'il a ete soft-deleted
+  (column deletedAt non null). Le hint OWASP officiel #5 precise
+  "this cannot be achieved through the application frontend and it
+  might even require (half-)Blind SQL Injection".
+
+  Methode recommandee : meme endpoint /rest/products/search?q=... que
+  pour Database Schema. Manipule la clause WHERE injectee pour
+  CASSER le filtre deletedAt IS NULL applique par le backend.
+  Concretement, ajoute une condition OR true ou commente la fin
+  de la WHERE pour que le serveur retourne TOUS les produits y
+  compris les soft-deletes. Trouve l'id du Christmas special,
+  ajoute-le au basket via /api/Baskets/<id>/items, et fais checkout.
+
+  Note la difference fondamentale entre soft delete (deletedAt
+  IS NULL) et hard delete, et ce que ce challenge revele sur la
+  retention de donnees obsoletes en production. Tu en parleras
+  dans le journal "apres".
+
+mission_en: |
+  Add the "Christmas special offer of 2014" product to your basket
+  and complete the order. The catch: this product does NOT show in
+  the catalog search because it was soft-deleted (deletedAt column
+  non-null). Official OWASP hint #5 states "this cannot be achieved
+  through the application frontend and it might even require
+  (half-)Blind SQL Injection".
+
+  Recommended method: same /rest/products/search?q=... endpoint as
+  Database Schema. Manipulate the injected WHERE clause to BREAK
+  the deletedAt IS NULL filter applied by the backend. Concretely,
+  add an OR true condition or comment out the end of the WHERE so
+  the server returns ALL products including soft-deletes. Find the
+  Christmas special id, add it to the basket via
+  /api/Baskets/<id>/items, then checkout.
+
+  Note the fundamental difference between soft delete (deletedAt
+  IS NULL) and hard delete, and what this challenge reveals about
+  retention of obsolete data in production. You will report it in
+  the "after" logbook.
+
+concepts:
+  - title_fr: "Soft delete : la donnee qui ne meurt pas vraiment"
+    title_en: "Soft delete: data that doesn't really die"
+    body_fr: |
+      Pattern Sequelize/ORM standard : column deletedAt timestamp,
+      requete SELECT par defaut filtre deletedAt IS NULL. Avantages
+      pour l'app : restauration possible, audit trail, undo. Cout
+      en securite : la donnee EXISTE toujours en DB, accessible si
+      la requete contourne le filtre. Ce challenge demontre que
+      "deleted from UI" n'est PAS "deleted from DB". Pour les
+      donnees vraiment sensibles (PII expirees, secrets purges
+      legalement), il faut un hard delete + un job de retention
+      reel. Soft delete est un compromis architectural a auditer.
+    body_en: |
+      Standard Sequelize/ORM pattern: deletedAt timestamp column,
+      default SELECT filters deletedAt IS NULL. App benefits:
+      restoration possible, audit trail, undo. Security cost: data
+      STILL EXISTS in DB, reachable if the query bypasses the
+      filter. This challenge proves "deleted from UI" is NOT
+      "deleted from DB". For truly sensitive data (expired PII,
+      legally purged secrets), you need a hard delete + a real
+      retention job. Soft delete is an architectural compromise to
+      audit.
+
+  - title_fr: "Half-blind SQLi : on ne voit pas le SQL mais on voit le resultat filtre"
+    title_en: "Half-blind SQLi: we don't see the SQL but we see the filtered result"
+    body_fr: |
+      Hint OWASP officiel #5 : "(half-)Blind SQL Injection". Sur ce
+      challenge, on ne voit pas le SQL execute (pas de stack trace
+      dans la response standard), mais on voit le RESULTAT du
+      search. La methode est iterative : on injecte des conditions
+      booleennes, on observe si le produit Christmas apparait ou
+      pas. Ex : ?q=christmas')) OR true-- forcera l'affichage de
+      tous les produits inclus soft-deletes. La signal est binaire :
+      le produit apparait (true) ou pas (false), c'est le "half" du
+      blind.
+    body_en: |
+      Official OWASP hint #5: "(half-)Blind SQL Injection". On this
+      challenge, you don't see the executed SQL (no stack trace in
+      the standard response), but you see the search RESULT. The
+      method is iterative: inject boolean conditions, observe
+      whether the Christmas product appears or not. E.g.
+      ?q=christmas')) OR true-- forces displaying all products
+      including soft-deletes. The signal is binary: product shows
+      (true) or not (false), this is the "half" of blind.
+
+  - title_fr: "Cible non plus exfiltration mais BYPASS d'un filtre business"
+    title_en: "Target not exfiltration but BYPASS of a business filter"
+    body_fr: |
+      Distinction nette avec dbSchema et unionSql, qui ciblaient
+      l'EXFILTRATION (lire des donnees autres). Christmas Special
+      cible le BYPASS d'un filtre business (deletedAt IS NULL). Le
+      backend a une logique correcte sur la donnee mais oublie que
+      la condition WHERE peut etre manipulee. C'est une 3eme
+      famille de SQLi sur le meme endpoint, qui montre que l'angle
+      "search vulnerable" multiplie les attaques selon l'objectif
+      de l'attaquant.
+    body_en: |
+      Sharp distinction from dbSchema and unionSql, which targeted
+      EXFILTRATION (reading other data). Christmas Special targets
+      BYPASS of a business filter (deletedAt IS NULL). The backend
+      has correct logic on data but forgets the WHERE condition
+      can be tampered with. This is a 3rd SQLi family on the same
+      endpoint, showing that the "vulnerable search" angle
+      multiplies attacks depending on attacker objective.
+
+  - title_fr: "Defense : retention strategy + ACL au niveau de l'object"
+    title_en: "Defense: retention strategy + object-level ACL"
+    body_fr: |
+      Trois niveaux. (1) Prepared statements (defense canonique,
+      empeche la SQLi en premier lieu). (2) Retention strategy :
+      soft delete pour 30/90 jours puis hard delete par job
+      automatique — la donnee n'EST PLUS accessible apres la
+      periode. (3) ACL object-level : un produit deletedAt non null
+      doit retourner 410 Gone meme avec un id direct, pas
+      seulement etre filtre cote query. Ces 3 couches font que
+      meme un bypass SQLi ne ressuscite pas le produit dans le
+      flow business.
+    body_en: |
+      Three levels. (1) Prepared statements (canonical defense,
+      prevents SQLi in the first place). (2) Retention strategy:
+      soft delete for 30/90 days then hard delete by automatic
+      job — data is NO LONGER accessible after the period. (3)
+      Object-level ACL: a product with non-null deletedAt must
+      return 410 Gone even via direct id, not just be filtered
+      query-side. These 3 layers ensure even a SQLi bypass cannot
+      resurrect the product in the business flow.

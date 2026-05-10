@@ -1,0 +1,128 @@
+challenge_key: "jwtForgedChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Hint OWASP #1 : "This challenge is explicitly
+      NOT about acquiring the RSA private key". Quel
+      est l'insight pedagogique critique ?
+    question_en: |
+      OWASP hint #1: "This challenge is explicitly
+      NOT about acquiring the RSA private key". What
+      is the critical pedagogical insight?
+    options_fr:
+      - "RSA private keys ne sont pas importantes"
+      - "L'algorithm confusion attack permet de FORGER un JWT signe sans avoir la private key. Le bug : la library JWT (express-jwt 0.1.3) accepte HS256 avec la public RSA comme HMAC secret. La public key est PUBLIQUE par definition, donc l'attaquant peut signer. Pattern : la cryptographie asymmetrique presume que public key != HMAC secret. Si l'application reutilise la cle, c'est la fin de la separation. Reusable : never reuse crypto material across algorithms"
+      - "Forger un JWT avec brute force"
+      - "Les JWT n'ont pas besoin de signature"
+    options_en:
+      - "RSA private keys aren't important"
+      - "Algorithm confusion attack allows FORGING signed JWT without private key. Bug: JWT library (express-jwt 0.1.3) accepts HS256 with public RSA as HMAC secret. Public key is PUBLIC by definition, so attacker can sign. Pattern: asymmetric crypto presumes public key != HMAC secret. If app reuses key, separation is broken. Reusable: never reuse crypto material across algorithms"
+      - "Forge JWT with brute force"
+      - "JWTs don't need signature"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la security cryptographique
+      depend des HYPOTHESES sur la separation des
+      cles. RS256 presume `public_key != HMAC_secret`.
+      HS256 presume `secret_is_secret`. Si la library
+      mixe les deux algorithms avec la meme key,
+      l'hypothese est violee. Defense : algorithm
+      whitelist + key type binding. Source : Auth0
+      disclosure 2016 + CVE-2016-10555.
+    explanation_en: |
+      Reusable pattern: cryptographic security
+      depends on HYPOTHESES on key separation.
+      RS256 presumes `public_key != HMAC_secret`.
+      HS256 presumes `secret_is_secret`. If library
+      mixes both algorithms with same key,
+      hypothesis is violated. Defense: algorithm
+      whitelist + key type binding. Source: Auth0
+      disclosure 2016 + CVE-2016-10555.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      jwtForgedChallenge a difficulty 6 vs
+      jwtUnsignedChallenge difficulty 5. Pourquoi
+      cette gradation ?
+    question_en: |
+      jwtForgedChallenge has difficulty 6 vs
+      jwtUnsignedChallenge difficulty 5. Why this
+      gradation?
+    options_fr:
+      - "Parce que 6 est le max"
+      - "Parce que jwtForged necessite : (a) recon de la public key (etape supplementaire), (b) signing avec HMAC sur cette key (algorithm confusion conceptual leap), (c) tooling specifique (jwt_tool ou PyJWT script). jwtUnsigned est plus simple : copier-paste header avec alg=none + signature vide. La gradation reflete la complexite cognitive ET le tooling required"
+      - "Parce que RSA est plus difficile que HMAC"
+      - "Aleatoire"
+    options_en:
+      - "Because 6 is the max"
+      - "Because jwtForged requires: (a) public key recon (additional step), (b) HMAC signing with this key (algorithm confusion conceptual leap), (c) specific tooling (jwt_tool or PyJWT script). jwtUnsigned is simpler: copy-paste header with alg=none + empty signature. Gradation reflects cognitive complexity AND required tooling"
+      - "Because RSA is harder than HMAC"
+      - "Random"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la difficulty pedagogique
+      d'un exploit reflete (a) le nombre d'etapes
+      pre-requis, (b) la complexite cognitive de
+      chaque etape, (c) le tooling necessaire. Pour
+      les students, gradation = progression
+      d'apprentissage. jwtUnsigned -> jwtForged
+      illustre l'escalade typique d'un attaquant :
+      d'abord les low-hanging fruits (alg=none),
+      puis les sophisticated bypasses (alg
+      confusion). Source : OWASP hint #2 confirme
+      "three generic hints from Forge an essentially
+      unsigned JWT token also help".
+    explanation_en: |
+      Reusable pattern: pedagogical difficulty of
+      exploit reflects (a) number of prerequisite
+      steps, (b) cognitive complexity of each step,
+      (c) required tooling. For students,
+      gradation = learning progression. jwtUnsigned
+      -> jwtForged illustrates typical attacker
+      escalation: first low-hanging fruits
+      (alg=none), then sophisticated bypasses (alg
+      confusion). Source: OWASP hint #2 confirms
+      "three generic hints from Forge an
+      essentially unsigned JWT token also help".
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense moderne ELIMINE entierement
+      l'algorithm confusion attack ?
+    question_en: |
+      Which modern defense ENTIRELY eliminates
+      algorithm confusion attack?
+    options_fr:
+      - "Plus longue la cle, mieux c'est"
+      - "Algorithm whitelist explicite : `jwt.verify(token, key, {algorithms: ['RS256']})`. Cette option (jsonwebtoken v9+, express-jwt v6+) FORCE la library a rejeter tout token dont l'alg n'est pas dans la whitelist. Donc HS256 sera rejete meme si signe correctement. Combine avec key type binding (la public RSA n'est PAS utilisable comme HMAC secret pour cet endpoint). Pattern : explicit > implicit"
+      - "Stocker les keys en plaintext"
+      - "Encrypter les JWT"
+    options_en:
+      - "Longer key, the better"
+      - "Explicit algorithm whitelist: `jwt.verify(token, key, {algorithms: ['RS256']})`. This option (jsonwebtoken v9+, express-jwt v6+) FORCES library to reject any token whose alg is not in whitelist. So HS256 will be rejected even if signed correctly. Combined with key type binding (RSA public NOT usable as HMAC secret for this endpoint). Pattern: explicit > implicit"
+      - "Store keys in plaintext"
+      - "Encrypt JWTs"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la defense `algorithms
+      whitelist` couvre BOTH alg=none ET alg
+      confusion attacks (toutes les variantes
+      header alg manipulation). Defense unique
+      multi-protect. Combine avec library moderne
+      qui force l'option par defaut. Source :
+      jsonwebtoken v9 changelog + OWASP JSON Web
+      Token Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: `algorithms whitelist`
+      defense covers BOTH alg=none AND alg
+      confusion attacks (all header alg
+      manipulation variants). Single defense multi-
+      protect. Combined with modern library forcing
+      option by default. Source: jsonwebtoken v9
+      changelog + OWASP JSON Web Token Cheat
+      Sheet.

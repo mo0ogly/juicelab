@@ -1,0 +1,146 @@
+challenge_key: "negativeOrderChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Place un order qui te rend RICHE (totalPrice
+  negatif). Description OWASP. Hints officiels : (1)
+  "You literally need to make the shop owe you any
+  amount of money". (2) "Investigate the shopping
+  basket closely to understand how it prevents you
+  from creating orders that would fulfil the
+  challenge". [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Le solve check est dans
+  routes/order.ts:138 (verifie source). Code exact :
+  `challengeUtils.solveIf(challenges.negativeOrder
+  Challenge, () => { return totalPrice < 0 })`. Donc
+  le serveur calcule totalPrice et solve si negatif.
+  Comment obtenir totalPrice negatif ? totalPrice =
+  sum(quantity * price) + delivery. Si quantity peut
+  etre NEGATIF, totalPrice peut etre negatif.
+  Workflow : (1) Adder un produit normal au basket.
+  (2) Modifier la quantity via PUT /api/BasketItems/
+  :id avec quantity = -10 (ou similar negatif). (3)
+  Checkout -> totalPrice negatif -> solve auto.
+
+mission_en: |
+  Place an order that makes you RICH (negative
+  totalPrice). OWASP description. Official hints:
+  (1) "You literally need to make the shop owe you
+  any amount of money". (2) "Investigate the
+  shopping basket closely to understand how it
+  prevents you from creating orders that would
+  fulfil the challenge". [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/order.
+  ts:138 (verified source). Exact code:
+  `challengeUtils.solveIf(challenges.negativeOrder
+  Challenge, () => { return totalPrice < 0 })`. So
+  server calculates totalPrice and solves if
+  negative. How to get negative totalPrice?
+  totalPrice = sum(quantity * price) + delivery. If
+  quantity can be NEGATIVE, totalPrice can be
+  negative. Workflow: (1) Add normal product to
+  basket. (2) Modify quantity via PUT /api/Basket
+  Items/:id with quantity = -10 (or similar
+  negative). (3) Checkout -> negative totalPrice ->
+  auto solve.
+
+concepts:
+  - title_fr: "Integer manipulation : negatif comme valeur valide"
+    title_en: "Integer manipulation: negative as valid value"
+    body_fr: |
+      Source canonique : OWASP Input Validation Cheat
+      Sheet (mitigationUrl du challenge). Pattern :
+      le serveur accepte un INTEGER (quantity) sans
+      verifier qu'il est >= 0 (ou >= 1). Une quantity
+      = -10 est techniquement un integer valide. Le
+      calcul totalPrice = qty * price reste un
+      integer valide aussi (negatif). Bug racine :
+      manque de business logic validation. La
+      quantity NEGATIVE n'a pas de sens dans le
+      contexte e-commerce, mais le code ne le sait
+      pas. Pattern reusable : business invariants
+      (`qty > 0`, `price > 0`, `totalPrice >= 0`,
+      `email contains @`) doivent etre EXPLICITS en
+      code, pas IMPLICITES dans le wishful
+      thinking.
+    body_en: |
+      Canonical source: OWASP Input Validation Cheat
+      Sheet (challenge mitigationUrl). Pattern:
+      server accepts INTEGER (quantity) without
+      verifying it's >= 0 (or >= 1). Quantity = -10
+      is technically valid integer. totalPrice = qty
+      * price calculation stays valid integer too
+      (negative). Root bug: missing business logic
+      validation. NEGATIVE quantity has no meaning
+      in e-commerce context, but code doesn't know.
+      Reusable pattern: business invariants
+      (`qty > 0`, `price > 0`, `totalPrice >= 0`,
+      `email contains @`) must be EXPLICIT in code,
+      not IMPLICIT in wishful thinking.
+
+  - title_fr: "BasketItems endpoint : la surface d'attaque"
+    title_en: "BasketItems endpoint: the attack surface"
+    body_fr: |
+      Hint OWASP #2 : "Investigate the shopping
+      basket closely". L'endpoint vulnerable est
+      PUT /api/BasketItems/:id qui permet de
+      modifier la quantity. Le frontend Angular
+      empeche les valeurs negatives via
+      `min="1"` HTML attribute + custom Validators
+      sur le quantity field. Mais le backend ne
+      valide PAS. Pattern reusable : auto-generated
+      REST APIs (Sequelize-based ici, finale.js a
+      l'epoque) sont notoirement vulnerables car
+      l'ORM expose tous les fields editable par
+      defaut. Defense : middleware de validation
+      sur PUT /api/BasketItems/:id avec joi/zod
+      schema verifiant quantity > 0.
+    body_en: |
+      OWASP hint #2: "Investigate the shopping
+      basket closely". Vulnerable endpoint is PUT
+      /api/BasketItems/:id allowing quantity
+      modification. Angular frontend prevents
+      negative values via `min="1"` HTML attribute
+      + custom Validators on quantity field. But
+      backend does NOT validate. Reusable pattern:
+      auto-generated REST APIs (Sequelize-based
+      here, finale.js historically) are notoriously
+      vulnerable as ORM exposes all fields editable
+      by default. Defense: validation middleware
+      on PUT /api/BasketItems/:id with joi/zod
+      schema verifying quantity > 0.
+
+  - title_fr: "Defense canonique : business invariants en code"
+    title_en: "Canonical defense: business invariants in code"
+    body_fr: |
+      Defense canonique multi-couches : (1) Schema
+      validation avec joi/zod : `quantity: z.number().
+      int().positive()`. (2) Sequelize model
+      validators : `quantity: { type: INTEGER,
+      validate: { min: 1 }}`. (3) DB CHECK
+      constraint : `CHECK (quantity > 0)`. (4)
+      Business logic dans le checkout endpoint :
+      `if (totalPrice < 0) return 400`. (5)
+      Monitoring/alerting sur les orders avec
+      totalPrice negatif (anomaly detection en
+      production reveal cette classe d'attaques).
+      Pattern reusable : pour les business
+      invariants critique (financiel surtout),
+      defense en profondeur multi-niveaux.
+    body_en: |
+      Multi-layer canonical defense: (1) Schema
+      validation with joi/zod: `quantity: z.
+      number().int().positive()`. (2) Sequelize
+      model validators: `quantity: { type:
+      INTEGER, validate: { min: 1 }}`. (3) DB
+      CHECK constraint: `CHECK (quantity > 0)`.
+      (4) Business logic in checkout endpoint:
+      `if (totalPrice < 0) return 400`. (5)
+      Monitoring/alerting on negative-totalPrice
+      orders (production anomaly detection
+      reveals this attack class). Reusable
+      pattern: for critical business invariants
+      (especially financial), multi-level defense
+      in depth.

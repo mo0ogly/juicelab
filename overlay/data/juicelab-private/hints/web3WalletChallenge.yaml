@@ -1,0 +1,95 @@
+challenge_key: "web3WalletChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP : "drain the smart contract". Le shop a un Web3 wallet
+      page (/#/web3-sandbox or similaire). Connecter Metamask + exploit
+      le contract pour drain les funds.
+    text_en: |
+      OWASP hint: "drain the smart contract". Shop has Web3 wallet page
+      (/#/web3-sandbox or similar). Connect Metamask + exploit contract
+      to drain funds.
+    pedagogical_intent: |
+      Activate Web3 + Metamask reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Le contract est sur Ethereum Sepolia testnet, address
+      0x413744D59d31AFDC2889aeE602636177805Bd7b0. Voir le contract sur
+      sepolia.etherscan.io. Le bundle Angular contient l'ABI
+      (web3WalletABI).
+    text_en: |
+      Contract is on Ethereum Sepolia testnet, address
+      0x413744D59d31AFDC2889aeE602636177805Bd7b0. View contract on
+      sepolia.etherscan.io. Angular bundle contains ABI (web3WalletABI).
+    pedagogical_intent: |
+      Spell exact address.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Lire le contract Solidity (decompiled si pas open-source) sur
+      Etherscan. Identifier la vulnerabilite : reentrancy, missing access
+      control, integer overflow, ou logic bug specifique au contract du
+      shop.
+    text_en: |
+      Read Solidity contract (decompiled if not open-source) on
+      Etherscan. Identify vulnerability: reentrancy, missing access
+      control, integer overflow, or shop-specific logic bug.
+    pedagogical_intent: |
+      Reveal contract analysis.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Connect Metamask au Sepolia testnet, get test ETH du faucet
+      (sepoliafaucet.com). Crafter transaction exploit (Remix IDE ou
+      Foundry/Hardhat). Le contract emit `ContractExploited` (exploiter
+      address) -> Juice Shop event listener trigger solve.
+    text_en: |
+      Connect Metamask to Sepolia testnet, get test ETH from faucet
+      (sepoliafaucet.com). Craft exploit transaction (Remix IDE or
+      Foundry/Hardhat). Contract emits `ContractExploited` (exploiter
+      address) -> Juice Shop event listener triggers solve.
+    pedagogical_intent: |
+      Spell technical workflow.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Naviguer /#/web3-sandbox
+      (ou similaire). (2) Connect Metamask (Sepolia testnet, test ETH du
+      faucet sepoliafaucet.com). (3) Le shop call POST /web3 avec
+      walletAddress -> serveur add to walletsConnected (web3Wallet.ts:14).
+      (4) Inspect le contract sur sepolia.etherscan.io address
+      0x413744D59d31AFDC2889aeE602636177805Bd7b0 - decompile or read
+      Solidity source. (5) Identify la vuln (probablement reentrancy ou
+      logic bug specifique). (6) Crafter exploit avec Remix IDE / Foundry
+      / call direct via `contract.exploitFunction()`. (7) Contract emit
+      `ContractExploited(exploiter=msg.sender)`. (8) Juice Shop event
+      listener (web3Wallet.ts:24)
+      `if (walletsConnected.has(exploiter)) solveIf(() => true)`
+      declenche. Defense : audit Slither/Mythril, OpenZeppelin libs,
+      multi-sig, time lock, EIP-712 integration. Source : web3Wallet.ts
+      :14-26.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Navigate /#/web3-sandbox (or
+      similar). (2) Connect Metamask (Sepolia testnet, test ETH from
+      sepoliafaucet.com). (3) Shop calls POST /web3 with walletAddress
+      -> server adds to walletsConnected (web3Wallet.ts:14). (4) Inspect
+      contract on sepolia.etherscan.io address
+      0x413744D59d31AFDC2889aeE602636177805Bd7b0 - decompile or read
+      Solidity source. (5) Identify vuln (likely reentrancy or specific
+      logic bug). (6) Craft exploit with Remix IDE / Foundry / direct
+      call via `contract.exploitFunction()`. (7) Contract emits
+      `ContractExploited(exploiter=msg.sender)`. (8) Juice Shop event
+      listener (web3Wallet.ts:24)
+      `if (walletsConnected.has(exploiter)) solveIf(() => true)`
+      triggers. Defense: Slither/Mythril audit, OpenZeppelin libs, multi-
+      sig, time lock, EIP-712 integration. Source: web3Wallet.ts:14-26.
+    pedagogical_intent: |
+      Solution + Web3 mastery.

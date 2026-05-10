@@ -1,0 +1,135 @@
+challenge_key: "accessLogDisclosureChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Acceder a n'importe quel access log file du
+  serveur. Description OWASP. Hints officiels : (1)
+  "Who would want a server access log to be
+  accessible through a web application?". (2)
+  "Normally server log files are written to disk on
+  server side and are not accessible from the
+  outside". (3) "One particular file found in the
+  folder you might already have found during the
+  Access a confidential document challenge might
+  give you an idea". (4) "Drilling down one level
+  into the file system might not be sufficient".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : Solve check dans
+  routes/verify.ts:72 (verifie source). Code exact :
+  `solveIf(() => url.match(/access\.log(0-9-)*/))`.
+  Le serveur expose /support/logs (server.ts:282-
+  284) avec serveIndex listing + serveLogFiles
+  individuel. Workflow : (1) Pre-requis :
+  directoryListing/confidential doc (Lot 0). (2)
+  GET /support/logs/ -> directory listing des log
+  files. (3) GET /support/logs/access.log.YYYY-MM-DD
+  ou similar. Solve auto.
+
+mission_en: |
+  Access any server access log file. OWASP
+  description. Official hints: (1) "Who would
+  want a server access log to be accessible
+  through a web application?". (2) "Normally
+  server log files are written to disk on server
+  side and are not accessible from the outside".
+  (3) "One particular file found in the folder
+  you might already have found during the Access
+  a confidential document challenge might give
+  you an idea". (4) "Drilling down one level
+  into the file system might not be sufficient".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: Solve check in routes/
+  verify.ts:72 (verified source). Exact code:
+  `solveIf(() => url.match(/access\.log(0-9-)*/))`.
+  Server exposes /support/logs (server.ts:282-
+  284) with serveIndex listing + individual
+  serveLogFiles. Workflow: (1) Prerequisite:
+  directoryListing/confidential doc (Lot 0). (2)
+  GET /support/logs/ -> directory listing of log
+  files. (3) GET /support/logs/access.log.YYYY-
+  MM-DD or similar. Auto solves.
+
+concepts:
+  - title_fr: "Logs exposes : violation OWASP Logging Cheat Sheet"
+    title_en: "Exposed logs: OWASP Logging Cheat Sheet violation"
+    body_fr: |
+      Source canonique : OWASP Logging Cheat Sheet
+      (mitigationUrl). Logs serveur DOIVENT etre
+      stockes hors de la web root + acces
+      restreint (admin only). Juice Shop expose
+      /support/logs publiquement = anti-pattern.
+      Risques : (a) PII leak (IPs, sessions
+      cookies, parameters), (b) credential leak
+      (logged passwords), (c) attack
+      reconnaissance (scan history), (d)
+      compliance violation (GDPR, PCI-DSS).
+      Defense : log files outside web root +
+      authentication required + retention
+      policy.
+    body_en: |
+      Canonical source: OWASP Logging Cheat
+      Sheet (mitigationUrl). Server logs MUST
+      be stored outside web root + restricted
+      access (admin only). Juice Shop exposes
+      /support/logs publicly = anti-pattern.
+      Risks: (a) PII leak (IPs, session
+      cookies, parameters), (b) credential
+      leak (logged passwords), (c) attack
+      reconnaissance (scan history), (d)
+      compliance violation (GDPR, PCI-DSS).
+      Defense: log files outside web root +
+      authentication required + retention
+      policy.
+
+  - title_fr: "Composition : pre-requis dlpPasswordSpraying"
+    title_en: "Composition: dlpPasswordSpraying prerequisite"
+    body_fr: |
+      accessLogDisclosure ouvre la kill chain pour
+      dlpPasswordSprayingChallenge (Lot 9 aussi).
+      L'access log contient les passwords logged
+      en clair (anti-pattern critique). L'attaquant
+      extract le password depuis le log + login
+      avec le password (Password Spraying).
+      Pattern reusable : un bug "low" (info
+      disclosure) peut chain vers un bug "high"
+      (auth bypass). Audit defensif : tous les
+      info disclosure doivent etre evalues pour
+      leur potential de chain.
+    body_en: |
+      accessLogDisclosure opens kill chain for
+      dlpPasswordSprayingChallenge (also Lot 9).
+      Access log contains plaintext-logged
+      passwords (critical anti-pattern). Attacker
+      extracts password from log + logs in with
+      password (Password Spraying). Reusable
+      pattern: "low" bug (info disclosure) can
+      chain to "high" bug (auth bypass).
+      Defensive audit: all info disclosure must
+      be evaluated for chain potential.
+
+  - title_fr: "Defense canonique : log management"
+    title_en: "Canonical defense: log management"
+    body_fr: |
+      Defense en profondeur : (1) Logs hors web
+      root (filesystem path /var/log/ pas
+      accessible HTTP). (2) Authentification
+      requise pour log access (admin role
+      only). (3) Sanitize les logs (PII
+      redaction, password masking). (4)
+      Centralized logging (ELK, Splunk,
+      Datadog) avec ACL strict. (5) Retention
+      policy + auto-rotation. (6) Audit log de
+      chaque log access.
+    body_en: |
+      Defense in depth: (1) Logs outside web
+      root (filesystem path /var/log/ not
+      HTTP-accessible). (2) Authentication
+      required for log access (admin role
+      only). (3) Sanitize logs (PII
+      redaction, password masking). (4)
+      Centralized logging (ELK, Splunk,
+      Datadog) with strict ACL. (5) Retention
+      policy + auto-rotation. (6) Audit log
+      of each log access.

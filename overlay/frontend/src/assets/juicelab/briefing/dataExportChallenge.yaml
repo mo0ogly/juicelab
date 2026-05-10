@@ -1,0 +1,141 @@
+challenge_key: "dataExportChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Vole les donnees personnelles d'un AUTRE utilisateur sans
+  utiliser SQL Injection. Description OWASP : "Steal someone
+  else's personal data without using Injection". Hints : (1)
+  "Trick the regular Data Export to give you more than
+  actually belongs to you", (2) "should not try to steal data
+  from a vanilla user who never even ordered something", (3)
+  "everything about this data export functionality happens on
+  the server-side", (4) "Inspecting various server responses
+  which contain user-specific data might give you a clue
+  about the mistake the developers made".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Methode recommandee : la feature GDPR Data Export expose un
+  bouton qui telecharge tes propres donnees (orders, reviews).
+  Le code serveur (verifie : `routes/dataExport.ts`) est
+  visible : il prend l'email du JWT, le DEFORME en remplacant
+  les voyelles par des asterisques, puis query orders par cet
+  email deforme. Faille : le pattern de deformation a des
+  COLLISIONS — plusieurs emails differents donnent le meme
+  email "etoile". Donc choisir un user dont l'email apres
+  deformation matche le tien permet de leak ses orders.
+  Workflow : trouver un user dont l'email a la meme structure
+  voyelles/consonnes, register avec un email qui collision,
+  appeler /dataerasure. Tu obtiens les orders du target.
+
+  Note la lecon : transformer les donnees en input avant
+  query SANS verifier les collisions = pattern de bug subtil.
+  Tu en parleras dans le journal "apres".
+
+mission_en: |
+  Steal another user's personal data without SQL Injection.
+  OWASP description: "Steal someone else's personal data
+  without using Injection". Hints: (1) "Trick the regular
+  Data Export to give you more than actually belongs to
+  you", (2) "should not try to steal data from a vanilla
+  user who never even ordered something", (3) "everything
+  about this data export functionality happens on the
+  server-side", (4) "Inspecting various server responses
+  which contain user-specific data might give you a clue
+  about the mistake the developers made".
+  [KILL_CHAIN_DOCUMENTED]
+
+  Recommended method: the GDPR Data Export feature exposes a
+  button downloading your own data (orders, reviews). Server
+  code (verified: `routes/dataExport.ts`) is visible: takes
+  email from JWT, DEFORMS it replacing vowels with asterisks,
+  then queries orders by that deformed email. Flaw: the
+  deformation pattern has COLLISIONS — different emails yield
+  the same starred email. So picking a user whose deformed
+  email matches yours lets you leak their orders. Workflow:
+  find a user with same vowel/consonant structure, register
+  with a colliding email, call /dataerasure. You get the
+  target's orders.
+
+  Note the lesson: transforming input data before query
+  WITHOUT checking collisions = subtle bug pattern. You will
+  report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Le bug : deformation lossy + query sur la deformation"
+    title_en: "The bug: lossy transformation + query on the transformation"
+    body_fr: |
+      Source verifiee : `routes/dataExport.ts` execute :
+      const updatedEmail = email.replace(/[aeiou]/gi, '*')
+      orders = await db.ordersCollection.find({ email:
+        updatedEmail })
+      Le code prend l'email du JWT (legitime), remplace les
+      voyelles par '*', puis query orders. Le bug est que la
+      deformation est LOSSY (perte d'information) : "alice@a"
+      et "elise@e" donnent tous deux "*l*c*@*" / "*l*s*@*"
+      respectivement. Si l'attaquant register avec un email
+      qui collision avec celui d'une victime, le query
+      retourne aussi les orders de la victime.
+    body_en: |
+      Verified source: `routes/dataExport.ts` runs:
+      const updatedEmail = email.replace(/[aeiou]/gi, '*')
+      orders = await db.ordersCollection.find({ email:
+        updatedEmail })
+      Code takes JWT email (legitimate), replaces vowels
+      with '*', queries orders. Bug: deformation is LOSSY
+      (information loss): "alice@a" and "elise@e" yield
+      "*l*c*@*" / "*l*s*@*" respectively. If attacker
+      registers with an email colliding with a victim's, the
+      query also returns the victim's orders.
+
+  - title_fr: "Anti-pattern : utiliser un identifiant DEFORME pour le query"
+    title_en: "Anti-pattern: use a DEFORMED identifier for the query"
+    body_fr: |
+      Pourquoi le developpeur fait-il ca ? Probablement pour
+      un effort de "privacy" mal compris : ne pas mettre
+      l'email exact dans les logs / la query. Mais le pattern
+      correct est d'utiliser un IDENTIFIANT STABLE (user.id
+      du JWT) pour la query. L'email peut etre redacte UNE
+      FOIS pour l'affichage (logs, UI), mais le query DOIT
+      etre sur l'identifiant primaire stable. Source de
+      verite : ALWAYS user.id, never email.replace(...). Le
+      pattern dataExport est documente comme anti-pattern
+      dans OWASP A04:2021 Insecure Design.
+    body_en: |
+      Why does the dev do this? Likely a misunderstood
+      "privacy" effort: don't put the exact email in logs /
+      query. But the correct pattern is using a STABLE
+      IDENTIFIER (user.id from JWT) for the query. Email can
+      be redacted ONCE for display (logs, UI), but the query
+      MUST be on the stable primary id. Truth source: ALWAYS
+      user.id, never email.replace(...). dataExport pattern
+      is documented as anti-pattern in OWASP A04:2021
+      Insecure Design.
+
+  - title_fr: "Defense canonique : query par primary key, redact pour display"
+    title_en: "Canonical defense: query by primary key, redact for display"
+    body_fr: |
+      Pattern correct :
+      router.get('/dataerasure', auth, (req, res) => {
+        const orders = await db.ordersCollection.find({
+          UserId: req.user.id  // PRIMARY KEY, jamais email
+        })
+        // Si privacy log : afficher email redacte
+        // mais NEVER query par cette redaction
+      })
+      Reference : OWASP A04 Insecure Design + CWE-639
+      (Authorization Bypass Through User-Controlled Key).
+      Le bug Juice Shop tombe exactement dans CWE-639 par
+      collision d'identifiant transforme.
+    body_en: |
+      Correct pattern:
+      router.get('/dataerasure', auth, (req, res) => {
+        const orders = await db.ordersCollection.find({
+          UserId: req.user.id  // PRIMARY KEY, never email
+        })
+        // For privacy log: display redacted email
+        // but NEVER query by that redaction
+      })
+      Reference: OWASP A04 Insecure Design + CWE-639
+      (Authorization Bypass Through User-Controlled Key).
+      Juice Shop bug falls exactly into CWE-639 via
+      transformed-identifier collision.

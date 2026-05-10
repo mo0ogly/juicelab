@@ -1,0 +1,80 @@
+challenge_key: "tokenSaleChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Pourquoi Security Through Obscurity n'est pas
+      une defense ?
+    question_en: |
+      Why is Security Through Obscurity not a defense?
+    options_fr:
+      - "Parce que c'est trop complique"
+      - "Parce que cacher une ressource sans controle d'acces ne previent pas la decouverte (bundle reverse engineering, fuzzing routes, archive.org, DNS monitoring). Defense reelle = ACL/RBAC. Cas reels : US Census 2020 (URL secrete indexee Google), AWS S3 buckets publics 2017-2024"
+      - "C'est tres efficace"
+      - "Seul Apple l'utilise"
+    options_en:
+      - "Because too complex"
+      - "Because hiding a resource without access control doesn't prevent discovery (bundle reverse engineering, route fuzzing, archive.org, DNS monitoring). Real defense = ACL/RBAC. Real cases: US Census 2020 (secret URL indexed by Google), AWS S3 public buckets 2017-2024"
+      - "It's very effective"
+      - "Only Apple uses it"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : tout ce qui est shipped au
+      client est public. Source : OWASP Top 10
+      Cryptographic Failures + NIST SP 800-160.
+    explanation_en: |
+      Reusable pattern: anything shipped to client is
+      public. Source: OWASP Top 10 Cryptographic
+      Failures + NIST SP 800-160.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Comment decouvrir des routes Angular cachees ?
+    question_en: |
+      How to discover hidden Angular routes?
+    options_fr:
+      - "Demander au CTO"
+      - "DevTools > Sources > main.js, grep `path:` ou `loadChildren` (toutes les routes Angular sont en clair dans le bundle apres minification). Tools : beautify-js, Wappalyzer, retire.js, ffuf pour fuzzing endpoint backend. Defense : SSR qui ne ship pas les routes sensibles au client non-auth"
+      - "Echec impossible"
+      - "Reverse de WebAssembly"
+    options_en:
+      - "Ask CTO"
+      - "DevTools > Sources > main.js, grep `path:` or `loadChildren` (all Angular routes plaintext in bundle post-minification). Tools: beautify-js, Wappalyzer, retire.js, ffuf for backend endpoint fuzzing. Defense: SSR that doesn't ship sensitive routes to unauthenticated clients"
+      - "Impossible failure"
+      - "WebAssembly reversing"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : audit periodique des bundles
+      front. Source : OWASP Mobile Top 10 M9.
+    explanation_en: |
+      Reusable pattern: periodic frontend bundle audit.
+      Source: OWASP Mobile Top 10 M9.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Defense canonique pour pages "admin/finance"
+      cachees ?
+    question_en: |
+      Canonical defense for hidden "admin/finance"
+      pages?
+    options_fr:
+      - "Renommer les URLs"
+      - "(1) Auth middleware (requireLogin) + autorisation (requireRole) sur toute ressource sensible. (2) Bundle separe lazy-loaded SEULEMENT apres verification serveur de l'auth. (3) Server-side rendering qui ne ship pas les routes sensibles au client non-auth. (4) Audit `grep -rn 'path:' frontend/` regulier"
+      - "Plus de mots de passe"
+      - "Captcha sur tout"
+    options_en:
+      - "Rename URLs"
+      - "(1) Auth middleware (requireLogin) + authorization (requireRole) on every sensitive resource. (2) Separate bundle lazy-loaded ONLY after server-side auth verification. (3) Server-side rendering that doesn't ship sensitive routes to unauthenticated clients. (4) Regular `grep -rn 'path:' frontend/` audit"
+      - "No more passwords"
+      - "Captcha on everything"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : zero-trust client. Source :
+      OWASP Authentication Cheat Sheet.
+    explanation_en: |
+      Reusable pattern: zero-trust client. Source:
+      OWASP Authentication Cheat Sheet.

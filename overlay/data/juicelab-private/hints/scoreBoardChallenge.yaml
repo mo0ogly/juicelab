@@ -1,0 +1,85 @@
+challenge_key: "scoreBoardChallenge"
+schema_version: "juicelab.hints.v1"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Une application web qui te propose des challenges de hacking doit bien
+      garder une trace de qui a resolu quoi. Cette page existe forcement
+      quelque part. Pourquoi ne te la donne-t-on pas spontanement ? Et si elle
+      etait juste cachee plutot qu'absente ?
+    text_en: |
+      A web application that offers hacking challenges has to keep track of
+      who solved what somewhere. That page must exist. Why isn't it shown to
+      you upfront? What if it is hidden rather than absent?
+    pedagogical_intent: |
+      Activate the discovery reflex: a missing UI does not mean a missing route.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Dans une SPA Angular comme Juice Shop, toutes les routes du frontend
+      sont declarees dans le bundle JavaScript livre au navigateur. Si un
+      lien n'apparait pas dans le menu, le chemin est quand meme present
+      dans le code charge cote client. Tes DevTools savent te montrer ce
+      code.
+    text_en: |
+      In an Angular SPA like Juice Shop, every frontend route is declared in
+      the JavaScript bundle delivered to the browser. If a link is missing
+      from the menu, the path is still present in the code loaded
+      client-side. Your DevTools can show you that code.
+    pedagogical_intent: |
+      Introduce the SPA / client-side routing model: routes shipped to the client.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Ouvre l'onglet Sources des DevTools, deroule le bundle principal
+      (main.js ou un fichier proche), et utilise Ctrl-F pour chercher des
+      mots evocateurs : "score", "score-board", "scoreBoard". Tu vas tomber
+      sur la table de routage Angular et identifier le chemin vers la page
+      cachee.
+    text_en: |
+      Open the DevTools Sources tab, expand the main bundle (main.js or
+      similar), and use Ctrl-F to search for telling keywords: "score",
+      "score-board", "scoreBoard". You will hit the Angular routing table
+      and spot the path to the hidden page.
+    pedagogical_intent: |
+      Localize the surface: the JavaScript bundle and the routing table.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Les routes Angular se trouvent dans une structure du genre
+      RouterModule.forRoot([{ path: '...', component: ... }, ...]). Cherche
+      l'entree dont le path ressemble a la concatenation de "score" et
+      "board". Une fois identifie, tu n'as pas besoin de cliquer : tu peux
+      taper directement le chemin dans la barre d'adresse, prefixe du dieze
+      qui marque les routes Angular.
+    text_en: |
+      Angular routes sit in a structure shaped like RouterModule.forRoot([{
+      path: '...', component: ... }, ...]). Find the entry whose path looks
+      like the concatenation of "score" and "board". Once identified, you do
+      not need to click: type the path directly in the address bar,
+      prefixed with the hash that marks Angular routes.
+    pedagogical_intent: |
+      Give the syntactic shape: hash-based routing path.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      Tape dans la barre d'adresse l'URL http://127.0.0.1:3000/#/score-board
+      et appuie sur Entree. La page Score Board s'affiche, le challenge est
+      automatiquement valide par Juice Shop (le frontend declenche la
+      validation cote backend a l'ouverture de cette page). Si tu prefere la
+      methode "code analysis", l'entree dans main.js est { path:
+      'score-board', loadChildren: ... }.
+    text_en: |
+      Type the URL http://127.0.0.1:3000/#/score-board in the address bar and
+      press Enter. The Score Board page renders, and Juice Shop automatically
+      marks the challenge solved (the frontend triggers backend validation on
+      opening that page). If you prefer the "code analysis" route, the entry
+      in main.js is { path: 'score-board', loadChildren: ... }.
+    pedagogical_intent: |
+      Quasi-solution: full URL or full code-analysis path, but the student still types it.

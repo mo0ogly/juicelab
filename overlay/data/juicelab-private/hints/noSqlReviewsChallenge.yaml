@@ -1,0 +1,119 @@
+challenge_key: "noSqlReviewsChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP officiel #2 : "This challenge requires another
+      classic Injection attack". Hint #1 : "Take a close look on
+      how the equivalent of UPDATE-statements in MongoDB work". Le
+      challenge demande de modifier PLUSIEURS reviews. Quel
+      endpoint Juice Shop te permet de modifier le contenu d'un
+      review ? Et qu'est-ce qui pourrait te permettre d'en
+      modifier plusieurs en une seule requete ?
+    text_en: |
+      Official OWASP hint #2: "This challenge requires another
+      classic Injection attack". Hint #1: "Take a close look on
+      how the equivalent of UPDATE-statements in MongoDB work".
+      The challenge wants to modify MULTIPLE reviews. Which Juice
+      Shop endpoint lets you modify a review's content? And what
+      could let you modify several in one request?
+    pedagogical_intent: |
+      Activate the bulk-update reflex on review endpoint.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Endpoint PATCH /rest/products/reviews. Le body attendu pour
+      modifier ton review est typiquement { "id": "<reviewId>",
+      "message": "<nouveau texte>" }. Cote backend, le code
+      execute Reviews.update({ _id: id }, { $set: { message } }).
+      Hint OWASP officiel #3 : "Query Operators in MongoDB". Quel
+      operateur permettrait de matcher TOUS les reviews dans le
+      filtre _id ?
+    text_en: |
+      Endpoint PATCH /rest/products/reviews. Body to modify your
+      review is typically { "id": "<reviewId>", "message":
+      "<new text>" }. Server-side: Reviews.update({ _id: id },
+      { $set: { message } }). Official OWASP hint #3: "Query
+      Operators in MongoDB". Which operator would match ALL
+      reviews in the _id filter?
+    pedagogical_intent: |
+      Pin down the endpoint and hint operator-based filter bypass.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      $ne (not equal) avec une valeur impossible : { "$ne": -1 }
+      match TOUS les _id (puisqu'aucun n'est -1). Mais attention :
+      Mongoose .updateOne ou .update sans option par defaut ne
+      modifie que le PREMIER document matche. Pour modifier
+      vraiment plusieurs reviews, il faut forcer l'option
+      multi: true (ancienne API .update). Si l'API spread l'input
+      dans les options, tu peux injecter multi via le body.
+    text_en: |
+      $ne (not equal) with an impossible value: { "$ne": -1 }
+      matches ALL _id (none is -1). Caution: Mongoose .updateOne
+      or default .update only modifies the FIRST matching
+      document. To actually modify several reviews, you must
+      force the multi: true option (old .update API). If the API
+      spreads the input into options, you can inject multi via
+      the body.
+    pedagogical_intent: |
+      Reveal the multi flag mechanic.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Body PATCH /rest/products/reviews complet :
+      {
+        "id": { "$ne": -1 },
+        "message": "Pwn3d!"
+      }
+      Si le backend supporte le multi (ou utilise update() ancien
+      style), tous les reviews voient leur message remplace par
+      "Pwn3d!". Si pas (backend strict updateOne), seul le premier
+      review change — le challenge ne se valide pas. Dans ce cas,
+      il faut potentiellement ajouter explicitement multi dans le
+      body : { "id": ..., "message": ..., "multi": true }
+    text_en: |
+      Full PATCH /rest/products/reviews body:
+      {
+        "id": { "$ne": -1 },
+        "message": "Pwn3d!"
+      }
+      If the backend supports multi (or uses old-style update()),
+      every review's message becomes "Pwn3d!". If not (strict
+      updateOne backend), only the first changes — the challenge
+      doesn't solve. In that case, you may need to explicitly add
+      multi in the body: { "id": ..., "message": ..., "multi":
+      true }
+    pedagogical_intent: |
+      Spell exact body and the multi-fallback.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      curl -X PATCH http://127.0.0.1:3000/rest/products/reviews
+        -H "Authorization: Bearer <ton_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"id":{"$ne":-1},"message":"Pwn3d!"}'
+      Tous les reviews ont maintenant le message "Pwn3d!". Le
+      challenge se valide automatiquement quand le serveur detecte
+      l'attaque (pattern $ne sur l'endpoint reviews update). Source
+      des fixes : codefixes/noSqlReviewsChallenge.info.yml. Le fix
+      correct (#3) est l'utilisation du binding Sequelize equivalent
+      a un Prepared Statement.
+    text_en: |
+      curl -X PATCH http://127.0.0.1:3000/rest/products/reviews
+        -H "Authorization: Bearer <your_jwt>"
+        -H "Content-Type: application/json"
+        -d '{"id":{"$ne":-1},"message":"Pwn3d!"}'
+      All reviews now show "Pwn3d!". The challenge solves
+      automatically when the server detects the attack ($ne
+      pattern on reviews update endpoint). Fix sources: codefixes/
+      noSqlReviewsChallenge.info.yml. The correct fix (#3) is
+      using Sequelize binding equivalent to a Prepared Statement.
+    pedagogical_intent: |
+      Quasi-solution : full curl + reference to canonical fix.

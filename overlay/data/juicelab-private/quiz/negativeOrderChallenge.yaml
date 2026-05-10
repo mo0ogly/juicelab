@@ -1,0 +1,129 @@
+challenge_key: "negativeOrderChallenge"
+schema_version: "juicelab.quiz.v2"
+
+quiz:
+  Q1:
+    type: multiple_choice
+    question_fr: |
+      Le bug racine est l'acceptation de quantity
+      NEGATIVE par l'endpoint PUT /api/BasketItems.
+      Quel concept SECURITY fundamental est
+      illustre ?
+    question_en: |
+      Root bug is acceptance of NEGATIVE quantity
+      by PUT /api/BasketItems endpoint. What
+      fundamental SECURITY concept is illustrated?
+    options_fr:
+      - "Cross-site scripting"
+      - "Business invariant violation : la business logic suppose IMPLICITEMENT que quantity > 0 (un panier ne peut pas avoir -10 items). Mais le code ne ENFORCE PAS cette invariant. L'attaquant exploit cette gap entre l'INTENT (positive) et la REALITE (signed integer accept negative). Pattern : tous les business invariants critiques doivent etre EXPLICIT en code, pas IMPLICIT dans wishful thinking"
+      - "SQL injection sur quantity"
+      - "Buffer overflow"
+    options_en:
+      - "Cross-site scripting"
+      - "Business invariant violation: business logic IMPLICITLY assumes quantity > 0 (basket can't have -10 items). But code doesn't ENFORCE this invariant. Attacker exploits gap between INTENT (positive) and REALITY (signed integer accepts negative). Pattern: all critical business invariants must be EXPLICIT in code, not IMPLICIT in wishful thinking"
+      - "SQL injection on quantity"
+      - "Buffer overflow"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : faire la chasse aux
+      business invariants implicites = audit
+      strategique. Examples : qty > 0, balance >=
+      0, expiration > now, role in [admin,
+      customer], age >= 18. Tous doivent etre
+      explicit en code (validation + tests). Cas
+      reels : Mt.Gox 2011 (negative balance bug),
+      Knight Capital 2012 ($440M loss en 30min via
+      bug invariant). Source : routes/order.
+      ts:138 + OWASP Input Validation.
+    explanation_en: |
+      Reusable pattern: hunt implicit business
+      invariants = strategic audit. Examples: qty
+      > 0, balance >= 0, expiration > now, role
+      in [admin, customer], age >= 18. All must
+      be explicit in code (validation + tests).
+      Real cases: Mt.Gox 2011 (negative balance
+      bug), Knight Capital 2012 ($440M loss in
+      30min via invariant bug). Source: routes/
+      order.ts:138 + OWASP Input Validation.
+
+  Q2:
+    type: multiple_choice
+    question_fr: |
+      Le frontend Angular bloque les quantity
+      negatives via HTML `min="1"` + custom
+      Validators. Pourquoi cette protection est-
+      elle SYSTEMATIQUEMENT bypassable ?
+    question_en: |
+      Angular frontend blocks negative quantities
+      via HTML `min="1"` + custom Validators. Why
+      is this protection SYSTEMATICALLY bypassable?
+    options_fr:
+      - "Parce que HTML min n'est pas standard"
+      - "Parce que TOUTE protection cote CLIENT est UX uniquement, JAMAIS securite. L'attaquant utilise curl/Burp/Postman/console fetch() pour bypass DEFINITELY. La SEULE defense effective est server-side : middleware schema validation + ORM model validators + DB constraints. Pattern reusable : si ce qu'on PROTEGE est sur le SERVER, la PROTECTION doit etre sur le SERVER"
+      - "Parce que min n'accepte pas les decimaux"
+      - "Parce que Validators sont buggy"
+    options_en:
+      - "Because HTML min isn't standard"
+      - "Because ALL CLIENT-side protection is UX only, NEVER security. Attacker uses curl/Burp/Postman/console fetch() to bypass DEFINITELY. ONLY effective defense is server-side: middleware schema validation + ORM model validators + DB constraints. Reusable pattern: if what we PROTECT is on SERVER, PROTECTION must be on SERVER"
+      - "Because min doesn't accept decimals"
+      - "Because Validators are buggy"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : la regle "client-side
+      validation = UX only" doit etre internalise
+      par TOUS les developers. Cas reels qui
+      illustrent : 99% des SQLi proviennent du
+      fait que le frontend faisait la validation,
+      99% des price tampering en e-commerce idem.
+      Source : OWASP Input Validation + analyse
+      Juice Shop frontend.
+    explanation_en: |
+      Reusable pattern: rule "client-side
+      validation = UX only" must be internalized
+      by ALL developers. Real cases illustrate:
+      99% of SQLi come from frontend doing
+      validation, 99% of e-commerce price
+      tampering same. Source: OWASP Input
+      Validation + Juice Shop frontend analysis.
+
+  Q3:
+    type: multiple_choice
+    question_fr: |
+      Quelle defense MULTI-COUCHE est la plus
+      EFFECTIVE pour empecher negativeOrder ET
+      tous les futurs invariants integer
+      manipulation ?
+    question_en: |
+      What MULTI-LAYER defense is MOST EFFECTIVE
+      to prevent negativeOrder AND all future
+      integer manipulation invariants?
+    options_fr:
+      - "Forcer HTTPS"
+      - "Defense en profondeur 5-layers : (1) Schema validation joi/zod : `quantity: z.number().int().positive()`. (2) Sequelize model validators : `min: 1`. (3) DB CHECK constraint : `CHECK (quantity > 0)`. (4) Business logic dans checkout : `if (totalPrice < 0) return 400`. (5) Anomaly monitoring (Datadog/Splunk) sur les orders negative. Aucune couche unique ne suffit"
+      - "Encrypter le quantity"
+      - "Stocker en string"
+    options_en:
+      - "Force HTTPS"
+      - "5-layer defense in depth: (1) joi/zod schema validation: `quantity: z.number().int().positive()`. (2) Sequelize model validators: `min: 1`. (3) DB CHECK constraint: `CHECK (quantity > 0)`. (4) Business logic in checkout: `if (totalPrice < 0) return 400`. (5) Anomaly monitoring (Datadog/Splunk) on negative orders. No single layer suffices"
+      - "Encrypt quantity"
+      - "Store as string"
+    correct: 1
+    explanation_fr: |
+      Pattern reusable : pour les invariants
+      financiers (qty, price, balance, total),
+      defense en profondeur multi-niveaux. Chaque
+      couche doit fail-CLOSED. Combine avec
+      monitoring : meme si toutes les couches
+      preventives echouent, la detection
+      anomaly catch le incident dans la minute.
+      Source : analyse routes/order.ts:138 + best
+      practices financial systems.
+    explanation_en: |
+      Reusable pattern: for financial invariants
+      (qty, price, balance, total), multi-level
+      defense in depth. Each layer must
+      fail-CLOSED. Combined with monitoring: even
+      if all preventive layers fail, anomaly
+      detection catches incident within minute.
+      Source: routes/order.ts:138 analysis + best
+      practices financial systems.

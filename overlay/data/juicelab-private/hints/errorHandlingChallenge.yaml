@@ -1,0 +1,111 @@
+challenge_key: "errorHandlingChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP #1 : "submit bad input to
+      forms or tamper with URL paths".
+      Difficulty 1 = trivial.
+    text_en: |
+      OWASP hint #1: "submit bad input to
+      forms or tamper with URL paths".
+      Difficulty 1 = trivial.
+    pedagogical_intent: |
+      Activate fuzzing reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Approches : (a) URL malformed - GET
+      /api/Users/abc (au lieu de :id integer),
+      (b) JSON malformed - POST avec body
+      `{not valid}`, (c) Required parameter
+      missing - POST sans field obligatoire.
+    text_en: |
+      Approaches: (a) Malformed URL - GET
+      /api/Users/abc (instead of :id
+      integer), (b) Malformed JSON - POST
+      with body `{not valid}`, (c) Missing
+      required parameter - POST without
+      mandatory field.
+    pedagogical_intent: |
+      Spell approaches.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (routes/verify.ts:77) :
+      `solveIf(() => err && (statusCode ===
+      200 || statusCode > 401))`. Donc
+      n'importe quel 500 (5xx) trigger le
+      solve.
+    text_en: |
+      Server source (routes/verify.ts:77):
+      `solveIf(() => err && (statusCode ===
+      200 || statusCode > 401))`. So any
+      500 (5xx) triggers solve.
+    pedagogical_intent: |
+      Reveal exact check.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Test concrete : `curl http://localhost:
+      3000/api/Users/abc` (les Users API
+      attend integer id, "abc" cause
+      Sequelize error 500). OU `curl -X POST
+      http://localhost:3000/api/Feedbacks
+      -H "Content-Type: application/json" -d
+      'malformed'` (JSON parse error 500).
+    text_en: |
+      Concrete test: `curl http://localhost:
+      3000/api/Users/abc` (Users API
+      expects integer id, "abc" causes
+      Sequelize error 500). OR `curl -X
+      POST http://localhost:3000/api/
+      Feedbacks -H "Content-Type:
+      application/json" -d 'malformed'`
+      (JSON parse error 500).
+    pedagogical_intent: |
+      Spell concrete payloads.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Solution
+      simplest :
+      1. `curl http://localhost:3000/api/
+         Users/abc`. Le serveur :
+         (a) Sequelize tente parseInt("abc")
+             -> NaN -> error
+         (b) Express error handler trigger
+             avec err non-null + status 500
+         (c) verify.errorHandlingChallenge
+             check : err && status > 401 =
+             true -> challenge solve auto.
+      Source : routes/verify.ts:76-79 +
+      Express error handling.
+      Defense : generic error response +
+      detailed logs backend-only + Sentry/
+      Bugsnag avec sanitization.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Simplest
+      solution:
+      1. `curl http://localhost:3000/api/
+         Users/abc`. Server:
+         (a) Sequelize tries parseInt("abc")
+             -> NaN -> error
+         (b) Express error handler triggers
+             with non-null err + status 500
+         (c) verify.errorHandlingChallenge
+             check: err && status > 401 =
+             true -> challenge auto solves.
+      Source: routes/verify.ts:76-79 +
+      Express error handling.
+      Defense: generic error response +
+      detailed backend-only logs + Sentry/
+      Bugsnag with sanitization.
+    pedagogical_intent: |
+      Solution + defense.

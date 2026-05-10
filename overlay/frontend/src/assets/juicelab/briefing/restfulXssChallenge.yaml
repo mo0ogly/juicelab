@@ -1,0 +1,146 @@
+challenge_key: "restfulXssChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Realise un XSS persiste avec le payload <iframe src="javascript:
+  alert(`xss`)"> SANS utiliser le frontend. Description OWASP
+  officielle precise : "without using the frontend application at
+  all". Hint #1 : "You need to work with the server-side API
+  directly. Try different HTTP verbs on different entities exposed
+  through the API". Le challenge combine deux bugs : (1)
+  exposition d'un PUT sur une entite que l'utilisateur ne devrait
+  pas modifier (similaire a changeProductChallenge), (2) absence
+  de sanitization cote serveur de l'input persiste.
+
+  Methode recommandee : utilise curl ou Postman pour faire un PUT
+  /api/Products/<id> avec un body contenant le payload XSS dans
+  la description. Le serveur stocke le HTML brut. Quand un user
+  visite la page produit, l'iframe s'execute. Source officielle
+  codefixes/restfulXssChallenge.info.yml fix #1 (correct) : "XSS
+  is only a consequence of broken authorization in this case, as
+  users should not be allowed to change product descriptions in
+  the first place".
+
+  Note la composition de bugs : ici, broken access (PUT sans auth
+  admin) + XSS via Angular bypassSecurityTrustHtml. Le fix
+  primaire est l'access control, pas le sanitization. Tu en
+  parleras dans le journal "apres".
+
+mission_en: |
+  Perform a persisted XSS with payload <iframe src="javascript:
+  alert(`xss`)"> WITHOUT using the frontend. Official OWASP
+  description specifies: "without using the frontend application
+  at all". Hint #1: "You need to work with the server-side API
+  directly. Try different HTTP verbs on different entities
+  exposed through the API". Challenge combines two bugs: (1)
+  exposed PUT on an entity the user shouldn't modify (similar to
+  changeProductChallenge), (2) absence of server-side
+  sanitization of persisted input.
+
+  Recommended method: use curl or Postman for PUT
+  /api/Products/<id> with a body containing the XSS payload in
+  the description. Server stores raw HTML. When a user visits
+  the product page, the iframe executes. Official source
+  codefixes/restfulXssChallenge.info.yml fix #1 (correct): "XSS
+  is only a consequence of broken authorization in this case,
+  as users should not be allowed to change product descriptions
+  in the first place".
+
+  Note the bug composition: here, broken access (PUT without
+  admin auth) + XSS via Angular bypassSecurityTrustHtml. Primary
+  fix is access control, not sanitization. You will report it
+  in the "after" logbook.
+
+concepts:
+  - title_fr: "Composition broken-access + XSS : la chaine vraiment dangereuse"
+    title_en: "Broken-access + XSS composition: the truly dangerous chain"
+    body_fr: |
+      Source officielle codefixes fix #1 : "XSS is only a
+      consequence of broken authorization in this case". La
+      lecon : ne pas traiter chaque vulnerabilite isolement. Si
+      le PUT etait protege (admin only), le XSS serait
+      inexploitable par un user normal. Si le sanitization
+      etait correct, le PUT non protege serait moins grave. Les
+      deux bugs ensemble = persisted XSS attaque tous les
+      visiteurs. Pattern recurrent : 1 bug = nuisance, 2 bugs =
+      catastrophe.
+    body_en: |
+      Official source codefixes fix #1: "XSS is only a
+      consequence of broken authorization in this case". Lesson:
+      don't treat each vulnerability in isolation. If the PUT
+      was protected (admin only), XSS would be unexploitable by
+      a normal user. If sanitization was correct, the
+      unprotected PUT would be less severe. Both bugs combined =
+      persisted XSS attacks every visitor. Recurrent pattern: 1
+      bug = nuisance, 2 bugs = catastrophe.
+
+  - title_fr: "Angular bypassSecurityTrustHtml : la racine du XSS server-side persisted"
+    title_en: "Angular bypassSecurityTrustHtml: root of server-side persisted XSS"
+    body_fr: |
+      Codefixes hint #2 : "Look for a line where the developers
+      fiddled with Angular's built-in security model". Sur Juice
+      Shop, le composant search-result rend la description
+      produit via [innerHTML]="..." apres avoir applique
+      bypassSecurityTrustHtml. Donc le HTML stocke en DB est
+      injecte BRUT dans le DOM. Si la description contient une
+      iframe, elle s'execute. Defense canonique : NE PAS
+      utiliser bypassSecurityTrustHtml sur du contenu user-
+      controlled. Si la description doit supporter du HTML
+      controle (tags styling), utiliser un sanitizer dedie
+      (DOMPurify) qui whitelist les tags surs.
+    body_en: |
+      Codefixes hint #2: "Look for a line where the developers
+      fiddled with Angular's built-in security model". On Juice
+      Shop, the search-result component renders the product
+      description via [innerHTML]="..." after applying
+      bypassSecurityTrustHtml. So the DB-stored HTML is injected
+      RAW into the DOM. If the description contains an iframe,
+      it executes. Canonical defense: DO NOT use
+      bypassSecurityTrustHtml on user-controlled content. If the
+      description must support controlled HTML (styling tags),
+      use a dedicated sanitizer (DOMPurify) that whitelists safe
+      tags.
+
+  - title_fr: "Difference avec localXssChallenge (DOM XSS pur)"
+    title_en: "Difference with localXssChallenge (pure DOM XSS)"
+    body_fr: |
+      localXss (parcours TD) = DOM XSS PUR : payload tape dans
+      la search bar, affecte uniquement la session courante du
+      navigateur (le serveur ne voit jamais le payload).
+      restfulXss = PERSISTED XSS via API : payload stocke en DB,
+      affecte TOUS les visiteurs futurs du produit. La gravite
+      explose : un seul attaquant cree un payload, tous les
+      autres users le declenchent. Defense : sanitization
+      server-side au moment de la PERSISTANCE (pas au moment
+      du rendu) + input validation au moment de l'API call.
+    body_en: |
+      localXss (TD parcours) = PURE DOM XSS: payload typed in
+      search bar, only affects the current browser session
+      (server never sees the payload). restfulXss = PERSISTED
+      XSS via API: payload stored in DB, affects EVERY future
+      visitor of the product. Severity explodes: a single
+      attacker creates a payload, all other users trigger it.
+      Defense: server-side sanitization at PERSIST time (not at
+      render time) + input validation at API-call time.
+
+  - title_fr: "Defense en profondeur : access + sanitize + CSP + framework"
+    title_en: "Defense in depth: access + sanitize + CSP + framework"
+    body_fr: |
+      Quatre couches a empiler. (1) Access control : PUT
+      /api/Products restreint a admin via middleware. (2)
+      Sanitization server-side : DOMPurify ou validator.js
+      escape le HTML avant persist. (3) CSP frame-src 'self'
+      bloque l'iframe a l'execution meme si elle passe les 3
+      couches precedentes. (4) Framework defaults : ne pas
+      bypass Angular security (bypassSecurityTrustHtml).
+      L'attaquant doit casser les 4 couches pour reussir, ce
+      qui devient combinatoire.
+    body_en: |
+      Four layers to stack. (1) Access control: PUT
+      /api/Products restricted to admin via middleware. (2)
+      Server-side sanitization: DOMPurify or validator.js
+      escapes HTML before persist. (3) CSP frame-src 'self'
+      blocks iframe at execution even if it passes the 3 prior
+      layers. (4) Framework defaults: don't bypass Angular
+      security (bypassSecurityTrustHtml). Attacker must break
+      all 4 layers, which is combinatorial.

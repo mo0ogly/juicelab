@@ -1,0 +1,117 @@
+challenge_key: "noSqlReviewsChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Update PLUSIEURS reviews de produits en une seule requete via
+  NoSQL Injection. La description OWASP officielle : "Update
+  multiple product reviews at the same time". Hint #1 : "the
+  equivalent of UPDATE-statements in MongoDB", hint #3 : "Query
+  Operators in MongoDB". L'angle est l'endpoint
+  PATCH /rest/products/reviews qui devrait modifier UN review (le
+  tien sur un produit).
+
+  Methode recommandee : le backend execute typiquement
+  Reviews.update({ _id: <input> }, { $set: { message: <text> } }).
+  Si le filter _id n'est pas valide en type, tu peux remplacer la
+  valeur par un objet always-true ({"$ne":-1}). Mais cela ne suffit
+  pas : Mongoose updateOne ne touche que le PREMIER document
+  matche. Il faut aussi forcer l'option { multi: true } ou utiliser
+  updateMany. Le challenge OWASP exige que TOUS les reviews soient
+  mis a jour — donc le backend Juice Shop utilise probablement
+  updateMany ou supporte l'option multi via le body.
+
+  Note la difference entre filter injection (lit/cible plusieurs
+  rows) et update operator (modifie le contenu) — c'est une
+  combinaison qui multiplie l'impact. Tu en parleras dans le
+  journal "apres".
+
+mission_en: |
+  Update MULTIPLE product reviews in one request via NoSQL
+  Injection. Official OWASP description: "Update multiple product
+  reviews at the same time". Hint #1: "the equivalent of
+  UPDATE-statements in MongoDB", hint #3: "Query Operators in
+  MongoDB". The angle is the PATCH /rest/products/reviews
+  endpoint that should modify ONE review (yours on a product).
+
+  Recommended method: the backend typically runs
+  Reviews.update({ _id: <input> }, { $set: { message: <text> } }).
+  If the _id filter isn't type-validated, you can replace the
+  value with an always-true object ({"$ne":-1}). Not enough
+  though: Mongoose updateOne only touches the FIRST matching
+  document. You also have to force the { multi: true } option or
+  use updateMany. The OWASP challenge requires ALL reviews to be
+  updated — so the Juice Shop backend likely uses updateMany or
+  supports the multi option via the body.
+
+  Note the difference between filter injection (targets multiple
+  rows) and update operator (modifies content) — a combination
+  multiplying impact. You will report it in the "after" logbook.
+
+concepts:
+  - title_fr: "Update injection : 2 vecteurs combines, FILTER + UPDATE"
+    title_en: "Update injection: 2 combined vectors, FILTER + UPDATE"
+    body_fr: |
+      Les vrais updates MongoDB ont 2 args : le FILTER (quoi
+      matcher) et l'UPDATE (quoi changer). NoSQLi peut frapper les
+      DEUX. (1) Filter injection : remplacer le filter par un
+      operateur always-true pour cibler plusieurs rows. (2)
+      Update injection : ajouter des $set sur des champs autres
+      que prevus (ex set userId pour voler ownership, ou set
+      isAdmin pour escalader privilege). Combinaison des deux =
+      modifier en masse n'importe quel champ de n'importe quel
+      row. Source : OWASP NoSQL Injection cheatsheet.
+    body_en: |
+      Real MongoDB updates take 2 args: FILTER (what to match)
+      and UPDATE (what to change). NoSQLi can hit BOTH. (1)
+      Filter injection: replace filter with an always-true
+      operator to target multiple rows. (2) Update injection: add
+      $set on fields other than intended (e.g. set userId to
+      steal ownership, or set isAdmin for privilege escalation).
+      Combined: modify in bulk any field of any row. Source:
+      OWASP NoSQL Injection cheatsheet.
+
+  - title_fr: "Multi flag : la difference entre updateOne et updateMany"
+    title_en: "Multi flag: the difference between updateOne and updateMany"
+    body_fr: |
+      Mongoose et MongoDB native distinguent updateOne (1 row) et
+      updateMany (N rows). En Mongoose ancien, l'API .update()
+      avait une option { multi: true } qui basculait. Si l'API
+      construit blindly { ...input, multi: true } depuis un body,
+      l'attaquant peut injecter multi: true via le body et
+      transformer un updateOne en updateMany. Sur Juice Shop,
+      c'est l'angle exact qui rend le challenge resoluble.
+      Defense : utiliser explicitement updateOne (et pas .update())
+      dans le code, et ne JAMAIS spread l'input dans les options
+      Mongoose.
+    body_en: |
+      Mongoose and native MongoDB distinguish updateOne (1 row)
+      and updateMany (N rows). In older Mongoose, the .update()
+      API had a { multi: true } option that switched. If the API
+      blindly builds { ...input, multi: true } from a body, the
+      attacker can inject multi: true via the body and turn an
+      updateOne into updateMany. On Juice Shop, this is the
+      exact angle making the challenge solvable. Defense:
+      explicitly use updateOne (not .update()) in code, and NEVER
+      spread input into Mongoose options.
+
+  - title_fr: "Defense canonique : explicit operations + parametrized queries"
+    title_en: "Canonical defense: explicit operations + parametrized queries"
+    body_fr: |
+      Source codefixes/noSqlReviewsChallenge fix #3 (correct) :
+      "Using the built-in replacement (or binding) mechanism of
+      Sequelize is equivalent to creating a Prepared Statement"
+      — meme principe pour Mongoose : utiliser les API typees et
+      explicites. Les fixes #1 et #2 (incorrects) montrent les
+      anti-patterns : custom blocklist (peut etre bypasse) et
+      startsWith() trop permissif (preserve la SQLi via prefix).
+      Pour ce challenge specifiquement : utiliser updateOne, pas
+      update(). Et valider le _id en type ObjectId.
+    body_en: |
+      Source codefixes/noSqlReviewsChallenge fix #3 (correct):
+      "Using the built-in replacement (or binding) mechanism of
+      Sequelize is equivalent to creating a Prepared Statement"
+      — same principle for Mongoose: use typed and explicit APIs.
+      Fixes #1 and #2 (incorrect) show anti-patterns: custom
+      blocklist (bypassable) and overly permissive startsWith()
+      (preserves prefix SQLi). For this specific challenge: use
+      updateOne, not update(). And validate _id as ObjectId type.

@@ -1,0 +1,143 @@
+challenge_key: "loginSupportChallenge"
+schema_version: "juicelab.briefing.v2"
+
+mission_fr: |
+  Login avec credentials originaux du support team
+  SANS SQLi ni autre bypass. Tags : Brute Force,
+  Code Analysis. Description OWASP. Hints : (1) "
+  underlying flaw is a lot more human error than
+  technical weakness". (2) "support team in low-
+  cost country, structure fluctuates". (3) "
+  password is actually very strong". (4) "support
+  team utilizes a 3rd party tool which every
+  support engineer can access to get the current
+  account password from". [KILL_CHAIN_DOCUMENTED]
+
+  Methode : Solve dans routes/login.ts:61. Code :
+  `solveIf(() => req.body.email === 'support@
+  juice-sh.op' && req.body.password === '
+  J6aVjTgOpRs@?5l!Zkq2AYnCE@RF$P')`. Le password
+  est dans /ftp/incident-support.kdbx (KeePass
+  file - "3rd party tool" du hint #4). Workflow :
+  (1) GET /ftp/incident-support.kdbx (allowlist
+  serve specifique pour ce file - cf. fileServer.
+  ts:27 `file === 'incident-support.kdbx'`). (2)
+  Open avec KeePass. (3) Master password = ?
+  Hint : "low-cost country" + "fluctuates" =
+  team utilise un master password trivialement
+  guessable, ou meme pas de password. (4)
+  Extract le support password depuis l'entry.
+  (5) Login.
+
+mission_en: |
+  Login with support team's ORIGINAL credentials
+  WITHOUT SQLi or other bypass. Tags: Brute Force,
+  Code Analysis. OWASP description. Hints: (1)
+  "underlying flaw is a lot more human error than
+  technical weakness". (2) "support team in
+  low-cost country, structure fluctuates". (3)
+  "password is actually very strong". (4) "
+  support team utilizes a 3rd party tool which
+  every support engineer can access". [KILL_
+  CHAIN_DOCUMENTED]
+
+  Method: Solve in routes/login.ts:61. Code:
+  `solveIf(() => req.body.email === 'support@
+  juice-sh.op' && req.body.password === '
+  J6aVjTgOpRs@?5l!Zkq2AYnCE@RF$P')`. Password
+  in /ftp/incident-support.kdbx (KeePass file -
+  "3rd party tool" from hint #4). Workflow: (1)
+  GET /ftp/incident-support.kdbx (specific
+  allowlist serve for this file - cf.
+  fileServer.ts:27 `file === 'incident-support.
+  kdbx'`). (2) Open with KeePass. (3) Master
+  password = ? Hint: "low-cost country" +
+  "fluctuates" = team uses trivially guessable
+  master password, or no password at all. (4)
+  Extract support password from entry. (5)
+  Login.
+
+concepts:
+  - title_fr: "Shared password manager : the human error"
+    title_en: "Shared password manager: the human error"
+    body_fr: |
+      Hint OWASP #1 : "underlying flaw is a lot
+      more HUMAN ERROR than technical weakness".
+      L'anti-pattern : un password manager
+      partage (KeePass file) accessible a tous
+      les support engineers sans master password
+      strong. Si le file leak (file disclosure
+      bug, employee leaving, file misplaced),
+      tous les passwords inside leak. Defense :
+      (a) password manager INDIVIDUAL per
+      employee (1Password Business, Bitwarden
+      Teams), (b) ZERO shared passwords (chacun
+      son acces avec MFA), (c) audit log de
+      chaque access, (d) just-in-time access
+      (PAM - Privileged Access Management).
+    body_en: |
+      OWASP hint #1: "underlying flaw is a lot
+      more HUMAN ERROR than technical
+      weakness". Anti-pattern: shared password
+      manager (KeePass file) accessible to all
+      support engineers without strong master
+      password. If file leaks (file disclosure
+      bug, employee leaving, file misplaced),
+      all passwords inside leak. Defense: (a)
+      INDIVIDUAL password manager per employee
+      (1Password Business, Bitwarden Teams),
+      (b) ZERO shared passwords (each their
+      access with MFA), (c) audit log of each
+      access, (d) just-in-time access (PAM -
+      Privileged Access Management).
+
+  - title_fr: "KeePass file disclosure : kdbx fileserve allowlist"
+    title_en: "KeePass file disclosure: kdbx fileserve allowlist"
+    body_fr: |
+      Source verifiee (routes/fileServer.ts:27):
+      `if (file && (endsWithAllowlistedFileType
+      (file) || file === 'incident-support.kdbx'
+      ))`. Le serveur a une exception EXPLICITE
+      pour ce fichier .kdbx. C'est un bug : la
+      kdbx file devrait etre stockee hors web
+      root. Defense : pas d'allowlist d'exception
+      pour les fichiers sensibles ; logs +
+      backups + secrets stockes hors web root.
+    body_en: |
+      Verified source (routes/fileServer.ts:27):
+      `if (file && (endsWithAllowlistedFileType
+      (file) || file === 'incident-support.
+      kdbx'))`. Server has EXPLICIT exception
+      for this .kdbx file. Bug: kdbx file
+      should be stored outside web root.
+      Defense: no exception allowlist for
+      sensitive files; logs + backups + secrets
+      stored outside web root.
+
+  - title_fr: "Brute Force tag : weak master password"
+    title_en: "Brute Force tag: weak master password"
+    body_fr: |
+      Tag du challenge : Brute Force + Code
+      Analysis. La kdbx file est protegee par
+      un master password mais : (a) low-cost
+      country support team = formation security
+      faible, master password trivial. (b)
+      fluctuating team = pas de
+      reset/governance. Tools : keepass2john
+      (john the ripper) pour extract le hash
+      kdbx + hashcat pour cracker. Wordlist
+      generic (rockyou) ou language-specific
+      (developer-specific terms : juice-shop,
+      support, incident, etc.).
+    body_en: |
+      Challenge tag: Brute Force + Code
+      Analysis. kdbx file protected by master
+      password but: (a) low-cost country
+      support team = weak security training,
+      trivial master password. (b) fluctuating
+      team = no reset/governance. Tools:
+      keepass2john (john the ripper) to
+      extract kdbx hash + hashcat to crack.
+      Generic wordlist (rockyou) or language-
+      specific (developer-specific terms:
+      juice-shop, support, incident, etc.).

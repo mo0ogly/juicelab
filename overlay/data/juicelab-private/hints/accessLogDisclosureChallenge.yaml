@@ -1,0 +1,130 @@
+challenge_key: "accessLogDisclosureChallenge"
+schema_version: "juicelab.hints.v2"
+
+hints:
+  N1:
+    cost_pct: 5
+    text_fr: |
+      Hint OWASP #1 : "Who would want a server
+      access log to be accessible through a web
+      application?". Donc objectif = trouver
+      access log file expose. Hint #2 : logs
+      sont normalement non-accessibles - ici, ils
+      le sont par bug.
+    text_en: |
+      OWASP hint #1: "Who would want a server
+      access log to be accessible through a web
+      application?". So objective = find exposed
+      access log file. Hint #2: logs normally
+      non-accessible - here, by bug.
+    pedagogical_intent: |
+      Activate exposed-logs reflex.
+
+  N2:
+    cost_pct: 10
+    text_fr: |
+      Hint OWASP #3 : "One particular file found
+      in the folder you might already have found
+      during Access a confidential document".
+      Donc pre-requis : directoryListing /
+      confidential doc (Lot 0). Le folder
+      typique pour logs server : /support/logs ou
+      similar.
+    text_en: |
+      OWASP hint #3: "One particular file found
+      in the folder you might already have found
+      during Access a confidential document". So
+      prerequisite: directoryListing /
+      confidential doc (Lot 0). Typical folder
+      for server logs: /support/logs or similar.
+    pedagogical_intent: |
+      Spell location method.
+
+  N3:
+    cost_pct: 20
+    text_fr: |
+      Source serveur (server.ts:282-284) :
+      `app.use('/support/logs',
+      serveIndexMiddleware, serveIndex('logs'))`
+      + `app.use('/support/logs/:file',
+      serveLogFiles())`. Donc /support/logs/
+      donne un directory listing + chaque file
+      est servable. Hint #4 : "Drilling down
+      one level might not be sufficient" - need
+      le specific file path.
+    text_en: |
+      Server source (server.ts:282-284):
+      `app.use('/support/logs',
+      serveIndexMiddleware, serveIndex('logs'))`
+      + `app.use('/support/logs/:file',
+      serveLogFiles())`. So /support/logs/
+      gives directory listing + each file is
+      servable. Hint #4: "Drilling down one
+      level might not be sufficient" - need
+      specific file path.
+    pedagogical_intent: |
+      Reveal endpoint structure.
+
+  N4:
+    cost_pct: 35
+    text_fr: |
+      Source verifiee (routes/verify.ts:72) :
+      `solveIf(() => url.match(/access\.log
+      (0-9-)*/))`. Le regex match les filenames
+      type access.log* (avec optional date
+      suffix). Donc GET /support/logs/access.log
+      ou /support/logs/access.log.2026-05-10
+      = solve.
+    text_en: |
+      Verified source (routes/verify.ts:72):
+      `solveIf(() => url.match(/access\.log
+      (0-9-)*/))`. Regex matches filenames like
+      access.log* (with optional date suffix).
+      So GET /support/logs/access.log or
+      /support/logs/access.log.2026-05-10 =
+      solve.
+    pedagogical_intent: |
+      Reveal exact regex.
+
+  N5:
+    cost_pct: 50
+    text_fr: |
+      [KILL_CHAIN_DOCUMENTED] Workflow :
+      1. Naviguer http://localhost:3000/support/
+         logs/ - directory listing apparait.
+      2. Cliquer sur un fichier access.log* (le
+         current log file ou un rotated log).
+      3. Le browser GET /support/logs/access.
+         log -> verify.accessLogDisclosure
+         match -> challenge solve auto.
+      4. Le content du log file est servi -
+         tu peux y voir les requests recentes
+         (potentiellement avec passwords
+         plaintext logged - chain vers
+         dlpPasswordSpraying).
+      Source : routes/verify.ts:72 + server.ts:
+      282-284 + OWASP Logging Cheat Sheet.
+      Defense : logs hors web root + auth +
+      sanitization + centralized logging +
+      retention.
+    text_en: |
+      [KILL_CHAIN_DOCUMENTED] Workflow:
+      1. Navigate http://localhost:3000/
+         support/logs/ - directory listing
+         appears.
+      2. Click on access.log* file (current
+         log or rotated log).
+      3. Browser GETs /support/logs/access.
+         log -> verify.accessLogDisclosure
+         matches -> challenge auto solves.
+      4. Log file content is served - you
+         can see recent requests (potentially
+         with plaintext-logged passwords -
+         chain to dlpPasswordSpraying).
+      Source: routes/verify.ts:72 + server.ts:
+      282-284 + OWASP Logging Cheat Sheet.
+      Defense: logs outside web root + auth +
+      sanitization + centralized logging +
+      retention.
+    pedagogical_intent: |
+      Solution + chain note.
