@@ -209,6 +209,26 @@ else
   fi
 fi
 
+# --- HADOLINT (Dockerfile lint) ------------------------------------------
+HADOLINT=$(command -v hadolint 2>/dev/null || ls "$HOME/.local/bin/hadolint" 2>/dev/null)
+DOCKERFILES="docker/Dockerfile.dashboard docker/Dockerfile.juicelab"
+if [ -z "$HADOLINT" ]; then
+  warn "SEC-15 hadolint" "tool missing (binary from github.com/hadolint/hadolint)"
+else
+  if [ -f .hadolint.yaml ]; then
+    out=$("$HADOLINT" --config .hadolint.yaml $DOCKERFILES 2>&1 || true)
+  else
+    out=$("$HADOLINT" $DOCKERFILES 2>&1 || true)
+  fi
+  err_count=$(printf '%s' "$out" | grep -cE ' error: ' || true)
+  warn_count=$(printf '%s' "$out" | grep -cE ' warning: ' || true)
+  if [ "${err_count:-1}" = "0" ]; then
+    pass "SEC-15 hadolint : 0 errors on 2 Dockerfiles (warnings=$warn_count, ignored by config)"
+  else
+    fail "SEC-15" "hadolint $err_count errors on Dockerfiles"
+  fi
+fi
+
 # --- LICENSES.md drift (reproducible from lockfile) ----------------------
 LICFILE=dashboard/LICENSES.md
 GENLIC=scripts/gen_licenses.sh
@@ -279,6 +299,6 @@ fi
 if [ "$WARN" -gt "0" ]; then
   echo "RECETTE PASS WITH WARNINGS ($WARN tools missing — install for full coverage)"
 else
-  echo "RECETTE PASS (14/14)"
+  echo "RECETTE PASS (15/15)"
 fi
 exit 0

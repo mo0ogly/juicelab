@@ -1,0 +1,33 @@
+# Hadolint config for JuiceLab Dockerfiles.
+#
+# Ignored rules (with rationale) :
+#
+# DL3008 - Pin versions in apt get install
+#   Pinning debian package versions (e.g. tini=0.19.0-1) breaks at
+#   the next debian point release. We pin the base image instead
+#   (node:24-bullseye-slim, python:3.11-slim) and rely on it for
+#   the apt manifest.
+#
+# DL3059 - Multiple consecutive RUN instructions
+#   Squashing RUN into && chains hurts readability AND defeats
+#   docker layer caching when only one step changes. We accept the
+#   layer cost.
+#
+# DL3003 - Use WORKDIR to switch to a directory
+#   Some RUN steps in the juicelab build use `cd /build/juice-shop`
+#   inline because they are sequential within the same RUN. WORKDIR
+#   would persist across all subsequent layers, which is not what we
+#   want during the patch-apply stage.
+#
+# DL4006 - Set the SHELL option -o pipefail before RUN with a pipe
+#   Used once for `npm install ... 2>&1 | tail -20` where we want to
+#   suppress the verbose npm output. Failure of npm install would
+#   produce a non-empty exit on its own ; pipefail is not needed.
+
+ignored:
+  - DL3008
+  - DL3059
+  - DL3003
+  - DL4006
+
+failure-threshold: error

@@ -186,6 +186,12 @@ jobs:
           tar -xzf /tmp/gl.tar.gz -C /usr/local/bin gitleaks
           gitleaks version
 
+      - name: Install hadolint
+        run: |
+          sudo curl -sSL -o /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
+          sudo chmod +x /usr/local/bin/hadolint
+          hadolint --version
+
       - name: Run security recette (DAST skipped in CI, docker-only)
         env:
           DASHBOARD_TEACHER_TOKEN: ci-token-very-long-32chars-aaaa!!

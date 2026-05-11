@@ -46,6 +46,16 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+    # Container hardening (cycle 18) :
+    #   - no-new-privileges : process cannot gain SUID/CAP via execve
+    #     (mitigates kernel privilege-escalation primitives).
+    #   - cap_drop ALL : drop every Linux capability ; the dashboard is
+    #     pure-Python + SQLite, no raw socket / chown / mknod / kill /
+    #     setuid required at runtime.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   juicelab-demo:
     build:

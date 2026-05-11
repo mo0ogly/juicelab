@@ -90,5 +90,11 @@ EXPOSE 3000
 COPY --chown=juicelab:juicelab docker/entrypoint.sh /usr/local/bin/juicelab-entrypoint.sh
 RUN chmod +x /usr/local/bin/juicelab-entrypoint.sh
 
+# Healthcheck : Juice Shop core exposes the rest root at / and the
+# REST /rest/admin/application-version endpoint as a low-cost readiness
+# probe. 60s start-period because the Angular bundle takes a moment.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD node -e "require('http').get('http://127.0.0.1:3000/rest/admin/application-version', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/juicelab-entrypoint.sh"]
 CMD ["node", "build/app.js"]

@@ -14,8 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends tini && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY dashboard/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Hash-pinned install : every dep is fetched with sha256 verification.
+# Any tampered mirror / replaced wheel breaks the build immediately.
+COPY dashboard/requirements.lock.txt /app/requirements.lock.txt
+RUN pip install --no-cache-dir --require-hashes -r requirements.lock.txt
 
 COPY dashboard/ /app/
 
@@ -28,5 +30,11 @@ RUN useradd -m -u 1001 dash && \
 USER dash
 
 EXPOSE 5000
+
+# In-container healthcheck (works under docker run, supplements
+# docker-compose healthcheck). 30s grace before considering unhealthy.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=2); sys.exit(0)" || exit 1
+
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["python", "app.py"]
