@@ -1,0 +1,62 @@
+<button type="button" class="logout help-trigger" id="help-trigger" title="{{ t('HELP_NAV_TITLE') }}" aria-label="{{ t('HELP_NAV_TITLE') }}">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+  {{ t('HELP_NAV_BTN') }}
+</button>
+
+<div class="modal-backdrop help-modal" id="help-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="help-title">{{ t('HELP_MODAL_TITLE') }}</h3>
+      <button class="modal-close" type="button" id="help-close" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button>
+    </div>
+    <div class="modal-body help-body">
+
+      <h4>{{ t('HELP_S1_TITLE') }}</h4>
+      <p>{{ t('HELP_S1_BODY') }}</p>
+      <p class="help-sub">{{ t('HELP_S1_STEPS_T') }}</p>
+      <ol class="help-steps">
+        <li>{{ t('HELP_S1_STEP_1') }}</li>
+        <li>{{ t('HELP_S1_STEP_2') }}</li>
+        <li>{{ t('HELP_S1_STEP_3') }}</li>
+        <li>{{ t('HELP_S1_STEP_4') }}</li>
+      </ol>
+
+      <h4>{{ t('HELP_S2_TITLE') }}</h4>
+      <p>{{ t('HELP_S2_BODY') }}</p>
+
+      <h4>{{ t('HELP_S3_TITLE') }}</h4>
+      <p>{{ t('HELP_S3_BODY') }}</p>
+      <div class="help-danger">{{ t('HELP_S3_DANGER') }}</div>
+      <p class="help-sub">{{ t('HELP_S3_CLI') }}</p>
+      <ol class="help-steps">
+        <li><code>{{ t('HELP_S3_CLI_1') }}</code></li>
+        <li>{{ t('HELP_S3_CLI_2') }}</li>
+        <li><code>{{ t('HELP_S3_CLI_3') }}</code></li>
+        <li>{{ t('HELP_S3_CLI_4') }}</li>
+      </ol>
+
+      <h4>{{ t('HELP_S4_TITLE') }}</h4>
+      <p class="help-code">{{ t('HELP_S4_BODY') }}</p>
+
+      <h4>{{ t('HELP_S5_TITLE') }}</h4>
+      <p>{{ t('HELP_S5_BODY') }}</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var trigger = document.getElementById('help-trigger');
+  var backdrop = document.getElementById('help-backdrop');
+  var close = document.getElementById('help-close');
+  if (!trigger || !backdrop || !close) return;
+  function open() { backdrop.classList.add('open'); }
+  function shut() { backdrop.classList.remove('open'); }
+  trigger.addEventListener('click', open);
+  close.addEventListener('click', shut);
+  backdrop.addEventListener('click', function (e) { if (e.target === backdrop) shut(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shut(); });
+})();
+</script>

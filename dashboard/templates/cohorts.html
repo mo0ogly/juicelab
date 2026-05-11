@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JuiceLab dashboard - {{ t('NAV_COHORTS') }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <style>
+    .pending-block { margin-top: 18px; }
+    .pending-block h3 { margin: 0 0 6px; font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .pending-block h3 .cohort-id { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; color: var(--text-mute); font-weight: 400; }
+    .pending-block .empty { color: var(--text-mute); font-style: italic; font-size: 13px; padding: 6px 0; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </span>
+      <div>
+        <h1>{{ t('NAV_COHORTS') }}</h1>
+        <p class="subtitle">{{ t('BRAND_SUBTITLE_COHORTS') }}</p>
+      </div>
+    </div>
+    <nav class="nav-actions" aria-label="{{ t('ARIA_MAIN_NAV') }}">
+      {% include "_lang_switch.html" %}
+      {% include "_help_modal.html" %}
+      <a class="logout" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        {{ t('NAV_DASHBOARD') }}
+      </a>
+      <a class="logout" href="/logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        {{ t('NAV_LOGOUT') }}
+      </a>
+    </nav>
+  </header>
+
+  <section class="kpis" aria-label="{{ t('ARIA_KEY_INDICATORS') }}">
+    <div class="kpi">
+      <span class="kpi-label">{{ t('KPI_COHORTS') }}</span>
+      <span class="kpi-value" id="kpi-cohorts">-</span>
+      <span class="kpi-foot">{{ t('KPI_FOOT_REGISTERED') }}</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">{{ t('KPI_STUDENTS') }}</span>
+      <span class="kpi-value" id="kpi-students">-</span>
+      <span class="kpi-foot">{{ t('KPI_FOOT_TOTAL_ROSTER') }}</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">{{ t('KPI_EVENTS') }}</span>
+      <span class="kpi-value" id="kpi-events">-</span>
+      <span class="kpi-foot">{{ t('KPI_FOOT_INGEST_CUMUL') }}</span>
+    </div>
+    <div class="kpi live">
+      <span class="kpi-label">{{ t('KPI_PENDING') }}</span>
+      <span class="kpi-value" id="kpi-pending">-</span>
+      <span class="kpi-foot">{{ t('KPI_PENDING_REQUESTS') }}</span>
+    </div>
+  </section>
+
+  <h2 class="section-title">
+    {{ t('SECTION_EXISTING_COHORTS') }}
+    <span class="section-meta">{{ t('SECTION_EXISTING_COHORTS_META') }}</span>
+  </h2>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">{{ t('TABLE_IDENTIFIER') }}</th>
+          <th style="width:30%">{{ t('TABLE_LABEL') }}</th>
+          <th style="width:10%">{{ t('KPI_STUDENTS') }}</th>
+          <th style="width:10%">{{ t('KPI_EVENTS') }}</th>
+          <th>{{ t('TABLE_ACTIONS') }}</th>
+        </tr>
+      </thead>
+      <tbody id="cohorts-tbody"></tbody>
+      <tfoot>
+        <tr class="create-row">
+          <td><input id="new-cohort-id" placeholder="m2-ia-2026 (alnum + - _ .)" maxlength="64"></td>
+          <td><input id="new-cohort-label" placeholder="{{ t('TABLE_LABEL') }}" maxlength="100"></td>
+          <td colspan="2" class="empty-placeholder">{{ t('ACTION_NEW') }}</td>
+          <td class="actions"><button class="btn primary" id="create-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            {{ t('ACTION_CREATE_RENAME') }}
+          </button></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <h2 class="section-title">
+    {{ t('SECTION_PENDING') }}
+    <span class="section-meta">{{ t('SECTION_PENDING_META') }}</span>
+  </h2>
+  <div class="section-card">
+    <p class="empty-placeholder" style="margin:0 0 4px;font-size:13px">{{ t('SECTION_PENDING_BODY') }}</p>
+    <div id="pending-container"></div>
+  </div>
+
+  <footer class="footer">
+    <span>{{ t('FOOTER_ADMIN_COHORTS') }}</span>
+    <span>
+      <a href="/dashboard">{{ t('NAV_DASHBOARD') }}</a> &middot;
+      <a href="/admin/students">{{ t('NAV_ROSTER') }}</a> &middot;
+      <a href="/logout">{{ t('NAV_DISCONNECT') }}</a>
+    </span>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div><!-- /.shell -->
+
+<script>
+  window.I18N = {{ i18n_catalog | tojson }};
+  window.T = function(key, params) {
+    var s = window.I18N[key] || key;
+    if (params) { for (var k in params) { s = s.split('{' + k + '}').join(params[k]); } }
+    return s;
+  };
+</script>
+<script>
+const TBODY = document.getElementById('cohorts-tbody');
+const PENDING_CONTAINER = document.getElementById('pending-container');
+const TOAST = document.getElementById('toast');
+const NEW_ID = document.getElementById('new-cohort-id');
+const NEW_LABEL = document.getElementById('new-cohort-label');
+const CREATE_BTN = document.getElementById('create-btn');
+const KPI_COHORTS = document.getElementById('kpi-cohorts');
+const KPI_STUDENTS = document.getElementById('kpi-students');
+const KPI_EVENTS = document.getElementById('kpi-events');
+const KPI_PENDING = document.getElementById('kpi-pending');
+
+function getCookie(name) {
+  const parts = ('; ' + document.cookie).split('; ' + name + '=');
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return '';
+}
+
+function authHeaders(extra) {
+  const tok = getCookie('teacher_token') || '';
+  const h = { 'X-Teacher-Token': tok };
+  if (extra) Object.assign(h, extra);
+  return h;
+}
+
+function showToast(msg, isError) {
+  TOAST.textContent = msg;
+  TOAST.classList.toggle('error', !!isError);
+  TOAST.classList.add('show');
+  setTimeout(() => TOAST.classList.remove('show'), 2500);
+}
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, function (ch) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+  });
+}
+
+async function fetchJson(url, opts) {
+  const res = await fetch(url, opts);
+  let body = null;
+  try { body = await res.json(); } catch (_) { /* ignore */ }
+  if (!res.ok) {
+    const err = (body && body.error) || ('HTTP ' + res.status);
+    throw new Error(err);
+  }
+  return body;
+}
+
+async function loadCohorts() {
+  try {
+    const data = await fetchJson('/api/cohorts', { headers: authHeaders() });
+    const cohorts = data.cohorts || [];
+    renderCohorts(cohorts);
+    updateKpis(cohorts);
+    await loadAllPending(cohorts);
+  } catch (err) {
+    showToast(T('TOAST_ERR_LOAD', { msg: err.message }), true);
+  }
+}
+
+function updateKpis(cohorts) {
+  KPI_COHORTS.textContent = cohorts.length;
+  let totalStudents = 0, totalEvents = 0;
+  for (const c of cohorts) { totalStudents += (c.student_count || 0); totalEvents += (c.event_count || 0); }
+  KPI_STUDENTS.textContent = totalStudents;
+  KPI_EVENTS.textContent = totalEvents;
+}
+
+function renderCohorts(cohorts) {
+  if (!cohorts.length) {
+    TBODY.innerHTML = '<tr><td colspan="5" class="empty-placeholder">' + T('TABLE_EMPTY_COHORTS') + '</td></tr>';
+    return;
+  }
+  TBODY.innerHTML = cohorts.map(c => (
+    '<tr data-cohort="' + escapeHtml(c.cohort_id) + '">'
+    + '<td class="id">' + escapeHtml(c.cohort_id) + '</td>'
+    + '<td>' + escapeHtml(c.label || '-') + '</td>'
+    + '<td>' + c.student_count + '</td>'
+    + '<td>' + c.event_count + '</td>'
+    + '<td class="actions">'
+    + '<a class="btn" href="/admin/students?cohort=' + encodeURIComponent(c.cohort_id) + '">' + T('NAV_STUDENTS') + '</a>'
+    + '<a class="btn" href="/dashboard?cohort=' + encodeURIComponent(c.cohort_id) + '">' + T('ACTION_VIEW') + '</a>'
+    + '<button class="btn danger" data-action="reset">' + T('TOOLBAR_RESET') + '</button>'
+    + '<button class="btn danger" data-action="delete">' + T('TOOLBAR_DELETE') + '</button>'
+    + '</td>'
+    + '</tr>'
+  )).join('');
+  TBODY.querySelectorAll('button[data-action]').forEach(btn => btn.addEventListener('click', onRowAction));
+}
+
+async function onRowAction(ev) {
+  const btn = ev.currentTarget;
+  const tr = btn.closest('tr');
+  const cohort = tr.getAttribute('data-cohort');
+  const action = btn.getAttribute('data-action');
+  if (action === 'reset') {
+    if (!confirm(T('CONFIRM_RESET_GENERIC', { cohort: cohort }))) return;
+    try {
+      const r = await fetchJson('/api/cohorts/' + encodeURIComponent(cohort) + '/reset', { method: 'POST', headers: authHeaders() });
+      showToast(T('TOAST_RESET_OK', { events: r.events_deleted, students: r.students_deleted }));
+      loadCohorts();
+    } catch (err) { showToast(T('TOAST_ERR_RESET', { msg: err.message }), true); }
+  } else if (action === 'delete') {
+    if (!confirm(T('CONFIRM_DELETE_GENERIC', { cohort: cohort }))) return;
+    try {
+      await fetchJson('/api/cohorts/' + encodeURIComponent(cohort), { method: 'DELETE', headers: authHeaders() });
+      showToast(T('TOAST_DELETED'));
+      loadCohorts();
+    } catch (err) { showToast(T('TOAST_ERR_DELETE', { msg: err.message }), true); }
+  }
+}
+
+async function createCohort() {
+  const cid = (NEW_ID.value || '').trim();
+  const label = (NEW_LABEL.value || '').trim();
+  if (!cid) { showToast(T('TOAST_NEED_ID'), true); return; }
+  try {
+    await fetchJson('/api/cohorts', {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ cohort_id: cid, label: label || null }),
+    });
+    NEW_ID.value = ''; NEW_LABEL.value = '';
+    showToast(T('TOAST_CREATED'));
+    loadCohorts();
+  } catch (err) { showToast(T('TOAST_ERR_CREATE', { msg: err.message }), true); }
+}
+
+async function loadAllPending(cohorts) {
+  if (!cohorts.length) {
+    PENDING_CONTAINER.innerHTML = '<div class="empty-placeholder">' + T('PENDING_NO_COHORT') + '</div>';
+    KPI_PENDING.textContent = '0';
+    return;
+  }
+  const blocks = [];
+  let totalPending = 0;
+  for (const c of cohorts) {
+    try {
+      const data = await fetchJson('/api/students/pending?cohort=' + encodeURIComponent(c.cohort_id), { headers: authHeaders() });
+      const list = data.pending || [];
+      totalPending += list.length;
+      blocks.push(renderPendingBlock(c, list));
+    } catch (err) {
+      blocks.push('<div class="pending-block"><h3>' + escapeHtml(c.cohort_id) + '</h3><div class="empty">' + escapeHtml(err.message) + '</div></div>');
+    }
+  }
+  KPI_PENDING.textContent = totalPending;
+  PENDING_CONTAINER.innerHTML = blocks.join('');
+  PENDING_CONTAINER.querySelectorAll('button[data-decision]').forEach(btn => btn.addEventListener('click', onDecision));
+}
+
+function renderPendingBlock(cohort, pendingList) {
+  const title = escapeHtml(cohort.label || cohort.cohort_id);
+  const idLabel = '<span class="cohort-id">' + escapeHtml(cohort.cohort_id) + '</span>';
+  if (!pendingList.length) {
+    return '<div class="pending-block"><h3>' + title + ' ' + idLabel + '</h3><div class="empty">' + T('PENDING_EMPTY') + '</div></div>';
+  }
+  const rows = pendingList.map(p => (
+    '<tr data-cohort="' + escapeHtml(cohort.cohort_id) + '" data-token="' + escapeHtml(p.student_token) + '">'
+    + '<td>' + escapeHtml(p.email || '-') + '</td>'
+    + '<td class="token">' + escapeHtml(p.student_token) + '</td>'
+    + '<td class="token">' + escapeHtml(p.dashboard_url_used || '-') + '</td>'
+    + '<td>' + escapeHtml(p.created_at) + '</td>'
+    + '<td class="actions">'
+    + '<button class="btn success" data-decision="approve">' + T('ACTION_APPROVE') + '</button>'
+    + '<button class="btn danger" data-decision="reject">' + T('ACTION_REJECT') + '</button>'
+    + '</td></tr>'
+  )).join('');
+  return '<div class="pending-block"><h3>' + title + ' ' + idLabel
+    + ' <span class="badge pending">' + pendingList.length + '</span></h3>'
+    + '<div class="scroll" style="margin-top:8px"><table><thead><tr>'
+    + '<th>Email</th><th>' + T('TABLE_TOKEN') + '</th><th>Dashboard URL</th><th>' + T('TABLE_STATUS') + '</th><th>' + T('TABLE_ACTIONS') + '</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+}
+
+async function onDecision(ev) {
+  const btn = ev.currentTarget;
+  const tr = btn.closest('tr');
+  const cohort = tr.getAttribute('data-cohort');
+  const token = tr.getAttribute('data-token');
+  const decision = btn.getAttribute('data-decision');
+  if (decision === 'reject' && !confirm(T('CONFIRM_REJECT'))) return;
+  const route = decision === 'approve' ? 'approve' : 'reject';
+  try {
+    await fetchJson('/api/students/' + encodeURIComponent(token) + '/' + route, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ cohort_id: cohort, decided_by: 'admin' }),
+    });
+    showToast(decision === 'approve' ? T('TOAST_APPROVED') : T('TOAST_REJECTED'));
+    loadCohorts();
+  } catch (err) { showToast(T('TOAST_ERR_GENERIC', { msg: err.message }), true); }
+}
+
+CREATE_BTN.addEventListener('click', createCohort);
+NEW_ID.addEventListener('keydown', e => { if (e.key === 'Enter') createCohort(); });
+NEW_LABEL.addEventListener('keydown', e => { if (e.key === 'Enter') createCohort(); });
+
+loadCohorts();
+</script>
+</body>
+</html>

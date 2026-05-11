@@ -34,3 +34,33 @@ CREATE TABLE IF NOT EXISTS student_team_mapping (
     ctfd_user_id    INTEGER,
     last_synced_at  TEXT    NOT NULL
 );
+
+-- Registry of cohorts. Auto-populated on first event via ensure_cohort().
+-- Reset = wipe events+students for the cohort. Delete = drop everything.
+CREATE TABLE IF NOT EXISTS cohorts (
+    cohort_id   TEXT    PRIMARY KEY,
+    label       TEXT,
+    created_at  TEXT    NOT NULL
+);
+
+-- Roster managed via /admin/students. Auto-populated on first sync event
+-- (display_name = NULL) so prof can rename inline.
+-- status = 'pending' on join request, 'validated' after prof approval,
+-- 'rejected' after prof refusal. Legacy rows (auto-seeded from events) default
+-- to 'validated' via _migrate() so existing classrooms keep working.
+CREATE TABLE IF NOT EXISTS students (
+    cohort_id          TEXT    NOT NULL,
+    student_token      TEXT    NOT NULL,
+    display_name       TEXT,
+    email              TEXT,
+    status             TEXT    NOT NULL DEFAULT 'pending',
+    dashboard_url_used TEXT,
+    decided_at         TEXT,
+    decided_by         TEXT,
+    created_at         TEXT    NOT NULL,
+    updated_at         TEXT    NOT NULL,
+    PRIMARY KEY (cohort_id, student_token)
+);
+CREATE INDEX IF NOT EXISTS idx_students_cohort ON students(cohort_id);
+-- idx_students_status is created by db._migrate() after the status column
+-- is ensured to exist (legacy DBs predate the column).

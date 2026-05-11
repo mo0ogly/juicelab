@@ -44,16 +44,11 @@ import requests
 from flask import Flask, Response, jsonify, render_template, request
 from flask_cors import CORS
 
-from db import (
-    count_pending_award_events,
-    count_team_mappings,
-    get_connection,
-    get_team_mapping,
-    init_schema,
-    mark_award_pushed,
-    pending_award_events,
-    set_team_mapping,
-)
+from db import (count_pending_award_events, count_team_mappings, ensure_cohort, ensure_student,
+    get_connection, get_team_mapping, init_schema, names_for_cohort,
+    mark_award_pushed, pending_award_events, set_team_mapping)
+from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n
+from students_routes import register_students_routes
 
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(
@@ -615,27 +610,16 @@ def _validate_event(payload: dict[str, Any]) -> tuple[bool, str]:
 def _insert_event(payload: dict[str, Any], instance_label: str | None) -> int:
     server_ts = datetime.now(timezone.utc).isoformat()
     data_json = json.dumps(payload.get("data", {}), ensure_ascii=False, sort_keys=True)
+    tok, coh = payload["student_token"].strip(), payload["cohort_id"].strip()
     with get_connection() as conn:
         cur = conn.execute(
-            """
-            INSERT INTO events (
-                student_token, cohort_id, event_type, challenge_key,
-                data_json, client_ts, server_ts, instance_label
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                payload["student_token"].strip(),
-                payload["cohort_id"].strip(),
-                payload["event_type"],
-                payload.get("challenge_key"),
-                data_json,
-                payload.get("client_timestamp", server_ts),
-                server_ts,
-                instance_label,
-            ),
+            "INSERT INTO events (student_token, cohort_id, event_type, challenge_key, "
+            "data_json, client_ts, server_ts, instance_label) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (tok, coh, payload["event_type"], payload.get("challenge_key"),
+             data_json, payload.get("client_timestamp", server_ts), server_ts, instance_label),
         )
         new_id = int(cur.lastrowid or 0)
+        ensure_cohort(conn, coh, server_ts); ensure_student(conn, coh, tok, server_ts)
 
     # CTFd Mode C hook : best-effort push of the hint penalty to the central
     # CTFd. No-op in Mode A / Mode B (env vars absent). Wrapped at the
@@ -721,15 +705,13 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
         avg = round(sum(sums) / len(sums)) if sums else None
         totals[student] = {"avg_score": avg, "challenges_with_quiz": chall_done}
 
+    with get_connection() as conn: roster = names_for_cohort(conn, cohort_id)
     return {
-        "cohort_id": cohort_id,
-        "students": sorted_students,
+        "cohort_id": cohort_id, "students": sorted_students,
         "challenges": sorted_challenges,
-        "matrix": {
-            student: students[student] for student in sorted_students
-        },
-        "totals": totals,
-        "events_total": len(rows),
+        "matrix": {s: students[s] for s in sorted_students},
+        "totals": totals, "events_total": len(rows),
+        "names": {t: roster[t] for t in sorted_students if t in roster},
     }
 
 
@@ -737,36 +719,14 @@ def create_app() -> Flask:
     """Application factory used by the dev server and pytest."""
     init_schema()
     app = Flask(__name__)
-    CORS(
-        app,
-        resources={r"/api/*": {"origins": _cors_origins()}},
-        allow_headers=["Content-Type", "Authorization", "X-Teacher-Token", "X-Instance-Label", "X-Student-Token"],
-        methods=["GET", "POST", "OPTIONS"],
-    )
+    CORS(app, resources={r"/api/*": {"origins": _cors_origins()}},
+         allow_headers=["Content-Type", "Authorization", "X-Teacher-Token", "X-Instance-Label", "X-Student-Token"],
+         methods=["GET", "POST", "DELETE", "OPTIONS"])
+    register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event)
 
     @app.get("/api/health")
     def health() -> Response:
         return jsonify({"ok": True, "ts": datetime.now(timezone.utc).isoformat()})
-
-    @app.post("/api/sync")
-    def sync_event() -> Response:
-        if not request.is_json:
-            return jsonify({"error": "expected application/json body"}), 400  # type: ignore[return-value]
-        payload = request.get_json(silent=True) or {}
-        ok, msg = _validate_event(payload)
-        if not ok:
-            return jsonify({"error": msg}), 400  # type: ignore[return-value]
-        instance_label = request.headers.get("X-Instance-Label") or None
-        new_id = _insert_event(payload, instance_label)
-        LOGGER.info(
-            "ingested event id=%s student=%s cohort=%s type=%s challenge=%s",
-            new_id,
-            payload["student_token"][:8] + "...",
-            payload["cohort_id"],
-            payload["event_type"],
-            payload.get("challenge_key") or "-",
-        )
-        return jsonify({"ok": True, "id": new_id}), 201  # type: ignore[return-value]
 
     @app.get("/api/cohort")
     def api_cohort() -> Response:

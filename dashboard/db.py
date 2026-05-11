@@ -24,6 +24,7 @@ LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DB_PATH = Path(__file__).parent / "data" / "dashboard.sqlite"
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
+DEFAULT_ROSTER_PATH = Path(__file__).parent / "data" / "roster.txt"
 
 
 def db_path() -> Path:
@@ -32,6 +33,39 @@ def db_path() -> Path:
     path = Path(raw).expanduser().resolve()
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def roster_path() -> Path:
+    raw = os.environ.get("DASHBOARD_ROSTER", str(DEFAULT_ROSTER_PATH))
+    return Path(raw).expanduser().resolve()
+
+
+def load_roster() -> dict[str, str]:
+    """Return token -> display name mapping. Empty dict if file missing.
+
+    Format: one entry per line, `<token>\\s+<name>`. Lines starting with `#`
+    and blanks are ignored. The token is the JuiceLab UUID emitted by the
+    overlay (events.student_token).
+    """
+    path = roster_path()
+    if not path.is_file():
+        return {}
+    mapping: dict[str, str] = {}
+    try:
+        for raw_line in path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split(None, 1)
+            if len(parts) != 2:
+                continue
+            token, name = parts[0].strip(), parts[1].strip()
+            if token and name:
+                mapping[token] = name
+    except OSError as exc:
+        LOGGER.warning("roster read failed at %s: %s", path, exc)
+        return {}
+    return mapping
 
 
 def init_schema(path: Path | None = None) -> None:
@@ -55,13 +89,69 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "award_pushed_at" not in columns:
         LOGGER.info("migrating events: ADD COLUMN award_pushed_at TEXT")
         cur.execute("ALTER TABLE events ADD COLUMN award_pushed_at TEXT")
-    # Always (re)attempt the index creation : on fresh installs, the column
-    # comes from schema.sql but the index was excluded there to keep that
-    # script applicable to legacy DBs without the column.
     cur.execute(
         "CREATE INDEX IF NOT EXISTS idx_events_award_pending "
         "ON events(event_type, award_pushed_at)"
     )
+    # students table : add status workflow columns. Legacy rows (no status
+    # column) get 'validated' so existing classrooms keep emitting events
+    # without prof re-approval. New rows created by /api/cohort/join start
+    # as 'pending' and must be approved by the prof.
+    student_cols = {row[1] for row in cur.execute("PRAGMA table_info(students)").fetchall()}
+    if student_cols:  # table exists
+        if "email" not in student_cols:
+            LOGGER.info("migrating students: ADD COLUMN email TEXT")
+            cur.execute("ALTER TABLE students ADD COLUMN email TEXT")
+        if "status" not in student_cols:
+            LOGGER.info("migrating students: ADD COLUMN status TEXT DEFAULT 'validated'")
+            # Default 'validated' for the ALTER so legacy rows keep working;
+            # the CREATE TABLE schema uses 'pending' for fresh installs which
+            # is what new join requests will inherit.
+            cur.execute("ALTER TABLE students ADD COLUMN status TEXT NOT NULL DEFAULT 'validated'")
+        if "dashboard_url_used" not in student_cols:
+            cur.execute("ALTER TABLE students ADD COLUMN dashboard_url_used TEXT")
+        if "decided_at" not in student_cols:
+            cur.execute("ALTER TABLE students ADD COLUMN decided_at TEXT")
+        if "decided_by" not in student_cols:
+            cur.execute("ALTER TABLE students ADD COLUMN decided_by TEXT")
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_students_status ON students(cohort_id, status)"
+        )
+    # cohorts table : seed from distinct events.cohort_id so existing data
+    # is browsable right after migration. Idempotent (INSERT OR IGNORE).
+    has_cohorts = cur.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='cohorts'"
+    ).fetchone()
+    if has_cohorts:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc).isoformat()
+        cur.execute(
+            "INSERT OR IGNORE INTO cohorts (cohort_id, label, created_at) "
+            "SELECT DISTINCT cohort_id, NULL, ? FROM events WHERE cohort_id IS NOT NULL",
+            (now,),
+        )
+
+    # students table : seed from roster.txt if present and table empty. This
+    # lets a project upgrading from the file-based roster migrate transparently.
+    has_students = cur.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='students'"
+    ).fetchone()
+    if has_students:
+        n = cur.execute("SELECT COUNT(*) FROM students").fetchone()[0]
+        if n == 0:
+            roster = load_roster()
+            if roster:
+                from datetime import datetime, timezone
+                now = datetime.now(timezone.utc).isoformat()
+                cohort = os.environ.get("DASHBOARD_DEFAULT_COHORT") or ""
+                if cohort:
+                    cur.executemany(
+                        "INSERT OR IGNORE INTO students "
+                        "(cohort_id, student_token, display_name, created_at, updated_at) "
+                        "VALUES (?, ?, ?, ?, ?)",
+                        [(cohort, tok, name, now, now) for tok, name in roster.items()],
+                    )
+                    LOGGER.info("seeded %d students from roster.txt into cohort %s", len(roster), cohort)
     conn.commit()
 
 
@@ -165,3 +255,205 @@ def count_pending_award_events(conn: sqlite3.Connection) -> int:
         "WHERE event_type = 'hint_revealed' AND award_pushed_at IS NULL"
     ).fetchone()
     return int(row["n"]) if row else 0
+
+
+# ---- Students roster helpers ----------------------------------------------
+
+def ensure_student(conn: sqlite3.Connection, cohort_id: str, student_token: str, now: str) -> None:
+    """Idempotent upsert: register a (cohort, token) pair on first sighting.
+    display_name stays NULL so the prof can fill it via /admin/students.
+    status='validated' for the legacy auto-discovery path (events arriving
+    without a prior /api/cohort/join). ON CONFLICT DO NOTHING preserves
+    any decision the prof already made on an existing row (pending,
+    rejected, or validated)."""
+    conn.execute(
+        "INSERT INTO students (cohort_id, student_token, display_name, status, created_at, updated_at) "
+        "VALUES (?, ?, NULL, 'validated', ?, ?) "
+        "ON CONFLICT(cohort_id, student_token) DO NOTHING",
+        (cohort_id, student_token, now, now),
+    )
+
+
+def list_students(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]:
+    return conn.execute(
+        "SELECT s.cohort_id, s.student_token, s.display_name, s.email, s.status, "
+        "       s.dashboard_url_used, s.decided_at, s.decided_by, s.created_at, s.updated_at, "
+        "       (SELECT COUNT(*) FROM events e "
+        "          WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token) AS event_count "
+        "  FROM students s "
+        " WHERE s.cohort_id = ? "
+        " ORDER BY COALESCE(s.display_name, s.student_token) COLLATE NOCASE ASC",
+        (cohort_id,),
+    ).fetchall()
+
+
+def list_pending_students(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]:
+    """Pending join requests for a cohort. Empty list if cohort_id unknown."""
+    return conn.execute(
+        "SELECT cohort_id, student_token, display_name, email, dashboard_url_used, "
+        "       created_at, updated_at "
+        "  FROM students "
+        " WHERE cohort_id = ? AND status = 'pending' "
+        " ORDER BY created_at ASC",
+        (cohort_id,),
+    ).fetchall()
+
+
+def create_join_request(
+    conn: sqlite3.Connection,
+    cohort_id: str,
+    student_token: str,
+    email: str,
+    dashboard_url: str,
+    now: str,
+) -> str:
+    """Upsert a join request for a (cohort, token) pair.
+
+    Returns the current status after the upsert: 'pending' on fresh row or
+    on re-submit while still pending, 'validated' if the prof already
+    approved (re-emission is then idempotent), 'rejected' if already
+    refused (the student would see the rejected banner again).
+    """
+    row = conn.execute(
+        "SELECT status FROM students WHERE cohort_id = ? AND student_token = ?",
+        (cohort_id, student_token),
+    ).fetchone()
+    if row is None:
+        conn.execute(
+            "INSERT INTO students (cohort_id, student_token, display_name, email, status, "
+            "                      dashboard_url_used, created_at, updated_at) "
+            "VALUES (?, ?, NULL, ?, 'pending', ?, ?, ?)",
+            (cohort_id, student_token, email or None, dashboard_url or None, now, now),
+        )
+        return "pending"
+    conn.execute(
+        "UPDATE students SET email = COALESCE(?, email), "
+        "                    dashboard_url_used = COALESCE(?, dashboard_url_used), "
+        "                    updated_at = ? "
+        " WHERE cohort_id = ? AND student_token = ?",
+        (email or None, dashboard_url or None, now, cohort_id, student_token),
+    )
+    return str(row["status"])
+
+
+def get_student_status(
+    conn: sqlite3.Connection, student_token: str, cohort_id: str | None = None
+) -> tuple[str, str] | None:
+    """Return (status, cohort_id) for a student_token. If cohort_id given,
+    scope the lookup ; otherwise return the first match (a token is a UUID
+    so collisions across cohorts are not expected). None if unknown."""
+    if cohort_id:
+        row = conn.execute(
+            "SELECT status, cohort_id FROM students WHERE cohort_id = ? AND student_token = ?",
+            (cohort_id, student_token),
+        ).fetchone()
+    else:
+        row = conn.execute(
+            "SELECT status, cohort_id FROM students WHERE student_token = ? LIMIT 1",
+            (student_token,),
+        ).fetchone()
+    if row is None:
+        return None
+    return (str(row["status"]), str(row["cohort_id"]))
+
+
+def set_student_decision(
+    conn: sqlite3.Connection,
+    cohort_id: str,
+    student_token: str,
+    decision: str,
+    decided_by: str,
+    now: str,
+) -> int:
+    """Set status to 'validated' or 'rejected'. Returns rowcount (0 if row
+    not found, 1 on success). Caller must validate `decision`."""
+    cur = conn.execute(
+        "UPDATE students SET status = ?, decided_at = ?, decided_by = ?, updated_at = ? "
+        " WHERE cohort_id = ? AND student_token = ?",
+        (decision, now, decided_by or None, now, cohort_id, student_token),
+    )
+    return cur.rowcount
+
+
+def cohort_exists(conn: sqlite3.Connection, cohort_id: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM cohorts WHERE cohort_id = ?", (cohort_id,)
+    ).fetchone()
+    return row is not None
+
+
+def upsert_student_name(
+    conn: sqlite3.Connection, cohort_id: str, student_token: str, name: str | None, now: str
+) -> None:
+    """Set or clear display_name. Creates the row if missing (manual add by prof)."""
+    conn.execute(
+        "INSERT INTO students (cohort_id, student_token, display_name, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?) "
+        "ON CONFLICT(cohort_id, student_token) DO UPDATE SET "
+        "display_name = excluded.display_name, updated_at = excluded.updated_at",
+        (cohort_id, student_token, name, now, now),
+    )
+
+
+def delete_student(conn: sqlite3.Connection, cohort_id: str, student_token: str) -> int:
+    """Hard delete the roster row. Events are kept (historical record)."""
+    cur = conn.execute(
+        "DELETE FROM students WHERE cohort_id = ? AND student_token = ?",
+        (cohort_id, student_token),
+    )
+    return cur.rowcount
+
+
+# ---- Cohorts registry helpers ---------------------------------------------
+
+def ensure_cohort(conn: sqlite3.Connection, cohort_id: str, now: str) -> None:
+    """Idempotent registration. Called from _insert_event on every sync."""
+    conn.execute(
+        "INSERT INTO cohorts (cohort_id, label, created_at) VALUES (?, NULL, ?) "
+        "ON CONFLICT(cohort_id) DO NOTHING",
+        (cohort_id, now),
+    )
+
+
+def list_cohorts(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+    """Return cohorts with counts (events + students). Sorted by label/id."""
+    return conn.execute(
+        "SELECT c.cohort_id, c.label, c.created_at, "
+        "       (SELECT COUNT(*) FROM events e WHERE e.cohort_id = c.cohort_id) AS event_count, "
+        "       (SELECT COUNT(*) FROM students s WHERE s.cohort_id = c.cohort_id) AS student_count "
+        "  FROM cohorts c "
+        " ORDER BY COALESCE(c.label, c.cohort_id) COLLATE NOCASE ASC"
+    ).fetchall()
+
+
+def upsert_cohort(conn: sqlite3.Connection, cohort_id: str, label: str | None, now: str) -> None:
+    conn.execute(
+        "INSERT INTO cohorts (cohort_id, label, created_at) VALUES (?, ?, ?) "
+        "ON CONFLICT(cohort_id) DO UPDATE SET label = excluded.label",
+        (cohort_id, label, now),
+    )
+
+
+def reset_cohort(conn: sqlite3.Connection, cohort_id: str) -> dict[str, int]:
+    """Wipe events + students for the cohort. Cohort row stays."""
+    e = conn.execute("DELETE FROM events WHERE cohort_id = ?", (cohort_id,)).rowcount
+    s = conn.execute("DELETE FROM students WHERE cohort_id = ?", (cohort_id,)).rowcount
+    return {"events_deleted": e, "students_deleted": s}
+
+
+def delete_cohort(conn: sqlite3.Connection, cohort_id: str) -> dict[str, int]:
+    """Drop cohort row + events + students. Hard delete."""
+    out = reset_cohort(conn, cohort_id)
+    c = conn.execute("DELETE FROM cohorts WHERE cohort_id = ?", (cohort_id,)).rowcount
+    out["cohorts_deleted"] = c
+    return out
+
+
+def names_for_cohort(conn: sqlite3.Connection, cohort_id: str) -> dict[str, str]:
+    """token -> display_name map, skipping NULLs. Drop-in for load_roster()."""
+    rows = conn.execute(
+        "SELECT student_token, display_name FROM students "
+        "WHERE cohort_id = ? AND display_name IS NOT NULL AND display_name <> ''",
+        (cohort_id,),
+    ).fetchall()
+    return {r["student_token"]: r["display_name"] for r in rows}

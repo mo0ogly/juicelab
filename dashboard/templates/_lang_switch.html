@@ -1,0 +1,4 @@
+<div class="lang-switch" role="group" aria-label="{{ t('ARIA_LANG_SWITCH') }}">
+  <a href="?lang=fr{% if request.args.get('cohort') %}&cohort={{ request.args.get('cohort') }}{% endif %}" class="lang-pill {% if current_lang == 'fr' %}active{% endif %}" aria-current="{% if current_lang == 'fr' %}true{% else %}false{% endif %}">{{ t('LANG_SWITCH_FR') }}</a>
+  <a href="?lang=en{% if request.args.get('cohort') %}&cohort={{ request.args.get('cohort') }}{% endif %}" class="lang-pill {% if current_lang == 'en' %}active{% endif %}" aria-current="{% if current_lang == 'en' %}true{% else %}false{% endif %}">{{ t('LANG_SWITCH_EN') }}</a>
+</div>
