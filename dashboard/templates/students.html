@@ -95,6 +95,9 @@
       <option value="progress">{{ t('SORT_PROGRESS') }}</option>
       <option value="activity">{{ t('SORT_ACTIVITY') }}</option>
     </select>
+    <a class="btn primary" href="/api/diplomas.zip?cohort={{ cohort_id }}" style="margin-left:auto">
+      {{ t('ACTION_EXPORT_DIPLOMAS') }}
+    </a>
   </div>
   <div class="scroll">
     <table>
@@ -227,7 +230,10 @@
       + '<td>' + progressCell(stats) + '</td>'
       + '<td class="activity-cell ' + fresh + '">' + escapeHtml(relativeAgo(lastIso)) + '</td>'
       + '<td>' + s.event_count + '</td>'
-      + '<td><button class="btn danger" data-action="delete">' + T('ACTION_DELETE_SHORT') + '</button></td>'
+      + '<td>'
+      +   '<a class="btn" href="/admin/diploma/' + encodeURIComponent(s.student_token) + '?cohort=' + encodeURIComponent(COHORT) + '" target="_blank" rel="noopener">' + T('ACTION_DIPLOMA') + '</a> '
+      +   '<button class="btn danger" data-action="delete">' + T('ACTION_DELETE_SHORT') + '</button>'
+      + '</td>'
       + '</tr>';
   }
 
