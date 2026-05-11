@@ -249,6 +249,7 @@ juicelab/
 │   ├── CTF-INTEGRATION.md       Mode C deep-dive (CTFd, HMAC, awards)
 │   ├── CLASSROOM-DEPLOYMENT.md  Teacher deployment guide (4 scenarios + security)
 │   ├── DOCKER.md                Detailed Docker operator's guide
+│   ├── VPS_HARDENING.md         VPS deploy with Caddy/TLS/fail2ban/systemd hardening
 │   ├── PEDAGOGY_COMPANION_PHASE0_OUTREACH.md  Ready-to-post text for upstream sondage
 │   └── REBRAND_PLAN.md          Deferred plan to rename JuiceLab -> Pedagogy Companion
 │

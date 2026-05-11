@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -111,6 +112,7 @@ def register_i18n(app: Flask) -> None:
                 max_age=COOKIE_MAX_AGE,
                 httponly=False,  # accessible to JS so client banners can flip too
                 samesite="Lax",
+                secure=(os.environ.get("DASHBOARD_HTTPS", "false").lower() == "true"),
             )
         return response
 

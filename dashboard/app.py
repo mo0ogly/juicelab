@@ -878,7 +878,7 @@ def create_app() -> Flask:
             expected,
             httponly=True,
             samesite="Lax",
-            secure=False,  # set True if dashboard is served over HTTPS
+            secure=(os.environ.get("DASHBOARD_HTTPS", "false").lower() == "true"),
             path="/",
         )
         return resp
@@ -989,4 +989,4 @@ def create_app() -> Flask:
 if __name__ == "__main__":  # pragma: no cover
     port = int(os.environ.get("DASHBOARD_PORT", "5000"))
     app = create_app()
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host=os.environ.get("DASHBOARD_BIND", "0.0.0.0"), port=port, debug=False)
