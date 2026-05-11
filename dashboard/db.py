@@ -287,6 +287,54 @@ def list_students(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]
     ).fetchall()
 
 
+def per_student_stats(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]:
+    """Per-student aggregated stats for the teacher dashboard.
+
+    Returns one row per student in the cohort with counts of distinct
+    challenges solved / hints consumed / quizzes completed / flags
+    verified, plus the last event timestamp. Used by /api/students/stats
+    to render progression bars + last-activity columns.
+    """
+    return conn.execute(
+        "SELECT s.student_token,"
+        "  (SELECT COUNT(DISTINCT challenge_key) FROM events e"
+        "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token"
+        "       AND e.event_type = 'challenge_solved') AS challenges_solved,"
+        "  (SELECT COUNT(*) FROM events e"
+        "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token"
+        "       AND e.event_type = 'hint_revealed') AS hints_used,"
+        "  (SELECT COUNT(DISTINCT challenge_key) FROM events e"
+        "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token"
+        "       AND e.event_type = 'quiz_completed') AS quizzes_done,"
+        "  (SELECT COUNT(*) FROM events e"
+        "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token"
+        "       AND e.event_type = 'flag_verified') AS flags_verified,"
+        "  (SELECT MAX(client_ts) FROM events e"
+        "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token) AS last_event_ts"
+        "  FROM students s WHERE s.cohort_id = ?",
+        (cohort_id,),
+    ).fetchall()
+
+
+def events_by_type(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]:
+    """Histogram : count of events grouped by event_type for a cohort."""
+    return conn.execute(
+        "SELECT event_type, COUNT(*) AS n FROM events "
+        "  WHERE cohort_id = ? GROUP BY event_type ORDER BY n DESC",
+        (cohort_id,),
+    ).fetchall()
+
+
+def events_by_day(conn: sqlite3.Connection, cohort_id: str, days: int = 7) -> list[sqlite3.Row]:
+    """Daily activity for the last N days. ISO date in 'day', count in 'n'."""
+    return conn.execute(
+        "SELECT substr(client_ts, 1, 10) AS day, COUNT(*) AS n FROM events "
+        "  WHERE cohort_id = ? AND client_ts >= date('now', ?) "
+        "  GROUP BY day ORDER BY day ASC",
+        (cohort_id, f"-{int(days)} days"),
+    ).fetchall()
+
+
 def list_pending_students(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]:
     """Pending join requests for a cohort. Empty list if cohort_id unknown."""
     return conn.execute(

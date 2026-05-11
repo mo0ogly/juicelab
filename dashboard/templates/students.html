@@ -62,9 +62,25 @@
       <span class="kpi-foot">{{ t('KPI_FOOT_PENDING_APPROVAL') }}</span>
     </div>
     <div class="kpi">
+      <span class="kpi-label">{{ t('KPI_REJECTED') }}</span>
+      <span class="kpi-value" id="kpi-rejected">-</span>
+      <span class="kpi-foot">{{ t('KPI_FOOT_REJECTED') }}</span>
+    </div>
+    <div class="kpi">
       <span class="kpi-label">{{ t('KPI_EVENTS') }}</span>
       <span class="kpi-value" id="kpi-events">-</span>
       <span class="kpi-foot">{{ t('KPI_FOOT_ROSTER_CUMUL') }}</span>
+    </div>
+  </section>
+
+  <section class="stats-grid" aria-label="{{ t('CHART_EVENTS_BY_TYPE') }}">
+    <div class="stats-card">
+      <h3>{{ t('CHART_EVENTS_BY_TYPE') }}</h3>
+      <div id="chart-events-by-type"></div>
+    </div>
+    <div class="stats-card">
+      <h3>{{ t('CHART_LAST_7_DAYS') }}</h3>
+      <div id="chart-events-by-day" class="sparkline"></div>
     </div>
   </section>
 
@@ -72,6 +88,14 @@
     {{ t('SECTION_ROSTER') }}
     <span class="section-meta">{{ t('SECTION_ROSTER_META') }}</span>
   </h2>
+  <div class="sort-bar">
+    <label for="sort-by">{{ t('SORT_BY_LABEL') }} :</label>
+    <select id="sort-by">
+      <option value="name">{{ t('SORT_NAME') }}</option>
+      <option value="progress">{{ t('SORT_PROGRESS') }}</option>
+      <option value="activity">{{ t('SORT_ACTIVITY') }}</option>
+    </select>
+  </div>
   <div class="scroll">
     <table>
       <thead>
@@ -79,6 +103,8 @@
           <th class="w-24p">{{ t('TABLE_DISPLAY_NAME') }}</th>
           <th>{{ t('TABLE_TOKEN') }}</th>
           <th class="w-120">{{ t('TABLE_STATUS') }}</th>
+          <th>{{ t('TABLE_PROGRESSION') }}</th>
+          <th>{{ t('TABLE_LAST_ACTIVITY') }}</th>
           <th class="w-90">{{ t('KPI_EVENTS') }}</th>
           <th class="w-90">{{ t('TABLE_ACTION') }}</th>
         </tr>
@@ -88,7 +114,7 @@
         <tr class="create-row">
           <td><input id="add-name" type="text" placeholder="{{ t('TABLE_DISPLAY_NAME') }}" maxlength="100"></td>
           <td><input id="add-token" type="text" placeholder="UUID"></td>
-          <td colspan="2" class="empty-placeholder">{{ t('ACTION_MANUAL') }}</td>
+          <td colspan="4" class="empty-placeholder">{{ t('ACTION_MANUAL') }}</td>
           <td><button class="btn primary" id="add-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -129,7 +155,46 @@
   const KPI_TOTAL = document.getElementById('kpi-total');
   const KPI_VALIDATED = document.getElementById('kpi-validated');
   const KPI_PENDING = document.getElementById('kpi-pending');
+  const KPI_REJECTED = document.getElementById('kpi-rejected');
   const KPI_EVENTS = document.getElementById('kpi-events');
+  const SORT_SEL = document.getElementById('sort-by');
+  const CHART_TYPES = document.getElementById('chart-events-by-type');
+  const CHART_DAYS = document.getElementById('chart-events-by-day');
+  let _students = [];
+  let _stats = {};  // token -> stats row
+  let _eventTypes = [];
+  let _eventDays = [];
+
+  function relativeAgo(iso) {
+    if (!iso) return T('LABEL_NEVER');
+    const then = Date.parse(iso);
+    if (isNaN(then)) return T('LABEL_NEVER');
+    const diff = (Date.now() - then) / 1000;
+    if (diff < 60)    return T('LABEL_AGO_M', { n: 0 });
+    if (diff < 3600)  return T('LABEL_AGO_M', { n: Math.floor(diff / 60) });
+    if (diff < 86400) return T('LABEL_AGO_H', { n: Math.floor(diff / 3600) });
+    return T('LABEL_AGO_D', { n: Math.floor(diff / 86400) });
+  }
+  function activityFreshness(iso) {
+    if (!iso) return '';
+    const diff = (Date.now() - Date.parse(iso)) / 1000;
+    if (diff > 86400 * 2) return 'stale';
+    if (diff < 3600) return 'fresh';
+    return '';
+  }
+  function progressClass(pct) {
+    if (pct < 25) return 'q1';
+    if (pct < 50) return 'q2';
+    if (pct < 75) return 'q3';
+    return 'q4';
+  }
+  function progressCell(stats) {
+    if (!stats) return '<div class="progress-bar q1"><span style="width:0%"></span><b>0%</b></div>';
+    const pct = stats.progress_pct || 0;
+    return '<div class="progress-bar ' + progressClass(pct) + '">'
+      + '<span style="width:' + pct + '%"></span>'
+      + '<b>' + pct + '%</b></div>';
+  }
 
   function showToast(msg, error) {
     toast.textContent = msg;
@@ -152,10 +217,15 @@
   function rowHtml(s) {
     const name = s.display_name || '';
     const placeholder = name ? '' : 'placeholder="' + T('TABLE_DISPLAY_NAME') + '"';
+    const stats = _stats[s.student_token];
+    const lastIso = stats ? stats.last_event_ts : null;
+    const fresh = activityFreshness(lastIso);
     return '<tr data-token="' + escapeHtml(s.student_token) + '">'
       + '<td><input class="name-edit" type="text" value="' + escapeHtml(name) + '" ' + placeholder + ' maxlength="100" aria-label="' + T('ARIA_STUDENT_NAME') + '"></td>'
       + '<td class="token">' + escapeHtml(s.student_token) + '</td>'
       + '<td>' + statusBadge(s.status) + '</td>'
+      + '<td>' + progressCell(stats) + '</td>'
+      + '<td class="activity-cell ' + fresh + '">' + escapeHtml(relativeAgo(lastIso)) + '</td>'
       + '<td>' + s.event_count + '</td>'
       + '<td><button class="btn danger" data-action="delete">' + T('ACTION_DELETE_SHORT') + '</button></td>'
       + '</tr>';
@@ -163,32 +233,89 @@
 
   function updateKpis(students) {
     KPI_TOTAL.textContent = students.length;
-    let v = 0, p = 0, ev = 0;
+    let v = 0, p = 0, rj = 0, ev = 0;
     for (const s of students) {
       const st = (s.status || 'validated').toLowerCase();
       if (st === 'validated') v++;
       else if (st === 'pending') p++;
+      else if (st === 'rejected') rj++;
       ev += (s.event_count || 0);
     }
     KPI_VALIDATED.textContent = v;
     KPI_PENDING.textContent = p;
+    KPI_REJECTED.textContent = rj;
     KPI_EVENTS.textContent = ev;
   }
 
-  function load() {
-    return fetch('/api/students?cohort=' + encodeURIComponent(COHORT), { credentials: 'include' })
-      .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
-      .then(({ ok, data }) => {
-        if (!ok) { showToast(data.error || T('TOAST_ERR_LOAD_LIST'), true); return; }
-        const students = data.students || [];
-        updateKpis(students);
-        tbody.innerHTML = students.map(rowHtml).join('');
-        if (students.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="empty-placeholder">' + T('TABLE_EMPTY_STUDENTS') + '</td></tr>';
-        }
-        bindInputs();
+  function applySort() {
+    const mode = SORT_SEL ? SORT_SEL.value : 'name';
+    const arr = _students.slice();
+    if (mode === 'progress') {
+      arr.sort(function(a, b) {
+        return ((_stats[b.student_token] || {}).progress_pct || 0)
+             - ((_stats[a.student_token] || {}).progress_pct || 0);
+      });
+    } else if (mode === 'activity') {
+      arr.sort(function(a, b) {
+        const ta = Date.parse((_stats[a.student_token] || {}).last_event_ts || '') || 0;
+        const tb = Date.parse((_stats[b.student_token] || {}).last_event_ts || '') || 0;
+        return tb - ta;
+      });
+    } else {
+      arr.sort(function(a, b) {
+        return (a.display_name || a.student_token).localeCompare(b.display_name || b.student_token);
+      });
+    }
+    tbody.innerHTML = arr.map(rowHtml).join('');
+    if (arr.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-placeholder">' + T('TABLE_EMPTY_STUDENTS') + '</td></tr>';
+    }
+    bindInputs();
+  }
+
+  function renderCharts() {
+    const maxN = Math.max.apply(null, _eventTypes.map(function(r){return r.n;}).concat([1]));
+    CHART_TYPES.innerHTML = _eventTypes.map(function(r) {
+      const w = Math.round(100 * r.n / maxN);
+      return '<div class="chart-bar-row">'
+        + '<span class="label">' + escapeHtml(r.event_type) + '</span>'
+        + '<div class="bar"><span style="width:' + w + '%"></span></div>'
+        + '<span class="count">' + r.n + '</span></div>';
+    }).join('') || '<div class="empty-placeholder">' + T('TABLE_EMPTY_STUDENTS') + '</div>';
+    const maxD = Math.max.apply(null, _eventDays.map(function(r){return r.n;}).concat([1]));
+    CHART_DAYS.innerHTML = _eventDays.map(function(r) {
+      const h = Math.max(2, Math.round(100 * r.n / maxD));
+      return '<div style="height:' + h + '%" title="' + escapeHtml(r.day) + ' : ' + r.n + '"></div>';
+    }).join('') || '';
+  }
+
+  function loadStats() {
+    return fetch('/api/students/stats?cohort=' + encodeURIComponent(COHORT), { credentials: 'include' })
+      .then(function(r) { return r.json().then(function(d){ return { ok: r.ok, data: d }; }); })
+      .then(function(o) {
+        if (!o.ok) return;
+        _stats = {};
+        (o.data.students || []).forEach(function(s) { _stats[s.student_token] = s; });
+        _eventTypes = o.data.events_by_type || [];
+        _eventDays = o.data.events_by_day || [];
+        renderCharts();
       });
   }
+
+  function load() {
+    return Promise.all([
+      fetch('/api/students?cohort=' + encodeURIComponent(COHORT), { credentials: 'include' })
+        .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, data: d }; }); }),
+      loadStats(),
+    ]).then(function(arr) {
+      const o = arr[0];
+      if (!o.ok) { showToast(o.data.error || T('TOAST_ERR_LOAD_LIST'), true); return; }
+      _students = o.data.students || [];
+      updateKpis(_students);
+      applySort();
+    });
+  }
+  if (SORT_SEL) { SORT_SEL.addEventListener('change', applySort); }
 
   function saveName(token, name) {
     return fetch('/api/students', {

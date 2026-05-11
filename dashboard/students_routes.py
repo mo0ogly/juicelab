@@ -28,9 +28,12 @@ from flask import Flask, Response, jsonify, render_template, request
 from audit_log import log_event
 from db import (
     delete_student,
+    events_by_day,
+    events_by_type,
     get_connection,
     list_pending_students,
     list_students,
+    per_student_stats,
     set_student_decision,
     upsert_student_name,
 )
@@ -104,6 +107,50 @@ def register_students_routes(
             for r in rows
         ]
         return jsonify({"cohort_id": cohort, "students": students})
+
+    @app.get("/api/students/stats")
+    def students_stats_api() -> Response:
+        """Per-student progression + cohort-level histograms.
+
+        Wired to /admin/students for the prof-side progression view :
+          per_student[]   {token, challenges_solved, hints_used, quizzes_done,
+                           flags_verified, last_event_ts, progress_pct}
+          events_by_type[]{event_type, n}
+          events_by_day[] {day, n}  -- last 7 days
+
+        progress_pct uses TD_TOTAL_CHALLENGES as denominator (default 13,
+        matches frontend/src/assets/juicelab/selected_challenges.yml).
+        """
+        ok, err = auth_check_json()
+        if not ok:
+            return err  # type: ignore[return-value]
+        cohort = (request.args.get("cohort") or _default_cohort()).strip()
+        if not cohort:
+            return jsonify({"error": "cohort required"}), 400  # type: ignore[return-value]
+        td_total = max(1, int(request.args.get("td_total", "13")))
+        with get_connection() as conn:
+            per = per_student_stats(conn, cohort)
+            by_type = events_by_type(conn, cohort)
+            by_day = events_by_day(conn, cohort, days=7)
+        students = [
+            {
+                "student_token": r["student_token"],
+                "challenges_solved": int(r["challenges_solved"] or 0),
+                "hints_used": int(r["hints_used"] or 0),
+                "quizzes_done": int(r["quizzes_done"] or 0),
+                "flags_verified": int(r["flags_verified"] or 0),
+                "last_event_ts": r["last_event_ts"],
+                "progress_pct": min(100, round(100 * (int(r["challenges_solved"] or 0)) / td_total)),
+            }
+            for r in per
+        ]
+        return jsonify({
+            "cohort_id": cohort,
+            "td_total": td_total,
+            "students": students,
+            "events_by_type": [{"event_type": r["event_type"], "n": int(r["n"])} for r in by_type],
+            "events_by_day": [{"day": r["day"], "n": int(r["n"])} for r in by_day],
+        })
 
     @app.get("/api/students/pending")
     def list_pending_students_api() -> Response:
