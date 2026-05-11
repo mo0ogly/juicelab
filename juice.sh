@@ -153,10 +153,15 @@ start_shop() {
     return
   fi
 
-  say "demarrage Juice Shop (npm start, port $SHOP_PORT)"
+  # NODE_ENV=juicelab loads config/juicelab.yml overlay on top of
+  # config/default.yml. The overlay clears authorizedRedirects so the
+  # "Login with Google" button stays hidden in local-loopback labs (the
+  # upstream Google demo clientId does not accept 127.0.0.1 origins).
+  : "${JUICELAB_NODE_ENV:=juicelab}"
+  say "demarrage Juice Shop (npm start, port $SHOP_PORT, NODE_ENV=$JUICELAB_NODE_ENV)"
   (
     cd "$SHOP_DIR" || exit 1
-    setsid nohup npm start >"$SHOP_LOG" 2>"$SHOP_ERR" </dev/null &
+    NODE_ENV="$JUICELAB_NODE_ENV" setsid nohup npm start >"$SHOP_LOG" 2>"$SHOP_ERR" </dev/null &
     echo $! > "$SHOP_PID_FILE"
   )
   local pid
