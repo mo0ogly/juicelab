@@ -72,14 +72,27 @@
     {{ t('SECTION_EXISTING_COHORTS') }}
     <span class="section-meta">{{ t('SECTION_EXISTING_COHORTS_META') }}</span>
   </h2>
+  <div class="sort-bar">
+    <label for="cohort-filter">{{ t('COHORTS_FILTER_LABEL') }} :</label>
+    <input id="cohort-filter" type="search" placeholder="{{ t('COHORTS_FILTER_PLACEHOLDER') }}" autocomplete="off">
+    <label for="cohort-sort">{{ t('SORT_BY_LABEL') }} :</label>
+    <select id="cohort-sort">
+      <option value="created_desc">{{ t('COHORTS_SORT_CREATED_DESC') }}</option>
+      <option value="created_asc">{{ t('COHORTS_SORT_CREATED_ASC') }}</option>
+      <option value="id">{{ t('COHORTS_SORT_ID') }}</option>
+      <option value="students">{{ t('SORT_NAME') }} ({{ t('KPI_STUDENTS') }})</option>
+      <option value="events">{{ t('KPI_EVENTS') }}</option>
+    </select>
+  </div>
   <div class="scroll">
     <table>
       <thead>
         <tr>
           <th class="w-25p">{{ t('TABLE_IDENTIFIER') }}</th>
-          <th class="w-30p">{{ t('TABLE_LABEL') }}</th>
+          <th class="w-25p">{{ t('TABLE_LABEL') }}</th>
           <th class="w-10">{{ t('KPI_STUDENTS') }}</th>
           <th class="w-10">{{ t('KPI_EVENTS') }}</th>
+          <th>{{ t('COHORTS_TABLE_CREATED') }}</th>
           <th>{{ t('TABLE_ACTIONS') }}</th>
         </tr>
       </thead>
@@ -88,7 +101,7 @@
         <tr class="create-row">
           <td><input id="new-cohort-id" placeholder="m2-ia-2026 (alnum + - _ .)" maxlength="64"></td>
           <td><input id="new-cohort-label" placeholder="{{ t('TABLE_LABEL') }}" maxlength="100"></td>
-          <td colspan="2" class="empty-placeholder">{{ t('ACTION_NEW') }}</td>
+          <td colspan="3" class="empty-placeholder">{{ t('ACTION_NEW') }}</td>
           <td class="actions"><button class="btn primary" id="create-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -200,9 +213,43 @@ function updateKpis(cohorts) {
   KPI_EVENTS.textContent = totalEvents;
 }
 
-function renderCohorts(cohorts) {
+function relAgo(iso) {
+  if (!iso) return '-';
+  const t = Date.parse(iso); if (isNaN(t)) return '-';
+  const diff = (Date.now() - t) / 1000;
+  if (diff < 60)    return T('LABEL_AGO_M', { n: 0 });
+  if (diff < 3600)  return T('LABEL_AGO_M', { n: Math.floor(diff / 60) });
+  if (diff < 86400) return T('LABEL_AGO_H', { n: Math.floor(diff / 3600) });
+  return T('LABEL_AGO_D', { n: Math.floor(diff / 86400) });
+}
+
+let _cohorts = [];
+const FILTER = document.getElementById('cohort-filter');
+const SORT = document.getElementById('cohort-sort');
+
+function applyFilterSort() {
+  const q = (FILTER && FILTER.value || '').trim().toLowerCase();
+  const mode = SORT ? SORT.value : 'created_desc';
+  let arr = _cohorts.slice();
+  if (q) {
+    arr = arr.filter(c =>
+      String(c.cohort_id).toLowerCase().includes(q)
+      || String(c.label || '').toLowerCase().includes(q)
+    );
+  }
+  arr.sort((a, b) => {
+    if (mode === 'id') return a.cohort_id.localeCompare(b.cohort_id);
+    if (mode === 'students') return (b.student_count || 0) - (a.student_count || 0);
+    if (mode === 'events') return (b.event_count || 0) - (a.event_count || 0);
+    if (mode === 'created_asc') return (Date.parse(a.created_at) || 0) - (Date.parse(b.created_at) || 0);
+    return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
+  });
+  renderTbody(arr);
+}
+
+function renderTbody(cohorts) {
   if (!cohorts.length) {
-    TBODY.innerHTML = '<tr><td colspan="5" class="empty-placeholder">' + T('TABLE_EMPTY_COHORTS') + '</td></tr>';
+    TBODY.innerHTML = '<tr><td colspan="6" class="empty-placeholder">' + T('TABLE_EMPTY_COHORTS') + '</td></tr>';
     return;
   }
   TBODY.innerHTML = cohorts.map(c => (
@@ -211,9 +258,12 @@ function renderCohorts(cohorts) {
     + '<td>' + escapeHtml(c.label || '-') + '</td>'
     + '<td>' + c.student_count + '</td>'
     + '<td>' + c.event_count + '</td>'
+    + '<td class="activity-cell" title="' + escapeHtml(c.created_at || '') + '">' + escapeHtml(relAgo(c.created_at)) + '</td>'
     + '<td class="actions">'
     + '<a class="btn" href="/admin/students?cohort=' + encodeURIComponent(c.cohort_id) + '">' + T('NAV_STUDENTS') + '</a>'
     + '<a class="btn" href="/dashboard?cohort=' + encodeURIComponent(c.cohort_id) + '">' + T('ACTION_VIEW') + '</a>'
+    + '<a class="btn" href="/api/cohort/export.csv?cohort=' + encodeURIComponent(c.cohort_id) + '" title="' + T('TOOLBAR_EXPORT_CSV_TITLE') + '">' + T('TOOLBAR_EXPORT_CSV') + '</a>'
+    + '<a class="btn" href="/api/diplomas.zip?cohort=' + encodeURIComponent(c.cohort_id) + '" title="' + T('ACTION_EXPORT_DIPLOMAS') + '">' + T('ROW_ACTION_DIPLOMA_SHORT') + '</a>'
     + '<button class="btn danger" data-action="reset">' + T('TOOLBAR_RESET') + '</button>'
     + '<button class="btn danger" data-action="delete">' + T('TOOLBAR_DELETE') + '</button>'
     + '</td>'
@@ -221,6 +271,14 @@ function renderCohorts(cohorts) {
   )).join('');
   TBODY.querySelectorAll('button[data-action]').forEach(btn => btn.addEventListener('click', onRowAction));
 }
+
+function renderCohorts(cohorts) {
+  _cohorts = cohorts || [];
+  applyFilterSort();
+}
+
+if (FILTER) FILTER.addEventListener('input', applyFilterSort);
+if (SORT) SORT.addEventListener('change', applyFilterSort);
 
 async function onRowAction(ev) {
   const btn = ev.currentTarget;
