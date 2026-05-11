@@ -29,6 +29,7 @@ from db import (
     get_connection,
     get_student_status,
 )
+from rate_limit import ip_key, rate_limit
 
 
 _TOKEN_RE = re.compile(r"^[A-Za-z0-9._:\-]{8,128}$")
@@ -44,6 +45,7 @@ def _now() -> str:
 def register_join_routes(app: Flask) -> None:
 
     @app.get("/api/cohort/exists")
+    @rate_limit(ip_key, max_calls=30, window_sec=60)
     def cohort_exists_api() -> Response:
         cid = (request.args.get("cohort_id") or "").strip()
         if not cid or not _COHORT_RE.match(cid):
@@ -53,6 +55,7 @@ def register_join_routes(app: Flask) -> None:
         return jsonify({"cohort_id": cid, "exists": bool(present)})
 
     @app.post("/api/cohort/join")
+    @rate_limit(ip_key, max_calls=10, window_sec=3600)
     def cohort_join_api() -> Response:
         if not request.is_json:
             return jsonify({"error": "expected application/json body"}), 400  # type: ignore[return-value]
@@ -86,6 +89,7 @@ def register_join_routes(app: Flask) -> None:
         }), 202  # type: ignore[return-value]
 
     @app.get("/api/student/status")
+    @rate_limit(ip_key, max_calls=120, window_sec=60)
     def student_status_api() -> Response:
         token = (request.args.get("student_token") or "").strip()
         cohort = (request.args.get("cohort") or "").strip() or None

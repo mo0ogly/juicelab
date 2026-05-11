@@ -564,7 +564,7 @@ def _check_teacher_auth() -> tuple[bool, Response | None]:
         request.headers.get("X-Teacher-Token", "")
         or request.cookies.get("teacher_token", "")
     )
-    if provided != expected:
+    if not hmac.compare_digest(provided, expected):
         return False, (jsonify({"error": "invalid teacher token"}), 401)  # type: ignore[return-value]
     return True, None
 
@@ -578,7 +578,7 @@ def _check_teacher_auth_html() -> tuple[bool, Response | None]:
         request.headers.get("X-Teacher-Token", "")
         or request.cookies.get("teacher_token", "")
     )
-    if provided != expected:
+    if not hmac.compare_digest(provided, expected):
         from flask import redirect, url_for  # local import to avoid top-level redirect cost
         target = request.full_path or "/dashboard"
         return False, redirect(f"/login?next={target}")  # type: ignore[return-value]
@@ -864,7 +864,7 @@ def create_app() -> Flask:
             return Response("<h1>Dashboard disabled</h1>", status=503, content_type="text/html; charset=utf-8")
         provided = (request.form.get("token") or "").strip()
         nxt = (request.form.get("next") or "/dashboard").strip()
-        if provided != expected:
+        if not hmac.compare_digest(provided, expected):
             return Response(
                 render_template("login.html", next=nxt, error="Token incorrect."),
                 status=401,
