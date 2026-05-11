@@ -209,6 +209,26 @@ else
   fi
 fi
 
+# --- LICENSES.md drift (reproducible from lockfile) ----------------------
+LICFILE=dashboard/LICENSES.md
+GENLIC=scripts/gen_licenses.sh
+if [ ! -f "$LICFILE" ]; then
+  warn "SEC-14 LICENSES.md" "$LICFILE not committed (run $GENLIC)"
+elif [ ! -x "$GENLIC" ]; then
+  warn "SEC-14 LICENSES.md" "$GENLIC missing or not executable"
+elif [ -z "${PIPLIC:-}" ]; then
+  warn "SEC-14 LICENSES.md" "pip-licenses missing (skipped, see SEC-13)"
+else
+  cp "$LICFILE" /tmp/lic-pre.md
+  bash "$GENLIC" 2>/dev/null
+  if diff -q /tmp/lic-pre.md "$LICFILE" >/dev/null 2>&1; then
+    pass "SEC-14 LICENSES.md in sync (regenerated, no drift)"
+  else
+    cp /tmp/lic-pre.md "$LICFILE"
+    fail "SEC-14" "LICENSES.md drift detected (run: bash $GENLIC)"
+  fi
+fi
+
 # --- SBOM CycloneDX generation (supply-chain transparency) ---------------
 CYCLONEDX=$(command -v cyclonedx-py 2>/dev/null || ls "$HOME/.local/bin/cyclonedx-py" 2>/dev/null)
 if [ -z "$CYCLONEDX" ]; then
@@ -259,6 +279,6 @@ fi
 if [ "$WARN" -gt "0" ]; then
   echo "RECETTE PASS WITH WARNINGS ($WARN tools missing — install for full coverage)"
 else
-  echo "RECETTE PASS (13/13)"
+  echo "RECETTE PASS (14/14)"
 fi
 exit 0
