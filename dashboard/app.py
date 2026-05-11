@@ -586,6 +586,15 @@ def create_app() -> Flask:
         resp.headers.setdefault("X-Frame-Options", "DENY")
         resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         resp.headers.setdefault("Permissions-Policy", "interest-cohort=()")
+        # HSTS only when explicitly opted in (DASHBOARD_HTTPS=true). Setting
+        # it on a plain-HTTP origin would force every visitor's browser to
+        # upgrade subsequent requests to HTTPS without a valid cert, breaking
+        # the deployment. See docs/VPS_HARDENING.md before enabling.
+        if os.environ.get("DASHBOARD_HTTPS", "false").lower() == "true":
+            resp.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=63072000; includeSubDomains; preload",
+            )
         nonce = getattr(g, "csp_nonce", "")
         script_src = f"'self' 'nonce-{nonce}' 'strict-dynamic'" if nonce else "'self'"
         resp.headers.setdefault("Content-Security-Policy",
