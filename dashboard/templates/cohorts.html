@@ -149,7 +149,8 @@ function getCookie(name) {
 
 function authHeaders(extra) {
   const tok = getCookie('teacher_token') || '';
-  const h = { 'X-Teacher-Token': tok };
+  const csrf = getCookie('csrf_token') || '';
+  const h = { 'X-Teacher-Token': tok, 'X-CSRF-Token': csrf };
   if (extra) Object.assign(h, extra);
   return h;
 }

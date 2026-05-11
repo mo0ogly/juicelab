@@ -47,7 +47,7 @@ from flask_cors import CORS
 from db import (count_pending_award_events, count_team_mappings, ensure_cohort, ensure_student,
     get_connection, get_team_mapping, init_schema, names_for_cohort,
     mark_award_pushed, pending_award_events, set_team_mapping)
-from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes
+from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie
 from students_routes import register_students_routes
 
 LOGGER = logging.getLogger(__name__)
@@ -388,6 +388,8 @@ def _check_teacher_auth() -> tuple[bool, Response | None]:
     )
     if not hmac.compare_digest(provided, expected):
         return False, (jsonify({"error": "invalid teacher token"}), 401)  # type: ignore[return-value]
+    if not check_csrf():
+        return False, (jsonify({"error": "invalid or missing csrf token"}), 403)  # type: ignore[return-value]
     return True, None
 
 
@@ -546,6 +548,15 @@ def create_app() -> Flask:
          methods=["GET", "POST", "DELETE", "OPTIONS"])
     register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event); register_proof_routes(app, _check_teacher_auth, expected_flag=_expected_flag, insert_event=_insert_event, events_for=_events_for, proof_secret=_proof_secret)
 
+    @app.after_request
+    def _security_headers(resp: Response) -> Response:
+        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+        resp.headers.setdefault("X-Frame-Options", "DENY")
+        resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        resp.headers.setdefault("Permissions-Policy", "interest-cohort=()")
+        resp.headers.setdefault("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+        return resp
+
     @app.get("/api/health")
     def health() -> Response:
         return jsonify({"ok": True, "ts": datetime.now(timezone.utc).isoformat()})
@@ -593,6 +604,7 @@ def create_app() -> Flask:
             secure=(os.environ.get("DASHBOARD_HTTPS", "false").lower() == "true"),
             path="/",
         )
+        set_csrf_cookie(resp, issue_csrf_token())
         return resp
 
     @app.get("/logout")
@@ -600,6 +612,7 @@ def create_app() -> Flask:
         from flask import redirect, make_response
         resp = make_response(redirect("/login"))
         resp.delete_cookie("teacher_token", path="/")
+        clear_csrf_cookie(resp)
         return resp
 
     @app.get("/dashboard")

@@ -124,6 +124,8 @@
   const COHORT = {{ cohort_id | tojson }};
   const tbody = document.getElementById('rows');
   const toast = document.getElementById('toast');
+  function _cookie(n){const m=('; '+document.cookie).split('; '+n+'=');return m.length===2?m.pop().split(';').shift():'';}
+  function csrfHeaders(base){const h=Object.assign({},base||{});h['X-CSRF-Token']=_cookie('csrf_token')||'';return h;}
   const KPI_TOTAL = document.getElementById('kpi-total');
   const KPI_VALIDATED = document.getElementById('kpi-validated');
   const KPI_PENDING = document.getElementById('kpi-pending');
@@ -191,14 +193,14 @@
   function saveName(token, name) {
     return fetch('/api/students', {
       method: 'POST', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ student_token: token, cohort_id: COHORT, display_name: name || null }),
     }).then(r => r.json().then(d => ({ ok: r.ok, data: d })));
   }
 
   function deleteRow(token) {
     return fetch('/api/students/' + encodeURIComponent(token) + '?cohort=' + encodeURIComponent(COHORT),
-      { method: 'DELETE', credentials: 'include' }
+      { method: 'DELETE', credentials: 'include', headers: csrfHeaders() }
     ).then(r => r.json().then(d => ({ ok: r.ok, data: d })));
   }
 

@@ -83,6 +83,14 @@ Both secrets must be >= 16 characters. The dashboard refuses to boot the proof e
 | External attacker | Hits the dashboard / Juice Shop from the LAN or internet | CORS allowlist + teacher-token gating on admin routes. Public deployments must put HTTPS in front (Caddy / Traefik) and restrict the dashboard by IP at the firewall — documented in [`docker/README.md`](./docker/README.md) section 3. |
 | Compromised CTFd | Returns malicious data on `/api/v1/teams` | The dashboard only consumes `id` and `email` fields. A malicious CTFd can poison the team mapping but cannot inject code into the dashboard. The worst case is a wrong team_id, which produces a wrong leaderboard line — visible to the teacher and reversible. |
 
+## Hardening tracker (PDCA cycles)
+
+| Cycle | Commit | Added |
+|---|---|---|
+| 1 | `996851b` | Timing-safe `hmac.compare_digest` on the teacher-token check (3 sites). Per-IP sliding-window rate limit on the three public endpoints (`/api/cohort/join` 10/h, `/api/cohort/exists` 30/min, `/api/student/status` 120/min). WCAG AA contrast on dashboard text. Recette coverage for the previously untested `/api/proof`, `/api/journal-text`, `/api/verify-flag`, `/logout`. |
+| 2 | `9fa1388` | `app.py` extraction (992 -> 704 lines, below the 800-line audit limit). Inline `onclick` removed from `dashboard.html` to align with future CSP `script-src 'self'`. |
+| 3 | (current) | CSRF double-submit cookie on browser sessions (API clients via `X-Teacher-Token` header are exempt by design). After-request middleware sets `X-Content-Type-Options`, `X-Frame-Options DENY`, `Referrer-Policy`, `Permissions-Policy`, `Content-Security-Policy` on every response. |
+
 ## Acknowledgements
 
 The threat model is informed by:
