@@ -131,7 +131,9 @@
         {% for student in summary.students %}
         <tr data-student="{{ student }}">
           <td class="sticky-col" title="{{ student }}">
-            <input class="name-edit" type="text" value="{{ summary.names.get(student, '') }}" placeholder="{{ student[:8] ~ '...' }}" maxlength="100" aria-label="{{ t('ARIA_STUDENT_NAME') }}">
+            {% set _name = summary.names.get(student, '') %}
+            <input class="name-edit{% if not _name %} name-missing{% endif %}" type="text" value="{{ _name }}" placeholder="{{ t('STUDENT_NAME_MISSING_PLACEHOLDER') }}" maxlength="100" aria-label="{{ t('ARIA_STUDENT_NAME') }}">
+            <small class="token-hint">{{ student[:8] }}&hellip;</small>
             <span class="row-actions">
               <a href="/admin/student/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DETAIL') }}">D</a>
               <a href="/admin/diploma/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DIPLOMA') }}">{{ t('ROW_ACTION_DIPLOMA_SHORT') }}</a>

@@ -114,6 +114,25 @@ def register_cohorts_routes(
             counts = db_reset_cohort(conn, cid)
         return jsonify({"ok": True, "cohort_id": cid, **counts})
 
+    @app.post("/api/cohorts/<cid>/purge-orphans")
+    def purge_orphans_api(cid: str) -> Response:
+        """Drop events whose student_token is no longer in the roster.
+
+        Use case : test recettes / past DELETE leave the matrix littered
+        with orphan tokens (apex-auto-*, recette-*). The prof clicks
+        "Purge orphelins" once per cohort to wipe them.
+        """
+        from db import purge_orphan_events
+        ok, err = auth_check_json()
+        if not ok:
+            return err  # type: ignore[return-value]
+        cid = _clean_id(cid)
+        if not cid:
+            return jsonify({"error": "invalid cohort_id"}), 400  # type: ignore[return-value]
+        with get_connection() as conn:
+            n = purge_orphan_events(conn, cid)
+        return jsonify({"ok": True, "cohort_id": cid, "events_purged": n})
+
     @app.delete("/api/cohorts/<cid>")
     def delete_cohort_api(cid: str) -> Response:
         ok, err = auth_check_json()

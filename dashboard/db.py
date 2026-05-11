@@ -493,6 +493,21 @@ def delete_student(conn: sqlite3.Connection, cohort_id: str, student_token: str)
     return cur.rowcount
 
 
+def purge_orphan_events(conn: sqlite3.Connection, cohort_id: str) -> int:
+    """Drop events whose student_token has no row in students(cohort_id).
+
+    Cleans up the trail left by /api/students DELETE (which keeps events
+    for audit) or by test recettes that emit events under throwaway
+    tokens. Returns the number of rows removed.
+    """
+    cur = conn.execute(
+        "DELETE FROM events WHERE cohort_id = ? "
+        "  AND student_token NOT IN (SELECT student_token FROM students WHERE cohort_id = ?)",
+        (cohort_id, cohort_id),
+    )
+    return cur.rowcount
+
+
 # ---- Cohorts registry helpers ---------------------------------------------
 
 def ensure_cohort(conn: sqlite3.Connection, cohort_id: str, now: str) -> None:

@@ -459,14 +459,22 @@ def _insert_event(payload: dict[str, Any], instance_label: str | None) -> int:
 
 def _cohort_summary(cohort_id: str) -> dict[str, Any]:
     with get_connection() as conn:
+        # Only surface events that belong to a student still registered in
+        # the roster. Without this, the matrix shows orphan tokens left
+        # behind by /api/students DELETE (which keeps events for audit)
+        # or by test recettes that emit events under throwaway tokens.
+        # The matrix should match /admin/students by definition.
         rows = conn.execute(
             """
-            SELECT student_token, event_type, challenge_key, data_json, client_ts
-              FROM events
-             WHERE cohort_id = ?
-             ORDER BY id ASC
+            SELECT e.student_token, e.event_type, e.challenge_key, e.data_json, e.client_ts
+              FROM events e
+             WHERE e.cohort_id = ?
+               AND e.student_token IN (
+                   SELECT student_token FROM students WHERE cohort_id = ?
+               )
+             ORDER BY e.id ASC
             """,
-            (cohort_id,),
+            (cohort_id, cohort_id),
         ).fetchall()
 
     students: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)

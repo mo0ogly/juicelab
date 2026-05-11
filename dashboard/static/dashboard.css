@@ -448,3 +448,8 @@ input.name-edit:focus-visible { box-shadow: 0 0 0 3px rgba(14,116,144,0.2); }
 .sticky-col .row-actions a { padding: 2px 6px; border: 1px solid var(--border); border-radius: 3px;
   background: var(--bg-soft); color: var(--text-soft); text-decoration: none; font-weight: 600; }
 .sticky-col .row-actions a:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* --- Cycle 23 : name missing hint on dashboard matrix --- */
+.sticky-col .token-hint { display: block; font-size: 10px; color: var(--text-mute); font-family: ui-monospace, "Courier New", monospace; margin-top: 2px; opacity: 0.7; }
+.name-edit.name-missing { border-left: 3px solid var(--warn); }
+.name-edit.name-missing::placeholder { color: var(--warn); font-style: italic; }

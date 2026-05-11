@@ -264,6 +264,7 @@ function renderTbody(cohorts) {
     + '<a class="btn" href="/dashboard?cohort=' + encodeURIComponent(c.cohort_id) + '">' + T('ACTION_VIEW') + '</a>'
     + '<a class="btn" href="/api/cohort/export.csv?cohort=' + encodeURIComponent(c.cohort_id) + '" title="' + T('TOOLBAR_EXPORT_CSV_TITLE') + '">' + T('TOOLBAR_EXPORT_CSV') + '</a>'
     + '<a class="btn" href="/api/diplomas.zip?cohort=' + encodeURIComponent(c.cohort_id) + '" title="' + T('ACTION_EXPORT_DIPLOMAS') + '">' + T('ROW_ACTION_DIPLOMA_SHORT') + '</a>'
+    + '<button class="btn" data-action="purge" title="' + T('ACTION_PURGE_ORPHANS_TITLE') + '">' + T('ACTION_PURGE_ORPHANS') + '</button>'
     + '<button class="btn danger" data-action="reset">' + T('TOOLBAR_RESET') + '</button>'
     + '<button class="btn danger" data-action="delete">' + T('TOOLBAR_DELETE') + '</button>'
     + '</td>'
@@ -290,6 +291,13 @@ async function onRowAction(ev) {
     try {
       const r = await fetchJson('/api/cohorts/' + encodeURIComponent(cohort) + '/reset', { method: 'POST', headers: authHeaders() });
       showToast(T('TOAST_RESET_OK', { events: r.events_deleted, students: r.students_deleted }));
+      loadCohorts();
+    } catch (err) { showToast(T('TOAST_ERR_RESET', { msg: err.message }), true); }
+  } else if (action === 'purge') {
+    if (!confirm(T('CONFIRM_PURGE_ORPHANS', { cohort: cohort }))) return;
+    try {
+      const r = await fetchJson('/api/cohorts/' + encodeURIComponent(cohort) + '/purge-orphans', { method: 'POST', headers: authHeaders() });
+      showToast(T('TOAST_PURGE_OK', { n: r.events_purged }));
       loadCohorts();
     } catch (err) { showToast(T('TOAST_ERR_RESET', { msg: err.message }), true); }
   } else if (action === 'delete') {
