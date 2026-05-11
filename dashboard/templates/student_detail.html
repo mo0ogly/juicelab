@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('STUDENT_DETAIL_TITLE') }} - {{ student_token }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}" integrity="{{ css_sri }}" crossorigin="anonymous">
+</head>
+<body>
+<div class="shell">
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="7" r="4"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/>
+        </svg>
+      </span>
+      <div>
+        <h1>{{ t('STUDENT_DETAIL_TITLE') }}</h1>
+        <p class="subtitle"><strong>{{ student_token }}</strong> &middot; {{ t('KPI_FOOT_COHORT_LABEL') }} <strong>{{ cohort_id }}</strong></p>
+      </div>
+    </div>
+    <nav class="nav-actions" aria-label="{{ t('ARIA_MAIN_NAV') }}">
+      {% include "_lang_switch.html" %}
+      <a class="logout" href="/admin/students?cohort={{ cohort_id }}">{{ t('DIPLOMA_BACK') }}</a>
+      <a class="logout" href="/admin/diploma/{{ student_token }}?cohort={{ cohort_id }}" target="_blank" rel="noopener">{{ t('ACTION_DIPLOMA') }}</a>
+      <a class="logout" href="/logout">{{ t('NAV_LOGOUT') }}</a>
+    </nav>
+  </header>
+
+  <section class="kpis" aria-label="{{ t('ARIA_KEY_INDICATORS') }}">
+    <div class="kpi"><span class="kpi-label">{{ t('TABLE_DISPLAY_NAME') }}</span><span class="kpi-value" id="k-name">-</span><span class="kpi-foot" id="k-email">-</span></div>
+    <div class="kpi"><span class="kpi-label">{{ t('TABLE_STATUS') }}</span><span class="kpi-value" id="k-status">-</span><span class="kpi-foot" id="k-decided">-</span></div>
+    <div class="kpi"><span class="kpi-label">{{ t('STUDENT_DETAIL_TOTAL_EVENTS') }}</span><span class="kpi-value" id="k-events">-</span><span class="kpi-foot">{{ t('STUDENT_DETAIL_KPI_EVENTS_FOOT') }}</span></div>
+    <div class="kpi"><span class="kpi-label">{{ t('STUDENT_DETAIL_CHALLENGES_TOUCHED') }}</span><span class="kpi-value" id="k-challenges">-</span><span class="kpi-foot">{{ t('STUDENT_DETAIL_KPI_CHAL_FOOT') }}</span></div>
+  </section>
+
+  <h2 class="section-title">{{ t('STUDENT_DETAIL_PER_CHALLENGE') }}</h2>
+  <div id="per-challenge"></div>
+
+  <h2 class="section-title">{{ t('STUDENT_DETAIL_TIMELINE') }}</h2>
+  <div class="scroll">
+    <table id="timeline-table">
+      <thead><tr>
+        <th>{{ t('TABLE_LAST_ACTIVITY') }}</th>
+        <th>{{ t('STUDENT_DETAIL_EVENT_TYPE') }}</th>
+        <th>{{ t('STUDENT_DETAIL_CHALLENGE') }}</th>
+        <th>{{ t('STUDENT_DETAIL_PAYLOAD') }}</th>
+      </tr></thead>
+      <tbody id="timeline-rows"></tbody>
+    </table>
+  </div>
+
+  <footer class="footer">
+    <span>{{ t('FOOTER_ROSTER') }} <strong>{{ cohort_id }}</strong></span>
+    <span>
+      <a href="/admin/students?cohort={{ cohort_id }}">{{ t('NAV_STUDENTS') }}</a> &middot;
+      <a href="/admin/cohorts">{{ t('NAV_COHORTS') }}</a> &middot;
+      <a href="/dashboard?cohort={{ cohort_id }}">{{ t('NAV_DASHBOARD') }}</a>
+    </span>
+  </footer>
+</div>
+
+<script nonce="{{ csp_nonce }}">
+  window.I18N = {{ i18n_catalog | tojson }};
+  window.T = function(key, params) {
+    var s = window.I18N[key] || key;
+    if (params) { for (var k in params) { s = s.split('{' + k + '}').join(params[k]); } }
+    return s;
+  };
+</script>
+<script nonce="{{ csp_nonce }}">
+  const TOKEN = {{ student_token | tojson }};
+  const COHORT = {{ cohort_id | tojson }};
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function fmtTs(iso) { return iso ? String(iso).replace('T', ' ').substring(0, 19) : '-'; }
+  function statusBadge(s) {
+    const safe = (s === 'pending' || s === 'validated' || s === 'rejected') ? s : 'validated';
+    return '<span class="badge ' + safe + '">' + safe + '</span>';
+  }
+
+  function challengeCard(pc) {
+    const hints = pc.hints.map(function(h) {
+      return '<li>N' + escapeHtml(h.level || '?') + ' &mdash; cost ' + h.cost_pct + '% &mdash; ' + escapeHtml(fmtTs(h.ts)) + '</li>';
+    }).join('') || '<li class="empty-placeholder">' + T('LABEL_NO_EVENTS') + '</li>';
+    const quizBody = pc.quiz_score !== null
+      ? '<strong>' + pc.quiz_score + '/100</strong> &middot; ' + escapeHtml(fmtTs(pc.quiz_ts))
+        + '<pre class="diploma-verif" style="max-height:120px">' + escapeHtml(JSON.stringify(pc.quiz_answers, null, 2)) + '</pre>'
+      : '<em>' + T('STUDENT_DETAIL_NO_QUIZ') + '</em>';
+    const journalBody = pc.journal_after_text
+      ? '<small>' + pc.journal_after_words + ' ' + T('DIPLOMA_WORDS') + ' &middot; ' + escapeHtml(fmtTs(pc.journal_after_ts)) + '</small>'
+        + '<blockquote style="margin:8px 0;padding:8px 12px;border-left:3px solid var(--accent);background:var(--bg-soft);white-space:pre-wrap">' + escapeHtml(pc.journal_after_text) + '</blockquote>'
+      : '<em>' + T('STUDENT_DETAIL_NO_JOURNAL') + '</em>';
+    const proofLink = '/api/proof?student_token=' + encodeURIComponent(TOKEN)
+      + '&cohort=' + encodeURIComponent(COHORT) + '&key=' + encodeURIComponent(pc.challenge_key);
+    return '<details class="stats-card" style="margin:8px 0">'
+      + '<summary style="cursor:pointer;font-weight:600">'
+      +   escapeHtml(pc.challenge_key) + ' '
+      +   (pc.solved ? '<span class="badge validated">' + T('STUDENT_DETAIL_SOLVED') + '</span>' : '<span class="badge pending">' + T('STUDENT_DETAIL_UNSOLVED') + '</span>') + ' '
+      +   (pc.flag_verified ? '<span class="badge validated">FLAG</span>' : '')
+      + ' &middot; ' + pc.events + ' ' + T('STUDENT_DETAIL_EVENTS_SHORT')
+      + '</summary>'
+      + '<div style="margin-top:8px">'
+      + '<h3>' + T('DIPLOMA_STAT_HINTS') + ' (' + pc.hints.length + ', cost ' + pc.hint_cost_total + '%)</h3>'
+      + '<ul>' + hints + '</ul>'
+      + '<h3>' + T('DIPLOMA_STAT_QUIZ_AVG') + '</h3>' + quizBody
+      + '<h3>' + T('STUDENT_DETAIL_JOURNAL_AFTER') + '</h3>' + journalBody
+      + '<p style="margin-top:12px"><a class="btn" href="' + proofLink + '" target="_blank" rel="noopener">' + T('STUDENT_DETAIL_DOWNLOAD_PROOF') + '</a></p>'
+      + '</div>'
+      + '</details>';
+  }
+
+  function timelineRow(ev) {
+    let preview = '';
+    try { preview = JSON.stringify(ev.data); } catch (e) { preview = String(ev.data); }
+    if (preview.length > 200) preview = preview.slice(0, 197) + '...';
+    return '<tr>'
+      + '<td class="activity-cell">' + escapeHtml(fmtTs(ev.client_ts)) + '</td>'
+      + '<td><code>' + escapeHtml(ev.event_type) + '</code></td>'
+      + '<td>' + escapeHtml(ev.challenge_key || '-') + '</td>'
+      + '<td><code style="font-size:11px">' + escapeHtml(preview) + '</code></td>'
+      + '</tr>';
+  }
+
+  function render(d) {
+    document.getElementById('k-name').textContent = d.identity.display_name || d.identity.student_token;
+    document.getElementById('k-email').textContent = d.identity.email || '-';
+    document.getElementById('k-status').innerHTML = statusBadge(d.identity.status);
+    document.getElementById('k-decided').textContent = d.identity.decided_by
+      ? d.identity.decided_by + ' @ ' + fmtTs(d.identity.decided_at) : '-';
+    document.getElementById('k-events').textContent = d.total_events;
+    document.getElementById('k-challenges').textContent = d.per_challenge.length;
+
+    const pcArr = d.per_challenge.slice().sort(function(a, b) { return a.challenge_key.localeCompare(b.challenge_key); });
+    document.getElementById('per-challenge').innerHTML =
+      pcArr.length ? pcArr.map(challengeCard).join('')
+                    : '<div class="empty-placeholder">' + T('LABEL_NO_EVENTS') + '</div>';
+    document.getElementById('timeline-rows').innerHTML =
+      d.timeline.length ? d.timeline.slice().reverse().map(timelineRow).join('')
+                         : '<tr><td colspan="4" class="empty-placeholder">' + T('LABEL_NO_EVENTS') + '</td></tr>';
+  }
+
+  fetch('/api/students/' + encodeURIComponent(TOKEN) + '/detail?cohort=' + encodeURIComponent(COHORT),
+        { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(render)
+    .catch(function(e) {
+      document.getElementById('per-challenge').textContent = T('TOAST_ERR_LOAD_LIST') + ': ' + e;
+    });
+</script>
+</body>
+</html>

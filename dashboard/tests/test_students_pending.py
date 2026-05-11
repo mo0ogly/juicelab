@@ -133,3 +133,58 @@ def test_admin_students_shows_pending_count(isolated_app):
     r = isolated_app.get(f"/admin/students?cohort={COHORT}", headers=AUTH)
     assert r.status_code == 200
     assert b"uuid-disp-1" in r.data or b"pending" in r.data.lower()
+
+
+# --- /api/students/<token>/detail + /admin/student/<token> -----------
+
+def test_student_detail_api_unknown_404(isolated_app):
+    isolated_app.post("/api/cohorts", headers=AUTH, json={"cohort_id": COHORT, "label": "T"})
+    r = isolated_app.get(f"/api/students/nope/detail?cohort={COHORT}", headers=AUTH)
+    assert r.status_code == 404
+
+
+def test_student_detail_api_missing_cohort(isolated_app):
+    r = isolated_app.get("/api/students/x/detail", headers=AUTH)
+    assert r.status_code in (200, 400)
+
+
+def test_student_detail_api_requires_auth(isolated_app):
+    r = isolated_app.get(f"/api/students/x/detail?cohort={COHORT}")
+    assert r.status_code in (302, 401)
+
+
+def test_student_detail_api_full_dump(isolated_app):
+    _create_cohort_and_join(isolated_app, student_token="uuid-detail-1", email="d@e.com")
+    isolated_app.post("/api/students/uuid-detail-1/approve", headers=AUTH,
+                      json={"cohort_id": COHORT, "decided_by": "prof@unit"})
+    isolated_app.post("/api/sync", json={
+        "student_token": "uuid-detail-1", "cohort_id": COHORT,
+        "event_type": "hint_revealed", "challenge_key": "loginAdminChallenge",
+        "data": {"level": "N1", "cost_pct": 5},
+        "client_timestamp": "2026-05-11T08:00:00Z",
+    })
+    isolated_app.post("/api/sync", json={
+        "student_token": "uuid-detail-1", "cohort_id": COHORT,
+        "event_type": "journal_filled", "challenge_key": "loginAdminChallenge",
+        "data": {"phase": "after", "text": "I solved by tampering JWT", "word_count": 5},
+        "client_timestamp": "2026-05-11T08:30:00Z",
+    })
+    r = isolated_app.get(f"/api/students/uuid-detail-1/detail?cohort={COHORT}", headers=AUTH)
+    assert r.status_code == 200
+    body = r.get_json()
+    assert body["identity"]["student_token"] == "uuid-detail-1"
+    assert body["identity"]["status"] == "validated"
+    assert body["total_events"] >= 2
+    pc = body["per_challenge"]
+    assert len(pc) == 1
+    assert pc[0]["challenge_key"] == "loginAdminChallenge"
+    assert pc[0]["hint_cost_total"] == 5
+    assert pc[0]["journal_after_text"] == "I solved by tampering JWT"
+    assert pc[0]["journal_after_words"] == 5
+
+
+def test_student_detail_page_renders(isolated_app):
+    _create_cohort_and_join(isolated_app, student_token="uuid-page-1", email="p@e.com")
+    r = isolated_app.get(f"/admin/student/uuid-page-1?cohort={COHORT}", headers=AUTH)
+    assert r.status_code == 200
+    assert b"uuid-page-1" in r.data

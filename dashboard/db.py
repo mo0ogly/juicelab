@@ -339,6 +339,24 @@ def per_student_stats(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.
     ).fetchall()
 
 
+def events_for_student(conn: sqlite3.Connection, student_token: str,
+                        cohort_id: str) -> list[sqlite3.Row]:
+    """Full event timeline for one student across the whole cohort.
+
+    Ordered ascending by insertion id. Returns every column the teacher
+    detail view needs : type, challenge, payload, both timestamps,
+    instance label. Power source for /admin/student/<token>.
+    """
+    return conn.execute(
+        "SELECT id, event_type, challenge_key, data_json, client_ts, server_ts, "
+        "       instance_label, award_pushed_at "
+        "  FROM events "
+        " WHERE student_token = ? AND cohort_id = ? "
+        " ORDER BY id ASC",
+        (student_token, cohort_id),
+    ).fetchall()
+
+
 def events_by_type(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]:
     """Histogram : count of events grouped by event_type for a cohort."""
     return conn.execute(

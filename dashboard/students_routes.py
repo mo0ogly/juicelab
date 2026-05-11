@@ -26,10 +26,13 @@ from typing import Any, Callable
 from flask import Flask, Response, jsonify, render_template, request
 
 from audit_log import log_event
+import json as _json
+
 from db import (
     delete_student,
     events_by_day,
     events_by_type,
+    events_for_student,
     get_connection,
     list_pending_students,
     list_students,
@@ -229,3 +232,106 @@ def register_students_routes(
             return err  # type: ignore[return-value]
         cohort = (request.args.get("cohort") or _default_cohort()).strip()
         return render_template("students.html", cohort_id=cohort)  # type: ignore[return-value]
+
+    @app.get("/api/students/<token>/detail")
+    def student_detail_api(token: str) -> Response:
+        """Full per-student dump : identity + every event + per-challenge
+        aggregation (solved? hint cost sum, quiz score, journal text).
+
+        Powers the /admin/student/<token> drill-down page. The teacher
+        sees every artefact the student produced, not just aggregated
+        counts.
+        """
+        ok, err = auth_check_json()
+        if not ok:
+            return err  # type: ignore[return-value]
+        cohort = (request.args.get("cohort") or _default_cohort()).strip()
+        if not cohort:
+            return jsonify({"error": "cohort required"}), 400  # type: ignore[return-value]
+        with get_connection() as conn:
+            students = list_students(conn, cohort)
+            identity = next((r for r in students if r["student_token"] == token), None)
+            if identity is None:
+                return jsonify({"error": "student not found in cohort"}), 404  # type: ignore[return-value]
+            events = events_for_student(conn, token, cohort)
+
+        # Per-challenge aggregation : walk the ordered events.
+        per_challenge: dict[str, dict[str, Any]] = {}
+        timeline: list[dict[str, Any]] = []
+        for ev in events:
+            try:
+                data = _json.loads(ev["data_json"]) if ev["data_json"] else {}
+            except (ValueError, TypeError):
+                data = {}
+            timeline.append({
+                "id": ev["id"],
+                "event_type": ev["event_type"],
+                "challenge_key": ev["challenge_key"],
+                "client_ts": ev["client_ts"],
+                "server_ts": ev["server_ts"],
+                "instance_label": ev["instance_label"],
+                "data": data,
+            })
+            ck = ev["challenge_key"] or "_misc_"
+            pc = per_challenge.setdefault(ck, {
+                "challenge_key": ck,
+                "solved": False, "solved_ts": None,
+                "flag_verified": False, "flag_ts": None,
+                "hints": [], "hint_cost_total": 0,
+                "quiz_score": None, "quiz_answers": {}, "quiz_ts": None,
+                "journal_after_text": "", "journal_after_words": 0, "journal_after_ts": None,
+                "events": 0,
+            })
+            pc["events"] += 1
+            et = ev["event_type"]
+            ts = ev["client_ts"] or ev["server_ts"]
+            if et == "challenge_solved":
+                pc["solved"] = True
+                pc["solved_ts"] = ts
+            elif et == "flag_verified":
+                pc["flag_verified"] = True
+                pc["flag_ts"] = ts
+            elif et == "hint_revealed":
+                cost = int(data.get("cost_pct", 0)) if isinstance(data.get("cost_pct"), (int, float)) else 0
+                pc["hints"].append({
+                    "level": data.get("level"),
+                    "cost_pct": cost,
+                    "ts": ts,
+                })
+                pc["hint_cost_total"] += cost
+            elif et == "quiz_completed":
+                score = data.get("score")
+                if isinstance(score, (int, float)):
+                    pc["quiz_score"] = int(score)
+                pc["quiz_answers"] = data.get("answers") or {}
+                pc["quiz_ts"] = ts
+            elif et == "journal_filled":
+                if data.get("phase") == "after" and isinstance(data.get("text"), str):
+                    pc["journal_after_text"] = data["text"]
+                    pc["journal_after_words"] = int(data.get("word_count") or 0)
+                    pc["journal_after_ts"] = ts
+
+        return jsonify({
+            "identity": {
+                "student_token": identity["student_token"],
+                "display_name": identity["display_name"],
+                "email": identity["email"] if "email" in identity.keys() else None,
+                "status": identity["status"] if "status" in identity.keys() else "validated",
+                "cohort_id": cohort,
+                "created_at": identity["created_at"],
+                "updated_at": identity["updated_at"],
+                "decided_at": identity["decided_at"] if "decided_at" in identity.keys() else None,
+                "decided_by": identity["decided_by"] if "decided_by" in identity.keys() else None,
+            },
+            "per_challenge": list(per_challenge.values()),
+            "timeline": timeline,
+            "total_events": len(timeline),
+        })
+
+    @app.get("/admin/student/<token>")
+    def student_detail_page(token: str) -> Response:
+        ok, err = auth_check_html()
+        if not ok:
+            return err  # type: ignore[return-value]
+        cohort = (request.args.get("cohort") or _default_cohort()).strip()
+        return render_template("student_detail.html", cohort_id=cohort, student_token=token)
