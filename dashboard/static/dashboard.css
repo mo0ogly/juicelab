@@ -442,3 +442,9 @@ input.name-edit:focus-visible { box-shadow: 0 0 0 3px rgba(14,116,144,0.2); }
 .sort-bar { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 13px; color: var(--text-soft); }
 .sort-bar select { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-elev); color: var(--text); }
 .sort-bar select { padding: 4px 8px; border: 1px solid var(--border, #e5e7eb); border-radius: 4px; }
+
+/* --- Cycle 21 : dashboard matrix drill-down actions --- */
+.sticky-col .row-actions { display: inline-flex; gap: 4px; margin-left: 6px; font-size: 11px; }
+.sticky-col .row-actions a { padding: 2px 6px; border: 1px solid var(--border); border-radius: 3px;
+  background: var(--bg-soft); color: var(--text-soft); text-decoration: none; font-weight: 600; }
+.sticky-col .row-actions a:hover { background: var(--accent); color: #fff; border-color: var(--accent); }

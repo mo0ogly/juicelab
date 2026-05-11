@@ -94,6 +94,15 @@
       </svg>
       {{ t('TOOLBAR_DELETE') }}
     </button>
+    <a class="btn" href="/api/cohort/export.csv?cohort={{ summary.cohort_id }}" title="{{ t('TOOLBAR_EXPORT_CSV_TITLE') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      {{ t('TOOLBAR_EXPORT_CSV') }}
+    </a>
+    <a class="btn" href="/api/diplomas.zip?cohort={{ summary.cohort_id }}" title="{{ t('ACTION_EXPORT_DIPLOMAS') }}">
+      {{ t('ACTION_EXPORT_DIPLOMAS') }}
+    </a>
     <span class="toolbar-spacer"></span>
     <span class="toolbar-status" aria-live="polite">
       <a href="/admin/cohorts" class="link-plain">{{ t('TOOLBAR_PENDING_HINT') }}</a>
@@ -121,7 +130,13 @@
       <tbody id="body-rows">
         {% for student in summary.students %}
         <tr data-student="{{ student }}">
-          <td class="sticky-col" title="{{ student }}"><input class="name-edit" type="text" value="{{ summary.names.get(student, '') }}" placeholder="{{ student[:8] ~ '...' }}" maxlength="100" aria-label="{{ t('ARIA_STUDENT_NAME') }}"></td>
+          <td class="sticky-col" title="{{ student }}">
+            <input class="name-edit" type="text" value="{{ summary.names.get(student, '') }}" placeholder="{{ student[:8] ~ '...' }}" maxlength="100" aria-label="{{ t('ARIA_STUDENT_NAME') }}">
+            <span class="row-actions">
+              <a href="/admin/student/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DETAIL') }}">D</a>
+              <a href="/admin/diploma/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DIPLOMA') }}">{{ t('ROW_ACTION_DIPLOMA_SHORT') }}</a>
+            </span>
+          </td>
           {% for challenge in summary.challenges %}
             {% set slot = summary.matrix[student].get(challenge) %}
             <td data-cell="{{ challenge }}">
