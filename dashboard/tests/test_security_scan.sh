@@ -147,7 +147,7 @@ fi
 
 # --- COVERAGE (pytest under coverage.py, threshold 60%) -----------------
 COVERAGE=$(command -v coverage 2>/dev/null || ls "$HOME/.local/bin/coverage" 2>/dev/null)
-PYTEST_FILES="dashboard/tests/test_app.py dashboard/tests/test_ctfd_push.py dashboard/tests/test_students.py dashboard/tests/test_proof_signing.py dashboard/tests/test_cohorts_join_routes.py dashboard/tests/test_rate_limit.py dashboard/tests/test_proof_http.py dashboard/tests/test_students_pending.py"
+PYTEST_FILES="dashboard/tests/test_app.py dashboard/tests/test_ctfd_push.py dashboard/tests/test_students.py dashboard/tests/test_proof_signing.py dashboard/tests/test_cohorts_join_routes.py dashboard/tests/test_rate_limit.py dashboard/tests/test_proof_http.py dashboard/tests/test_students_pending.py dashboard/tests/test_csrf_helpers.py dashboard/tests/test_i18n_helpers.py dashboard/tests/test_verify_proof_cli.py"
 if [ -z "$COVERAGE" ]; then
   warn "SEC-09 coverage" "tool missing (pip install --user coverage)"
 else

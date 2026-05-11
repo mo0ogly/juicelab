@@ -141,6 +141,39 @@ jobs:
             echo "no shell script to lint"
           fi
 
+  dashboard-security-recette:
+    name: Dashboard security recette (SAST + SCA + secrets + coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: dashboard/requirements.txt
+
+      - name: Install dashboard deps
+        run: pip install -r dashboard/requirements.txt
+
+      - name: Install security tooling
+        run: pip install bandit ruff pip-audit semgrep safety coverage pytest pytest-asyncio
+
+      - name: Install gitleaks
+        run: |
+          curl -sSL -o /tmp/gl.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          tar -xzf /tmp/gl.tar.gz -C /usr/local/bin gitleaks
+          gitleaks version
+
+      - name: Run security recette (DAST skipped in CI, docker-only)
+        env:
+          DASHBOARD_TEACHER_TOKEN: ci-token-very-long-32chars-aaaa!!
+          DASHBOARD_PROOF_SECRET: ci-proof-secret-very-long-32-chars!!
+          SKIP_DAST: "1"
+        run: bash dashboard/tests/test_security_scan.sh
+
   yaml-lint:
     name: Lint YAML pedagogical packs
     runs-on: ubuntu-latest
