@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 
 from flask import Flask, Response, jsonify, request
 
+from audit_log import log_event
 from db import (
     cohort_exists,
     create_join_request,
@@ -81,6 +82,7 @@ def register_join_routes(app: Flask) -> None:
                 # avoid letting students spam arbitrary cohort identifiers.
                 return jsonify({"error": "unknown cohort_id, ask the teacher to create it first"}), 404  # type: ignore[return-value]
             status = create_join_request(conn, cid, token, email, dashboard_url, _now())
+        log_event("join_request", cohort=cid, email_domain=email.rsplit("@", 1)[-1], status=status)
         return jsonify({
             "ok": True,
             "cohort_id": cid,

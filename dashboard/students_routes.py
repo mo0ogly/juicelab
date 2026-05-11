@@ -25,6 +25,7 @@ from typing import Any, Callable
 
 from flask import Flask, Response, jsonify, render_template, request
 
+from audit_log import log_event
 from db import (
     delete_student,
     get_connection,
@@ -68,6 +69,7 @@ def _decide(token: str, decision: str, auth_check_json: AuthFn) -> Response:
         n = set_student_decision(conn, cohort, token, decision, decided_by, _now())
     if n == 0:
         return jsonify({"error": "student not found", "cohort_id": cohort, "student_token": token}), 404  # type: ignore[return-value]
+    log_event("decision", cohort=cohort, student_prefix=token[:8], decision=decision, decided_by=decided_by)
     return jsonify({"ok": True, "cohort_id": cohort, "student_token": token, "status": decision})
 
 

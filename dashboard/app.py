@@ -47,7 +47,7 @@ from flask_cors import CORS
 from db import (count_pending_award_events, count_team_mappings, ensure_cohort, ensure_student,
     get_connection, get_team_mapping, init_schema, names_for_cohort,
     mark_award_pushed, pending_award_events, set_team_mapping)
-from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie
+from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie; from audit_log import log_event
 from students_routes import register_students_routes
 
 LOGGER = logging.getLogger(__name__)
@@ -387,9 +387,9 @@ def _check_teacher_auth() -> tuple[bool, Response | None]:
         or request.cookies.get("teacher_token", "")
     )
     if not hmac.compare_digest(provided, expected):
-        return False, (jsonify({"error": "invalid teacher token"}), 401)  # type: ignore[return-value]
+        log_event("login_fail", source="api"); return False, (jsonify({"error": "invalid teacher token"}), 401)  # type: ignore[return-value]
     if not check_csrf():
-        return False, (jsonify({"error": "invalid or missing csrf token"}), 403)  # type: ignore[return-value]
+        log_event("csrf_fail"); return False, (jsonify({"error": "invalid or missing csrf token"}), 403)  # type: ignore[return-value]
     return True, None
 
 
@@ -588,6 +588,7 @@ def create_app() -> Flask:
         provided = (request.form.get("token") or "").strip()
         nxt = (request.form.get("next") or "/dashboard").strip()
         if not hmac.compare_digest(provided, expected):
+            log_event("login_fail", source="form")
             return Response(
                 render_template("login.html", next=nxt, error="Token incorrect."),
                 status=401,
@@ -605,6 +606,7 @@ def create_app() -> Flask:
             path="/",
         )
         set_csrf_cookie(resp, issue_csrf_token())
+        log_event("login_success")
         return resp
 
     @app.get("/logout")

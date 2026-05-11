@@ -20,6 +20,7 @@ from typing import Any, Callable
 
 from flask import Flask, Response, jsonify, request
 
+from audit_log import log_event
 from db import get_connection, get_student_status
 
 LOGGER = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ def register_sync_routes(
                 "sync gate: blocked event from student=%s cohort=%s status=%s",
                 token[:8] + "...", cohort, status_row[0],
             )
+            log_event("sync_blocked", cohort=cohort, student_prefix=token[:8], status=status_row[0])
             return jsonify({
                 "error": "join not approved",
                 "status": status_row[0],
