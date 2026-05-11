@@ -137,6 +137,51 @@ else
   esac
 fi
 
+# --- COVERAGE (pytest under coverage.py, threshold 60%) -----------------
+COVERAGE=$(command -v coverage 2>/dev/null || ls "$HOME/.local/bin/coverage" 2>/dev/null)
+PYTEST_FILES="dashboard/tests/test_app.py dashboard/tests/test_ctfd_push.py dashboard/tests/test_students.py"
+if [ -z "$COVERAGE" ]; then
+  warn "SEC-09 coverage" "tool missing (pip install --user coverage)"
+else
+  out=$("$COVERAGE" run --source=dashboard -m pytest $PYTEST_FILES -q 2>&1 || true)
+  passed=$(printf '%s' "$out" | grep -oE '[0-9]+ passed' | head -1 | grep -oE '[0-9]+' || echo "0")
+  failed=$(printf '%s' "$out" | grep -oE '[0-9]+ failed' | head -1 | grep -oE '[0-9]+' || echo "0")
+  if [ "${failed:-1}" != "0" ]; then
+    fail "SEC-09" "pytest $failed failed (passed=$passed)"
+  else
+    pct=$("$COVERAGE" report 2>/dev/null | tail -1 | awk '{print $NF}' | tr -d '%')
+    if [ -z "$pct" ]; then
+      warn "SEC-09 coverage" "pytest $passed passed, coverage parse failed"
+    elif [ "${pct%.*}" -ge 60 ]; then
+      pass "SEC-09 pytest $passed/$passed PASS, coverage=${pct}% (>= 60% threshold)"
+    else
+      fail "SEC-09" "pytest $passed PASS but coverage ${pct}% < 60% threshold"
+    fi
+  fi
+fi
+
+# --- DAST baseline (OWASP ZAP via docker, optional) ----------------------
+DOCKER=$(command -v docker 2>/dev/null)
+DASH_UP=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5050/api/health 2>/dev/null || echo "")
+if [ -z "$DOCKER" ]; then
+  warn "SEC-10 ZAP DAST" "docker missing (apt install docker.io)"
+elif [ "$DASH_UP" != "200" ]; then
+  warn "SEC-10 ZAP DAST" "dashboard not running on :5050 (start via ./juice.sh dash)"
+elif [ "${SKIP_DAST:-0}" = "1" ]; then
+  warn "SEC-10 ZAP DAST" "skipped (SKIP_DAST=1)"
+else
+  out=$("$DOCKER" run --rm --network=host -t ghcr.io/zaproxy/zaproxy:stable \
+        zap-baseline.py -t http://127.0.0.1:5050 -I -m 1 2>&1 | grep -E "FAIL-NEW:" | tail -1)
+  case "$out" in
+    *"FAIL-NEW: 0"*)
+      warn_count=$(printf '%s' "$out" | grep -oE 'WARN-NEW: [0-9]+' | grep -oE '[0-9]+')
+      pass_count=$(printf '%s' "$out" | grep -oE 'PASS: [0-9]+' | grep -oE '[0-9]+')
+      pass "SEC-10 ZAP DAST FAIL=0 PASS=$pass_count (WARN-NEW=$warn_count : info-disclosure non-bloquants)" ;;
+    *"FAIL-NEW:"*) fail "SEC-10" "ZAP DAST $out" ;;
+    *) warn "SEC-10 ZAP DAST" "unexpected output, manual check needed" ;;
+  esac
+fi
+
 echo
 if [ "$FAIL" -gt "0" ]; then
   echo "RECETTE FAIL (warnings: $WARN)"
@@ -145,6 +190,6 @@ fi
 if [ "$WARN" -gt "0" ]; then
   echo "RECETTE PASS WITH WARNINGS ($WARN tools missing — install for full coverage)"
 else
-  echo "RECETTE PASS (8/8)"
+  echo "RECETTE PASS (10/10)"
 fi
 exit 0

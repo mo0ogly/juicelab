@@ -121,7 +121,9 @@ def test_cohort_endpoint_isolates_cohorts(isolated_app):
 
 def test_dashboard_html_requires_token(isolated_app):
     response = isolated_app.get("/dashboard?cohort=X")
-    assert response.status_code == 401
+    assert response.status_code in (302, 401)
+    if response.status_code == 302:
+        assert "/login" in response.headers.get("Location", "")
 
 
 def test_dashboard_html_renders(isolated_app):

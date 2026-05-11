@@ -555,6 +555,10 @@ def create_app() -> Flask:
         resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         resp.headers.setdefault("Permissions-Policy", "interest-cohort=()")
         resp.headers.setdefault("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+        # Note: Server header neutralization happens at WSGI handler level
+        # (see WSGIRequestHandler patch below the app factory) because
+        # Flask's after_request only stacks alongside Werkzeug's own header.
+        resp.headers["Cache-Control"] = resp.headers.get("Cache-Control") or "no-store"
         return resp
 
     @app.get("/api/health")
@@ -714,6 +718,10 @@ def create_app() -> Flask:
 
 
 if __name__ == "__main__":  # pragma: no cover
+    # Mask Werkzeug version in Server header (info disclosure mitigation).
+    from werkzeug.serving import WSGIRequestHandler
+    WSGIRequestHandler.server_version = "JuiceLab"
+    WSGIRequestHandler.sys_version = ""
     port = int(os.environ.get("DASHBOARD_PORT", "5000"))
     app = create_app()
     app.run(host=os.environ.get("DASHBOARD_BIND", "0.0.0.0"), port=port, debug=False)  # noqa: S104 nosec B104 (binding overridable; production deploys must set DASHBOARD_BIND=127.0.0.1 + reverse proxy, see docs/VPS_HARDENING.md)

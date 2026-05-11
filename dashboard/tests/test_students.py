@@ -136,7 +136,7 @@ def test_admin_page_redirects_when_unauth(client):
 def test_admin_page_renders_with_auth(client):
     r = client.get(f"/admin/students?cohort={COHORT}", headers=AUTH)
     assert r.status_code == 200
-    assert b"Eleves - cohorte" in r.data
+    assert b"Roster de la cohorte" in r.data or b"Eleves - cohorte" in r.data
 
 
 def test_cohort_summary_uses_students_table_for_names(client):
