@@ -89,7 +89,9 @@ Both secrets must be >= 16 characters. The dashboard refuses to boot the proof e
 |---|---|---|
 | 1 | `996851b` | Timing-safe `hmac.compare_digest` on the teacher-token check (3 sites). Per-IP sliding-window rate limit on the three public endpoints (`/api/cohort/join` 10/h, `/api/cohort/exists` 30/min, `/api/student/status` 120/min). WCAG AA contrast on dashboard text. Recette coverage for the previously untested `/api/proof`, `/api/journal-text`, `/api/verify-flag`, `/logout`. |
 | 2 | `9fa1388` | `app.py` extraction (992 -> 704 lines, below the 800-line audit limit). Inline `onclick` removed from `dashboard.html` to align with future CSP `script-src 'self'`. |
-| 3 | (current) | CSRF double-submit cookie on browser sessions (API clients via `X-Teacher-Token` header are exempt by design). After-request middleware sets `X-Content-Type-Options`, `X-Frame-Options DENY`, `Referrer-Policy`, `Permissions-Policy`, `Content-Security-Policy` on every response. |
+| 3 | `6d9f7ad` | CSRF double-submit cookie on browser sessions (API clients via `X-Teacher-Token` header are exempt by design). After-request middleware sets `X-Content-Type-Options`, `X-Frame-Options DENY`, `Referrer-Policy`, `Permissions-Policy`, `Content-Security-Policy` on every response. |
+| 4 | `5a75df8` | Audit log JSONL (6 event types : login_success/fail, csrf_fail, sync_blocked, join_request, decision). Privacy-by-design : token prefixes (8 chars) + email domain only. THREAT_MODEL.md (STRIDE 15 threats) added. |
+| 5 | (current) | Static security recette `test_security_scan.sh` : bandit + ruff S-rules + pip-audit + secrets grep + absolute-URL check. requirements.txt bumped to close 7 CVEs in flask, flask-cors, requests, pytest. 0 known CVE remaining. |
 
 ## Acknowledgements
 

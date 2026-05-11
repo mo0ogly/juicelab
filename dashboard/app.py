@@ -716,4 +716,4 @@ def create_app() -> Flask:
 if __name__ == "__main__":  # pragma: no cover
     port = int(os.environ.get("DASHBOARD_PORT", "5000"))
     app = create_app()
-    app.run(host=os.environ.get("DASHBOARD_BIND", "0.0.0.0"), port=port, debug=False)
+    app.run(host=os.environ.get("DASHBOARD_BIND", "0.0.0.0"), port=port, debug=False)  # noqa: S104 nosec B104 (binding overridable; production deploys must set DASHBOARD_BIND=127.0.0.1 + reverse proxy, see docs/VPS_HARDENING.md)
