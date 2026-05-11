@@ -457,3 +457,10 @@ input.name-edit:focus-visible { box-shadow: 0 0 0 3px rgba(14,116,144,0.2); }
 /* Cycle 24 : dashboard matrix activity column */
 .activity-col { text-align: center; min-width: 60px; }
 .activity-col .pill { font-variant-numeric: tabular-nums; min-width: 32px; display: inline-block; text-align: center; }
+
+/* Cycle 25 : prominent display name + partial score signal */
+.sticky-col .student-display { display: block; font-size: 14px; color: var(--text); line-height: 1.2; margin-bottom: 2px; }
+.sticky-col .student-display-missing { color: var(--text-mute); font-style: italic; font-weight: 500; }
+.sticky-col .name-edit { width: 100%; font-size: 12px; padding: 3px 6px; opacity: 0.85; }
+.sticky-col .name-edit:focus { opacity: 1; }
+.score-col .score-partial { color: var(--warn); }

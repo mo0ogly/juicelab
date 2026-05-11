@@ -133,6 +133,9 @@
         <tr data-student="{{ student }}">
           <td class="sticky-col" title="{{ student }}">
             {% set _name = summary.names.get(student, '') %}
+            <strong class="student-display{% if not _name %} student-display-missing{% endif %}">
+              {% if _name %}{{ _name }}{% else %}{{ t('STUDENT_UNNAMED_PREFIX') }} {{ student[:6] }}{% endif %}
+            </strong>
             <input class="name-edit{% if not _name %} name-missing{% endif %}" type="text" value="{{ _name }}" placeholder="{{ t('STUDENT_NAME_MISSING_PLACEHOLDER') }}" maxlength="100" aria-label="{{ t('ARIA_STUDENT_NAME') }}">
             <small class="token-hint">{{ student[:8] }}&hellip;</small>
             <span class="row-actions">
@@ -172,8 +175,10 @@
           <td class="score-col">
             {% if total.avg_score is not none %}
               <span class="score-total">{{ total.avg_score }}/100</span>
+            {% elif total.partial_score is not none %}
+              <span class="score-total score-partial" title="{{ t('SCORE_PARTIAL_TITLE') }}">{{ total.partial_score }}/100 *</span>
             {% else %}
-              <span class="score-na">-</span>
+              <span class="score-na" title="{{ t('SCORE_NA_TITLE') }}">&mdash;</span>
             {% endif %}
           </td>
         </tr>

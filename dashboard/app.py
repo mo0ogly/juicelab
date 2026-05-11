@@ -529,23 +529,22 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
     # have at least a quiz score, using the same formula as the proof
     # ((100 - sum_costs + quiz) / 2) per challenge then averaged.
     totals: dict[str, dict[str, Any]] = {}
+    cost_map = {1: 5, 2: 15, 3: 35, 4: 70, 5: 120}
     for student in sorted_students:
         per_chall = students[student]
-        sums: list[int] = []
-        chall_done = 0
-        for ch_key, slot in per_chall.items():
-            hints = int(slot.get("hints") or 0)
-            cost_map = {1: 5, 2: 15, 3: 35, 4: 70, 5: 120}
-            cost = cost_map.get(hints, hints * 5)
-            score_chall = max(0, 100 - cost)
+        sums: list[int] = []; partials: list[int] = []; chall_done = 0
+        for slot in per_chall.values():
+            score_chall = max(0, 100 - cost_map.get(int(slot.get("hints") or 0), int(slot.get("hints") or 0) * 5))
             quiz = slot.get("quiz_score")
             if isinstance(quiz, int):
-                base = (score_chall + quiz) // 2
                 bonus = 10 if slot.get("flag_verified") else 0
-                sums.append(min(100, base + bonus))
-                chall_done += 1
+                sums.append(min(100, (score_chall + quiz) // 2 + bonus)); chall_done += 1
+            else:
+                partials.append(score_chall)
         avg = round(sum(sums) / len(sums)) if sums else None
-        totals[student] = {"avg_score": avg, "challenges_with_quiz": chall_done}
+        partial = round(sum(partials) / len(partials)) if partials else None
+        totals[student] = {"avg_score": avg, "partial_score": partial,
+            "challenges_with_quiz": chall_done, "challenges_touched": len(per_chall)}
 
     with get_connection() as conn: roster = names_for_cohort(conn, cohort_id)
     return {
