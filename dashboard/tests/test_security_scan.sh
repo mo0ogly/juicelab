@@ -148,7 +148,7 @@ fi
 
 # --- COVERAGE (pytest under coverage.py, threshold 60%) -----------------
 COVERAGE=$(command -v coverage 2>/dev/null || ls "$HOME/.local/bin/coverage" 2>/dev/null)
-PYTEST_FILES="dashboard/tests/test_app.py dashboard/tests/test_ctfd_push.py dashboard/tests/test_students.py dashboard/tests/test_proof_signing.py dashboard/tests/test_cohorts_join_routes.py dashboard/tests/test_rate_limit.py dashboard/tests/test_proof_http.py dashboard/tests/test_students_pending.py dashboard/tests/test_csrf_helpers.py dashboard/tests/test_i18n_helpers.py dashboard/tests/test_verify_proof_cli.py dashboard/tests/test_proof_edge_cases.py dashboard/tests/test_crypto_invariants.py"
+PYTEST_FILES="dashboard/tests/test_app.py dashboard/tests/test_ctfd_push.py dashboard/tests/test_students.py dashboard/tests/test_proof_signing.py dashboard/tests/test_cohorts_join_routes.py dashboard/tests/test_rate_limit.py dashboard/tests/test_proof_http.py dashboard/tests/test_students_pending.py dashboard/tests/test_csrf_helpers.py dashboard/tests/test_i18n_helpers.py dashboard/tests/test_verify_proof_cli.py dashboard/tests/test_proof_edge_cases.py dashboard/tests/test_crypto_invariants.py dashboard/tests/test_app_routes.py"
 if [ -z "$COVERAGE" ]; then
   warn "SEC-09 coverage" "tool missing (pip install --user coverage)"
 else
@@ -189,6 +189,24 @@ else
     *"FAIL-NEW:"*) fail "SEC-10" "ZAP DAST $out" ;;
     *) warn "SEC-10 ZAP DAST" "unexpected output, manual check needed" ;;
   esac
+fi
+
+# --- LICENSE compliance (no GPL/AGPL in dashboard deps) -----------------
+PIPLIC=$(command -v pip-licenses 2>/dev/null || ls "$HOME/.local/bin/pip-licenses" 2>/dev/null)
+ALLOWED="BSD License;BSD-3-Clause;BSD-2-Clause;MIT License;MIT;Mozilla Public License 2.0 (MPL 2.0);Apache Software License;Apache 2.0;Apache-2.0;Python Software Foundation License;PSF;ISC License;ISC License (ISCL);Public Domain"
+DENIED="GNU General Public License;GPL;GNU Affero General Public License;AGPL;GNU Lesser General Public License;LGPL"
+if [ -z "$PIPLIC" ]; then
+  warn "SEC-13 pip-licenses" "tool missing (pip install --user pip-licenses)"
+else
+  pkgs=$(grep -oE '^[a-zA-Z][a-zA-Z0-9_.-]*' "$LOCKFILE" 2>/dev/null | sort -u | grep -v '^#' | tr '\n' ' ')
+  denied_hits=$("$PIPLIC" --packages $pkgs --format=plain 2>/dev/null | awk 'NR>1' \
+    | grep -E "$DENIED" || true)
+  if [ -z "$denied_hits" ]; then
+    pkg_count=$(printf '%s' "$pkgs" | wc -w)
+    pass "SEC-13 licenses : $pkg_count pkgs, no GPL/AGPL/LGPL detected"
+  else
+    fail "SEC-13" "GPL-family license detected : $(echo "$denied_hits" | head -2)"
+  fi
 fi
 
 # --- SBOM CycloneDX generation (supply-chain transparency) ---------------
@@ -241,6 +259,6 @@ fi
 if [ "$WARN" -gt "0" ]; then
   echo "RECETTE PASS WITH WARNINGS ($WARN tools missing — install for full coverage)"
 else
-  echo "RECETTE PASS (12/12)"
+  echo "RECETTE PASS (13/13)"
 fi
 exit 0

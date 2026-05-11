@@ -178,7 +178,7 @@ jobs:
           echo "lockfile in sync"
 
       - name: Install security tooling
-        run: pip install bandit ruff pip-audit semgrep safety coverage pytest pytest-asyncio pip-tools cyclonedx-bom
+        run: pip install bandit ruff pip-audit semgrep safety coverage pytest pytest-asyncio pip-tools cyclonedx-bom pip-licenses
 
       - name: Install gitleaks
         run: |
