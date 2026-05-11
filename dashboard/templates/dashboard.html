@@ -184,7 +184,7 @@
   <div class="modal-card">
     <div class="modal-head">
       <h3 id="modal-title">{{ t('MODAL_JOURNAL_TITLE') }}</h3>
-      <button class="modal-close" type="button" onclick="closeModal()" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button>
+      <button class="modal-close" type="button" id="journal-close-btn" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button>
     </div>
     <div class="modal-body" id="modal-body">{{ t('MODAL_LOADING') }}</div>
     <div class="modal-meta" id="modal-meta"></div>
@@ -347,6 +347,7 @@
     window.closeModal = function () {
       document.getElementById('modal-backdrop').classList.remove('open');
     };
+    document.getElementById('journal-close-btn').addEventListener('click', window.closeModal);
     document.getElementById('modal-backdrop').addEventListener('click', (e) => {
       if (e.target.id === 'modal-backdrop') window.closeModal();
     });
