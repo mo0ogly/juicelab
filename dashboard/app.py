@@ -48,9 +48,9 @@ import secrets
 from flask import Flask, Response, g, jsonify, render_template, request
 from flask_cors import CORS
 
-from db import (count_pending_award_events, count_team_mappings, ensure_cohort, ensure_student,
-    get_connection, get_team_mapping, init_schema, names_for_cohort,
-    mark_award_pushed, pending_award_events, set_team_mapping)
+from db import (cohort_exists, count_pending_award_events, count_team_mappings,
+    ensure_cohort, ensure_student, get_connection, get_team_mapping, init_schema,
+    names_for_cohort, mark_award_pushed, pending_award_events, set_team_mapping)
 from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie; from audit_log import log_event
 from students_routes import register_students_routes
 from diploma_routes import register_diploma_routes
@@ -670,23 +670,32 @@ def create_app() -> Flask:
 
     @app.get("/dashboard")
     def dashboard() -> Response:
+        from flask import redirect
         ok, err = _check_teacher_auth_html()
         if not ok and err is not None:
             return err
         # Cohort comes from the query param ?cohort=... ; fallback chain :
-        # explicit query > DASHBOARD_DEFAULT_COHORT env var > 400 error.
+        # explicit query > DASHBOARD_DEFAULT_COHORT env var > redirect to
+        # /admin/cohorts so the prof can pick one (no more bare 400 page).
         cohort = (
             request.args.get("cohort", "").strip()
             or os.environ.get("DASHBOARD_DEFAULT_COHORT", "").strip()
         )
         if not cohort:
-            return Response(
-                "<h1>JuiceLab dashboard</h1>"
-                "<p>Manque <code>?cohort=&lt;id&gt;</code> dans l'URL "
-                "ou la variable d'environnement <code>DASHBOARD_DEFAULT_COHORT</code>.</p>",
-                status=400,
-                content_type="text/html; charset=utf-8",
-            )
+            return redirect("/admin/cohorts?reason=pick", code=302)  # type: ignore[return-value]
+        # Validate the cohort actually exists. Silent "empty matrix" when
+        # someone hits /dashboard?cohort=DELETED is confusing : surface a
+        # friendly 404 with a clear escape route.
+        with get_connection() as conn:
+            if not cohort_exists(conn, cohort):
+                return Response(
+                    render_template(
+                        "dashboard_404.html",
+                        cohort_id=cohort,
+                    ),
+                    status=404,
+                    content_type="text/html; charset=utf-8",
+                )
         summary = _cohort_summary(cohort)
         return Response(
             render_template("dashboard.html", summary=summary),

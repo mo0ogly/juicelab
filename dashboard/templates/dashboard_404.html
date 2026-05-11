@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('COHORT_404_TITLE') }} - {{ cohort_id }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}" integrity="{{ css_sri }}" crossorigin="anonymous">
+</head>
+<body>
+<div class="shell">
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </span>
+      <div>
+        <h1>{{ t('COHORT_404_TITLE') }}</h1>
+        <p class="subtitle">{{ t('COHORT_404_SUBTITLE', cohort=cohort_id) }}</p>
+      </div>
+    </div>
+    <nav class="nav-actions" aria-label="{{ t('ARIA_MAIN_NAV') }}">
+      {% include "_lang_switch.html" %}
+      <a class="logout" href="/admin/cohorts">{{ t('NAV_COHORTS') }}</a>
+      <a class="logout" href="/logout">{{ t('NAV_LOGOUT') }}</a>
+    </nav>
+  </header>
+
+  <section class="empty-state" style="margin: 40px 0">
+    <h2>{{ t('COHORT_404_HEADING') }}</h2>
+    <p>{{ t('COHORT_404_BODY', cohort=cohort_id) }}</p>
+    <p style="margin-top: 24px">
+      <a class="btn primary" href="/admin/cohorts">{{ t('COHORT_404_GO_LIST') }}</a>
+    </p>
+  </section>
+
+  <footer class="footer">
+    <span>JuiceLab dashboard</span>
+    <span>
+      <a href="/admin/cohorts">{{ t('NAV_COHORTS') }}</a> &middot;
+      <a href="/admin/students">{{ t('NAV_ROSTER') }}</a> &middot;
+      <a href="/logout">{{ t('NAV_DISCONNECT') }}</a>
+    </span>
+  </footer>
+</div>
+</body>
+</html>
