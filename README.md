@@ -245,7 +245,12 @@ juicelab/
 │
 ├── docs/
 │   ├── PEDAGOGY.md              Vygotsky / Bloom rationale, references
-│   └── CTF-INTEGRATION.md       Mode C deep-dive (CTFd, HMAC, awards)
+│   ├── COHORT_WORKFLOW.md       Trilateral workflow, login, i18n, help, OAuth, troubleshooting
+│   ├── CTF-INTEGRATION.md       Mode C deep-dive (CTFd, HMAC, awards)
+│   ├── CLASSROOM-DEPLOYMENT.md  Teacher deployment guide (4 scenarios + security)
+│   ├── DOCKER.md                Detailed Docker operator's guide
+│   ├── PEDAGOGY_COMPANION_PHASE0_OUTREACH.md  Ready-to-post text for upstream sondage
+│   └── REBRAND_PLAN.md          Deferred plan to rename JuiceLab -> Pedagogy Companion
 │
 ├── dashboard/                   Flask 3 + SQLite teacher dashboard
 │   ├── app.py                   routes (login, /dashboard, /api/sync, /api/proof, /api/verify-flag)
