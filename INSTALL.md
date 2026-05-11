@@ -33,28 +33,35 @@ The goal here is to validate that the build chain + dashboard + overlay all wire
 
 ### 1.0 One-shot installer (recommended for students and the smoke test)
 
+> Detailed student-facing guides : [docs/STUDENT-INSTALL-EN.md](./docs/STUDENT-INSTALL-EN.md) (English) and [docs/STUDENT-INSTALL-FR.md](./docs/STUDENT-INSTALL-FR.md) (français). Send students to those, not to this page.
+
 ```bash
 git clone https://github.com/mo0ogly/juicelab.git
 cd juicelab
+
+# Linux / macOS / WSL / Git Bash
 ./scripts/install-student.sh -c M2-IA-2026
+
+# Windows (PowerShell 7+)
+.\scripts\install-student.ps1 -Cohort M2-IA-2026
 ```
 
-The script :
+Both scripts share the exact same behavior :
 
-- checks `docker`, `docker compose v2`, `openssl`
-- generates `TEACHER_ADMIN_TOKEN` and `DASHBOARD_TEACHER_TOKEN` (32 chars each via `openssl rand`) and writes `docker/.env` from `.env.example` if it does not exist yet
-- preserves any token already present in `docker/.env` (idempotent — re-running it does not rotate keys)
-- runs `docker compose --env-file .env up -d --build`
-- waits for `http://127.0.0.1:3000/` and `http://127.0.0.1:5000/api/health` to answer
-- prints both teacher tokens and the student / teacher URLs at the end
+- check `docker`, `docker compose v2`, `openssl` (PowerShell falls back to .NET RNG if OpenSSL is missing)
+- generate `TEACHER_ADMIN_TOKEN` and `DASHBOARD_TEACHER_TOKEN` (32 chars hex each) and write `docker/.env` from `.env.example` if it does not exist yet
+- preserve any token already present in `docker/.env` (idempotent — re-running them does not rotate keys)
+- run `docker compose --env-file .env up -d --build`
+- poll `http://127.0.0.1:3000/` and `http://127.0.0.1:5000/api/health` until both answer
+- print both teacher tokens and the student / teacher URLs at the end
 
 Other modes :
 
-```bash
-./scripts/install-student.sh                     # interactive, asks for cohort_id
-./scripts/install-student.sh -y                  # non-interactive, default cohort
-./scripts/install-student.sh --reset             # docker compose down -v + clean reinstall
-```
+| bash | PowerShell | Effect |
+|---|---|---|
+| `./scripts/install-student.sh`         | `.\scripts\install-student.ps1`         | interactive, asks for cohort_id |
+| `./scripts/install-student.sh -y`      | `.\scripts\install-student.ps1 -Yes`    | non-interactive, default cohort |
+| `./scripts/install-student.sh --reset` | `.\scripts\install-student.ps1 -Reset`  | `docker compose down -v` + clean reinstall |
 
 If you want to drive the manual path (custom .env, custom build args, CTFd integration, etc.), keep reading § 1.1 below.
 
