@@ -31,7 +31,9 @@ frontend/src/app/juicelab-overlay/models/juicelab.types.ts.
 
 from __future__ import annotations
 
+import base64
 import hashlib
+from pathlib import Path
 import hmac
 import json
 import logging
@@ -541,6 +543,24 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
     }
 
 
+def _compute_css_sri() -> str:
+    """Compute SHA-384 SRI hash for the dashboard's only stylesheet at boot.
+
+    SRI lets the browser refuse to apply the stylesheet if it has been
+    tampered with in transit (e.g. compromised reverse proxy). Same-origin
+    asset, so the hash never has to be cross-domain trusted.
+    """
+    css_path = Path(__file__).parent / "static" / "dashboard.css"
+    try:
+        digest = hashlib.sha384(css_path.read_bytes()).digest()
+    except OSError:
+        return ""
+    return "sha384-" + base64.b64encode(digest).decode("ascii")
+
+
+_CSS_SRI = _compute_css_sri()
+
+
 def create_app() -> Flask:
     """Application factory used by the dev server and pytest."""
     init_schema()
@@ -558,7 +578,7 @@ def create_app() -> Flask:
 
     @app.context_processor
     def _inject_csp_nonce() -> dict:
-        return {"csp_nonce": getattr(g, "csp_nonce", "")}
+        return {"csp_nonce": getattr(g, "csp_nonce", ""), "css_sri": _CSS_SRI}
 
     @app.after_request
     def _security_headers(resp: Response) -> Response:
