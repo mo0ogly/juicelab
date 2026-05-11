@@ -68,7 +68,9 @@ def test_sign_diploma_roundtrip():
     body = build_diploma_md(
         student_token="abc", student_name="Alice", cohort_id=COHORT,
         mention="tres_bien", progress_pct=92, quiz_pct=80,
-        challenges_solved=12, hints_used=5, flags_verified=3,
+        challenges_solved=12, hints_used=5, hint_penalty=15,
+        score_challenge=85, flags_verified=3, quiz_submitted=True,
+        journals_written=3, journal_words=420,
         institution="Sorbonne",
     )
     signed = sign_diploma(body, secret=SECRET, student_token="abc",
@@ -83,7 +85,9 @@ def test_sign_diploma_tamper_body():
     body = build_diploma_md(
         student_token="abc", student_name="Alice", cohort_id=COHORT,
         mention="tres_bien", progress_pct=92, quiz_pct=80,
-        challenges_solved=12, hints_used=5, flags_verified=3,
+        challenges_solved=12, hints_used=5, hint_penalty=15,
+        score_challenge=85, flags_verified=3, quiz_submitted=True,
+        journals_written=3, journal_words=420,
         institution="Sorbonne",
     )
     signed = sign_diploma(body, secret=SECRET, student_token="abc",
@@ -97,7 +101,9 @@ def test_sign_diploma_wrong_secret():
     body = build_diploma_md(
         student_token="abc", student_name="A", cohort_id="C",
         mention="bien", progress_pct=60, quiz_pct=60,
-        challenges_solved=8, hints_used=2, flags_verified=1,
+        challenges_solved=8, hints_used=2, hint_penalty=10,
+        score_challenge=90, flags_verified=1, quiz_submitted=True,
+        journals_written=1, journal_words=80,
         institution="S",
     )
     signed = sign_diploma(body, secret=SECRET, student_token="abc",
@@ -118,7 +124,9 @@ def test_diploma_scheme_distinct_from_proof():
     body = build_diploma_md(
         student_token="abc", student_name="A", cohort_id="C",
         mention="bien", progress_pct=60, quiz_pct=60,
-        challenges_solved=8, hints_used=2, flags_verified=1,
+        challenges_solved=8, hints_used=2, hint_penalty=10,
+        score_challenge=90, flags_verified=1, quiz_submitted=True,
+        journals_written=1, journal_words=80,
         institution="S",
     )
     signed = sign_diploma(body, secret=SECRET, student_token="abc",

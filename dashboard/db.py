@@ -295,6 +295,9 @@ def per_student_stats(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.
     verified, plus the last event timestamp. Used by /api/students/stats
     to render progression bars + last-activity columns.
     """
+    # Note: hint cost_pct and quiz score are stored inside data_json. SQLite's
+    # json_extract() lets us aggregate them server-side instead of fetching
+    # every event row into Python.
     return conn.execute(
         "SELECT s.student_token,"
         "  (SELECT COUNT(DISTINCT challenge_key) FROM events e"
@@ -303,12 +306,32 @@ def per_student_stats(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.
         "  (SELECT COUNT(*) FROM events e"
         "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token"
         "       AND e.event_type = 'hint_revealed') AS hints_used,"
+        "  (SELECT COALESCE(SUM(CAST(json_extract(data_json, '$.cost_pct') AS INTEGER)), 0)"
+        "     FROM events e WHERE e.cohort_id = s.cohort_id"
+        "       AND e.student_token = s.student_token"
+        "       AND e.event_type = 'hint_revealed') AS hint_penalty_sum,"
         "  (SELECT COUNT(DISTINCT challenge_key) FROM events e"
         "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token"
         "       AND e.event_type = 'quiz_completed') AS quizzes_done,"
+        "  (SELECT AVG(CAST(json_extract(data_json, '$.score') AS REAL))"
+        "     FROM events e WHERE e.cohort_id = s.cohort_id"
+        "       AND e.student_token = s.student_token"
+        "       AND e.event_type = 'quiz_completed'"
+        "       AND json_extract(data_json, '$.score') IS NOT NULL) AS quiz_avg_score,"
         "  (SELECT COUNT(*) FROM events e"
         "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token"
         "       AND e.event_type = 'flag_verified') AS flags_verified,"
+        "  (SELECT COUNT(*) FROM events e"
+        "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token"
+        "       AND e.event_type = 'journal_filled'"
+        "       AND json_extract(data_json, '$.phase') = 'after'"
+        "       AND length(COALESCE(json_extract(data_json, '$.text'), '')) > 0)"
+        "    AS journals_written,"
+        "  (SELECT COALESCE(SUM(CAST(json_extract(data_json, '$.word_count') AS INTEGER)), 0)"
+        "     FROM events e WHERE e.cohort_id = s.cohort_id"
+        "       AND e.student_token = s.student_token"
+        "       AND e.event_type = 'journal_filled'"
+        "       AND json_extract(data_json, '$.phase') = 'after') AS journal_word_total,"
         "  (SELECT MAX(client_ts) FROM events e"
         "     WHERE e.cohort_id = s.cohort_id AND e.student_token = s.student_token) AS last_event_ts"
         "  FROM students s WHERE s.cohort_id = ?",

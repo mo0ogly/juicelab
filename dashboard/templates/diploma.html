@@ -77,7 +77,7 @@
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_STAT_QUIZ_AVG') }}</span>
-        <span class="val">{{ quiz_pct }}%</span>
+        <span class="val">{% if quiz_submitted %}{{ quiz_pct }}%{% else %}&mdash;{% endif %}</span>
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_STAT_FLAGS') }}</span>
@@ -85,7 +85,15 @@
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_STAT_HINTS') }}</span>
-        <span class="val">{{ hints_used }}</span>
+        <span class="val">{{ hints_used }} (&minus;{{ hint_penalty }}%)</span>
+      </div>
+      <div class="diploma-stat">
+        <span class="lbl">{{ t('DIPLOMA_STAT_SCORE_CHALLENGE') }}</span>
+        <span class="val">{{ score_challenge }} / 100</span>
+      </div>
+      <div class="diploma-stat">
+        <span class="lbl">{{ t('DIPLOMA_STAT_JOURNALS') }}</span>
+        <span class="val">{{ journals_written }} ({{ journal_words }} {{ t('DIPLOMA_WORDS') }})</span>
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_ISSUED_AT') }}</span>

@@ -93,10 +93,27 @@ def sign_diploma(body: str, *, secret: bytes, student_token: str, cohort_id: str
 def build_diploma_md(*, student_token: str, student_name: str, cohort_id: str,
                      mention: str, progress_pct: int, quiz_pct: int,
                      challenges_solved: int, hints_used: int,
-                     flags_verified: int, institution: str) -> str:
-    """Markdown body up to (but not including) the SIGNATURE line. Plain
-    text on purpose : the same body is reused by the ZIP batch and the
-    HTML print page (which renders the same text inside a styled card)."""
+                     hint_penalty: int, score_challenge: int,
+                     flags_verified: int, quiz_submitted: bool,
+                     journals_written: int, journal_words: int,
+                     institution: str) -> str:
+    """Markdown body up to (but not including) the SIGNATURE line.
+
+    Same content drives both the ZIP batch (.md per student) and the
+    HTML print page. Mirrors the structure of proof_routes.build_proof_markdown
+    so a teacher can cross-check a diploma against the per-challenge proofs.
+    """
+    quiz_line = (
+        "| Moyenne quiz | **" + str(quiz_pct) + "%** |"
+        if quiz_submitted else
+        "| Moyenne quiz | _aucun quiz soumis_ |"
+    )
+    retex_line = (
+        "| Journaux retex rediges | **" + str(journals_written) + "** "
+        "(" + str(journal_words) + " mots cumules) |"
+        if journals_written > 0 else
+        "| Journaux retex rediges | _aucun journal redige_ |"
+    )
     lines = [
         "# Diplome - " + cohort_id,
         "",
@@ -118,11 +135,22 @@ def build_diploma_md(*, student_token: str, student_name: str, cohort_id: str,
         "",
         "| Indicateur | Valeur |",
         "|---|---|",
-        "| Progression challenges | " + str(progress_pct) + "% |",
+        "| Progression challenges | **" + str(progress_pct) + "%** |",
         "| Challenges resolus | " + str(challenges_solved) + " |",
-        "| Indices consommes | " + str(hints_used) + " |",
+        "| Indices consommes | " + str(hints_used)
+        + " (penalite cumulee " + str(hint_penalty) + "%) |",
+        "| Score challenge (100 - penalite) | **" + str(score_challenge) + "/100** |",
         "| Flags CTF verifies | " + str(flags_verified) + " |",
-        "| Moyenne quiz | " + str(quiz_pct) + "% |",
+        quiz_line,
+        retex_line,
+        "",
+        "## Score final",
+        "",
+        "**Formule** : score_final = (score_challenge + score_quiz) / 2 + bonus_flag",
+        "",
+        "- score_challenge = " + str(score_challenge) + "/100 (apres deduction des indices)",
+        "- score_quiz = " + (str(quiz_pct) + "/100" if quiz_submitted else "_non calculable, quiz non soumis_"),
+        "- bonus_flag = +10 si flag CTF verifie (par challenge resolu)",
         "",
         "## Verification",
         "",
@@ -134,31 +162,56 @@ def build_diploma_md(*, student_token: str, student_name: str, cohort_id: str,
     return "\n".join(lines)
 
 
-def _gather_diploma_context(conn: Any, cohort_id: str) -> dict[str, Any]:
-    """Read students + per-student stats + cohort-level quiz histogram
-    in one go. Returns a dict keyed by student_token holding everything
-    needed to build a diploma body."""
+def _gather_diploma_context(conn: Any, cohort_id: str, td_total: int = 13) -> dict[str, Any]:
+    """Read students + per-student aggregated stats. Returns a dict
+    keyed by student_token holding every input the diploma body and
+    HTML page need : challenges_solved, hint penalty sum, real quiz
+    average (from json_extract data.score), flags, journal entries
+    written. Computes the final score and the mention from those.
+    """
     students = list_students(conn, cohort_id)
     stats = per_student_stats(conn, cohort_id)
     stats_by_token = {r["student_token"]: r for r in stats}
     out: dict[str, dict[str, Any]] = {}
     for s in students:
-        stat = stats_by_token.get(s["student_token"], {})
-        challenges_solved = int(stat["challenges_solved"] or 0) if stat else 0
-        progress_pct = min(100, round(100 * challenges_solved / 13))
-        # quiz average : approximation via quizzes_done / 13 * 100 (no
-        # per-quiz score stored at row level). Refine later if needed.
-        quizzes_done = int(stat["quizzes_done"] or 0) if stat else 0
-        quiz_pct = min(100, round(100 * quizzes_done / 13))
+        stat = stats_by_token.get(s["student_token"])
+        if stat is not None:
+            challenges_solved = int(stat["challenges_solved"] or 0)
+            hints_used = int(stat["hints_used"] or 0)
+            hint_penalty = int(stat["hint_penalty_sum"] or 0)
+            quizzes_done = int(stat["quizzes_done"] or 0)
+            quiz_avg_raw = stat["quiz_avg_score"]
+            flags_verified = int(stat["flags_verified"] or 0)
+            journals_written = int(stat["journals_written"] or 0)
+            journal_words = int(stat["journal_word_total"] or 0)
+        else:
+            challenges_solved = hints_used = hint_penalty = quizzes_done = 0
+            quiz_avg_raw = None
+            flags_verified = journals_written = journal_words = 0
+
+        progress_pct = min(100, round(100 * challenges_solved / td_total))
+        # score_challenge = 100 - sum of hint cost_pct used (clamped to [0,100]).
+        score_challenge = max(0, 100 - hint_penalty)
+        # quiz_pct = real average of stored data.score values (per quiz
+        # the event records "score" 0..100). None if no quiz submitted.
+        quiz_pct = int(round(quiz_avg_raw)) if quiz_avg_raw is not None else 0
+        # Mention uses progress_pct (broad coverage) AND quiz_pct (depth),
+        # consistent with the per-challenge score formula in proof_routes
+        # (avg of challenge + quiz + bonus_flag).
         out[s["student_token"]] = {
             "display_name": s["display_name"],
             "status": s["status"] if "status" in s.keys() else "validated",
             "challenges_solved": challenges_solved,
-            "hints_used": int(stat["hints_used"] or 0) if stat else 0,
-            "flags_verified": int(stat["flags_verified"] or 0) if stat else 0,
+            "hints_used": hints_used,
+            "hint_penalty": hint_penalty,
+            "score_challenge": score_challenge,
+            "flags_verified": flags_verified,
             "quizzes_done": quizzes_done,
-            "progress_pct": progress_pct,
             "quiz_pct": quiz_pct,
+            "quiz_submitted": quiz_avg_raw is not None,
+            "journals_written": journals_written,
+            "journal_words": journal_words,
+            "progress_pct": progress_pct,
             "mention": _mention_for(progress_pct, quiz_pct),
         }
     return out
@@ -195,7 +248,12 @@ def register_diploma_routes(
             quiz_pct=ctx["quiz_pct"],
             challenges_solved=ctx["challenges_solved"],
             hints_used=ctx["hints_used"],
+            hint_penalty=ctx["hint_penalty"],
+            score_challenge=ctx["score_challenge"],
             flags_verified=ctx["flags_verified"],
+            quiz_submitted=ctx["quiz_submitted"],
+            journals_written=ctx["journals_written"],
+            journal_words=ctx["journal_words"],
             institution=_institution(),
         )
         signed = sign_diploma(
@@ -213,9 +271,14 @@ def register_diploma_routes(
                 mention_label=ctx["mention"].replace("_", " ").upper(),
                 progress_pct=ctx["progress_pct"],
                 quiz_pct=ctx["quiz_pct"],
+                quiz_submitted=ctx["quiz_submitted"],
                 challenges_solved=ctx["challenges_solved"],
                 hints_used=ctx["hints_used"],
+                hint_penalty=ctx["hint_penalty"],
+                score_challenge=ctx["score_challenge"],
                 flags_verified=ctx["flags_verified"],
+                journals_written=ctx["journals_written"],
+                journal_words=ctx["journal_words"],
                 institution=_institution(),
                 signed_body=signed,
                 issued_at=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
@@ -258,7 +321,12 @@ def register_diploma_routes(
                     quiz_pct=ctx["quiz_pct"],
                     challenges_solved=ctx["challenges_solved"],
                     hints_used=ctx["hints_used"],
+                    hint_penalty=ctx["hint_penalty"],
+                    score_challenge=ctx["score_challenge"],
                     flags_verified=ctx["flags_verified"],
+                    quiz_submitted=ctx["quiz_submitted"],
+                    journals_written=ctx["journals_written"],
+                    journal_words=ctx["journal_words"],
                     institution=_institution(),
                 )
                 signed = sign_diploma(
