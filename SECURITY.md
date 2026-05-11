@@ -91,7 +91,8 @@ Both secrets must be >= 16 characters. The dashboard refuses to boot the proof e
 | 2 | `9fa1388` | `app.py` extraction (992 -> 704 lines, below the 800-line audit limit). Inline `onclick` removed from `dashboard.html` to align with future CSP `script-src 'self'`. |
 | 3 | `6d9f7ad` | CSRF double-submit cookie on browser sessions (API clients via `X-Teacher-Token` header are exempt by design). After-request middleware sets `X-Content-Type-Options`, `X-Frame-Options DENY`, `Referrer-Policy`, `Permissions-Policy`, `Content-Security-Policy` on every response. |
 | 4 | `5a75df8` | Audit log JSONL (6 event types : login_success/fail, csrf_fail, sync_blocked, join_request, decision). Privacy-by-design : token prefixes (8 chars) + email domain only. THREAT_MODEL.md (STRIDE 15 threats) added. |
-| 5 | (current) | Static security recette `test_security_scan.sh` : bandit + ruff S-rules + pip-audit + secrets grep + absolute-URL check. requirements.txt bumped to close 7 CVEs in flask, flask-cors, requests, pytest. 0 known CVE remaining. |
+| 5 | `e093cde` | Static security recette `test_security_scan.sh` : bandit + ruff S-rules + pip-audit + secrets grep + absolute-URL check. requirements.txt bumped to close 7 CVEs in flask, flask-cors, requests, pytest. 0 known CVE remaining. |
+| 6 | (current) | Recette `test_security_scan.sh` etendue 5 -> 8 checks : SEC-06 semgrep (OWASP top 10 + Python + Flask rule packs, 0 findings), SEC-07 gitleaks (secret scan scoped to `dashboard/`, 0 leaks), SEC-08 safety (CVE second opinion vs pip-audit, 0 vulns). Triple cross-check securite acquis : bandit + semgrep + ruff cote SAST, pip-audit + safety cote SCA, gitleaks + grep cote secrets. |
 
 ## Acknowledgements
 

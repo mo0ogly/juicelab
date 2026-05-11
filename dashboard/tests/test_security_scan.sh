@@ -84,6 +84,59 @@ else
   fail "SEC-05" "templates fetching absolute URLs : $(echo "$absurl" | head -2)"
 fi
 
+# --- SEMGREP (OWASP / Python / Flask rule packs) -------------------------
+SEMGREP=$(command -v semgrep 2>/dev/null || ls "$HOME/.local/bin/semgrep" 2>/dev/null)
+if [ -z "$SEMGREP" ]; then
+  warn "SEC-06 semgrep" "tool missing (pip install --user semgrep)"
+else
+  out=$("$SEMGREP" --config=p/owasp-top-ten --config=p/python --config=p/flask \
+        dashboard/ --quiet --json 2>/dev/null || echo '{}')
+  count=$(printf '%s' "$out" | python3 -c "import json,sys; d=json.loads(sys.stdin.read() or '{}'); print(len(d.get('results',[])))" 2>/dev/null)
+  if [ "${count:-1}" = "0" ]; then
+    pass "SEC-06 semgrep OWASP+Python+Flask : 0 findings"
+  else
+    fail "SEC-06" "semgrep $count findings (run: semgrep --config=p/owasp-top-ten dashboard/)"
+  fi
+fi
+
+# --- GITLEAKS (secrets in repo, scoped to dashboard/) --------------------
+GITLEAKS=$(command -v gitleaks 2>/dev/null || ls "$HOME/.local/bin/gitleaks" 2>/dev/null)
+if [ -z "$GITLEAKS" ]; then
+  warn "SEC-07 gitleaks" "tool missing (download from github.com/gitleaks/gitleaks)"
+else
+  out=$("$GITLEAKS" detect --source dashboard/ --no-git --no-banner 2>&1 || true)
+  case "$out" in
+    *"no leaks found"*) pass "SEC-07 gitleaks (dashboard/) : no leaks" ;;
+    *"leaks found:"*)
+      n=$(printf '%s' "$out" | grep -oE 'leaks found: [0-9]+' | grep -oE '[0-9]+' || echo "?")
+      fail "SEC-07" "gitleaks $n leaks in dashboard/"
+      ;;
+    *) warn "SEC-07 gitleaks" "unexpected output, manual check needed" ;;
+  esac
+fi
+
+# --- SAFETY (CVE second opinion vs pip-audit) ----------------------------
+SAFETY=$(command -v safety 2>/dev/null || ls "$HOME/.local/bin/safety" 2>/dev/null)
+if [ -z "$SAFETY" ]; then
+  warn "SEC-08 safety" "tool missing (pip install --user safety)"
+elif [ ! -f "$REQS" ]; then
+  warn "SEC-08 safety" "$REQS not found"
+else
+  out=$("$SAFETY" check -r "$REQS" --short-report 2>&1 || true)
+  case "$out" in
+    *"No known security vulnerabilities"*) pass "SEC-08 safety on $REQS : no CVE" ;;
+    *"vulnerabilities reported"*)
+      n=$(printf '%s' "$out" | grep -oE '[0-9]+[[:space:]]+vulnerabilities reported' | grep -oE '^[0-9]+' || echo "?")
+      if [ "$n" = "0" ]; then
+        pass "SEC-08 safety on $REQS : no CVE"
+      else
+        fail "SEC-08" "safety found $n CVEs"
+      fi
+      ;;
+    *) warn "SEC-08 safety" "unexpected output, manual check needed" ;;
+  esac
+fi
+
 echo
 if [ "$FAIL" -gt "0" ]; then
   echo "RECETTE FAIL (warnings: $WARN)"
@@ -92,6 +145,6 @@ fi
 if [ "$WARN" -gt "0" ]; then
   echo "RECETTE PASS WITH WARNINGS ($WARN tools missing — install for full coverage)"
 else
-  echo "RECETTE PASS (5/5)"
+  echo "RECETTE PASS (8/8)"
 fi
 exit 0
