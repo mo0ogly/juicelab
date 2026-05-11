@@ -178,7 +178,7 @@ jobs:
           echo "lockfile in sync"
 
       - name: Install security tooling
-        run: pip install bandit ruff pip-audit semgrep safety coverage pytest pytest-asyncio
+        run: pip install bandit ruff pip-audit semgrep safety coverage pytest pytest-asyncio pip-tools cyclonedx-bom
 
       - name: Install gitleaks
         run: |
@@ -192,6 +192,16 @@ jobs:
           DASHBOARD_PROOF_SECRET: ci-proof-secret-very-long-32-chars!!
           SKIP_DAST: "1"
         run: bash dashboard/tests/test_security_scan.sh
+
+      - name: Generate SBOM (CycloneDX JSON) as build artifact
+        run: cyclonedx-py requirements dashboard/requirements.lock.txt --output-format JSON --output-file dashboard/sbom.cdx.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-sbom-cyclonedx
+          path: dashboard/sbom.cdx.json
+          retention-days: 90
 
   yaml-lint:
     name: Lint YAML pedagogical packs

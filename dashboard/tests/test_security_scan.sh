@@ -7,6 +7,7 @@
 set -u
 FAIL=0
 WARN=0
+LOCKFILE=dashboard/requirements.lock.txt
 pass() { printf '  PASS  %s\n' "$1"; }
 fail() { printf '  FAIL  %s -- %s\n' "$1" "$2"; FAIL=1; }
 warn() { printf '  WARN  %s -- %s\n' "$1" "$2"; WARN=$((WARN+1)); }
@@ -147,7 +148,7 @@ fi
 
 # --- COVERAGE (pytest under coverage.py, threshold 60%) -----------------
 COVERAGE=$(command -v coverage 2>/dev/null || ls "$HOME/.local/bin/coverage" 2>/dev/null)
-PYTEST_FILES="dashboard/tests/test_app.py dashboard/tests/test_ctfd_push.py dashboard/tests/test_students.py dashboard/tests/test_proof_signing.py dashboard/tests/test_cohorts_join_routes.py dashboard/tests/test_rate_limit.py dashboard/tests/test_proof_http.py dashboard/tests/test_students_pending.py dashboard/tests/test_csrf_helpers.py dashboard/tests/test_i18n_helpers.py dashboard/tests/test_verify_proof_cli.py"
+PYTEST_FILES="dashboard/tests/test_app.py dashboard/tests/test_ctfd_push.py dashboard/tests/test_students.py dashboard/tests/test_proof_signing.py dashboard/tests/test_cohorts_join_routes.py dashboard/tests/test_rate_limit.py dashboard/tests/test_proof_http.py dashboard/tests/test_students_pending.py dashboard/tests/test_csrf_helpers.py dashboard/tests/test_i18n_helpers.py dashboard/tests/test_verify_proof_cli.py dashboard/tests/test_proof_edge_cases.py"
 if [ -z "$COVERAGE" ]; then
   warn "SEC-09 coverage" "tool missing (pip install --user coverage)"
 else
@@ -190,8 +191,29 @@ else
   esac
 fi
 
+# --- SBOM CycloneDX generation (supply-chain transparency) ---------------
+CYCLONEDX=$(command -v cyclonedx-py 2>/dev/null || ls "$HOME/.local/bin/cyclonedx-py" 2>/dev/null)
+if [ -z "$CYCLONEDX" ]; then
+  warn "SEC-12 SBOM cyclonedx" "tool missing (pip install --user cyclonedx-bom)"
+elif [ ! -f "$LOCKFILE" ]; then
+  warn "SEC-12 SBOM" "$LOCKFILE not found (run SEC-11 first)"
+else
+  out=$("$CYCLONEDX" requirements "$LOCKFILE" --output-format JSON \
+    --output-file /tmp/sbom.cdx.json 2>&1)
+  if [ -f /tmp/sbom.cdx.json ]; then
+    spec=$(python3 -c "import json; d=json.load(open('/tmp/sbom.cdx.json')); print(d.get('specVersion','?'))")
+    comp_count=$(python3 -c "import json; d=json.load(open('/tmp/sbom.cdx.json')); print(len(d.get('components',[])))")
+    if [ "$comp_count" -ge 15 ]; then
+      pass "SEC-12 SBOM CycloneDX $spec : $comp_count components emitted"
+    else
+      fail "SEC-12" "SBOM has only $comp_count components, expected >= 15"
+    fi
+  else
+    fail "SEC-12" "cyclonedx-py failed : ${out:0:120}"
+  fi
+fi
+
 # --- LOCKFILE drift (pip-compile reproducible) ---------------------------
-LOCKFILE=dashboard/requirements.lock.txt
 PIPCOMPILE=$(command -v pip-compile 2>/dev/null || ls "$HOME/.local/bin/pip-compile" 2>/dev/null)
 if [ -z "$PIPCOMPILE" ]; then
   warn "SEC-11 lockfile" "tool missing (pip install --user pip-tools)"
@@ -219,6 +241,6 @@ fi
 if [ "$WARN" -gt "0" ]; then
   echo "RECETTE PASS WITH WARNINGS ($WARN tools missing — install for full coverage)"
 else
-  echo "RECETTE PASS (11/11)"
+  echo "RECETTE PASS (12/12)"
 fi
 exit 0
