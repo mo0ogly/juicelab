@@ -76,11 +76,11 @@
     <table>
       <thead>
         <tr>
-          <th style="width:24%">{{ t('TABLE_DISPLAY_NAME') }}</th>
+          <th class="w-24p">{{ t('TABLE_DISPLAY_NAME') }}</th>
           <th>{{ t('TABLE_TOKEN') }}</th>
-          <th style="width:120px">{{ t('TABLE_STATUS') }}</th>
-          <th style="width:90px">{{ t('KPI_EVENTS') }}</th>
-          <th style="width:90px">{{ t('TABLE_ACTION') }}</th>
+          <th class="w-120">{{ t('TABLE_STATUS') }}</th>
+          <th class="w-90">{{ t('KPI_EVENTS') }}</th>
+          <th class="w-90">{{ t('TABLE_ACTION') }}</th>
         </tr>
       </thead>
       <tbody id="rows"></tbody>
@@ -112,7 +112,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </div><!-- /.shell -->
 
-<script>
+<script nonce="{{ csp_nonce }}">
   window.I18N = {{ i18n_catalog | tojson }};
   window.T = function(key, params) {
     var s = window.I18N[key] || key;
@@ -120,7 +120,7 @@
     return s;
   };
 </script>
-<script>
+<script nonce="{{ csp_nonce }}">
   const COHORT = {{ cohort_id | tojson }};
   const tbody = document.getElementById('rows');
   const toast = document.getElementById('toast');

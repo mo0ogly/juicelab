@@ -76,10 +76,10 @@
     <table>
       <thead>
         <tr>
-          <th style="width:25%">{{ t('TABLE_IDENTIFIER') }}</th>
-          <th style="width:30%">{{ t('TABLE_LABEL') }}</th>
-          <th style="width:10%">{{ t('KPI_STUDENTS') }}</th>
-          <th style="width:10%">{{ t('KPI_EVENTS') }}</th>
+          <th class="w-25p">{{ t('TABLE_IDENTIFIER') }}</th>
+          <th class="w-30p">{{ t('TABLE_LABEL') }}</th>
+          <th class="w-10">{{ t('KPI_STUDENTS') }}</th>
+          <th class="w-10">{{ t('KPI_EVENTS') }}</th>
           <th>{{ t('TABLE_ACTIONS') }}</th>
         </tr>
       </thead>
@@ -105,7 +105,7 @@
     <span class="section-meta">{{ t('SECTION_PENDING_META') }}</span>
   </h2>
   <div class="section-card">
-    <p class="empty-placeholder" style="margin:0 0 4px;font-size:13px">{{ t('SECTION_PENDING_BODY') }}</p>
+    <p class="empty-placeholder empty-placeholder-detail">{{ t('SECTION_PENDING_BODY') }}</p>
     <div id="pending-container"></div>
   </div>
 
@@ -121,7 +121,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div><!-- /.shell -->
 
-<script>
+<script nonce="{{ csp_nonce }}">
   window.I18N = {{ i18n_catalog | tojson }};
   window.T = function(key, params) {
     var s = window.I18N[key] || key;
@@ -129,7 +129,7 @@
     return s;
   };
 </script>
-<script>
+<script nonce="{{ csp_nonce }}">
 const TBODY = document.getElementById('cohorts-tbody');
 const PENDING_CONTAINER = document.getElementById('pending-container');
 const TOAST = document.getElementById('toast');
@@ -302,7 +302,7 @@ function renderPendingBlock(cohort, pendingList) {
   )).join('');
   return '<div class="pending-block"><h3>' + title + ' ' + idLabel
     + ' <span class="badge pending">' + pendingList.length + '</span></h3>'
-    + '<div class="scroll" style="margin-top:8px"><table><thead><tr>'
+    + '<div class="scroll mt-8"><table><thead><tr>'
     + '<th>Email</th><th>' + T('TABLE_TOKEN') + '</th><th>Dashboard URL</th><th>' + T('TABLE_STATUS') + '</th><th>' + T('TABLE_ACTIONS') + '</th>'
     + '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 }

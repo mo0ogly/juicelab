@@ -41,7 +41,9 @@ from datetime import datetime, timezone
 from typing import Any, Iterable
 
 import requests
-from flask import Flask, Response, jsonify, render_template, request
+import secrets
+
+from flask import Flask, Response, g, jsonify, render_template, request
 from flask_cors import CORS
 
 from db import (count_pending_award_events, count_team_mappings, ensure_cohort, ensure_student,
@@ -548,13 +550,28 @@ def create_app() -> Flask:
          methods=["GET", "POST", "DELETE", "OPTIONS"])
     register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event); register_proof_routes(app, _check_teacher_auth, expected_flag=_expected_flag, insert_event=_insert_event, events_for=_events_for, proof_secret=_proof_secret)
 
+    @app.before_request
+    def _csp_nonce() -> None:
+        # Per-request nonce: lets us drop script-src 'unsafe-inline' while
+        # keeping inline <script nonce="..."> blocks that emit the i18n catalog.
+        g.csp_nonce = secrets.token_urlsafe(16)
+
+    @app.context_processor
+    def _inject_csp_nonce() -> dict:
+        return {"csp_nonce": getattr(g, "csp_nonce", "")}
+
     @app.after_request
     def _security_headers(resp: Response) -> Response:
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
         resp.headers.setdefault("X-Frame-Options", "DENY")
         resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         resp.headers.setdefault("Permissions-Policy", "interest-cohort=()")
-        resp.headers.setdefault("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+        nonce = getattr(g, "csp_nonce", "")
+        script_src = f"'self' 'nonce-{nonce}' 'strict-dynamic'" if nonce else "'self'"
+        resp.headers.setdefault("Content-Security-Policy",
+            f"default-src 'self'; style-src 'self'; "
+            f"script-src {script_src}; img-src 'self' data:; "
+            "connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
         # Note: Server header neutralization happens at WSGI handler level
         # (see WSGIRequestHandler patch below the app factory) because
         # Flask's after_request only stacks alongside Werkzeug's own header.

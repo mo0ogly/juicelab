@@ -404,3 +404,15 @@ input.name-edit:focus-visible { box-shadow: 0 0 0 3px rgba(14,116,144,0.2); }
   border-radius: var(--radius-sm); color: var(--danger);
   font-size: 12px; line-height: 1.55;
 }
+
+/* --- Utility classes (cycle 8 : CSP unsafe-inline elimination on style attr) --- */
+.w-10  { width: 10%; }
+.w-24p { width: 24%; }
+.w-25p { width: 25%; }
+.w-30p { width: 30%; }
+.w-90  { width: 90px; }
+.w-120 { width: 120px; }
+.mt-8  { margin-top: 8px; }
+.empty-placeholder-detail { margin: 0 0 4px; font-size: 13px; }
+.link-plain { text-decoration: none; color: inherit; }
+.hidden { display: none; }
