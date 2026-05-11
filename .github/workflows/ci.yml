@@ -28,10 +28,12 @@ jobs:
           cache: pip
           cache-dependency-path: dashboard/requirements.txt
 
-      - name: Install dependencies
+      - name: Install dependencies (hash-pinned lockfile)
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install --require-hashes -r requirements.lock.txt
+          # tools not in the lockfile (test-only); installed loose
+          pip install pytest pytest-asyncio
 
       - name: Smoke imports (schema migration on fresh DB)
         env:
@@ -62,10 +64,12 @@ jobs:
           cache: pip
           cache-dependency-path: dashboard/requirements.txt
 
-      - name: Install dependencies
+      - name: Install dependencies (hash-pinned lockfile)
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install --require-hashes -r requirements.lock.txt
+          # tools not in the lockfile (test-only); installed loose
+          pip install pytest pytest-asyncio
 
       - name: Seed a legacy database and migrate it
         env:
@@ -155,8 +159,23 @@ jobs:
           cache: pip
           cache-dependency-path: dashboard/requirements.txt
 
-      - name: Install dashboard deps
-        run: pip install -r dashboard/requirements.txt
+      - name: Install dashboard deps (hash-pinned lockfile)
+        run: pip install --require-hashes -r dashboard/requirements.lock.txt
+
+      - name: Check lockfile drift vs requirements.txt
+        run: |
+          pip install pip-tools
+          cp dashboard/requirements.lock.txt /tmp/lock-pre.txt
+          pip-compile --quiet --generate-hashes \
+            --output-file=dashboard/requirements.lock.txt \
+            dashboard/requirements.txt
+          if ! diff -q /tmp/lock-pre.txt dashboard/requirements.lock.txt > /dev/null; then
+            echo "::error::requirements.lock.txt is out of sync with requirements.txt"
+            echo "Run: pip-compile --generate-hashes -o dashboard/requirements.lock.txt dashboard/requirements.txt"
+            diff /tmp/lock-pre.txt dashboard/requirements.lock.txt | head -40
+            exit 1
+          fi
+          echo "lockfile in sync"
 
       - name: Install security tooling
         run: pip install bandit ruff pip-audit semgrep safety coverage pytest pytest-asyncio

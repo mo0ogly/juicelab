@@ -190,6 +190,27 @@ else
   esac
 fi
 
+# --- LOCKFILE drift (pip-compile reproducible) ---------------------------
+LOCKFILE=dashboard/requirements.lock.txt
+PIPCOMPILE=$(command -v pip-compile 2>/dev/null || ls "$HOME/.local/bin/pip-compile" 2>/dev/null)
+if [ -z "$PIPCOMPILE" ]; then
+  warn "SEC-11 lockfile" "tool missing (pip install --user pip-tools)"
+elif [ ! -f "$LOCKFILE" ]; then
+  warn "SEC-11 lockfile" "$LOCKFILE not found"
+else
+  cp "$LOCKFILE" /tmp/lock-recette-pre.txt
+  "$PIPCOMPILE" --quiet --generate-hashes \
+    --output-file="$LOCKFILE" \
+    dashboard/requirements.txt 2>/dev/null
+  if diff -q /tmp/lock-recette-pre.txt "$LOCKFILE" >/dev/null 2>&1; then
+    pkg_count=$(grep -cE "^[a-zA-Z][a-zA-Z0-9_-]*==" "$LOCKFILE" || echo "0")
+    pass "SEC-11 lockfile in sync ($pkg_count pkgs pinned with --hash)"
+  else
+    cp /tmp/lock-recette-pre.txt "$LOCKFILE"
+    fail "SEC-11" "lockfile drift detected (run: pip-compile --generate-hashes -o $LOCKFILE dashboard/requirements.txt)"
+  fi
+fi
+
 echo
 if [ "$FAIL" -gt "0" ]; then
   echo "RECETTE FAIL (warnings: $WARN)"
@@ -198,6 +219,6 @@ fi
 if [ "$WARN" -gt "0" ]; then
   echo "RECETTE PASS WITH WARNINGS ($WARN tools missing — install for full coverage)"
 else
-  echo "RECETTE PASS (10/10)"
+  echo "RECETTE PASS (11/11)"
 fi
 exit 0
