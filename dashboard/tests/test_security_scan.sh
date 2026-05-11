@@ -13,16 +13,24 @@ warn() { printf '  WARN  %s -- %s\n' "$1" "$2"; WARN=$((WARN+1)); }
 
 # --- BANDIT (Python static security) -------------------------------------
 BANDIT=$(command -v bandit 2>/dev/null || ls "$HOME/.local/bin/bandit" 2>/dev/null)
+BASELINE=dashboard/.bandit-baseline.json
 if [ -z "$BANDIT" ]; then
   warn "SEC-01 bandit" "tool missing (pip install --user bandit)"
 else
   out=$("$BANDIT" -q -r dashboard/ --exclude dashboard/tests,dashboard/data,dashboard/__pycache__ -f json 2>/dev/null || true)
   high=$(printf '%s' "$out" | python3 -c "import json,sys; d=json.loads(sys.stdin.read() or '{}'); print(d.get('metrics',{}).get('_totals',{}).get('SEVERITY.HIGH',0))" 2>/dev/null)
   med=$(printf '%s' "$out" | python3 -c "import json,sys; d=json.loads(sys.stdin.read() or '{}'); print(d.get('metrics',{}).get('_totals',{}).get('SEVERITY.MEDIUM',0))" 2>/dev/null)
-  if [ "${high:-1}" = "0" ]; then
-    pass "SEC-01 bandit HIGH=0 (MEDIUM=$med, acceptable for dev binding)"
-  else
+  if [ "${high:-1}" != "0" ]; then
     fail "SEC-01" "bandit HIGH=$high"
+  elif [ -f "$BASELINE" ]; then
+    baseline_med=$(python3 -c "import json; print(json.load(open('$BASELINE')).get('metrics',{}).get('_totals',{}).get('SEVERITY.MEDIUM',0))" 2>/dev/null)
+    if [ "${med:-0}" -le "${baseline_med:-0}" ]; then
+      pass "SEC-01 bandit HIGH=0 MEDIUM=$med <= baseline=$baseline_med (no new findings)"
+    else
+      fail "SEC-01" "bandit MEDIUM=$med > baseline=$baseline_med (new findings)"
+    fi
+  else
+    pass "SEC-01 bandit HIGH=0 (MEDIUM=$med, no baseline)"
   fi
 fi
 
@@ -104,7 +112,7 @@ GITLEAKS=$(command -v gitleaks 2>/dev/null || ls "$HOME/.local/bin/gitleaks" 2>/
 if [ -z "$GITLEAKS" ]; then
   warn "SEC-07 gitleaks" "tool missing (download from github.com/gitleaks/gitleaks)"
 else
-  out=$("$GITLEAKS" detect --source dashboard/ --no-git --no-banner 2>&1 || true)
+  out=$("$GITLEAKS" detect --source dashboard/ --no-git --no-banner --config dashboard/.gitleaks.toml 2>&1 || true)
   case "$out" in
     *"no leaks found"*) pass "SEC-07 gitleaks (dashboard/) : no leaks" ;;
     *"leaks found:"*)
@@ -139,7 +147,7 @@ fi
 
 # --- COVERAGE (pytest under coverage.py, threshold 60%) -----------------
 COVERAGE=$(command -v coverage 2>/dev/null || ls "$HOME/.local/bin/coverage" 2>/dev/null)
-PYTEST_FILES="dashboard/tests/test_app.py dashboard/tests/test_ctfd_push.py dashboard/tests/test_students.py dashboard/tests/test_proof_signing.py dashboard/tests/test_cohorts_join_routes.py dashboard/tests/test_rate_limit.py"
+PYTEST_FILES="dashboard/tests/test_app.py dashboard/tests/test_ctfd_push.py dashboard/tests/test_students.py dashboard/tests/test_proof_signing.py dashboard/tests/test_cohorts_join_routes.py dashboard/tests/test_rate_limit.py dashboard/tests/test_proof_http.py dashboard/tests/test_students_pending.py"
 if [ -z "$COVERAGE" ]; then
   warn "SEC-09 coverage" "tool missing (pip install --user coverage)"
 else

@@ -1,0 +1,17 @@
+# gitleaks config for the dashboard scope.
+#
+# Extends the upstream default rules but excludes the pytest test fixtures,
+# which intentionally hold long-looking but synthetic placeholder values
+# ("teacher-test-token-...", "proof-test-secret-..."). Same exclusion
+# convention as bandit (which skips dashboard/tests/ entirely).
+# Real-secret detection still applies to every productive file under
+# dashboard/ (.py outside tests/, templates, static/, *.sh, *.yml).
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "pytest fixtures with synthetic placeholder secrets"
+paths = [
+  '''dashboard/tests/.*''',
+]
