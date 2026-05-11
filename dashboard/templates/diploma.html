@@ -55,7 +55,7 @@
 </head>
 <body>
   <div class="diploma-actions">
-    <button onclick="window.print()">{{ t('DIPLOMA_PRINT') }}</button>
+    <button id="diploma-print-btn" type="button">{{ t('DIPLOMA_PRINT') }}</button>
     <a href="/admin/students?cohort={{ cohort_id }}">{{ t('DIPLOMA_BACK') }}</a>
   </div>
   <article class="diploma-print" role="document">
@@ -116,5 +116,8 @@
       </p>
     </details>
   </article>
+  <script nonce="{{ csp_nonce }}">
+    document.getElementById('diploma-print-btn').addEventListener('click', function() { window.print(); });
+  </script>
 </body>
 </html>
