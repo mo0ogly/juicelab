@@ -121,6 +121,7 @@
       <thead>
         <tr id="head-row">
           <th class="sticky-col">{{ t('TABLE_STUDENT') }}</th>
+          <th class="activity-col">{{ t('KPI_EVENTS') }}</th>
           {% for challenge in summary.challenges %}
             <th>{{ challenge }}</th>
           {% endfor %}
@@ -138,6 +139,10 @@
               <a href="/admin/student/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DETAIL') }}">D</a>
               <a href="/admin/diploma/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DIPLOMA') }}">{{ t('ROW_ACTION_DIPLOMA_SHORT') }}</a>
             </span>
+          </td>
+          <td class="activity-col">
+            {% set _evcount = summary.event_counts.get(student, 0) %}
+            <span class="pill {% if _evcount > 0 %}hints{% else %}empty{% endif %}">{{ _evcount }}</span>
           </td>
           {% for challenge in summary.challenges %}
             {% set slot = summary.matrix[student].get(challenge) %}

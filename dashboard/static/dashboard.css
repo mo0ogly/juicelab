@@ -453,3 +453,7 @@ input.name-edit:focus-visible { box-shadow: 0 0 0 3px rgba(14,116,144,0.2); }
 .sticky-col .token-hint { display: block; font-size: 10px; color: var(--text-mute); font-family: ui-monospace, "Courier New", monospace; margin-top: 2px; opacity: 0.7; }
 .name-edit.name-missing { border-left: 3px solid var(--warn); }
 .name-edit.name-missing::placeholder { color: var(--warn); font-style: italic; }
+
+/* Cycle 24 : dashboard matrix activity column */
+.activity-col { text-align: center; min-width: 60px; }
+.activity-col .pill { font-variant-numeric: tabular-nums; min-width: 32px; display: inline-block; text-align: center; }

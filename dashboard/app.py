@@ -479,6 +479,10 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
 
     students: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
     challenge_keys: set[str] = set()
+    # Total events per student, including session_start / connection events
+    # that have no challenge_key. Used to surface activity in the matrix
+    # row even before the student touches a real challenge.
+    event_counts: dict[str, int] = defaultdict(int)
 
     for row in rows:
         student = str(row["student_token"])
@@ -486,6 +490,7 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
         event_type = str(row["event_type"])
         # Ensure student appears in roster even if no challenge yet
         _ = students[student]
+        event_counts[student] += 1
         if challenge:
             challenge_keys.add(str(challenge))
             slot = students[student].setdefault(
@@ -548,6 +553,7 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
         "challenges": sorted_challenges,
         "matrix": {s: students[s] for s in sorted_students},
         "totals": totals, "events_total": len(rows),
+        "event_counts": {s: event_counts.get(s, 0) for s in sorted_students},
         "names": {t: roster[t] for t in sorted_students if t in roster},
     }
 
