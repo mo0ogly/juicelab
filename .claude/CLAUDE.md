@@ -1,136 +1,118 @@
-# CLAUDE.md — Project Rules for poc_medical
+# CLAUDE.md — Project Rules for juicelab
 
-**DOCTORAL THESIS PROJECT (ENS, 2026) — Red Team Security Lab for Medical LLM**
+**OWASP Juice Shop + JuiceLab pedagogical overlay + cohort dashboard.**
+Used as a pedagogical platform for university TDs (M2 ANSSI, M2-IA, etc.).
 
 ## Rules detaillees (fichiers de reference)
 
 | Fichier | Contenu |
 |---------|---------|
-| `.claude/rules/programming.md` | Regles React, Go, Python, General (zero emoticon, zero placeholder) |
-| `.claude/rules/doctoral-research.md` | Exigences doctorales, skills ecosystem, triple verification, references cles |
-| `.claude/rules/mathematical-analysis.md` | Analyse mathematique : qualification epistemique, hypotheses, verification preuves, rigueur statistique |
-| `.claude/rules/redteam-analysis.md` | Analyse red team : classification vecteurs, threat model, ASR critique, reproductibilite, integration AEGIS |
-| `.claude/rules/redteam-forge.md` | Architecture AEGIS, moteur genetique, campagnes, fiches d'attaque |
-| `research_archive/RESEARCH_ARCHIVE_GUIDE.md` | Structure research_archive, regles PDFs, ChromaDB |
-| `research_archive/RESEARCH_STATE.md` | Etat partage entre toutes les skills |
-
-## ZERO PLACEHOLDER / ZERO DECORATIVE / ZERO HARDCODING — ABSOLUTE RULE
-
-1. **ZERO placeholder** — chaque element UI connecte a un vrai appel API backend. Pas de "TODO", "coming soon", "fake data", `setTimeout` qui simule une reponse.
-2. **ZERO hardcoding** — chaque chaine UI visible passe par un catalogue i18n (FR/EN minimum). Chaque URL/port/cle passe par un fichier de config ou une variable d'environnement. JAMAIS de `'Connecte-toi'`, `'http://localhost:3000'`, `'admin@juice-sh.op'` en dur dans un composant. Voir `frontend/src/app/juicelab-overlay/models/juicelab-i18n.ts` pour le catalogue UI.
-3. **ZERO decorative** — pas de Matrix rain, pas de fake "SYSTEM COMPROMISED"
-4. **ZERO emoticon** dans le code sauf demande explicite du user
-5. **ZERO approximation** — these doctorale, rien sans preuve (voir `rules/doctoral-research.md`)
-6. **ZERO schema ASCII** — tout diagramme dans le wiki DOIT etre en fence Mermaid (`flowchart`, `sequenceDiagram`, `pie`, etc.). JAMAIS de box-drawing `┌──┐│└──┘` ni ASCII art. Enforcement : PR blocker.
-
-**Audit** : `grep -rn 'setTimeout\|EXPLOITATION SUCCESSFUL\|SYSTEM COMPROMISED' frontend/src/` — 0 resultat attendu.
+| `.claude/rules/programming.md` | Regles React, Go, Python, General (zero emoticon, zero placeholder, zero hardcoding) |
+| `.claude/rules/owasp-pedagogy-companion.md` | Production rigoureuse du pack pedagogique trilingue (briefing + hints + quiz) pour les 111 challenges natifs OWASP Juice Shop |
 
 ## Architecture
 
 ```
-poc_medical/
-├── backend/           FastAPI + Groq (provider principal) + ChromaDB (:8042)
-│   │                  Fallback local : Ollama (si GROQ_API_KEY absent)
-│   │                  Provider configure dans backend/.env (GROQ_API_KEY, MEDICAL_MODEL)
-│   ├── agents/attack_chains/    40 chaines d'attaque
-│   ├── prompts/                 122 templates (.json + .md)
-│   ├── routes/                  11 routes API
-│   ├── taxonomy/                87 techniques defense
-│   └── chroma_db/               ChromaDB (aegis_corpus ~4200 + aegis_bibliography ~4700)
-├── frontend/          React 18 + Vite + Tailwind v4 (:5173)
-│   └── src/components/redteam/  Red Team Lab (15+ vues)
-├── research_archive/  These doctorale (voir RESEARCH_ARCHIVE_GUIDE.md)
-│   ├── _staging/               9 agents bibliography-maintainer
-│   ├── discoveries/            D-001 a D-020, C1-C7, G-001 a G-027
-│   ├── doc_references/         80 papiers organises, fiches d'attaque
-│   ├── literature_for_rag/     PDFs sources uniquement
-│   └── manuscript/             Chapitres de these
-├── .claude/skills/    16 skills (research-director, fiche-attaque, bibliography-maintainer, etc.)
-└── aegis.ps1/.sh      Scripts de gestion (start/stop/build/health)
+juice/
+├── juice-shop/         OWASP Juice Shop (Angular 20 + Express, port 3000)
+│   └── frontend/src/app/juicelab-overlay/   plugin overlay pedagogique (route /juicelab)
+├── overlay/            mirror des fichiers pedagogiques copies sur juice-shop au build
+│   ├── frontend/                            sources Angular (badges, panels, services)
+│   ├── data/juicelab-private/               packs hints/quiz/journal YAML
+│   └── routes/                              endpoints Express overlay
+├── dashboard/          dashboard prof Flask (port 5000 ou 5050)
+│   ├── app.py                               routes + CSP + CSRF + cookie auth
+│   ├── sync_routes.py                       POST /api/sync (event ingestion)
+│   ├── students_routes.py                   /api/students (CRUD)
+│   ├── cohorts_routes.py                    /api/cohorts (CRUD)
+│   └── data/dashboard.sqlite                event log
+├── docker/             docker-compose.yml + .env.example + Dockerfiles
+├── patches/            juicelab-core.patch (patches juice-shop core files)
+├── scripts/
+│   ├── apply-overlay.{sh,ps1}               merge overlay/ into juice-shop clone
+│   ├── install-student.{sh,ps1}             one-shot bootstrap pour eleve / smoke test
+│   └── juicelab-dashboard.service           systemd user unit template
+├── docs/
+│   ├── STUDENT-INSTALL-{FR,EN}.md           guide install eleve
+│   ├── TEACHER-DASHBOARD-{FR,EN}.md         guide install dashboard prof
+│   ├── COHORT_WORKFLOW.md, CTF-INTEGRATION.md, etc.
+└── .claude/skills/                           skills locaux du projet
 ```
 
 ## Source de verite
 
-| Data | Source unique | API |
-|------|-------------|-----|
-| Templates (122) | `backend/prompts/*.json` | `/api/redteam/catalog` |
-| Scenarios (62) | `backend/scenarios.py` | `/api/redteam/scenarios` |
-| Chains (40) | `backend/agents/attack_chains/` + `chain_id` sidecars | `/api/redteam/chains` |
-| Etat recherche | `research_archive/RESEARCH_STATE.md` | Toutes les skills |
+| Data | Source unique | Notes |
+|------|---------------|-------|
+| Challenges OWASP selectionnes pour TD | `juice-shop/frontend/src/assets/juicelab/selected_challenges.yml` | NE JAMAIS creer un nouveau challenge OWASP |
+| Hints (5 niveaux) | `overlay/data/juicelab-private/hints/<key>.yaml` | cohorte cout fixe : 5/10/20/35/50 |
+| Quiz (3 QCM, 4 options) | `overlay/data/juicelab-private/quiz/<key>.yaml` | bilingue FR/EN strict |
+| Briefing | `overlay/frontend/src/assets/juicelab/briefing/<key>.yaml` | 3-4 concepts max |
+| Config overlay runtime | `overlay/frontend/src/assets/juicelab/config.json` | dashboard_url + cohort_id + instance_label |
+| Env Docker | `docker/.env` (depuis `.env.example`) | tokens >= 16 chars sinon dashboard refuse de boot |
 
-## Documentation obligatoire apres changement
+## ZERO PLACEHOLDER / ZERO DECORATIVE / ZERO HARDCODING — REGLE ABSOLUE
 
-1. README.md (EN) + README_FR.md (FR) + README_BR.md (BR)
-2. backend/README.md — comptes, API docs
-3. ScenarioHelpModal.jsx — help modals
-4. formal_framework_complete.md — these
-5. INTEGRATION_TRACKER.md — si integration
+1. **ZERO placeholder** — chaque element UI connecte a un vrai appel API. Pas de "TODO", "coming soon", `setTimeout` qui simule.
+2. **ZERO hardcoding** — toute chaine UI visible passe par i18n (`juicelab-overlay/models/juicelab-i18n.ts`, FR/EN minimum). URL/port via `assets/juicelab/config.json` ou env var. JAMAIS `'http://localhost:5050'` ou `'admin@juice-sh.op'` en dur dans un composant.
+3. **ZERO decorative** — pas de Matrix rain, pas de fake "SYSTEM COMPROMISED".
+4. **ZERO emoticon** dans le code sauf demande explicite du user.
+5. **ZERO schema ASCII** — tout diagramme dans le wiki en fence Mermaid (`flowchart`, `sequenceDiagram`). JAMAIS de box-drawing `┌──┐│└──┘`.
+
+## File size — 800 lines max
+
+Aucun fichier source ne depasse 800 lignes. S'applique a `.py`, `.jsx`, `.js`, `.ts`, `.tsx`, `.go`, `.md`, `.json` (sauf datasets), `.yaml`.
+
+Quand un fichier approche 700 lignes : decomposer en modules logiques par responsabilite. Pour `.tsx` : extraire sub-components + hooks + constants. Pour `.py` : extraire classes + fonctions utilitaires. Pour `.md` : decomposer par section.
+
+Hook `.claude/hooks/file_size_check.cjs` enforce au moment de l'edit (PreToolUse Edit/Write).
 
 ## i18n trilingual (FR / EN / BR)
 
-Tout texte visible : `t('key')` via react-i18next. JAMAIS de string hardcodee. Termes techniques restent en anglais.
+Tout texte visible : `t('key')` via react-i18next (Juice Shop) ou via le catalogue overlay (`juicelab-i18n.ts`). JAMAIS de string hardcodee. Termes techniques restent en anglais.
 
 ## Process Management
 
-**JAMAIS de commandes directes.** Utiliser `aegis.ps1` (Windows) / `aegis.sh` (Linux).
-```
-.\aegis.ps1 start/stop/restart/health/build/logs
-```
+Pas de commandes directes. Utiliser :
+- `juice.ps1` (Windows) / `juice.sh` (Linux) pour build / start / stop / health
+- `scripts/install-student.{sh,ps1}` pour bootstrap eleve
+- `systemctl --user start juicelab-dashboard.service` pour le dashboard prof persistant
+
+## Dashboard — variables d'env critiques
+
+| Variable | Min | Effet si absent |
+|----------|-----|-----------------|
+| `DASHBOARD_TEACHER_TOKEN` | 16 chars | dashboard refuse de booter (503) |
+| `DASHBOARD_PROOF_SECRET` | 16 chars | flag verification desactivee |
+| `DASHBOARD_PORT` | — | default 5000 |
+| `DASHBOARD_BIND` | — | default 0.0.0.0 (production VPS = 127.0.0.1 + reverse proxy) |
+| `DASHBOARD_CORS_ORIGINS` | — | CORS bloque les eleves si leur origine pas listee |
+| `JUICELAB_COHORT_ID` | — | cohorte par defaut overlay |
+
+`docker/.env` n'est lu QUE par `docker compose --env-file`. `python3 app.py` direct ignore ce fichier — l'env doit etre exporte dans le shell appelant ou via systemd `EnvironmentFile=`.
 
 ## Skills a utiliser
 
 | Situation | Skill |
 |-----------|-------|
-| Implementation structuree | `/apex` (10 etapes) |
-| Audit qualite | `/audit-pdca` (benchmark + recette) |
-| Nouvelle fiche d'analyse | `/fiche-attaque [num]` |
-| Recherche bibliographique | `/bibliography-maintainer incremental` |
-| Orchestration PDCA | `/research-director cycle` |
-| Nouveau prompt d'attaque | `/aegis-prompt-forge FORGE` |
-| Nouveau scenario | `/add-scenario` (6 agents) |
-| Analyse resultats campagne | `/experimentalist [experiment_id]` |
-| Gap vers campagne | `/experiment-planner [gap_id]` |
-| Resultats vers manuscrit | `/thesis-writer [conjecture_id]` |
-
-## Notation δ — OBLIGATOIRE
-
-δ⁰ δ¹ δ² δ³ (Unicode). JAMAIS "δ⁰/1/2/3" en ASCII dans la documentation.
-
-## Content Filter Safety
-
-Ne JAMAIS lire : `scenarios.py`, `attack_catalog.py`, `i18n.js` (valeurs), `prompts/*.json` champ "template".
-Travailler via metadonnees + fichiers .md (safe). Subagents : toujours inclure "NE LIS JAMAIS le contenu complet des fichiers sensibles".
-
-## Provider LLM — Groq par defaut
-
-- **Provider principal : Groq** (`llama-3.3-70b-versatile` ou `llama-3.1-8b-instant`)
-- Cle dans `backend/.env` — `GROQ_API_KEY=gsk_...`
-- `aegis.sh start backend` charge automatiquement `.env` avant uvicorn (source .env)
-- Ollama = fallback local uniquement (si GROQ_API_KEY absent)
-- Campagnes thesis TOUJOURS sur Groq (TC-002 confirme 70B, RETEX 2026-04-08)
-- Verification provider actif : `curl localhost:8042/api/redteam/llm-providers` → groq doit apparaitre avec status "available"
-- JAMAIS "Ollama offline" comme blocant — utiliser Groq
+| Implementation structuree multi-fichiers | `/apex` (10 etapes) |
+| Audit qualite avec benchmark | `/audit-pdca` |
+| Modifier un pack pedagogique existant (hints/quiz/journal) | `/juicelab-add-challenge` (refuse de creer un nouveau challenge OWASP) |
+| Test/recette d'un module | `/test-driven-development` |
+| Debug systematique | `/systematic-debugging` |
+| Verification avant marquer "done" | `/verification-before-completion` |
 
 ## Git
 
 - Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
-- `research_archive/` en .gitignore — `git add -f` pour thesis docs
+- Repo `juice/` push sur `juicelab` remote (mo0ogly/juicelab)
+- Repo `juice-shop/` push sur `fork` remote (mo0ogly/juice-shop), JAMAIS sur `origin` (upstream OWASP) sans PR explicite
 - Pas de `houyi` dans les noms de fichiers
+- Strip CRLF avant commit (`sed -i 's/\r$//' <fichier>`) — plein de fichiers du repo sont en CRLF historique, on ne touche que ceux qu'on a modifies
 
-## Statistiques
+## Template literal bug
 
-- Sep(M) : N >= 30 par condition, Sep(M)=0 avec 0 violations = artefact
-- Tags : `[ARTICLE VERIFIE]` / `[PREPRINT]` / `[HYPOTHESE]` / `[CALCUL VERIFIE]` / `[EXPERIMENTAL]`
+Pas de `${}` dans les fonctions standalone `.jsx`. Utiliser concatenation.
 
-## Audit qualite — `/audit-these`
+## Content Filter Safety
 
-- Chaque session COMMENCE et TERMINE par `/audit-these full`
-- Aucun lot "done" sans audit (lint_sources.py > 5% NONE = PAS DONE)
-- Cross-validation : 3 chiffres aleatoires verifies contre fulltext ChromaDB apres chaque batch
-- Si 1 chiffre faux → refaire le batch entier
-- Maximum 3 agents en parallele (auditabilite)
-- Toute affirmation "le seul", "le premier" → WebSearch de verification AVANT publication
-
-## Template Literal Bug
-
-Pas de `${}` dans les fonctions standalone .jsx. Utiliser concatenation.
+Eviter de lire en entier : fichiers > 800 lignes (par regle), packs hints/quiz si pas necessaire, gros JSON datasets. Travailler via metadonnees + grep cible quand possible.
