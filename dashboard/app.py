@@ -612,7 +612,7 @@ def create_app() -> Flask:
         nonce = getattr(g, "csp_nonce", "")
         script_src = f"'self' 'nonce-{nonce}' 'strict-dynamic'" if nonce else "'self'"
         resp.headers.setdefault("Content-Security-Policy",
-            f"default-src 'self'; style-src 'self'; "
+            f"default-src 'self'; style-src 'self' 'unsafe-inline'; "
             f"script-src {script_src}; img-src 'self' data:; "
             "connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
         # Note: Server header neutralization happens at WSGI handler level
