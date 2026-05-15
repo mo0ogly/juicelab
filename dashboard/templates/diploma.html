@@ -3,53 +3,166 @@
 <head>
   <meta charset="utf-8">
   <title>Diplome {{ cohort_id }} - {{ student_name or student_token }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}" integrity="{{ css_sri }}" crossorigin="anonymous">
+  {% include "_head_assets.html" %}
   <style>
     /* A4 print layout, no nav, single page, centered. Kept here (not in
        dashboard.css) because it only applies to this template. */
     @page { size: A4 portrait; margin: 18mm 16mm; }
-    body { background: var(--bg); color: var(--text); }
-    .diploma-print { max-width: 720px; margin: 24px auto; padding: 32px 40px;
-      background: var(--bg-elev); border: 2px solid var(--accent);
-      border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
-    .diploma-institution { font-size: 13px; text-transform: uppercase;
-      letter-spacing: 0.18em; color: var(--text-mute); text-align: center; }
-    .diploma-title { font-size: 32px; font-weight: 700; text-align: center;
-      margin: 12px 0 4px; color: var(--text); }
-    .diploma-subtitle { font-size: 14px; text-align: center; color: var(--text-soft); }
-    .diploma-recipient { font-size: 28px; font-weight: 600; text-align: center;
-      margin: 36px 0 4px; color: var(--accent-deep, var(--accent)); }
-    .diploma-mention { font-size: 20px; font-weight: 700; letter-spacing: 0.1em;
-      text-align: center; margin: 4px 0 36px; text-transform: uppercase;
-      color: var(--text); }
-    .diploma-mention.tres_bien { color: #10b981; }
-    .diploma-mention.bien { color: var(--accent); }
-    .diploma-mention.reussite { color: #f59e0b; }
+    body { background: var(--bg); color: var(--text); padding: 24px 16px; }
+    .diploma-print {
+      max-width: 740px; margin: 32px auto; padding: 44px 52px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-pop);
+      position: relative;
+    }
+    .diploma-print::before {
+      content: ""; display: block; height: 2px; margin-bottom: 32px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--rose) 60%, var(--amber) 100%);
+    }
+    .diploma-institution {
+      font-family: var(--font-mono);
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.22em; color: var(--text-mute);
+      text-align: center; margin: 0 0 8px;
+    }
+    .diploma-title {
+      font-family: var(--font-display); font-style: italic;
+      font-size: 42px; font-weight: 400;
+      text-align: center; margin: 14px 0 6px;
+      color: var(--text); letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+    .diploma-subtitle {
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      text-align: center; color: var(--text-soft);
+      margin: 0;
+    }
+    .diploma-subtitle strong { color: var(--accent); font-weight: 500; }
+    .diploma-recipient {
+      font-family: var(--font-display); font-style: italic;
+      font-size: 32px; font-weight: 500;
+      text-align: center; margin: 40px 0 6px;
+      color: var(--text); letter-spacing: -0.01em;
+    }
+    .diploma-mention {
+      font-family: var(--font-mono);
+      font-size: 14px; font-weight: 600;
+      letter-spacing: 0.22em; text-align: center;
+      margin: 6px 0 40px; text-transform: uppercase;
+      color: var(--text);
+    }
+    .diploma-mention.tres_bien   { color: var(--accent); }
+    .diploma-mention.bien        { color: var(--cobalt); }
+    .diploma-mention.reussite    { color: var(--amber); }
     .diploma-mention.participation { color: var(--text-mute); }
-    .diploma-stats { display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 12px 24px; margin: 20px 0; }
-    .diploma-stat { padding: 10px 12px; border: 1px solid var(--border);
-      border-radius: 4px; }
-    .diploma-stat .lbl { font-size: 11px; text-transform: uppercase;
-      letter-spacing: 0.08em; color: var(--text-mute); }
-    .diploma-stat .val { font-size: 18px; font-weight: 600; color: var(--text);
-      font-variant-numeric: tabular-nums; }
-    .diploma-footer { display: flex; justify-content: space-between;
-      margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border);
-      font-size: 12px; color: var(--text-soft); }
-    .diploma-verif { margin-top: 24px; padding: 12px; background: var(--bg-soft);
-      border: 1px solid var(--border); border-radius: 4px;
-      font-family: ui-monospace, "Courier New", monospace; font-size: 10px;
-      color: var(--text-mute); white-space: pre-wrap; word-break: break-all;
-      max-height: 140px; overflow: auto; }
-    .diploma-actions { text-align: center; margin: 16px 0 32px; }
-    .diploma-actions button { padding: 10px 18px; font-size: 14px; cursor: pointer;
-      background: var(--accent); color: #fff; border: 0; border-radius: 4px; }
-    .diploma-actions a { margin-left: 12px; color: var(--text-soft); }
+    .diploma-stats {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 12px 24px; margin: 24px 0;
+    }
+    .diploma-stat {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-soft);
+    }
+    .diploma-stat .lbl {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.14em; color: var(--text-mute);
+      margin-bottom: 4px;
+    }
+    .diploma-stat .val {
+      font-family: var(--font-mono);
+      font-size: 19px; font-weight: 500;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+    .diploma-footer {
+      display: flex; justify-content: space-between; gap: 12px;
+      margin-top: 36px; padding-top: 18px;
+      border-top: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 10.5px; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-mute);
+    }
+    .diploma-footer code {
+      font-family: var(--font-mono); font-size: 10.5px;
+      color: var(--accent); padding: 1px 5px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 3px; text-transform: none; letter-spacing: 0;
+    }
+    .diploma-verif {
+      margin-top: 24px; padding: 14px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 10px; line-height: 1.6;
+      color: var(--text-mute);
+      white-space: pre-wrap; word-break: break-all;
+      max-height: 160px; overflow: auto;
+    }
+    .diploma-actions {
+      text-align: center; margin: 24px 0 32px;
+      display: flex; gap: 12px; justify-content: center; align-items: center;
+    }
+    .diploma-actions button {
+      padding: 11px 22px;
+      font-family: var(--font-body); font-size: 12.5px;
+      font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; cursor: pointer;
+      background: var(--accent); color: var(--bg);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-sm);
+      transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+    .diploma-actions button:hover {
+      background: var(--accent-deep); transform: translateY(-1px);
+      box-shadow: 0 6px 16px var(--accent-glow);
+    }
+    .diploma-actions a {
+      font-family: var(--font-mono);
+      font-size: 10.5px; letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-soft); text-decoration: none;
+      border-bottom: 1px dotted var(--text-mute);
+    }
+    .diploma-actions a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+    details summary {
+      cursor: pointer;
+      font-family: var(--font-mono); font-size: 10.5px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-soft); margin-top: 18px;
+      padding: 6px 0;
+    }
+    details summary:hover { color: var(--accent); }
+    details > p {
+      font-family: var(--font-mono); font-size: 10.5px;
+      color: var(--text-mute); margin-top: 10px; line-height: 1.6;
+    }
     @media print {
       .diploma-actions, header.app-header, footer.footer { display: none !important; }
-      .diploma-print { box-shadow: none; border: 1px solid #000; margin: 0; }
-      body { background: #fff; }
+      .diploma-print {
+        box-shadow: none; border: 1px solid #000; margin: 0;
+        background: #fff; color: #111;
+      }
+      .diploma-print::before { background: #000; opacity: 1; }
+      body { background: #fff; color: #111; }
+      .diploma-institution, .diploma-subtitle,
+      .diploma-footer, .diploma-stat .lbl { color: #444; }
+      .diploma-title, .diploma-recipient, .diploma-stat .val { color: #111; }
+      .diploma-mention.tres_bien { color: #0a6a3a; }
+      .diploma-mention.bien       { color: #1d3a8a; }
+      .diploma-mention.reussite   { color: #8a5a14; }
+      .diploma-mention.participation { color: #555; }
+      .diploma-stat { background: #fafafa; border-color: #ccc; }
+      .diploma-verif { background: #fafafa; border-color: #ccc; color: #555; }
+      .diploma-footer code { background: #f4f4f4; color: #0a6a3a; border-color: #ccc; }
     }
   </style>
 </head>

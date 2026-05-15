@@ -4,12 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>JuiceLab dashboard - {{ t('NAV_COHORTS') }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}" integrity="{{ css_sri }}" crossorigin="anonymous">
+  {% include "_head_assets.html" %}
   <style>
-    .pending-block { margin-top: 18px; }
-    .pending-block h3 { margin: 0 0 6px; font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 8px; }
-    .pending-block h3 .cohort-id { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; color: var(--text-mute); font-weight: 400; }
-    .pending-block .empty { color: var(--text-mute); font-style: italic; font-size: 13px; padding: 6px 0; }
+    .pending-block { margin-top: 22px; }
+    .pending-block h3 {
+      margin: 0 0 8px;
+      font-family: var(--font-display); font-style: italic;
+      font-weight: 400; font-size: 17px;
+      color: var(--text); letter-spacing: -0.01em;
+      display: flex; align-items: baseline; gap: 10px;
+    }
+    .pending-block h3 .cohort-id {
+      font-family: var(--font-mono);
+      font-size: 10.5px; letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-mute); font-weight: 400;
+      font-style: normal;
+    }
+    .pending-block .empty {
+      color: var(--text-mute); font-style: italic;
+      font-size: 12.5px; padding: 8px 0;
+    }
   </style>
 </head>
 <body>

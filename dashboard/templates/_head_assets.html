@@ -1,0 +1,8 @@
+{# Loaded by every page <head>. Provides Google Fonts preconnect + stylesheet
+   link, and the two same-origin dashboard CSS sheets each with its own SRI
+   hash. Keep in sync with app.py:_compute_css_sri and CSP style-src/font-src. #}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,300..600&family=Geist:wght@300..700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}" integrity="{{ css_sri }}" crossorigin="anonymous">
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard-widgets.css') }}" integrity="{{ css_widgets_sri }}" crossorigin="anonymous">

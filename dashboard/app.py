@@ -557,14 +557,10 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
     }
 
 
-def _compute_css_sri() -> str:
-    """Compute SHA-384 SRI hash for the dashboard's only stylesheet at boot.
-
-    SRI lets the browser refuse to apply the stylesheet if it has been
-    tampered with in transit (e.g. compromised reverse proxy). Same-origin
-    asset, so the hash never has to be cross-domain trusted.
-    """
-    css_path = Path(__file__).parent / "static" / "dashboard.css"
+def _compute_css_sri(filename: str = "dashboard.css") -> str:
+    """SHA-384 SRI hash per .css file (each <link> needs its own digest;
+    @import-loaded sub-files inherit no SRI from parent)."""
+    css_path = Path(__file__).parent / "static" / filename
     try:
         digest = hashlib.sha384(css_path.read_bytes()).digest()
     except OSError:
@@ -572,7 +568,8 @@ def _compute_css_sri() -> str:
     return "sha384-" + base64.b64encode(digest).decode("ascii")
 
 
-_CSS_SRI = _compute_css_sri()
+_CSS_SRI = _compute_css_sri("dashboard.css")
+_CSS_WIDGETS_SRI = _compute_css_sri("dashboard-widgets.css")
 
 
 def create_app() -> Flask:
@@ -592,7 +589,7 @@ def create_app() -> Flask:
 
     @app.context_processor
     def _inject_csp_nonce() -> dict:
-        return {"csp_nonce": getattr(g, "csp_nonce", ""), "css_sri": _CSS_SRI}
+        return {"csp_nonce": getattr(g, "csp_nonce", ""), "css_sri": _CSS_SRI, "css_widgets_sri": _CSS_WIDGETS_SRI}
 
     @app.after_request
     def _security_headers(resp: Response) -> Response:
@@ -612,7 +609,9 @@ def create_app() -> Flask:
         nonce = getattr(g, "csp_nonce", "")
         script_src = f"'self' 'nonce-{nonce}' 'strict-dynamic'" if nonce else "'self'"
         resp.headers.setdefault("Content-Security-Policy",
-            f"default-src 'self'; style-src 'self' 'unsafe-inline'; "
+            f"default-src 'self'; "
+            f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            f"font-src 'self' https://fonts.gstatic.com; "
             f"script-src {script_src}; img-src 'self' data:; "
             "connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
         # Note: Server header neutralization happens at WSGI handler level
