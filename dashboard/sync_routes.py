@@ -20,6 +20,7 @@ from typing import Any, Callable
 
 from flask import Flask, Response, jsonify, request
 
+import sse_pubsub
 from audit_log import log_event
 from db import get_connection, get_student_status
 
@@ -71,4 +72,15 @@ def register_sync_routes(
             payload["event_type"],
             payload.get("challenge_key") or "-",
         )
+        try:
+            sse_pubsub.publish(cohort, {
+                "id": new_id,
+                "cohort_id": cohort,
+                "student_token": token,
+                "event_type": payload["event_type"],
+                "challenge_key": payload.get("challenge_key"),
+                "client_ts": payload.get("client_ts"),
+            })
+        except Exception as exc:
+            LOGGER.warning("sse publish failed for event=%s: %s", new_id, exc)
         return jsonify({"ok": True, "id": new_id}), 201  # type: ignore[return-value]

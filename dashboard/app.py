@@ -51,7 +51,7 @@ from flask_cors import CORS
 from db import (cohort_exists, count_pending_award_events, count_team_mappings,
     ensure_cohort, ensure_student, get_connection, get_team_mapping, init_schema,
     names_for_cohort, mark_award_pushed, pending_award_events, set_team_mapping)
-from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie; from audit_log import log_event
+from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie; from audit_log import log_event; from sse_routes import register_sse_routes; from tags_routes import register_tags_routes
 from students_routes import register_students_routes
 from diploma_routes import register_diploma_routes
 
@@ -579,7 +579,7 @@ def create_app() -> Flask:
     CORS(app, resources={r"/api/*": {"origins": _cors_origins()}},
          allow_headers=["Content-Type", "Authorization", "X-Teacher-Token", "X-Instance-Label", "X-Student-Token"],
          methods=["GET", "POST", "DELETE", "OPTIONS"])
-    register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event); register_proof_routes(app, _check_teacher_auth, expected_flag=_expected_flag, insert_event=_insert_event, events_for=_events_for, proof_secret=_proof_secret); register_diploma_routes(app, _check_teacher_auth_html, _check_teacher_auth, proof_secret=_proof_secret)
+    register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event); register_proof_routes(app, _check_teacher_auth, expected_flag=_expected_flag, insert_event=_insert_event, events_for=_events_for, proof_secret=_proof_secret); register_diploma_routes(app, _check_teacher_auth_html, _check_teacher_auth, proof_secret=_proof_secret); register_sse_routes(app, _check_teacher_auth, _cohort_summary); register_tags_routes(app, _check_teacher_auth)
 
     @app.before_request
     def _csp_nonce() -> None:

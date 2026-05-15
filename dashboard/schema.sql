@@ -64,3 +64,37 @@ CREATE TABLE IF NOT EXISTS students (
 CREATE INDEX IF NOT EXISTS idx_students_cohort ON students(cohort_id);
 -- idx_students_status is created by db._migrate() after the status column
 -- is ensured to exist (legacy DBs predate the column).
+
+-- Phase 1 — pedagogical triage : tags, notes, alerts.
+-- student_tag : prof-set status ('a_voir', 'autonome', etc.) per student per
+--   cohort. PRIMARY KEY (cohort_id, student_token) matches the convention
+--   used by students table and makes upsert idempotent.
+-- student_note : free-form prof note attached to a student per cohort.
+-- alerts : signal-to-noise events surfaced in the dashboard (blocked, stuck,
+--   etc.). ack_at NULL = unread; idx_alerts_cohort_unack accelerates the
+--   "unread alerts" query, idx_alerts_recent the recent-feed query.
+CREATE TABLE IF NOT EXISTS student_tag (
+    student_token TEXT NOT NULL,
+    cohort_id     TEXT NOT NULL,
+    status        TEXT NOT NULL DEFAULT 'none',
+    updated_at    TEXT NOT NULL,
+    PRIMARY KEY (cohort_id, student_token)
+);
+CREATE TABLE IF NOT EXISTS student_note (
+    student_token TEXT NOT NULL,
+    cohort_id     TEXT NOT NULL,
+    body          TEXT NOT NULL DEFAULT '',
+    updated_at    TEXT NOT NULL,
+    PRIMARY KEY (cohort_id, student_token)
+);
+CREATE TABLE IF NOT EXISTS alerts (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    cohort_id     TEXT NOT NULL,
+    student_token TEXT NOT NULL,
+    kind          TEXT NOT NULL,
+    challenge_key TEXT,
+    created_at    TEXT NOT NULL,
+    ack_at        TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_alerts_cohort_unack ON alerts(cohort_id, ack_at);
+CREATE INDEX IF NOT EXISTS idx_alerts_recent ON alerts(cohort_id, created_at DESC);

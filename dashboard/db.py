@@ -152,6 +152,15 @@ def _migrate(conn: sqlite3.Connection) -> None:
                         [(cohort, tok, name, now, now) for tok, name in roster.items()],
                     )
                     LOGGER.info("seeded %d students from roster.txt into cohort %s", len(roster), cohort)
+    # Phase 1 — tags + notes + alerts (idempotent)
+    for stmt in [
+        "CREATE TABLE IF NOT EXISTS student_tag (student_token TEXT NOT NULL, cohort_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'none', updated_at TEXT NOT NULL, PRIMARY KEY (cohort_id, student_token))",
+        "CREATE TABLE IF NOT EXISTS student_note (student_token TEXT NOT NULL, cohort_id TEXT NOT NULL, body TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL, PRIMARY KEY (cohort_id, student_token))",
+        "CREATE TABLE IF NOT EXISTS alerts (id INTEGER PRIMARY KEY AUTOINCREMENT, cohort_id TEXT NOT NULL, student_token TEXT NOT NULL, kind TEXT NOT NULL, challenge_key TEXT, created_at TEXT NOT NULL, ack_at TEXT)",
+        "CREATE INDEX IF NOT EXISTS idx_alerts_cohort_unack ON alerts(cohort_id, ack_at)",
+        "CREATE INDEX IF NOT EXISTS idx_alerts_recent ON alerts(cohort_id, created_at DESC)",
+    ]:
+        cur.execute(stmt)
     conn.commit()
 
 
@@ -561,3 +570,61 @@ def names_for_cohort(conn: sqlite3.Connection, cohort_id: str) -> dict[str, str]
         (cohort_id,),
     ).fetchall()
     return {r["student_token"]: r["display_name"] for r in rows}
+
+
+# ------------------------------------------------------------------
+# Phase 1 helpers — tags, notes, alerts
+# ------------------------------------------------------------------
+# ON CONFLICT target uses (cohort_id, student_token) to match the
+# composite PRIMARY KEY declaration order in schema.sql (cohort_id
+# first, aligned with the students table convention from Task 1 fix).
+# SQLite accepts either column order on the conflict target, but
+# matching the PK keeps things defensive and grep-friendly.
+
+def set_tag(conn: sqlite3.Connection, student_token: str, cohort_id: str, status: str, now: str) -> None:
+    conn.execute(
+        "INSERT INTO student_tag (student_token, cohort_id, status, updated_at) VALUES (?, ?, ?, ?) "
+        "ON CONFLICT(cohort_id, student_token) DO UPDATE SET status=excluded.status, updated_at=excluded.updated_at",
+        (student_token, cohort_id, status, now),
+    )
+
+
+def get_tag(conn: sqlite3.Connection, student_token: str, cohort_id: str) -> str | None:
+    row = conn.execute(
+        "SELECT status FROM student_tag WHERE student_token=? AND cohort_id=?",
+        (student_token, cohort_id),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def set_note(conn: sqlite3.Connection, student_token: str, cohort_id: str, body: str, now: str) -> None:
+    conn.execute(
+        "INSERT INTO student_note (student_token, cohort_id, body, updated_at) VALUES (?, ?, ?, ?) "
+        "ON CONFLICT(cohort_id, student_token) DO UPDATE SET body=excluded.body, updated_at=excluded.updated_at",
+        (student_token, cohort_id, body, now),
+    )
+
+
+def get_note(conn: sqlite3.Connection, student_token: str, cohort_id: str) -> str:
+    row = conn.execute(
+        "SELECT body FROM student_note WHERE student_token=? AND cohort_id=?",
+        (student_token, cohort_id),
+    ).fetchone()
+    return row[0] if row else ""
+
+
+def insert_alert(conn: sqlite3.Connection, cohort_id: str, student_token: str, kind: str, challenge_key: str | None, now: str) -> int:
+    cur = conn.execute(
+        "INSERT INTO alerts (cohort_id, student_token, kind, challenge_key, created_at) VALUES (?, ?, ?, ?, ?)",
+        (cohort_id, student_token, kind, challenge_key, now),
+    )
+    return cur.lastrowid or 0
+
+
+def recent_alerts(conn: sqlite3.Connection, cohort_id: str, limit: int = 100) -> list[sqlite3.Row]:
+    conn.row_factory = sqlite3.Row
+    return conn.execute(
+        "SELECT id, cohort_id, student_token, kind, challenge_key, created_at, ack_at "
+        "FROM alerts WHERE cohort_id=? ORDER BY id DESC LIMIT ?",
+        (cohort_id, limit),
+    ).fetchall()

@@ -231,7 +231,6 @@
 <script nonce="{{ csp_nonce }}">
   (function () {
     const COHORT = {{ summary.cohort_id | tojson }};
-    const REFRESH_MS = 5000;
     const refreshTag = document.getElementById('last-refresh');
     const autoTag = document.getElementById('auto-tag');
 
@@ -392,22 +391,24 @@
       if (e.key === 'Escape') window.closeModal();
     });
 
-    function tick() {
+    function applySnapshot(summary) {
+      renderMatrix(summary);
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      refreshTag.textContent = T('REFRESH_OK', { time: hh + ':' + mm + ':' + ss });
+      autoTag.textContent = T('REFRESH_LIVE_LABEL');
+      autoTag.classList.remove('off');
+    }
+
+    function refetchSummary() {
       fetch('/api/cohort?cohort=' + encodeURIComponent(COHORT), { credentials: 'include' })
         .then(r => {
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return r.json();
         })
-        .then(summary => {
-          renderMatrix(summary);
-          const now = new Date();
-          const hh = String(now.getHours()).padStart(2, '0');
-          const mm = String(now.getMinutes()).padStart(2, '0');
-          const ss = String(now.getSeconds()).padStart(2, '0');
-          refreshTag.textContent = T('REFRESH_OK', { time: hh + ':' + mm + ':' + ss });
-          autoTag.textContent = T('REFRESH_LIVE_LABEL');
-          autoTag.classList.remove('off');
-        })
+        .then(applySnapshot)
         .catch(err => {
           refreshTag.textContent = T('REFRESH_KO', { msg: err.message });
           autoTag.textContent = T('REFRESH_TAG_KO');
@@ -416,8 +417,24 @@
     }
 
     bindJournalPills();
-    setInterval(tick, REFRESH_MS);
-    tick();
+
+    // Live updates via Server-Sent Events. The browser handles reconnect
+    // automatically; on error we surface a disconnect badge but keep
+    // the EventSource alive so it can recover on its own.
+    const es = new EventSource('/api/cohort/stream?cohort=' + encodeURIComponent(COHORT));
+    es.addEventListener('snapshot', (e) => {
+      try { applySnapshot(JSON.parse(e.data)); } catch (_) { /* ignore parse */ }
+    });
+    es.addEventListener('event', (_e) => {
+      // Phase 1: any cohort event triggers a full summary refetch.
+      // Phase 2 will switch to delta patching using the event payload.
+      refetchSummary();
+    });
+    es.onerror = () => {
+      refreshTag.textContent = T('REFRESH_KO', { msg: 'SSE disconnected, auto-retry' });
+      autoTag.textContent = T('REFRESH_TAG_KO');
+      autoTag.classList.add('off');
+    };
 
     const select = document.getElementById('cohort-select');
 
