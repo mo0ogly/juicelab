@@ -1,0 +1,36 @@
+{
+  "scope": "dashboard UI redesign — cyber-pedagogique sombre raffine",
+  "project": "juicelab (Flask + Jinja, port 5000/5050)",
+  "cycle": 1,
+  "date": "2026-05-15",
+  "files_modified": [
+    {"path": "dashboard/app.py", "lines": 798, "type": "py", "change": "CSP relax: +fonts.googleapis.com style-src, +fonts.gstatic.com font-src", "hunks": 1},
+    {"path": "dashboard/static/dashboard.css", "lines": 516, "type": "css", "change": "full rewrite — Fraunces+Geist+JetBrains Mono, charbon palette, menthe/rose/ambre accents, atmosphere radial, motion stagger"},
+    {"path": "dashboard/static/dashboard-widgets.css", "lines": 242, "type": "css", "change": "NEW — widgets, progress-bar, stats-grid, sparkline, scrollbars themed"},
+    {"path": "dashboard/templates/login.html", "lines": 124, "type": "html", "change": "inline <style> overhaul — Fraunces 34px italic h1, mark mono, grid backdrop, hero rail"},
+    {"path": "dashboard/templates/diploma.html", "lines": 236, "type": "html", "change": "typo overhaul + mention colors mappees sur tokens + print-safe fallback"},
+    {"path": "dashboard/templates/cohorts.html", "lines": 417, "type": "html", "change": "pending-block: Fraunces italic + mono cohort-id"},
+    {"path": "dashboard/templates/dashboard_404.html", "lines": 48, "type": "html", "change": "classes app-header/brand-icon → topbar/brand-mark (alignment)"},
+    {"path": "dashboard/templates/student_detail.html", "lines": 157, "type": "html", "change": "classes app-header/brand-icon → topbar/brand-mark (alignment)"}
+  ],
+  "files_untouched_but_inherit": [
+    {"path": "dashboard/templates/dashboard.html", "lines": 493, "note": "deja sur classes canoniques, herite CSS"},
+    {"path": "dashboard/templates/students.html", "lines": 391, "note": "deja sur classes canoniques, herite CSS"},
+    {"path": "dashboard/templates/_help_modal.html", "lines": 62, "note": "deja sur classes canoniques"},
+    {"path": "dashboard/templates/_lang_switch.html", "lines": 4, "note": "lang-pill/lang-switch couverts"}
+  ],
+  "css_class_surface": {
+    "core_tokens": ["--bg", "--bg-elev", "--bg-soft", "--bg-row-alt", "--border", "--border-strong", "--text", "--text-soft", "--text-mute", "--accent", "--accent-deep", "--accent-soft", "--accent-glow", "--rose", "--rose-soft", "--amber", "--amber-soft", "--cobalt", "--cobalt-soft", "--danger", "--danger-soft", "--shadow-card", "--shadow-pop", "--shadow-focus"],
+    "compat_aliases": ["--warn", "--ok", "--info", "--purple", "--indigo"],
+    "fonts": {"display": "Fraunces (italic)", "body": "Geist", "mono": "JetBrains Mono"},
+    "preserved_classes": "all dashboard.html / cohorts.html / students.html / student_detail.html / diploma.html / login.html / _help_modal.html classes"
+  },
+  "csp_changes": {
+    "before": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src ...; connect-src 'self'; frame-ancestors 'none'",
+    "after": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src ...; connect-src 'self'; frame-ancestors 'none'",
+    "delta": "+2 external host whitelists (read-only font CDN)",
+    "risk_assessment": "low — fonts.googleapis.com & fonts.gstatic.com serve only CSS+woff2, no JS, no injection surface"
+  },
+  "tests": {"framework": "pytest", "results": "199/199 passed in ~2.2s"},
+  "browser_smoke": "NOT EXECUTED (CLI session, no headless browser)"
+}

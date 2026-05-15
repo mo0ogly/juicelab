@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "perimetre": "dashboard UI redesign",
+  "domains": {
+    "design_quality":     {"weight": 20, "rationale": "core differentiator du redesign"},
+    "accessibility":      {"weight": 18, "rationale": "WCAG AA cible, prof users"},
+    "performance":        {"weight": 12, "rationale": "VPS lambda + 30 students concurrent"},
+    "security_csp":       {"weight": 15, "rationale": "dashboard prof = surface haute"},
+    "i18n_coherence":     {"weight": 10, "rationale": "regle ZERO hardcoding stricte"},
+    "file_size_hygiene":  {"weight":  5, "rationale": "hook enforced, faible variance"},
+    "test_coverage":      {"weight": 10, "rationale": "pytest harness existant 199 tests"},
+    "markup_consistency": {"weight": 10, "rationale": "post-redesign dead classes risk"}
+  },
+  "checks": {
+    "PERF-01": {"domain": "performance", "type": "grep_fail_if_match", "pattern": "@import.*googleapis|@import.*gstatic", "files": "static/*.css"},
+    "PERF-02": {"domain": "performance", "type": "grep_score_if_match", "pattern": "preconnect.*fonts", "files": "templates/*.html"},
+    "SEC-SRI": {"domain": "security_csp", "type": "code_review", "description": "_compute_css_sri couvre TOUS les .css statiques"},
+    "A11Y-CONTRAST": {"domain": "accessibility", "type": "python_wcag", "description": "Tous --text-* sur --bg-* >= 4.5:1 pour body, >= 3:1 pour large/UI"},
+    "MARKUP-DEAD": {"domain": "markup_consistency", "type": "cross_check", "description": "Aucune classe CSS orpheline (sauf utilitaires reserves)"},
+    "FILE-SIZE": {"domain": "file_size_hygiene", "type": "wc_max_lines", "limit": 800},
+    "TEST-PYTEST": {"domain": "test_coverage", "type": "pytest_exit_0"},
+    "VISUAL-RECETTE": {"domain": "design_quality", "type": "playwright_screenshots", "pages": ["/login", "/dashboard?cohort=demo", "/admin/cohorts", "/admin/students", "/admin/diploma/X"]}
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "cycle": 1,
+  "date": "2026-05-15",
+  "perimetre": "dashboard UI redesign",
+  "scores_by_domain": {
+    "design_quality":     {"weight": 20, "score": 82, "delta_vs_baseline": null},
+    "accessibility":      {"weight": 18, "score": 82, "delta_vs_baseline": null},
+    "performance":        {"weight": 12, "score": 65, "delta_vs_baseline": null},
+    "security_csp":       {"weight": 15, "score": 78, "delta_vs_baseline": null},
+    "i18n_coherence":     {"weight": 10, "score": 92, "delta_vs_baseline": null},
+    "file_size_hygiene":  {"weight":  5, "score": 95, "delta_vs_baseline": null},
+    "test_coverage":      {"weight": 10, "score": 90, "delta_vs_baseline": null},
+    "markup_consistency": {"weight": 10, "score": 95, "delta_vs_baseline": null}
+  },
+  "score_global": 84,
+  "objectif": "baseline",
+  "verdict": "ACHIEVED",
+  "findings_by_severity": {
+    "CRITIQUE": 0,
+    "HAUTE":    2,
+    "MOYENNE":  4,
+    "BASSE":    4,
+    "INFO":     3
+  },
+  "policy_gates": {
+    "no_stub":         "OK",
+    "no_mock":         "OK",
+    "usage_triage":    "N/A (CSS scope)",
+    "no_disable":      "OK"
+  },
+  "preflight": {
+    "flask_boot":    "OK",
+    "css_main_200":  "OK (22833 bytes)",
+    "css_widgets_200": "OK (6943 bytes)",
+    "login_200":     "OK",
+    "csp_fonts_whitelisted": "OK",
+    "pytest":        "OK (199/199)"
+  },
+  "browser_visual_recette": {
+    "status": "SKIPPED",
+    "reason": "CLI session, no headless browser. Move to cycle 2."
+  },
+  "regressions_vs_previous": null
+}
