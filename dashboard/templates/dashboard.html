@@ -6,7 +6,9 @@
   <title>JuiceLab dashboard - {{ summary.cohort_id }}</title>
   {% include "_head_assets.html" %}
 </head>
-<body>
+{% set _mode_raw = request.args.get('mode', 'analyse') %}
+{% set mode = _mode_raw if _mode_raw in ('live', 'analyse') else 'analyse' %}
+<body class="mode-{{ mode }}">
 <div class="shell">
 
   <header class="topbar">
@@ -23,6 +25,9 @@
     </div>
     <nav class="nav-actions" aria-label="{{ t('ARIA_MAIN_NAV') }}">
       {% include "_lang_switch.html" %}
+      <a class="logout mode-switch" href="?cohort={{ summary.cohort_id }}&amp;mode={% if mode == 'live' %}analyse{% else %}live{% endif %}">
+        {{ t('MODE_SWITCH') }} : {{ t('MODE_' + mode.upper()) }}
+      </a>
       {% include "_help_modal.html" %}
       <a class="logout" href="/admin/cohorts">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -111,6 +116,36 @@
 
   {% include "_alerts_panel.html" %}
 
+  {% if mode == 'analyse' %}
+  <div class="filter-bar" role="toolbar" aria-label="{{ t('FILTER_TITLE') }}">
+    <label>{{ t('FILTER_CHALLENGE') }}
+      <select id="filter-challenge">
+        <option value="">{{ t('FILTER_ALL') }}</option>
+        {% for c in summary.challenges %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ t('FILTER_SCORE') }}
+      <select id="filter-score">
+        <option value="">{{ t('FILTER_ALL') }}</option>
+        <option value="lt50">&lt; 50</option>
+        <option value="50-80">50 - 80</option>
+        <option value="gt80">&gt; 80</option>
+      </select>
+    </label>
+    <label>{{ t('FILTER_TAG') }}
+      <select id="filter-tag">
+        <option value="">{{ t('FILTER_ALL') }}</option>
+        <option value="a_voir">{{ t('TAG_A_VOIR') }}</option>
+        <option value="ok">{{ t('TAG_OK') }}</option>
+        <option value="absent">{{ t('TAG_ABSENT') }}</option>
+        <option value="a_interroger">{{ t('TAG_A_INTERROGER') }}</option>
+        <option value="none">{{ t('TAG_NONE') }}</option>
+      </select>
+    </label>
+    <button type="button" class="btn" id="filter-reset">{{ t('FILTER_RESET') }}</button>
+  </div>
+  {% endif %}
+
   {% if not summary.students %}
     <div class="empty-state" id="empty-msg">
       <h2>{{ t('EMPTY_NO_EVENTS_TITLE') }}</h2>
@@ -149,8 +184,7 @@
             </select>
             <small class="token-hint">{{ student[:8] }}&hellip;</small>
             <span class="row-actions">
-              <a href="/admin/student/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DETAIL') }}">D</a>
-              <a href="/admin/diploma/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DIPLOMA') }}">{{ t('ROW_ACTION_DIPLOMA_SHORT') }}</a>
+              <a href="/admin/student/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DETAIL') }}" data-drilldown="1">D</a> <a href="/admin/diploma/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DIPLOMA') }}">{{ t('ROW_ACTION_DIPLOMA_SHORT') }}</a>
               <button type="button" class="note-btn" data-student="{{ student }}" title="{{ t('ACTION_NOTE') }}">N</button>
             </span>
           </td>
@@ -219,28 +253,28 @@
 </div><!-- /.shell -->
 
 <div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h3 id="modal-title">{{ t('MODAL_JOURNAL_TITLE') }}</h3>
-      <button class="modal-close" type="button" id="journal-close-btn" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button>
-    </div>
+  <div class="modal-card"><div class="modal-head"><h3 id="modal-title">{{ t('MODAL_JOURNAL_TITLE') }}</h3>
+    <button class="modal-close" type="button" id="journal-close-btn" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button></div>
     <div class="modal-body" id="modal-body">{{ t('MODAL_LOADING') }}</div>
-    <div class="modal-meta" id="modal-meta"></div>
+    <div class="modal-meta" id="modal-meta"></div></div>
+</div>
+<div class="modal-backdrop" id="note-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="note-modal-title">
+  <div class="modal-card"><div class="modal-head"><h3 id="note-modal-title">{{ t('NOTE_TITLE') }}</h3>
+    <button class="modal-close" type="button" id="note-close-btn" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button></div>
+    <div class="modal-body"><textarea id="note-textarea" class="note-textarea" placeholder="{{ t('NOTE_PLACEHOLDER') }}" maxlength="2000" rows="8"></textarea></div>
+    <div class="modal-meta"><button class="btn primary" id="note-save-btn">{{ t('NOTE_SAVE') }}</button></div>
   </div>
 </div>
-
-<div class="modal-backdrop" id="note-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="note-modal-title">
-  <div class="modal-card">
-    <div class="modal-head">
-      <h3 id="note-modal-title">{{ t('NOTE_TITLE') }}</h3>
-      <button class="modal-close" type="button" id="note-close-btn" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button>
-    </div>
-    <div class="modal-body">
-      <textarea id="note-textarea" class="note-textarea" placeholder="{{ t('NOTE_PLACEHOLDER') }}" maxlength="2000" rows="8"></textarea>
-    </div>
-    <div class="modal-meta">
-      <button class="btn primary" id="note-save-btn">{{ t('NOTE_SAVE') }}</button>
-    </div>
+<div class="modal-backdrop kbd-help" id="kbd-help" role="dialog" aria-modal="true" aria-labelledby="kbd-help-title">
+  <div class="modal-card kbd-help-card"><div class="modal-head"><h3 id="kbd-help-title">{{ t('KEYBOARD_HELP_TITLE') }}</h3>
+    <button class="modal-close" type="button" id="kbd-help-close" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button></div>
+    <div class="modal-body"><dl class="kbd-help-list">
+      <dt><kbd>j</kbd>&nbsp;/&nbsp;<kbd>k</kbd></dt><dd>{{ t('KEYBOARD_HELP_J') }}</dd>
+      <dt><kbd>Enter</kbd></dt><dd>{{ t('KEYBOARD_HELP_ENTER') }}</dd>
+      <dt><kbd>t</kbd></dt><dd>{{ t('KEYBOARD_HELP_T') }}</dd>
+      <dt><kbd>/</kbd></dt><dd>{{ t('KEYBOARD_HELP_SLASH') }}</dd>
+      <dt><kbd>?</kbd></dt><dd>{{ t('KEYBOARD_HELP_QUESTION') }}</dd>
+    </dl></div>
   </div>
 </div>
 
@@ -248,12 +282,13 @@
   window.I18N = {{ i18n_catalog | tojson }};
   window.T = function(key, params) {
     var s = window.I18N[key] || key;
-    if (params) {
-      for (var k in params) { s = s.split('{' + k + '}').join(params[k]); }
-    }
+    if (params) { for (var k in params) { s = s.split('{' + k + '}').join(params[k]); } }
     return s;
   };
 </script>
+{% include "_drilldown_modal.html" %}
+<script src="{{ url_for('static', filename='dashboard-keyboard.js') }}" nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', filename='dashboard-drilldown.js') }}" nonce="{{ csp_nonce }}"></script>
 <script nonce="{{ csp_nonce }}">
   (function () {
     const COHORT = {{ summary.cohort_id | tojson }};
@@ -725,8 +760,41 @@
         });
     });
 
+    // --- Phase 3 Task 2 : filter bar (analyse mode only) ---
+    function applyFilters() {
+      const fChal = document.getElementById('filter-challenge')?.value || '';
+      const fScore = document.getElementById('filter-score')?.value || '';
+      const fTag = document.getElementById('filter-tag')?.value || '';
+      document.querySelectorAll('#body-rows tr').forEach(tr => {
+        let hide = false;
+        if (fChal) {
+          const cell = tr.querySelector('td[data-cell="' + fChal + '"]');
+          if (!cell || cell.querySelector('.pill.empty')) hide = true;
+        }
+        if (!hide && fScore) {
+          const txt = (tr.querySelector('.score-total')?.textContent || '').match(/\d+/);
+          const s = txt ? parseInt(txt[0]) : -1;
+          if (fScore === 'lt50' && (s < 0 || s >= 50)) hide = true;
+          if (fScore === '50-80' && (s < 50 || s > 80)) hide = true;
+          if (fScore === 'gt80' && s <= 80) hide = true;
+        }
+        if (!hide && fTag) {
+          const tg = tr.querySelector('.tag-select')?.value || 'none';
+          if (tg !== fTag) hide = true;
+        }
+        tr.classList.toggle('row-filtered-out', hide);
+      });
+    }
+    ['filter-challenge', 'filter-score', 'filter-tag'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', applyFilters);
+    });
+    document.getElementById('filter-reset')?.addEventListener('click', () => {
+      ['filter-challenge', 'filter-score', 'filter-tag'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      applyFilters();
+    });
     reloadList();
-  })();
-</script>
+  })();</script>
 </body>
 </html>

@@ -14,6 +14,10 @@
   "NAV_LOGOUT": "Exit",
   "NAV_DISCONNECT": "Sign out",
 
+  "MODE_LIVE": "Live",
+  "MODE_ANALYSE": "Analyse",
+  "MODE_SWITCH": "Mode",
+
   "KPI_STUDENTS": "Students",
   "KPI_CHALLENGES": "Challenges",
   "KPI_EVENTS": "Events",
@@ -273,5 +277,20 @@
   "TAG_A_VOIR": "To check",
   "TAG_OK": "OK",
   "TAG_ABSENT": "Absent",
-  "TAG_A_INTERROGER": "To question"
+  "TAG_A_INTERROGER": "To question",
+
+  "FILTER_TITLE": "Filters",
+  "FILTER_CHALLENGE": "Challenge",
+  "FILTER_SCORE": "Score",
+  "FILTER_TAG": "Tag",
+  "FILTER_ALL": "(all)",
+  "FILTER_RESET": "Reset",
+
+  "KEYBOARD_HELP_TITLE": "Keyboard shortcuts",
+  "KEYBOARD_HELP_J": "Next / previous row",
+  "KEYBOARD_HELP_ENTER": "Open row detail",
+  "KEYBOARD_HELP_T": "Cycle row tag",
+  "KEYBOARD_HELP_SLASH": "Focus filter",
+  "KEYBOARD_HELP_QUESTION": "Show this help",
+  "DRILLDOWN_TITLE": "Student detail"
 }

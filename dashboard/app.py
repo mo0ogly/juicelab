@@ -54,7 +54,7 @@ from db import (cohort_exists, count_pending_award_events, count_team_mappings,
     tags_for_cohort)
 from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie; from audit_log import log_event; from sse_routes import register_sse_routes; from tags_routes import register_tags_routes; from monitor import start_monitor, persist_alert; from alerts_routes import register_alerts_routes
 from students_routes import register_students_routes
-from diploma_routes import register_diploma_routes
+from diploma_routes import register_diploma_routes; from pdf_routes import register_pdf_routes
 
 LOGGER = logging.getLogger(__name__)
 logging.basicConfig(
@@ -583,7 +583,7 @@ def create_app() -> Flask:
     CORS(app, resources={r"/api/*": {"origins": _cors_origins()}},
          allow_headers=["Content-Type", "Authorization", "X-Teacher-Token", "X-Instance-Label", "X-Student-Token"],
          methods=["GET", "POST", "DELETE", "OPTIONS"])
-    register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event); register_proof_routes(app, _check_teacher_auth, expected_flag=_expected_flag, insert_event=_insert_event, events_for=_events_for, proof_secret=_proof_secret); register_diploma_routes(app, _check_teacher_auth_html, _check_teacher_auth, proof_secret=_proof_secret); register_sse_routes(app, _check_teacher_auth, _cohort_summary); register_tags_routes(app, _check_teacher_auth); register_alerts_routes(app, _check_teacher_auth)
+    register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event); register_proof_routes(app, _check_teacher_auth, expected_flag=_expected_flag, insert_event=_insert_event, events_for=_events_for, proof_secret=_proof_secret); register_diploma_routes(app, _check_teacher_auth_html, _check_teacher_auth, proof_secret=_proof_secret); register_sse_routes(app, _check_teacher_auth, _cohort_summary); register_tags_routes(app, _check_teacher_auth); register_alerts_routes(app, _check_teacher_auth); register_pdf_routes(app, _check_teacher_auth, _cohort_summary)
     if os.environ.get("DASHBOARD_MONITOR_ENABLED", "1").strip() != "0": import db as _dbm; start_monitor(_dbm, lambda a: persist_alert(_dbm, a))
 
     @app.before_request

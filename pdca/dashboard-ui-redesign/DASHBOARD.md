@@ -8,6 +8,7 @@
 | 001.5 (hotfix) | 2026-05-15 | ~91/100 (est.) | HAUTE CLOSED | 0 — H1 done (preconnect+<link>), H2 done (_CSS_WIDGETS_SRI ajoute, _head_assets.html partial) |
 | 002 (phase 1) | 2026-05-16 | TBD audit | Foundation SSE+tags livree | 0 — Phase 2 (signal-to-noise) au cycle 003 |
 | 003 (phase 2) | 2026-05-16 | TBD audit | Signal-to-noise heuristics + alerts panel + toasts + tag/notes UI livre | 0 — Phase 3 (modes UX) au cycle 004 |
+| 004 (phase 3) | 2026-05-16 | TBD audit | Modes UX + filtres + raccourcis + drill-down modal + PDF export | 0 — visual recette playwright reportee a cycle 005 |
 
 ## Tendance par domaine
 

@@ -385,3 +385,51 @@
   border-color: var(--accent);
   box-shadow: var(--shadow-focus);
 }
+
+/* --- Phase 3 mode toggle --- */
+body.mode-live .scroll,
+body.mode-live .toolbar,
+body.mode-live .legend,
+body.mode-live .footer { display: none; }
+body.mode-live .kpi-value { font-size: 56px; }
+body.mode-live .kpi-label { font-size: 13px; letter-spacing: 0.22em; }
+body.mode-live .alerts-panel { margin: 32px 0; padding: 24px 28px; }
+body.mode-live .alerts-title { font-size: 14px; }
+body.mode-live .alert-item { font-size: 14px; padding: 12px 16px; }
+body.mode-live .brand h1 { font-size: clamp(2rem, 4vw, 3rem); }
+.mode-switch { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* --- Phase 3 filter bar --- */
+.filter-bar {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  padding: 12px 16px; margin: 16px 0;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.filter-bar label {
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mute);
+  display: flex; align-items: center; gap: 8px;
+}
+.filter-bar select {
+  padding: 5px 9px; font-family: var(--font-body); font-size: 12px;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  text-transform: none; letter-spacing: 0;
+}
+.filter-bar select:focus-visible {
+  outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus);
+}
+.row-filtered-out { display: none !important; }
+
+/* --- Phase 3 keyboard shortcuts + help --- */
+.row-focused { outline: 2px solid var(--accent); outline-offset: -2px; }
+.kbd-help-card { width: min(560px, 96vw); }
+.kbd-help-list { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; padding: 0; font-size: 13px; }
+.kbd-help-list dt { font-family: var(--font-mono); color: var(--accent); margin: 0; }
+.kbd-help-list dd { margin: 0; color: var(--text); }
+kbd { font-family: var(--font-mono); font-size: 11px; padding: 2px 6px; background: var(--bg-soft); border: 1px solid var(--border-strong); border-radius: 3px; color: var(--text); }
+
+/* --- Phase 3 drill-down modal --- */
+.drilldown-card { width: min(1100px, 96vw); max-height: 92vh; padding: 16px 18px; }
+.drilldown-iframe { width: 100%; height: 70vh; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); }
