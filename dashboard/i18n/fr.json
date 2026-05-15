@@ -114,6 +114,9 @@
   "TOAST_ERR_SAVE": "Erreur sauvegarde",
   "TOAST_ERR_DELETE_GENERIC": "Erreur suppression",
   "TOAST_ERR_ADD": "Erreur ajout",
+  "TOAST_FLAG_POSTED": "Flag pose par {student}",
+  "TOAST_QUIZ_DONE": "Quiz complete par {student}",
+  "TOAST_JOURNAL_SAVED": "Journal sauvegarde par {student}",
 
   "MODAL_JOURNAL_TITLE": "Journal",
   "MODAL_LOADING": "Chargement...",
@@ -211,6 +214,11 @@
   "DIPLOMA_BACK": "Retour roster",
   "ACTION_DIPLOMA": "Diplome",
   "ACTION_DETAIL": "Detail",
+  "ACTION_NOTE": "Note",
+  "NOTE_TITLE": "Note professeur",
+  "NOTE_PLACEHOLDER": "Saisir une note libre (max 2000 caracteres)...",
+  "NOTE_SAVE": "Sauvegarder",
+  "NOTE_SAVED": "Note sauvegardee",
   "TOOLBAR_EXPORT_CSV": "Export CSV",
   "TOOLBAR_EXPORT_CSV_TITLE": "Telecharger la cohorte au format CSV (Excel-compatible UTF-8 BOM)",
   "ROW_ACTION_DIPLOMA_SHORT": "Dip",
@@ -251,5 +259,19 @@
   "STUDENT_DETAIL_JOURNAL_AFTER": "Journal retex (apres exercice)",
   "STUDENT_DETAIL_DOWNLOAD_PROOF": "Telecharger proof.md signe",
   "LABEL_NO_EVENTS": "Aucun evenement",
-  "ACTION_EXPORT_DIPLOMAS": "Exporter diplomes cohorte (ZIP)"
+  "ACTION_EXPORT_DIPLOMAS": "Exporter diplomes cohorte (ZIP)",
+
+  "ALERT_TITLE": "Alertes",
+  "ALERT_KIND_BLOCKED": "Bloque",
+  "ALERT_KIND_STUCK": "Cale",
+  "ALERT_KIND_SCRIPTING": "Script suspect",
+  "ALERT_KIND_IDLE": "Inactif",
+  "ALERT_ACK_BUTTON": "OK",
+  "ALERT_EMPTY": "Aucune alerte active",
+
+  "TAG_NONE": "(aucun)",
+  "TAG_A_VOIR": "A voir",
+  "TAG_OK": "OK",
+  "TAG_ABSENT": "Absent",
+  "TAG_A_INTERROGER": "A interroger"
 }

@@ -1,0 +1,11 @@
+{
+  "_comment": "Copy to dashboard-config.json to override monitor thresholds. Priority : this file > env var > built-in default. Reload requires service restart (file is cached at first read).",
+  "monitor": {
+    "blocked_min": 10,
+    "stuck_hints": 5,
+    "scripting_events": 30,
+    "scripting_window_min": 2,
+    "idle_min": 15,
+    "interval_sec": 30
+  }
+}

@@ -76,7 +76,17 @@ def register_sse_routes(
                 while True:
                     try:
                         ev = q.get(timeout=_heartbeat_sec())
-                        yield f"event: event\ndata: {json.dumps(ev)}\n\n"
+                        # Discriminate payload by `kind` to emit typed SSE
+                        # event names (event: alert, event: notification...).
+                        # Plain Phase 1 sync broadcasts have no `kind` and
+                        # keep getting the default `event: event` frame.
+                        if isinstance(ev, dict) and "kind" in ev:
+                            ev_name = ev["kind"]
+                            payload = {k: v for k, v in ev.items() if k != "kind"}
+                        else:
+                            ev_name = "event"
+                            payload = ev
+                        yield f"event: {ev_name}\ndata: {json.dumps(payload)}\n\n"
                     except Empty:
                         yield ": heartbeat\n\n"
             finally:

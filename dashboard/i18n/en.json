@@ -114,6 +114,9 @@
   "TOAST_ERR_SAVE": "Save error",
   "TOAST_ERR_DELETE_GENERIC": "Delete error",
   "TOAST_ERR_ADD": "Add error",
+  "TOAST_FLAG_POSTED": "Flag posted by {student}",
+  "TOAST_QUIZ_DONE": "Quiz completed by {student}",
+  "TOAST_JOURNAL_SAVED": "Journal saved by {student}",
 
   "MODAL_JOURNAL_TITLE": "Journal",
   "MODAL_LOADING": "Loading...",
@@ -211,6 +214,11 @@
   "DIPLOMA_BACK": "Back to roster",
   "ACTION_DIPLOMA": "Diploma",
   "ACTION_DETAIL": "Detail",
+  "ACTION_NOTE": "Note",
+  "NOTE_TITLE": "Teacher note",
+  "NOTE_PLACEHOLDER": "Free-form note (max 2000 characters)...",
+  "NOTE_SAVE": "Save",
+  "NOTE_SAVED": "Note saved",
   "TOOLBAR_EXPORT_CSV": "Export CSV",
   "TOOLBAR_EXPORT_CSV_TITLE": "Download the cohort as CSV (Excel-compatible UTF-8 BOM)",
   "ROW_ACTION_DIPLOMA_SHORT": "Dip",
@@ -251,5 +259,19 @@
   "STUDENT_DETAIL_JOURNAL_AFTER": "Retex journal (after exercise)",
   "STUDENT_DETAIL_DOWNLOAD_PROOF": "Download signed proof.md",
   "LABEL_NO_EVENTS": "No events",
-  "ACTION_EXPORT_DIPLOMAS": "Export cohort diplomas (ZIP)"
+  "ACTION_EXPORT_DIPLOMAS": "Export cohort diplomas (ZIP)",
+
+  "ALERT_TITLE": "Alerts",
+  "ALERT_KIND_BLOCKED": "Blocked",
+  "ALERT_KIND_STUCK": "Stuck",
+  "ALERT_KIND_SCRIPTING": "Suspected script",
+  "ALERT_KIND_IDLE": "Idle",
+  "ALERT_ACK_BUTTON": "OK",
+  "ALERT_EMPTY": "No active alert",
+
+  "TAG_NONE": "(none)",
+  "TAG_A_VOIR": "To check",
+  "TAG_OK": "OK",
+  "TAG_ABSENT": "Absent",
+  "TAG_A_INTERROGER": "To question"
 }

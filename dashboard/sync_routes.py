@@ -27,6 +27,13 @@ from db import get_connection, get_student_status
 LOGGER = logging.getLogger(__name__)
 
 
+NOTIFICATION_TYPES = {
+    "flag_verified":  "flag",
+    "quiz_completed": "quiz",
+    "journal_filled": "journal",
+}
+
+
 ValidateFn = Callable[[dict[str, Any]], "tuple[bool, str]"]
 InsertFn = Callable[[dict[str, Any], "str | None"], int]
 
@@ -83,4 +90,17 @@ def register_sync_routes(
             })
         except Exception as exc:
             LOGGER.warning("sse publish failed for event=%s: %s", new_id, exc)
+
+        sub = NOTIFICATION_TYPES.get(payload["event_type"])
+        if sub is not None:
+            try:
+                sse_pubsub.publish(cohort, {
+                    "kind": "notification",
+                    "subtype": sub,
+                    "student_token": token,
+                    "challenge_key": payload.get("challenge_key"),
+                    "client_ts": payload.get("client_ts"),
+                })
+            except Exception as exc:
+                LOGGER.warning("sse notification publish failed for event=%s: %s", new_id, exc)
         return jsonify({"ok": True, "id": new_id}), 201  # type: ignore[return-value]

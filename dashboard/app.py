@@ -50,8 +50,9 @@ from flask_cors import CORS
 
 from db import (cohort_exists, count_pending_award_events, count_team_mappings,
     ensure_cohort, ensure_student, get_connection, get_team_mapping, init_schema,
-    names_for_cohort, mark_award_pushed, pending_award_events, set_team_mapping)
-from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie; from audit_log import log_event; from sse_routes import register_sse_routes; from tags_routes import register_tags_routes
+    names_for_cohort, mark_award_pushed, pending_award_events, set_team_mapping,
+    tags_for_cohort)
+from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie; from audit_log import log_event; from sse_routes import register_sse_routes; from tags_routes import register_tags_routes; from monitor import start_monitor, persist_alert; from alerts_routes import register_alerts_routes
 from students_routes import register_students_routes
 from diploma_routes import register_diploma_routes
 
@@ -546,7 +547,9 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
         totals[student] = {"avg_score": avg, "partial_score": partial,
             "challenges_with_quiz": chall_done, "challenges_touched": len(per_chall)}
 
-    with get_connection() as conn: roster = names_for_cohort(conn, cohort_id)
+    with get_connection() as conn:
+        roster = names_for_cohort(conn, cohort_id)
+        tags = tags_for_cohort(conn, cohort_id)
     return {
         "cohort_id": cohort_id, "students": sorted_students,
         "challenges": sorted_challenges,
@@ -554,6 +557,7 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
         "totals": totals, "events_total": len(rows),
         "event_counts": {s: event_counts.get(s, 0) for s in sorted_students},
         "names": {t: roster[t] for t in sorted_students if t in roster},
+        "tags": tags,
     }
 
 
@@ -579,7 +583,8 @@ def create_app() -> Flask:
     CORS(app, resources={r"/api/*": {"origins": _cors_origins()}},
          allow_headers=["Content-Type", "Authorization", "X-Teacher-Token", "X-Instance-Label", "X-Student-Token"],
          methods=["GET", "POST", "DELETE", "OPTIONS"])
-    register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event); register_proof_routes(app, _check_teacher_auth, expected_flag=_expected_flag, insert_event=_insert_event, events_for=_events_for, proof_secret=_proof_secret); register_diploma_routes(app, _check_teacher_auth_html, _check_teacher_auth, proof_secret=_proof_secret); register_sse_routes(app, _check_teacher_auth, _cohort_summary); register_tags_routes(app, _check_teacher_auth)
+    register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event); register_proof_routes(app, _check_teacher_auth, expected_flag=_expected_flag, insert_event=_insert_event, events_for=_events_for, proof_secret=_proof_secret); register_diploma_routes(app, _check_teacher_auth_html, _check_teacher_auth, proof_secret=_proof_secret); register_sse_routes(app, _check_teacher_auth, _cohort_summary); register_tags_routes(app, _check_teacher_auth); register_alerts_routes(app, _check_teacher_auth)
+    if os.environ.get("DASHBOARD_MONITOR_ENABLED", "1").strip() != "0": import db as _dbm; start_monitor(_dbm, lambda a: persist_alert(_dbm, a))
 
     @app.before_request
     def _csp_nonce() -> None:

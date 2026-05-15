@@ -109,6 +109,8 @@
     </span>
   </div>
 
+  {% include "_alerts_panel.html" %}
+
   {% if not summary.students %}
     <div class="empty-state" id="empty-msg">
       <h2>{{ t('EMPTY_NO_EVENTS_TITLE') }}</h2>
@@ -137,10 +139,19 @@
               {% if _name %}{{ _name }}{% else %}{{ t('STUDENT_UNNAMED_PREFIX') }} {{ student[:6] }}{% endif %}
             </strong>
             <input class="name-edit{% if not _name %} name-missing{% endif %}" type="text" value="{{ _name }}" placeholder="{{ t('STUDENT_NAME_MISSING_PLACEHOLDER') }}" maxlength="100" aria-label="{{ t('ARIA_STUDENT_NAME') }}">
+            {% set _tag = (summary.tags.get(student, 'none') if summary.tags is defined else 'none') %}
+            <select class="tag-select" data-student="{{ student }}" aria-label="{{ t('TAG_NONE') }}">
+              <option value="none"{% if _tag == 'none' %} selected{% endif %}>{{ t('TAG_NONE') }}</option>
+              <option value="a_voir"{% if _tag == 'a_voir' %} selected{% endif %}>{{ t('TAG_A_VOIR') }}</option>
+              <option value="ok"{% if _tag == 'ok' %} selected{% endif %}>{{ t('TAG_OK') }}</option>
+              <option value="absent"{% if _tag == 'absent' %} selected{% endif %}>{{ t('TAG_ABSENT') }}</option>
+              <option value="a_interroger"{% if _tag == 'a_interroger' %} selected{% endif %}>{{ t('TAG_A_INTERROGER') }}</option>
+            </select>
             <small class="token-hint">{{ student[:8] }}&hellip;</small>
             <span class="row-actions">
               <a href="/admin/student/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DETAIL') }}">D</a>
               <a href="/admin/diploma/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DIPLOMA') }}">{{ t('ROW_ACTION_DIPLOMA_SHORT') }}</a>
+              <button type="button" class="note-btn" data-student="{{ student }}" title="{{ t('ACTION_NOTE') }}">N</button>
             </span>
           </td>
           <td class="activity-col">
@@ -218,6 +229,21 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="note-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="note-modal-title">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="note-modal-title">{{ t('NOTE_TITLE') }}</h3>
+      <button class="modal-close" type="button" id="note-close-btn" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="note-textarea" class="note-textarea" placeholder="{{ t('NOTE_PLACEHOLDER') }}" maxlength="2000" rows="8"></textarea>
+    </div>
+    <div class="modal-meta">
+      <button class="btn primary" id="note-save-btn">{{ t('NOTE_SAVE') }}</button>
+    </div>
+  </div>
+</div>
+
 <script nonce="{{ csp_nonce }}">
   window.I18N = {{ i18n_catalog | tojson }};
   window.T = function(key, params) {
@@ -242,6 +268,16 @@
       const h = Object.assign({}, base || {});
       h['X-CSRF-Token'] = _cookie('csrf_token') || '';
       return h;
+    }
+
+    function escapeHtml(s) {
+      if (s === null || s === undefined) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function pillsHtml(slot, challenge, student) {
@@ -296,12 +332,21 @@
       const body = document.getElementById('body-rows');
       let bodyHtml = '';
       const nameMap = summary.names || {};
+      const tagMap = summary.tags || {};
+      const tagValues = ['none', 'a_voir', 'ok', 'absent', 'a_interroger'];
       for (const student of summary.students) {
         const name = nameMap[student] || '';
         const placeholder = name ? '' : 'placeholder="' + (student.substring(0, 8) + '...') + '"';
+        const tag = tagMap[student] || 'none';
+        const tagOpts = tagValues.map(function (v) {
+          return '<option value="' + v + '"' + (v === tag ? ' selected' : '') + '>'
+            + escapeHtml(T('TAG_' + v.toUpperCase())) + '</option>';
+        }).join('');
         bodyHtml += '<tr data-student="' + student + '">';
         bodyHtml += '<td class="sticky-col" title="' + student + '">'
           + '<input class="name-edit" type="text" value="' + name.replace(/"/g, '&quot;') + '" ' + placeholder + ' maxlength="100" aria-label="' + T('ARIA_STUDENT_NAME') + '">'
+          + '<select class="tag-select" data-student="' + student + '" aria-label="' + escapeHtml(T('TAG_NONE')) + '">' + tagOpts + '</select>'
+          + '<span class="row-actions"><button type="button" class="note-btn" data-student="' + student + '" title="' + escapeHtml(T('ACTION_NOTE')) + '">N</button></span>'
           + '</td>';
         for (const ch of summary.challenges) {
           const slot = (summary.matrix[student] || {})[ch];
@@ -313,6 +358,8 @@
       body.innerHTML = bodyHtml;
       bindJournalPills();
       bindNameEdits();
+      bindTagSelects();
+      bindNoteButtons();
     }
 
     function bindNameEdits() {
@@ -347,6 +394,62 @@
         p.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
         });
+      });
+    }
+
+    function bindTagSelects() {
+      document.querySelectorAll('.tag-select').forEach(sel => {
+        if (sel.dataset.bound) return;
+        sel.dataset.bound = '1';
+        sel.addEventListener('change', () => {
+          const token = sel.getAttribute('data-student');
+          fetch('/api/tag', {
+            method: 'POST', credentials: 'include',
+            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ student_token: token, cohort_id: COHORT, status: sel.value }),
+          }).then(r => r.json()).catch(() => {});
+        });
+      });
+    }
+
+    let currentNoteToken = null;
+
+    function openNoteModal(token) {
+      currentNoteToken = token;
+      const backdrop = document.getElementById('note-modal-backdrop');
+      const ta = document.getElementById('note-textarea');
+      ta.value = '';
+      backdrop.classList.add('open');
+      fetch('/api/note?student_token=' + encodeURIComponent(token) + '&cohort=' + encodeURIComponent(COHORT),
+            { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => { ta.value = d.body || ''; ta.focus(); })
+        .catch(() => {});
+    }
+
+    function closeNoteModal() {
+      document.getElementById('note-modal-backdrop').classList.remove('open');
+      currentNoteToken = null;
+    }
+
+    function saveNote() {
+      if (!currentNoteToken) return;
+      const body = document.getElementById('note-textarea').value;
+      fetch('/api/note', {
+        method: 'POST', credentials: 'include',
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ student_token: currentNoteToken, cohort_id: COHORT, body: body }),
+      }).then(r => r.json()).then(() => {
+        if (typeof showToast === 'function') showToast(T('NOTE_SAVED'));
+        closeNoteModal();
+      });
+    }
+
+    function bindNoteButtons() {
+      document.querySelectorAll('.note-btn').forEach(btn => {
+        if (btn.dataset.bound) return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => openNoteModal(btn.getAttribute('data-student')));
       });
     }
 
@@ -387,8 +490,13 @@
     document.getElementById('modal-backdrop').addEventListener('click', (e) => {
       if (e.target.id === 'modal-backdrop') window.closeModal();
     });
+    document.getElementById('note-close-btn').addEventListener('click', closeNoteModal);
+    document.getElementById('note-save-btn').addEventListener('click', saveNote);
+    document.getElementById('note-modal-backdrop').addEventListener('click', (e) => {
+      if (e.target.id === 'note-modal-backdrop') closeNoteModal();
+    });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') window.closeModal();
+      if (e.key === 'Escape') { window.closeModal(); closeNoteModal(); }
     });
 
     function applySnapshot(summary) {
@@ -417,6 +525,80 @@
     }
 
     bindJournalPills();
+    bindNameEdits();
+    bindTagSelects();
+    bindNoteButtons();
+    // --- Phase 2 Task 4 : live alerts panel ---
+    function alertKindOf(a) {
+      // SSE payload exposes `alert_kind`; REST /api/alerts returns `kind`.
+      return (a.alert_kind || a.kind || '').toString();
+    }
+
+    function alertItemHtml(a) {
+      const kind = alertKindOf(a);
+      const kindKey = 'ALERT_KIND_' + kind.toUpperCase();
+      const labelRaw = T(kindKey);
+      const kindLabel = (labelRaw && labelRaw !== kindKey) ? labelRaw : kind;
+      const token = (a.student_token || '').toString();
+      const tokenShort = token.substring(0, 8);
+      const challenge = a.challenge_key ? ' &middot; ' + escapeHtml(a.challenge_key) : '';
+      return '<li class="alert-item alert-kind-' + escapeHtml(kind) + '" data-alert-id="' + a.id + '">'
+        + '<span class="alert-kind">' + escapeHtml(kindLabel) + '</span>'
+        + '<span class="alert-student">' + escapeHtml(tokenShort) + '&hellip;</span>'
+        + challenge
+        + '<button class="alert-ack-btn" data-alert-id="' + a.id + '" type="button">' + escapeHtml(T('ALERT_ACK_BUTTON')) + '</button>'
+        + '</li>';
+    }
+
+    function renderAlerts(alerts) {
+      const list = document.getElementById('alerts-list');
+      if (!list) return;
+      if (!alerts || alerts.length === 0) {
+        list.innerHTML = '<li class="alerts-empty" id="alerts-empty">' + escapeHtml(T('ALERT_EMPTY')) + '</li>';
+        return;
+      }
+      list.innerHTML = alerts.map(alertItemHtml).join('');
+      bindAckButtons();
+    }
+
+    function prependAlert(a) {
+      const list = document.getElementById('alerts-list');
+      if (!list) return;
+      const empty = document.getElementById('alerts-empty');
+      if (empty) empty.remove();
+      const wrap = document.createElement('div');
+      wrap.innerHTML = alertItemHtml(a);
+      const node = wrap.firstChild;
+      if (node) list.insertBefore(node, list.firstChild);
+      bindAckButtons();
+    }
+
+    function bindAckButtons() {
+      document.querySelectorAll('.alert-ack-btn').forEach(btn => {
+        if (btn.dataset.bound) return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-alert-id');
+          fetch('/api/alerts/' + encodeURIComponent(id) + '/ack', {
+            method: 'POST', credentials: 'include',
+            headers: csrfHeaders(),
+          }).then(r => r.json()).then(() => {
+            const item = btn.closest('.alert-item');
+            if (item) item.remove();
+            const list = document.getElementById('alerts-list');
+            if (list && list.querySelectorAll('.alert-item').length === 0) {
+              list.innerHTML = '<li class="alerts-empty" id="alerts-empty">' + escapeHtml(T('ALERT_EMPTY')) + '</li>';
+            }
+          }).catch(() => {/* network error: leave row in place so teacher can retry */});
+        });
+      });
+    }
+
+    // Boot : fetch existing unack alerts for the active cohort.
+    fetch('/api/alerts?cohort=' + encodeURIComponent(COHORT) + '&unack=true', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : { alerts: [] })
+      .then(d => renderAlerts(d.alerts || []))
+      .catch(() => { /* silent : panel stays empty until next SSE alert event */ });
 
     // Live updates via Server-Sent Events. The browser handles reconnect
     // automatically; on error we surface a disconnect badge but keep
@@ -430,6 +612,46 @@
       // Phase 2 will switch to delta patching using the event payload.
       refetchSummary();
     });
+    es.addEventListener('alert', (e) => {
+      try {
+        const a = JSON.parse(e.data);
+        prependAlert(a);
+      } catch (_) { /* ignore parse */ }
+    });
+    es.addEventListener('notification', (e) => {
+      try {
+        const n = JSON.parse(e.data);
+        showNotificationToast(n);
+      } catch (_) { /* ignore parse */ }
+    });
+
+    function showNotificationToast(n) {
+      const msgs = {
+        flag: 'TOAST_FLAG_POSTED',
+        quiz: 'TOAST_QUIZ_DONE',
+        journal: 'TOAST_JOURNAL_SAVED',
+      };
+      const key = msgs[n.subtype] || 'TOAST_NOTIFICATION';
+      const studentShort = (n.student_token || '').toString().substring(0, 8) + '...';
+      const challenge = n.challenge_key ? ' - ' + n.challenge_key : '';
+      const msg = T(key, { student: studentShort }) + challenge;
+      showToast(msg);
+    }
+
+    function showToast(msg) {
+      let t = document.getElementById('toast-host');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast-host';
+        t.className = 'toast';
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(function () { t.classList.remove('show'); }, 4000);
+    }
+
     es.onerror = () => {
       refreshTag.textContent = T('REFRESH_KO', { msg: 'SSE disconnected, auto-retry' });
       autoTag.textContent = T('REFRESH_TAG_KO');

@@ -240,3 +240,148 @@
 }
 .scroll::-webkit-scrollbar-thumb:hover,
 .modal-card::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* --- Phase 2 alerts panel --- */
+.alerts-panel {
+  margin: 24px 0;
+  padding: 16px 18px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--rose);
+  border-radius: var(--radius);
+}
+.alerts-title {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rose);
+  font-weight: 500;
+}
+.alerts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--rose);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+}
+.alert-kind {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.alert-item.alert-kind-blocked .alert-kind { color: var(--rose); }
+.alert-item.alert-kind-blocked { border-left-color: var(--rose); }
+.alert-item.alert-kind-stuck .alert-kind { color: var(--amber); }
+.alert-item.alert-kind-stuck { border-left-color: var(--amber); }
+.alert-item.alert-kind-scripting .alert-kind { color: var(--cobalt); }
+.alert-item.alert-kind-scripting { border-left-color: var(--cobalt); }
+.alert-item.alert-kind-idle .alert-kind { color: var(--text-mute); }
+.alert-item.alert-kind-idle { border-left-color: var(--text-mute); }
+.alert-student {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-soft);
+}
+.alert-ack-btn {
+  margin-left: auto;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--bg);
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+.alert-ack-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.alerts-empty {
+  font-size: 12px;
+  color: var(--text-mute);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+/* --- Phase 2 inline tag select --- */
+.tag-select {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-soft);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+.tag-select:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.tag-select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* --- Phase 2 Task 7 : note modal trigger + textarea --- */
+.note-btn {
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-soft);
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 500;
+}
+.note-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.note-textarea {
+  width: 100%;
+  min-height: 180px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+.note-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
+}

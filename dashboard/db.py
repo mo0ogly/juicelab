@@ -597,6 +597,15 @@ def get_tag(conn: sqlite3.Connection, student_token: str, cohort_id: str) -> str
     return row[0] if row else None
 
 
+def tags_for_cohort(conn: sqlite3.Connection, cohort_id: str) -> dict[str, str]:
+    """Return {student_token: status} for all tagged students in the cohort."""
+    rows = conn.execute(
+        "SELECT student_token, status FROM student_tag WHERE cohort_id=?",
+        (cohort_id,),
+    ).fetchall()
+    return {r[0]: r[1] for r in rows}
+
+
 def set_note(conn: sqlite3.Connection, student_token: str, cohort_id: str, body: str, now: str) -> None:
     conn.execute(
         "INSERT INTO student_note (student_token, cohort_id, body, updated_at) VALUES (?, ?, ?, ?) "
@@ -628,3 +637,13 @@ def recent_alerts(conn: sqlite3.Connection, cohort_id: str, limit: int = 100) ->
         "FROM alerts WHERE cohort_id=? ORDER BY id DESC LIMIT ?",
         (cohort_id, limit),
     ).fetchall()
+
+
+def ack_alert(conn: sqlite3.Connection, alert_id: int, now: str) -> int:
+    """Stamp ack_at on a single alert if not already acked. Returns rowcount
+    (0 if alert missing or already acked, 1 on success). Caller commits."""
+    cur = conn.execute(
+        "UPDATE alerts SET ack_at=? WHERE id=? AND ack_at IS NULL",
+        (now, alert_id),
+    )
+    return cur.rowcount

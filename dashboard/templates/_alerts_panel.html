@@ -1,0 +1,7 @@
+{# Loaded by dashboard.html. Shows recent unack alerts; populated via SSE `alert` event. #}
+<aside class="alerts-panel" id="alerts-panel" aria-label="{{ t('ALERT_TITLE') }}">
+  <h3 class="alerts-title">{{ t('ALERT_TITLE') }}</h3>
+  <ul id="alerts-list" class="alerts-list">
+    <li class="alerts-empty" id="alerts-empty">{{ t('ALERT_EMPTY') }}</li>
+  </ul>
+</aside>
