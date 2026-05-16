@@ -1,0 +1,56 @@
+{
+  "cycle": 5,
+  "date": "2026-05-16",
+  "perimetre": "audit holistique Phases 1+2+3 sur main",
+  "scope_commits": ["1193489 P1 SSE+tags", "fffae3f P2 signal-to-noise", "c6fe1ad P3 modes UX"],
+  "scores_by_domain": {
+    "architecture_coherence": {"weight": 18, "score": 78},
+    "security_csp":           {"weight": 18, "score": 74},
+    "performance":            {"weight": 14, "score": 72},
+    "code_quality":           {"weight": 12, "score": 72},
+    "i18n":                   {"weight":  6, "score": 95},
+    "accessibility":          {"weight": 10, "score": 88},
+    "test_coverage":          {"weight": 12, "score": 92},
+    "markup_consistency":     {"weight": 10, "score": 90}
+  },
+  "score_global": 80,
+  "objectif": "consolidation post-3-phases",
+  "verdict": "ACHIEVED_AVEC_HOTFIX_CRITICAL",
+  "findings_by_severity": {
+    "CRITICAL": 1,
+    "HAUTE":    6,
+    "MOYENNE":  5,
+    "BASSE":    4,
+    "INFO":     2
+  },
+  "critical_findings": [
+    {
+      "id": "F1",
+      "domain": "security_csp + architecture_coherence",
+      "title": "CSP frame-ancestors 'none' casse le drill-down Phase 3",
+      "file": "dashboard/app.py:621",
+      "verified": true,
+      "evidence": "GET /admin/student/X retourne Content-Security-Policy avec frame-ancestors 'none'. Drill-down ouvre <iframe src> qui sera refuse par le browser.",
+      "fix": "frame-ancestors 'none' -> frame-ancestors 'self'",
+      "scheduled": "cycle 005 hotfix (this session)"
+    }
+  ],
+  "regressions_vs_previous": null,
+  "test_summary": {
+    "total":  242,
+    "passed": 242,
+    "runtime_sec": 5.9,
+    "gaps": ["pas de visual recette playwright (deferred cycle 005)", "PDF golden-file test absent (weasyprint missing)", "pas de load test concurrent SSE"]
+  },
+  "policy_gates": {
+    "no_stub":        "OK",
+    "no_mock":        "OK",
+    "usage_triage":   "N/A (3 phases livrees, pas dead code)",
+    "no_disable":     "OK"
+  },
+  "preflight": {
+    "flask_boot": "OK",
+    "pytest":     "OK (242/242)",
+    "file_size":  "WARNING (app.py 800, dashboard.html 800 — saturation)"
+  }
+}

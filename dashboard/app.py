@@ -618,7 +618,7 @@ def create_app() -> Flask:
             f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             f"font-src 'self' https://fonts.gstatic.com; "
             f"script-src {script_src}; img-src 'self' data:; "
-            "connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+            "connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'")
         # Note: Server header neutralization happens at WSGI handler level
         # (see WSGIRequestHandler patch below the app factory) because
         # Flask's after_request only stacks alongside Werkzeug's own header.
