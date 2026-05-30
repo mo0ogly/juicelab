@@ -380,6 +380,7 @@ def build_eleve(tmp: Path) -> None:
         "docker compose --env-file .env down -v    # arret + efface tout",
     ])
 
+    annexes(doc)
     doc.save(str(ELEVE_OUT))
     print(f"  ecrit : {ELEVE_OUT}")
 
@@ -507,8 +508,116 @@ def build_prof(tmp: Path) -> None:
     note(doc, "down -v efface la base SQLite (toute la progression cohorte). "
               "Recupere les preuves avant si besoin.")
 
+    annexes(doc)
     doc.save(str(PROF_OUT))
     print(f"  ecrit : {PROF_OUT}")
+
+
+# ---------------------------------------------------------------------------
+# Annexes communes (prerequis detailles) — appendues aux deux guides
+# ---------------------------------------------------------------------------
+
+
+def annexes(doc: Document) -> None:
+    """Annexes prerequis : PowerShell, Docker, Git/OpenSSL, verifs et gotchas."""
+    doc.add_page_break()
+    doc.add_heading("Annexes — preparer le poste", level=1)
+    para(doc, "A faire UNE fois par poste, avant la procedure d'installation. "
+              "Si une commande echoue, voir l'annexe D (depannage).")
+
+    # ---- A : PowerShell ---------------------------------------------------
+    doc.add_heading("Annexe A — Debloquer PowerShell (Windows)", level=2)
+    para(doc, "Par defaut, Windows bloque l'execution des scripts .ps1 "
+              "(ExecutionPolicy = Restricted). Le script install-student.ps1 ne "
+              "demarrera pas tant que ce n'est pas debloque. Aucun droit "
+              "administrateur n'est requis pour les methodes ci-dessous.")
+    para(doc, "Methode 1 — temporaire, pour la session courante (recommandee). "
+              "Ouvre PowerShell, puis dans la MEME fenetre :")
+    code_block(doc, [
+        "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass",
+        "# puis lance le script dans cette meme fenetre",
+    ])
+    para(doc, "Methode 2 — persistante pour ton compte utilisateur :")
+    code_block(doc, [
+        "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned",
+    ])
+    para(doc, "Si le fichier a ete telecharge et est marque « bloque » par Windows :")
+    code_block(doc, [
+        "Unblock-File .\\scripts\\install-student.ps1",
+    ])
+    para(doc, "Verifier l'etat des politiques par portee :")
+    code_block(doc, ["Get-ExecutionPolicy -List"])
+    note(doc, "Utilise de preference PowerShell 7+ (commande pwsh) plutot que "
+              "Windows PowerShell 5. Ne lance pas le script « en tant "
+              "qu'administrateur » : Docker Desktop fonctionne en utilisateur normal.")
+
+    # ---- B : Docker -------------------------------------------------------
+    doc.add_heading("Annexe B — Installer Docker", level=2)
+
+    doc.add_heading("Windows 10/11", level=3)
+    numbered(doc, "Active WSL2 (PowerShell en administrateur), puis redemarre :")
+    code_block(doc, ["wsl --install"])
+    numbered(doc, "Installe Docker Desktop depuis docker.com (backend WSL2 par defaut).")
+    numbered(doc, "Lance Docker Desktop et attends le statut « running » (icone baleine).")
+    numbered(doc, "Verifie dans un terminal :")
+    code_block(doc, ["docker run --rm hello-world", "docker compose version"])
+    note(doc, "Erreur de virtualisation : active « Virtualization / SVM / VT-x » "
+              "dans le BIOS/UEFI, et la fonctionnalite Windows « Plateforme "
+              "de machine virtuelle ».")
+
+    doc.add_heading("macOS", level=3)
+    numbered(doc, "Telecharge Docker Desktop pour Mac (choisis la puce : Apple "
+                  "Silicon ou Intel).")
+    numbered(doc, "Glisse Docker dans Applications, lance-le, attends « running ».")
+    numbered(doc, "Verifie :")
+    code_block(doc, ["docker run --rm hello-world", "docker compose version"])
+
+    doc.add_heading("Linux (Debian / Ubuntu)", level=3)
+    para(doc, "Installe Docker Engine + le plugin compose v2 (depot officiel Docker), "
+              "puis ajoute ton utilisateur au groupe docker :")
+    code_block(doc, [
+        "# suivre https://docs.docker.com/engine/install/ pour le depot apt officiel",
+        "sudo usermod -aG docker $USER",
+        "# se deconnecter / reconnecter (ou : newgrp docker) pour appliquer le groupe",
+        "docker compose version",
+    ])
+
+    # ---- C : Git / OpenSSL ------------------------------------------------
+    doc.add_heading("Annexe C — Git et OpenSSL", level=2)
+    add_table(
+        doc,
+        ["Systeme", "Commande / source"],
+        [
+            ["Windows", "Git for Windows (git-scm.com) — fournit git, openssl et Git Bash"],
+            ["macOS", "xcode-select --install (git) ; openssl deja present"],
+            ["Linux", "sudo apt install git openssl"],
+        ],
+        [40, 130],
+    )
+    note(doc, "Le script genere les jetons avec openssl. Sous Windows, si openssl "
+              "manque, il bascule sur un generateur .NET integre — aucune action requise.")
+
+    # ---- D : Depannage prerequis -----------------------------------------
+    doc.add_heading("Annexe D — Depannage des prerequis", level=2)
+    add_table(
+        doc,
+        ["Symptome", "Cause / solution"],
+        [
+            ["« running scripts is disabled on this system »",
+             "PowerShell bloque : voir Annexe A (Set-ExecutionPolicy -Scope Process Bypass)."],
+            ["« docker : command not found » / « cannot connect to the Docker daemon »",
+             "Docker Desktop n'est pas demarre, ou (Linux) groupe docker pas applique : "
+             "ouvre Docker Desktop / reconnecte-toi."],
+            ["Le clone git echoue ou reste bloque",
+             "Proxy ou pare-feu d'entreprise : configure git (http.proxy) ou utilise "
+             "un reseau ouvert pour le clone."],
+            ["Le build s'arrete au telechargement d'images",
+             "Proxy Docker : configure le proxy dans Docker Desktop (Settings > Resources > Proxies)."],
+            ["docker compose version affiche v1.x",
+             "Plugin compose v2 absent : installe docker compose v2 (docker-compose-plugin)."],
+        ],
+        [60, 110],
+    )
 
 
 # ---------------------------------------------------------------------------
