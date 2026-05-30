@@ -2,17 +2,32 @@
 # JuiceLab — installateur eleve / smoke test enseignant.
 #
 # Usage :
-#   ./scripts/install-student.sh                # installation interactive (cohort_id demande)
-#   ./scripts/install-student.sh -c M2-IA-2026  # cohort_id en argument
-#   ./scripts/install-student.sh -c X -y        # non interactif, accepte tous les defauts
-#   ./scripts/install-student.sh --reset        # docker compose down -v + reinstall propre
+#   ./scripts/install-student.sh                       # solo local : dashboard + juice-shop sur la meme machine
+#   ./scripts/install-student.sh -c M2-IA-2026         # cohort_id en argument
+#   ./scripts/install-student.sh -c X -y               # non interactif, accepte tous les defauts
+#   ./scripts/install-student.sh --reset               # docker compose down -v + reinstall propre
+#
+# Scenario 4 (Juice Shop chez l'eleve, dashboard consolide chez le prof) :
+#   Cote eleve :
+#     ./scripts/install-student.sh -d 192.168.1.10 -l amelie -c M2-IA-2026
+#       -> lance UNIQUEMENT juice-shop, configure pour pousser ses events
+#          vers le dashboard du prof (http://192.168.1.10:<DASHBOARD_PORT>).
+#   Cote prof :
+#     ./scripts/install-student.sh --server -c M2-IA-2026
+#       -> lance UNIQUEMENT le dashboard, accessible sur le LAN, et affiche
+#          l'IP a distribuer aux eleves.
+#
+# Modes de lancement :
+#   (defaut)   solo local  : services dashboard + juicelab-demo
+#   -d HOST    eleve scen.4 : juicelab-demo seul, dashboard_url -> HOST
+#   --server   prof scen.4  : dashboard seul, joignable sur le LAN
 #
 # Ce script :
 #   1. verifie docker / docker compose / openssl
 #   2. genere TEACHER_ADMIN_TOKEN + DASHBOARD_TEACHER_TOKEN (32 chars random)
 #      a partir de openssl rand si absent dans docker/.env
 #   3. ecrit / met a jour docker/.env (les valeurs existantes ne sont PAS ecrasees)
-#   4. lance docker compose --env-file .env up -d --build
+#   4. lance les services docker compose adaptes au mode choisi
 #   5. attend la disponibilite des endpoints / health-check
 #   6. affiche les URLs eleve / prof
 #
@@ -29,21 +44,33 @@ ENV_EXAMPLE="${DOCKER_DIR}/.env.example"
 COHORT_ID=""
 ASSUME_YES=0
 RESET=0
+DASHBOARD_HOST=""      # -d : IP/host du dashboard prof (scenario 4 cote eleve)
+INSTANCE_LABEL=""      # -l : nom unique de l'instance eleve dans la matrice prof
+SERVER_ONLY=0          # --server : lance uniquement le dashboard (scenario 4 cote prof)
 
 # ---- args ------------------------------------------------------------------
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -c|--cohort) COHORT_ID="$2"; shift 2 ;;
-        -y|--yes)    ASSUME_YES=1; shift ;;
-        --reset)     RESET=1; shift ;;
+        -c|--cohort)    COHORT_ID="$2"; shift 2 ;;
+        -d|--dashboard) DASHBOARD_HOST="$2"; shift 2 ;;
+        -l|--label)     INSTANCE_LABEL="$2"; shift 2 ;;
+        --server)       SERVER_ONLY=1; shift ;;
+        -y|--yes)       ASSUME_YES=1; shift ;;
+        --reset)        RESET=1; shift ;;
         -h|--help)
-            sed -n '2,18p' "$0"
+            sed -n '2,38p' "$0"
             exit 0
             ;;
         *) echo "Argument inconnu : $1" >&2; exit 2 ;;
     esac
 done
+
+# -d et --server sont mutuellement exclusifs (eleve distant vs prof serveur).
+if [[ -n "${DASHBOARD_HOST}" && "${SERVER_ONLY}" -eq 1 ]]; then
+    echo "Erreur : -d/--dashboard (eleve) et --server (prof) sont exclusifs." >&2
+    exit 2
+fi
 
 # ---- helpers ---------------------------------------------------------------
 
@@ -162,10 +189,42 @@ fi
 env_set JUICELAB_COHORT_ID "${COHORT_ID}"
 ok "JUICELAB_COHORT_ID = ${COHORT_ID}"
 
+# ---- Step 2b : cablage scenario 4 (eleve distant) --------------------------
+
+if [[ -n "${DASHBOARD_HOST}" ]]; then
+    env_set DASHBOARD_PUBLIC_HOST "${DASHBOARD_HOST}"
+    ok "DASHBOARD_PUBLIC_HOST = ${DASHBOARD_HOST} (events pousses vers le dashboard prof)"
+
+    # Label unique de l'instance dans la matrice prof. Defaut : nom de session.
+    if [[ -z "${INSTANCE_LABEL}" ]]; then
+        INSTANCE_LABEL="$(id -un 2>/dev/null || echo eleve)"
+    fi
+    env_set JUICELAB_INSTANCE_LABEL "${INSTANCE_LABEL}"
+    ok "JUICELAB_INSTANCE_LABEL = ${INSTANCE_LABEL}"
+elif [[ -n "${INSTANCE_LABEL}" ]]; then
+    env_set JUICELAB_INSTANCE_LABEL "${INSTANCE_LABEL}"
+    ok "JUICELAB_INSTANCE_LABEL = ${INSTANCE_LABEL}"
+fi
+
 # ---- Step 3 : build + up ---------------------------------------------------
 
+# Selection des services selon le mode :
+#   --server         -> dashboard seul (prof, scenario 4)
+#   -d HOST          -> juicelab-demo seul (eleve, scenario 4)
+#   (defaut)         -> dashboard + juicelab-demo (solo local)
+if [[ "${SERVER_ONLY}" -eq 1 ]]; then
+    COMPOSE_SERVICES=(dashboard)
+    say "Mode prof (--server) : build + lancement du dashboard seul"
+elif [[ -n "${DASHBOARD_HOST}" ]]; then
+    COMPOSE_SERVICES=(juicelab-demo)
+    say "Mode eleve (-d ${DASHBOARD_HOST}) : build + lancement de juice-shop seul"
+else
+    COMPOSE_SERVICES=(dashboard juicelab-demo)
+    say "Mode solo local : build + lancement dashboard + juice-shop"
+fi
+
 say "docker compose up -d --build (premier build : 5-8 min, builds suivants : 10s)"
-(cd "${DOCKER_DIR}" && "${DC[@]}" --env-file .env up -d --build)
+(cd "${DOCKER_DIR}" && "${DC[@]}" --env-file .env up -d --build "${COMPOSE_SERVICES[@]}")
 ok "Conteneurs lances"
 
 # ---- Step 4 : health checks ------------------------------------------------
@@ -185,17 +244,62 @@ wait_http() {
     return 1
 }
 
-DASHBOARD_PORT="$(env_get DASHBOARD_PORT)"; DASHBOARD_PORT="${DASHBOARD_PORT:-5000}"
+DASHBOARD_PORT="$(env_get DASHBOARD_PORT)"; DASHBOARD_PORT="${DASHBOARD_PORT:-5050}"
 
-wait_http "http://127.0.0.1:3000/" "Juice Shop"
-wait_http "http://127.0.0.1:${DASHBOARD_PORT}/api/health" "Dashboard /api/health"
+if [[ "${SERVER_ONLY}" -eq 1 ]]; then
+    wait_http "http://127.0.0.1:${DASHBOARD_PORT}/api/health" "Dashboard /api/health"
+elif [[ -n "${DASHBOARD_HOST}" ]]; then
+    wait_http "http://127.0.0.1:3000/" "Juice Shop"
+    # Dashboard distant : verification best-effort (le LAN/firewall peut bloquer).
+    if curl -fsS --max-time 3 "http://${DASHBOARD_HOST}:${DASHBOARD_PORT}/api/health" >/dev/null 2>&1; then
+        ok "Dashboard prof joignable : http://${DASHBOARD_HOST}:${DASHBOARD_PORT}/api/health"
+    else
+        warn "Dashboard prof http://${DASHBOARD_HOST}:${DASHBOARD_PORT} injoignable depuis ici."
+        warn "Verifier que le prof a lance --server, que le LAN est plat, et le firewall (port ${DASHBOARD_PORT})."
+    fi
+else
+    wait_http "http://127.0.0.1:3000/" "Juice Shop"
+    wait_http "http://127.0.0.1:${DASHBOARD_PORT}/api/health" "Dashboard /api/health"
+fi
 
 # ---- Step 5 : recap --------------------------------------------------------
 
-cat <<EOF
+echo
+echo "========================================================================"
+printf "${C_OK}Installation OK${C_OFF}\n\n"
 
-========================================================================
-${C_OK}Installation OK${C_OFF}
+if [[ "${SERVER_ONLY}" -eq 1 ]]; then
+    LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"; LAN_IP="${LAN_IP:-<ip-de-cette-machine>}"
+    cat <<EOF
+  Mode prof (--server) : dashboard de consolidation lance.
+
+  Prof   -> http://127.0.0.1:${DASHBOARD_PORT}/login            (token ci-dessous)
+  Prof   -> http://127.0.0.1:${DASHBOARD_PORT}/dashboard?cohort=${COHORT_ID}
+
+  A DISTRIBUER AUX ELEVES (scenario 4) :
+    Cohorte   : ${COHORT_ID}
+    Dashboard : ${LAN_IP}     (commande eleve : install-student.sh -d ${LAN_IP} -c ${COHORT_ID} -l <prenom>)
+
+  CORS : verifier que DASHBOARD_CORS_ORIGINS autorise l'origine des eleves.
+         Si tous les eleves ouvrent http://127.0.0.1:3000, valeur actuelle OK :
+         $(env_get DASHBOARD_CORS_ORIGINS)
+
+  DASHBOARD_TEACHER_TOKEN = $(env_get DASHBOARD_TEACHER_TOKEN)
+EOF
+elif [[ -n "${DASHBOARD_HOST}" ]]; then
+    cat <<EOF
+  Mode eleve (scenario 4) : juice-shop lance, events pousses vers le prof.
+
+  Eleve  -> http://127.0.0.1:3000/#/juicelab           (parcours TD)
+  Eleve  -> http://127.0.0.1:3000/#/score-board        (challenges OWASP)
+
+  Cohorte           : ${COHORT_ID}
+  Instance (label)  : $(env_get JUICELAB_INSTANCE_LABEL)
+  Dashboard prof    : http://${DASHBOARD_HOST}:${DASHBOARD_PORT}
+EOF
+else
+    cat <<EOF
+  Mode solo local : dashboard + juice-shop sur cette machine.
 
   Eleve  -> http://127.0.0.1:3000/#/juicelab           (parcours TD)
   Eleve  -> http://127.0.0.1:3000/#/score-board        (challenges OWASP)
@@ -204,6 +308,10 @@ ${C_OK}Installation OK${C_OFF}
 
   DASHBOARD_TEACHER_TOKEN = $(env_get DASHBOARD_TEACHER_TOKEN)
   TEACHER_ADMIN_TOKEN     = $(env_get TEACHER_ADMIN_TOKEN)
+EOF
+fi
+
+cat <<EOF
 
   Stop  : (cd docker && ${DC[*]} --env-file .env down)
   Wipe  : (cd docker && ${DC[*]} --env-file .env down -v)

@@ -447,9 +447,9 @@ flowchart TB
         J3[juicelab-demo<br/>:3000]
     end
 
-    J1 -. POST events<br/>http://prof-ip:5000 .-> D
-    J2 -. POST events<br/>http://prof-ip:5000 .-> D
-    J3 -. POST events<br/>http://prof-ip:5000 .-> D
+    J1 -. POST events<br/>http://prof-ip:5050 .-> D
+    J2 -. POST events<br/>http://prof-ip:5050 .-> D
+    J3 -. POST events<br/>http://prof-ip:5050 .-> D
 ```
 
 **Le concept** : chaque élève fait tourner son `juicelab-demo` sur son propre laptop (pas de Juice Shop centralisé). Mais ils configurent leur `dashboard_url` pour pointer vers le PC de l'enseignant sur le LAN. Le prof voit la matrice cohorte temps réel.
@@ -467,47 +467,46 @@ flowchart TB
 
 #### Étapes
 
+> Le script `install-student.sh` gère les deux côtés du scénario 4 : `--server`
+> côté prof (dashboard seul), `-d <IP>` côté élève (juice-shop seul, configuré
+> pour pousser vers le prof). Le port vient de `DASHBOARD_PORT` dans `docker/.env`
+> (ce dépôt livre **5050**) — aucun port à recopier à la main.
+
 **Côté prof** :
 
 ```bash
-# 1. Cloner + ne lancer QUE le dashboard
+# 1. Cloner
 git clone https://github.com/mo0ogly/juicelab.git
-cd juicelab/docker
-cp .env.example .env
-# éditer .env : DASHBOARD_TEACHER_TOKEN, DASHBOARD_PROOF_SECRET, DASHBOARD_CORS_ORIGINS
+cd juicelab
 
-# 2. Lancer uniquement le service dashboard (pas juicelab-demo)
-docker compose --env-file .env up -d --build dashboard
+# 2. Éditer docker/.env : DASHBOARD_TEACHER_TOKEN, DASHBOARD_PROOF_SECRET (>= 16 chars),
+#    DASHBOARD_CORS_ORIGINS. (Si docker/.env n'existe pas, le script le crée.)
 
-# 3. Noter l'IP visible par le LAN
-hostname -I       # ex. 192.168.1.10
-
-# 4. Distribuer aux élèves la chaîne à mettre dans LEUR config :
-#    http://192.168.1.10:5000
+# 3. Lancer UNIQUEMENT le dashboard, joignable sur le LAN
+./scripts/install-student.sh --server -c M2-IA-2026
+#    -> le script affiche l'IP LAN (ex. 192.168.1.10) et le port à distribuer
+#       aux élèves, ainsi que la commande exacte qu'ils doivent lancer.
 ```
 
 **Côté chaque élève** :
 
 ```bash
-# 1. Cloner + lancer juicelab-demo seul, configuré pour pointer vers le prof
+# 1. Cloner
 git clone https://github.com/mo0ogly/juicelab.git
-cd juicelab/docker
+cd juicelab
 
-# 2. Préparer un .env minimaliste
-cat > .env <<EOF
-TEACHER_ADMIN_TOKEN=$(openssl rand -hex 16)
-JUICELAB_DASHBOARD_URL=http://192.168.1.10:5000
-JUICELAB_COHORT_ID=M2-IA-2026
-JUICELAB_INSTANCE_LABEL=$(whoami)   # ou prénom
-JUICELAB_DEFAULT_LANGUAGE=fr
-EOF
+# 2. Lancer UNIQUEMENT juice-shop, pointant vers le dashboard du prof.
+#    Remplacer 192.168.1.10 par l'IP affichée par le prof, <prenom> par un nom unique.
+./scripts/install-student.sh -d 192.168.1.10 -l <prenom> -c M2-IA-2026
 
-# 3. Lancer juicelab-demo uniquement
-docker compose --env-file .env up -d --build juicelab-demo
-
-# 4. Browser
+# 3. Browser
 #    http://127.0.0.1:3000/#/juicelab
 ```
+
+> Installation manuelle (sans le script) : côté prof
+> `docker compose --env-file .env up -d --build dashboard` ; côté élève, mettre
+> `DASHBOARD_PUBLIC_HOST=<ip-prof>` + `JUICELAB_INSTANCE_LABEL=<prenom>` dans
+> `docker/.env` puis `docker compose --env-file .env up -d --build juicelab-demo`.
 
 #### Configuration CORS critique
 
@@ -575,7 +574,7 @@ Récapitulatif rapide.
 | 1 (solo) | Aucun (tout localhost) | — |
 | 2 (LAN) | 3001-30XX + 5000 sur le LAN classe seulement | Élèves + prof, jamais Internet |
 | 3 (VPS) | 80 + 443 (Caddy gère le reste) | Internet |
-| 4 (hybride) | 5000 sur le PC prof | Élèves sur le LAN |
+| 4 (hybride) | 5050 sur le PC prof | Élèves sur le LAN |
 
 **Important** : ne **jamais** exposer le port 3000-30XX directement à Internet sans HTTPS et sans IP allow-listing. Juice Shop est **délibérément vulnérable** — c'est le but. Si vous l'exposez publiquement, n'importe qui peut s'en servir comme point d'attaque vers votre réseau.
 

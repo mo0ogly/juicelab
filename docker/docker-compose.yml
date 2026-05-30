@@ -8,7 +8,7 @@
 #   2. cd docker
 #   3. docker compose --env-file .env up -d --build
 #   4. ouvrir http://127.0.0.1:3000/#/juicelab (eleve)
-#      ouvrir http://127.0.0.1:5000/dashboard?cohort=<COHORT> (prof, header X-Teacher-Token)
+#      ouvrir http://127.0.0.1:5050/dashboard?cohort=<COHORT> (prof, header X-Teacher-Token)
 #
 # Pour une cohorte de N eleves : utiliser provision.py qui genere un fichier
 # docker-compose.cohort.yml avec un service juicelab-NN par eleve, chacun
@@ -38,7 +38,7 @@ services:
     volumes:
       - dashboard_data:/app/data
     ports:
-      - "${DASHBOARD_PORT:-5000}:5000"
+      - "${DASHBOARD_PORT:-5050}:5000"
     networks: [juicelab_net]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=2); sys.exit(0)"]
@@ -65,9 +65,9 @@ services:
     container_name: juicelab-demo
     environment:
       TEACHER_ADMIN_TOKEN: "${TEACHER_ADMIN_TOKEN:?must be set in .env}"
-      JUICELAB_DASHBOARD_URL: "http://${DASHBOARD_PUBLIC_HOST:-127.0.0.1}:${DASHBOARD_PORT:-5000}"
+      JUICELAB_DASHBOARD_URL: "http://${DASHBOARD_PUBLIC_HOST:-127.0.0.1}:${DASHBOARD_PORT:-5050}"
       JUICELAB_COHORT_ID: "${JUICELAB_COHORT_ID:?must be set in .env (no default — pick a cohort id like M2-IA-2026)}"
-      JUICELAB_INSTANCE_LABEL: "demo"
+      JUICELAB_INSTANCE_LABEL: "${JUICELAB_INSTANCE_LABEL:-demo}"
       JUICELAB_DEFAULT_LANGUAGE: "${JUICELAB_DEFAULT_LANGUAGE:-fr}"
     ports:
       - "${JUICELAB_DEMO_PORT:-3000}:3000"
