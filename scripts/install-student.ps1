@@ -18,11 +18,28 @@
 .PARAMETER Reset
     docker compose down -v + suppression de docker/.env avant reinstall.
 
+.PARAMETER Dashboard
+    Scenario 4 (eleve) : IP/host du dashboard du prof. Lance UNIQUEMENT
+    juice-shop, configure pour pousser ses events vers ce dashboard.
+
+.PARAMETER Label
+    Scenario 4 (eleve) : nom unique de l'instance dans la matrice prof
+    (defaut : nom d'utilisateur Windows).
+
+.PARAMETER Server
+    Scenario 4 (prof) : lance UNIQUEMENT le dashboard, joignable sur le LAN,
+    et affiche l'IP a distribuer aux eleves.
+
 .EXAMPLE
     .\scripts\install-student.ps1 -Cohort M2-IA-2026
 
 .EXAMPLE
-    .\scripts\install-student.ps1 -Yes
+    # Scenario 4 cote eleve : pointe vers le dashboard du prof
+    .\scripts\install-student.ps1 -Dashboard 192.168.1.10 -Label amelie -Cohort M2-IA-2026
+
+.EXAMPLE
+    # Scenario 4 cote prof : dashboard seul, joignable sur le LAN
+    .\scripts\install-student.ps1 -Server -Cohort M2-IA-2026
 
 .EXAMPLE
     .\scripts\install-student.ps1 -Reset
@@ -31,9 +48,17 @@
 [CmdletBinding()]
 param(
     [Alias('c')] [string]$Cohort = '',
+    [Alias('d')] [string]$Dashboard = '',
+    [Alias('l')] [string]$Label = '',
+    [switch]$Server,
     [Alias('y')] [switch]$Yes,
     [switch]$Reset
 )
+
+if ($Dashboard -and $Server) {
+    Write-Host '!!! -Dashboard (eleve) et -Server (prof) sont exclusifs.' -ForegroundColor Red
+    exit 2
+}
 
 $ErrorActionPreference = 'Stop'
 
@@ -193,12 +218,42 @@ if (-not $Cohort) {
 Set-EnvValue 'JUICELAB_COHORT_ID' $Cohort
 Ok "JUICELAB_COHORT_ID = $Cohort"
 
+# ---- Step 2b : cablage scenario 4 (eleve distant) --------------------------
+
+if ($Dashboard) {
+    Set-EnvValue 'DASHBOARD_PUBLIC_HOST' $Dashboard
+    Ok "DASHBOARD_PUBLIC_HOST = $Dashboard (events pousses vers le dashboard prof)"
+
+    if (-not $Label) {
+        $Label = if ($env:USERNAME) { $env:USERNAME } else { 'eleve' }
+    }
+    Set-EnvValue 'JUICELAB_INSTANCE_LABEL' $Label
+    Ok "JUICELAB_INSTANCE_LABEL = $Label"
+} elseif ($Label) {
+    Set-EnvValue 'JUICELAB_INSTANCE_LABEL' $Label
+    Ok "JUICELAB_INSTANCE_LABEL = $Label"
+}
+
 # ---- Step 3 : build + up ---------------------------------------------------
 
-Say 'docker compose up -d --build (premier build : 5-8 min, builds suivants : 10s)'
+# Selection des services selon le mode :
+#   -Server          -> dashboard seul (prof, scenario 4)
+#   -Dashboard HOST  -> juicelab-demo seul (eleve, scenario 4)
+#   (defaut)         -> dashboard + juicelab-demo (solo local)
+if ($Server) {
+    $Services = @('dashboard')
+    Say 'Mode prof (-Server) : build + lancement du dashboard seul'
+} elseif ($Dashboard) {
+    $Services = @('juicelab-demo')
+    Say "Mode eleve (-Dashboard $Dashboard) : build + lancement de juice-shop seul"
+} else {
+    $Services = @('dashboard','juicelab-demo')
+    Say 'Mode solo local : build + lancement dashboard + juice-shop'
+}
+
 Push-Location $DockerDir
 try {
-    $dcArgs = @($DC[1..($DC.Length - 1)]) + @('--env-file','.env','up','-d','--build')
+    $dcArgs = @($DC[1..($DC.Length - 1)]) + @('--env-file','.env','up','-d','--build') + $Services
     & $DC[0] @dcArgs
     if ($LASTEXITCODE -ne 0) { Die "docker compose a echoue (exit $LASTEXITCODE)" }
 } finally {
@@ -211,10 +266,25 @@ Ok 'Conteneurs lances'
 Say 'Attente des endpoints (timeout 120s par endpoint)'
 
 $dashboardPort = Get-EnvValue 'DASHBOARD_PORT'
-if (-not $dashboardPort) { $dashboardPort = '5000' }
+if (-not $dashboardPort) { $dashboardPort = '5050' }
 
-[void] (Wait-Http 'http://127.0.0.1:3000/'                              'Juice Shop')
-[void] (Wait-Http "http://127.0.0.1:$dashboardPort/api/health"          'Dashboard /api/health')
+if ($Server) {
+    [void] (Wait-Http "http://127.0.0.1:$dashboardPort/api/health" 'Dashboard /api/health')
+} elseif ($Dashboard) {
+    [void] (Wait-Http 'http://127.0.0.1:3000/' 'Juice Shop')
+    try {
+        $r = Invoke-WebRequest -Uri "http://${Dashboard}:$dashboardPort/api/health" -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
+        if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) {
+            Ok "Dashboard prof joignable : http://${Dashboard}:$dashboardPort/api/health"
+        }
+    } catch {
+        Warn "Dashboard prof http://${Dashboard}:$dashboardPort injoignable depuis ici."
+        Warn "Verifier que le prof a lance -Server, le LAN plat, et le firewall (port $dashboardPort)."
+    }
+} else {
+    [void] (Wait-Http 'http://127.0.0.1:3000/'                     'Juice Shop')
+    [void] (Wait-Http "http://127.0.0.1:$dashboardPort/api/health" 'Dashboard /api/health')
+}
 
 # ---- Step 5 : recap --------------------------------------------------------
 
@@ -223,13 +293,47 @@ Write-Host ''
 Write-Host '========================================================================'
 Write-Host 'Installation OK' -ForegroundColor Green
 Write-Host ''
-Write-Host "  Eleve  -> http://127.0.0.1:3000/#/juicelab           (parcours TD)"
-Write-Host "  Eleve  -> http://127.0.0.1:3000/#/score-board        (challenges OWASP)"
-Write-Host "  Prof   -> http://127.0.0.1:$dashboardPort/login            (token ci-dessous)"
-Write-Host "  Prof   -> http://127.0.0.1:$dashboardPort/dashboard?cohort=$Cohort"
-Write-Host ''
-Write-Host ("  DASHBOARD_TEACHER_TOKEN = {0}" -f (Get-EnvValue 'DASHBOARD_TEACHER_TOKEN'))
-Write-Host ("  TEACHER_ADMIN_TOKEN     = {0}" -f (Get-EnvValue 'TEACHER_ADMIN_TOKEN'))
+
+if ($Server) {
+    $lanIp = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+        Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } |
+        Select-Object -First 1).IPAddress
+    if (-not $lanIp) { $lanIp = '<ip-de-cette-machine>' }
+    Write-Host '  Mode prof (-Server) : dashboard de consolidation lance.'
+    Write-Host ''
+    Write-Host "  Prof   -> http://127.0.0.1:$dashboardPort/login            (token ci-dessous)"
+    Write-Host "  Prof   -> http://127.0.0.1:$dashboardPort/dashboard?cohort=$Cohort"
+    Write-Host ''
+    Write-Host '  A DISTRIBUER AUX ELEVES (scenario 4) :'
+    Write-Host "    Cohorte   : $Cohort"
+    Write-Host "    Dashboard : $lanIp     (commande eleve : .\scripts\install-student.ps1 -Dashboard $lanIp -Cohort $Cohort -Label <prenom>)"
+    Write-Host ''
+    Write-Host '  CORS : verifier que DASHBOARD_CORS_ORIGINS autorise l''origine des eleves.'
+    Write-Host '         Si tous les eleves ouvrent http://127.0.0.1:3000, valeur actuelle OK :'
+    Write-Host ("         {0}" -f (Get-EnvValue 'DASHBOARD_CORS_ORIGINS'))
+    Write-Host ''
+    Write-Host ("  DASHBOARD_TEACHER_TOKEN = {0}" -f (Get-EnvValue 'DASHBOARD_TEACHER_TOKEN'))
+} elseif ($Dashboard) {
+    Write-Host '  Mode eleve (scenario 4) : juice-shop lance, events pousses vers le prof.'
+    Write-Host ''
+    Write-Host "  Eleve  -> http://127.0.0.1:3000/#/juicelab           (parcours TD)"
+    Write-Host "  Eleve  -> http://127.0.0.1:3000/#/score-board        (challenges OWASP)"
+    Write-Host ''
+    Write-Host "  Cohorte           : $Cohort"
+    Write-Host ("  Instance (label)  : {0}" -f (Get-EnvValue 'JUICELAB_INSTANCE_LABEL'))
+    Write-Host "  Dashboard prof    : http://${Dashboard}:$dashboardPort"
+} else {
+    Write-Host '  Mode solo local : dashboard + juice-shop sur cette machine.'
+    Write-Host ''
+    Write-Host "  Eleve  -> http://127.0.0.1:3000/#/juicelab           (parcours TD)"
+    Write-Host "  Eleve  -> http://127.0.0.1:3000/#/score-board        (challenges OWASP)"
+    Write-Host "  Prof   -> http://127.0.0.1:$dashboardPort/login            (token ci-dessous)"
+    Write-Host "  Prof   -> http://127.0.0.1:$dashboardPort/dashboard?cohort=$Cohort"
+    Write-Host ''
+    Write-Host ("  DASHBOARD_TEACHER_TOKEN = {0}" -f (Get-EnvValue 'DASHBOARD_TEACHER_TOKEN'))
+    Write-Host ("  TEACHER_ADMIN_TOKEN     = {0}" -f (Get-EnvValue 'TEACHER_ADMIN_TOKEN'))
+}
+
 Write-Host ''
 Write-Host "  Stop  : cd docker; $dcStr --env-file .env down"
 Write-Host "  Wipe  : cd docker; $dcStr --env-file .env down -v"
