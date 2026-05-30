@@ -341,6 +341,9 @@ def build_eleve(tmp: Path) -> None:
         "./scripts/install-student.sh -d " + EXAMPLE_IP +
         " -l amelie -c " + COHORT,
     ])
+    note(doc, "macOS (Apple Silicon M1/M2/M3) : aucune manipulation Rosetta requise, "
+              "l'image se construit en natif arm64 ; le premier build peut juste etre "
+              "un peu plus long. Docker Desktop doit etre ouvert avant de lancer.")
 
     doc.add_heading("6. Verifier que ca marche", level=1)
     numbered(doc, "Le script affiche « Installation OK » avec un recapitulatif.")
@@ -451,6 +454,9 @@ def build_prof(tmp: Path) -> None:
         "cd juicelab",
         "./scripts/install-student.sh --server -c " + COHORT,
     ])
+    note(doc, "macOS : le script detecte ton IP LAN via ipconfig (pas besoin de "
+              "hostname -I, propre a Linux). Sur Apple Silicon, le dashboard tourne "
+              "en natif arm64.")
 
     doc.add_heading("5. Distribuer aux eleves", level=1)
     para(doc, "A la fin, le script affiche un bloc « A DISTRIBUER AUX ELEVES » "

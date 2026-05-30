@@ -109,12 +109,34 @@ env_get() {
 }
 
 env_set() {
-    local key="$1" val="$2"
-    if grep -q "^${key}=" "${ENV_FILE}" 2>/dev/null; then
-        sed -i "s|^${key}=.*|${key}=${val}|" "${ENV_FILE}"
+    # Reecriture portable : `sed -i` differe entre GNU (Linux) et BSD (macOS,
+    # qui exige `sed -i ''`). On passe par un fichier temporaire pour eviter
+    # toute divergence.
+    local key="$1" val="$2" tmp
+    if [[ -f "${ENV_FILE}" ]] && grep -q "^${key}=" "${ENV_FILE}" 2>/dev/null; then
+        tmp="$(mktemp "${ENV_FILE}.XXXXXX")"
+        sed "s|^${key}=.*|${key}=${val}|" "${ENV_FILE}" > "${tmp}" && mv "${tmp}" "${ENV_FILE}"
     else
         printf '%s=%s\n' "${key}" "${val}" >> "${ENV_FILE}"
     fi
+}
+
+# Detection de l'IP LAN, portable Linux + macOS.
+#   Linux : hostname -I
+#   macOS : ipconfig getifaddr enX (pas de hostname -I), fallback ifconfig.
+detect_lan_ip() {
+    local ip iface
+    ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
+    if [[ -z "${ip}" ]] && command -v ipconfig >/dev/null 2>&1; then
+        for iface in en0 en1 en2 en3; do
+            ip="$(ipconfig getifaddr "${iface}" 2>/dev/null)"
+            [[ -n "${ip}" ]] && break
+        done
+    fi
+    if [[ -z "${ip}" ]] && command -v ifconfig >/dev/null 2>&1; then
+        ip="$(ifconfig 2>/dev/null | awk '/inet /{ if ($2 != "127.0.0.1") { print $2; exit } }')"
+    fi
+    echo "${ip}"
 }
 
 is_token_valid() {
@@ -269,7 +291,7 @@ echo "========================================================================"
 printf "${C_OK}Installation OK${C_OFF}\n\n"
 
 if [[ "${SERVER_ONLY}" -eq 1 ]]; then
-    LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"; LAN_IP="${LAN_IP:-<ip-de-cette-machine>}"
+    LAN_IP="$(detect_lan_ip)"; LAN_IP="${LAN_IP:-<ip-de-cette-machine>}"
     cat <<EOF
   Mode prof (--server) : dashboard de consolidation lance.
 
