@@ -234,6 +234,27 @@ if ($Dashboard) {
     Ok "JUICELAB_INSTANCE_LABEL = $Label"
 }
 
+function Get-PortPid ($port) {
+    try {
+        return @(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
+                 Select-Object -ExpandProperty OwningProcess -Unique)
+    } catch { return @() }
+}
+
+# Libere un port hote en stoppant les process qui l'ecoutent (TERM force).
+function Free-Port ($port) {
+    $procs = Get-PortPid $port
+    if (-not $procs) { return }
+    foreach ($procId in $procs) {
+        if ($procId -eq 0) { continue }
+        Warn "Port $port occupe (PID $procId) - arret force"
+        Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+    }
+    Start-Sleep -Seconds 2
+    if (Get-PortPid $port) { Die "Port $port toujours occupe. Le liberer manuellement puis relancer." }
+    Ok "Port $port libere"
+}
+
 # ---- Step 3 : build + up ---------------------------------------------------
 
 # Selection des services selon le mode :
@@ -250,6 +271,19 @@ if ($Server) {
     $Services = @('dashboard','juicelab-demo')
     Say 'Mode solo local : build + lancement dashboard + juice-shop'
 }
+
+# Ports hote a binder selon le mode (defaut .env : dashboard 5050, demo 3000).
+$dashPort = Get-EnvValue 'DASHBOARD_PORT'; if (-not $dashPort) { $dashPort = '5050' }
+$demoPort = Get-EnvValue 'JUICELAB_DEMO_PORT'; if (-not $demoPort) { $demoPort = '3000' }
+
+# Retire d'abord nos propres conteneurs/reseau stale (idempotent, garde les volumes).
+Push-Location $DockerDir
+try { & $DC[0] @($DC[1..($DC.Length - 1)]) '--env-file' '.env' 'down' 2>$null } catch { } finally { Pop-Location }
+
+# Libere les ports que ce mode va utiliser.
+if ($Server) { Free-Port $dashPort }
+elseif ($Dashboard) { Free-Port $demoPort }
+else { Free-Port $dashPort; Free-Port $demoPort }
 
 Push-Location $DockerDir
 try {

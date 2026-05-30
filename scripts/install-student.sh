@@ -139,6 +139,65 @@ detect_lan_ip() {
     echo "${ip}"
 }
 
+# Liste les PIDs qui ECOUTENT sur un port TCP (Linux ss, fallback macOS lsof).
+# Le `|| true` final neutralise le grep sans match (exit 1) sous set -o pipefail.
+port_listeners() {
+    local port="$1"
+    {
+        if command -v ss >/dev/null 2>&1; then
+            ss -ltnpH "sport = :${port}" 2>/dev/null \
+                | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u | tr '\n' ' '
+        elif command -v lsof >/dev/null 2>&1; then
+            lsof -tiTCP:"${port}" -sTCP:LISTEN 2>/dev/null | sort -u | tr '\n' ' '
+        fi
+    } || true
+}
+
+port_in_use() {
+    local port="$1"
+    if command -v ss >/dev/null 2>&1; then
+        ss -ltnH "sport = :${port}" 2>/dev/null | grep -q .
+    elif command -v lsof >/dev/null 2>&1; then
+        lsof -iTCP:"${port}" -sTCP:LISTEN >/dev/null 2>&1
+    else
+        return 1   # pas d'outil : on suppose libre, docker tranchera
+    fi
+}
+
+# Libere un port hote avant le lancement docker. Strategie graduee :
+#   1. (si demande) stoppe le service systemd user juicelab-dashboard ;
+#   2. tue les process restants qui ecoutent (TERM puis KILL) ;
+#   3. abandonne avec un message clair si toujours occupe.
+free_port() {
+    local port="$1" stop_service="${2:-}" pids
+    port_in_use "${port}" || return 0   # deja libre
+
+    if [[ "${stop_service}" == "service" ]] && command -v systemctl >/dev/null 2>&1; then
+        if systemctl --user is-active --quiet juicelab-dashboard.service 2>/dev/null; then
+            warn "Port ${port} : arret du service juicelab-dashboard.service (systemd user)"
+            systemctl --user stop juicelab-dashboard.service 2>/dev/null || true
+            sleep 1
+        fi
+    fi
+
+    pids="$(port_listeners "${port}")"
+    if [[ -n "${pids// /}" ]]; then
+        warn "Port ${port} occupe (PID ${pids}) — arret force"
+        kill ${pids} 2>/dev/null || true
+        sleep 2
+        pids="$(port_listeners "${port}")"
+        if [[ -n "${pids// /}" ]]; then
+            kill -9 ${pids} 2>/dev/null || true
+            sleep 1
+        fi
+    fi
+
+    if port_in_use "${port}"; then
+        die "Port ${port} toujours occupe apres tentative de liberation. Le liberer manuellement puis relancer."
+    fi
+    ok "Port ${port} libere"
+}
+
 is_token_valid() {
     local v="$1"
     [[ -n "${v}" && "${v}" != replace-me-with-* && ${#v} -ge 16 ]]
@@ -243,6 +302,23 @@ elif [[ -n "${DASHBOARD_HOST}" ]]; then
 else
     COMPOSE_SERVICES=(dashboard juicelab-demo)
     say "Mode solo local : build + lancement dashboard + juice-shop"
+fi
+
+# Ports hote a binder selon le mode (defaut .env : dashboard 5050, demo 3000).
+DASHBOARD_PORT="$(env_get DASHBOARD_PORT)"; DASHBOARD_PORT="${DASHBOARD_PORT:-5050}"
+DEMO_PORT="$(env_get JUICELAB_DEMO_PORT)"; DEMO_PORT="${DEMO_PORT:-3000}"
+
+# Retire d'abord nos propres conteneurs/reseau stale (idempotent, garde les volumes).
+(cd "${DOCKER_DIR}" && "${DC[@]}" --env-file .env down >/dev/null 2>&1 || true)
+
+# Libere les ports que ce mode va utiliser : service systemd juicelab + process tiers.
+if [[ "${SERVER_ONLY}" -eq 1 ]]; then
+    free_port "${DASHBOARD_PORT}" service
+elif [[ -n "${DASHBOARD_HOST}" ]]; then
+    free_port "${DEMO_PORT}"
+else
+    free_port "${DASHBOARD_PORT}" service
+    free_port "${DEMO_PORT}"
 fi
 
 say "docker compose up -d --build (premier build : 5-8 min, builds suivants : 10s)"
