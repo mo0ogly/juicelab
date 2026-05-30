@@ -376,7 +376,7 @@ if [[ "${SERVER_ONLY}" -eq 1 ]]; then
 
   A DISTRIBUER AUX ELEVES (scenario 4) :
     Cohorte   : ${COHORT_ID}
-    Dashboard : ${LAN_IP}     (commande eleve : install-student.sh -d ${LAN_IP} -c ${COHORT_ID} -l <prenom>)
+    Dashboard : ${LAN_IP}     (commande eleve : ./scripts/install-student.sh -d ${LAN_IP} -c ${COHORT_ID} -l <prenom>)
 
   CORS : verifier que DASHBOARD_CORS_ORIGINS autorise l'origine des eleves.
          Si tous les eleves ouvrent http://127.0.0.1:3000, valeur actuelle OK :
