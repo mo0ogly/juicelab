@@ -27,7 +27,7 @@ Aucune donnee ne quitte ton portable. Le dashboard est expose uniquement sur `12
 | Outil | Version minimum | Ou le trouver |
 |---|---|---|
 | **Docker Desktop** (Windows / macOS) ou **Docker Engine** (Linux) | 24+ | <https://www.docker.com/products/docker-desktop> |
-| **Docker Compose v2** | livre avec Docker Desktop ; sur Linux : `sudo apt install docker-compose-plugin` | — |
+| **Docker Compose v2** | livre avec Docker Desktop ; sur Linux : `sudo apt install docker-compose-v2` (distro) ou `docker-compose-plugin` (dépôt officiel Docker) — voir § Annexe A | — |
 | **Git** | n'importe quelle version recente | <https://git-scm.com/downloads> |
 | **OpenSSL** | livre avec Git for Windows, macOS et toutes les distros Linux | — |
 | **RAM** | 4 Go libres | — |
@@ -42,7 +42,7 @@ git --version
 openssl version             # n'importe quelle sortie
 ```
 
-Si `docker compose version` echoue, ton Docker est trop vieux. Sur Linux : `sudo apt install docker-compose-plugin`. Sur Windows / macOS : mets a jour Docker Desktop.
+Si `docker compose version` echoue, ton Docker est trop vieux. Sur Linux : `sudo apt install docker-compose-v2` (Ubuntu/Debian standard) ou `sudo apt install docker-compose-plugin` (dépôt officiel Docker). Sur Windows / macOS : mets a jour Docker Desktop.
 
 ---
 
@@ -173,8 +173,11 @@ Une autre appli squatte le port. Soit tu l'arretes, soit tu changes le port hote
 ### `docker compose: command not found`
 
 Ton Docker est trop vieux ou le plugin Compose est manquant.
-- Linux : `sudo apt install docker-compose-plugin`
+- Linux (Ubuntu/Debian standard) : `sudo apt install docker-compose-v2`
+- Linux (dépôt officiel Docker) : `sudo apt install docker-compose-plugin`
 - Windows / macOS : mets a jour Docker Desktop.
+
+> **Note :** les deux paquets sont mutuellement exclusifs — n'installe pas les deux. Sur Ubuntu 25.04 et plus, utilise `docker-compose-v2`.
 
 ### `permission denied` sur le script (Linux / macOS)
 
@@ -238,3 +241,52 @@ docker image prune                       # optionnel, libere du disque
   - la commande exacte qui a echoue et la sortie complete
 
 Ton enseignant et `gabrielhociel@gmail.com` sont les mainteneurs.
+
+---
+
+## Annexe A — Installer Docker et Docker Compose sur Linux
+
+Deux méthodes **mutuellement exclusives**. Choisis l'une OU l'autre.
+
+### Méthode A — paquets de la distribution (recommandée pour un TD)
+
+```bash
+sudo apt update
+sudo apt install -y docker-compose-v2
+sudo usermod -aG docker $USER
+newgrp docker   # ou se déconnecter puis se reconnecter
+docker compose version
+```
+
+`docker-compose-v2` tire `docker.io` comme dépendance : une seule commande installe tout. C'est le choix pragmatique pour un poste étudiant — la fraîcheur de version ne compte pas ici.
+
+### Méthode B — dépôt officiel Docker (si tu veux la dernière version)
+
+```bash
+# Configurer le dépôt officiel : https://docs.docker.com/engine/install/ubuntu/
+sudo apt install -y docker-ce docker-ce-cli containerd.io \
+    docker-buildx-plugin docker-compose-plugin
+sudo usermod -aG docker $USER
+newgrp docker
+docker compose version
+```
+
+> **Piège :** si tu as déjà installé la méthode A, purge-la d'abord : `sudo apt remove docker-compose-v2 docker.io`
+
+### Vérification (commune)
+
+```bash
+docker run --rm hello-world
+docker compose version
+```
+
+### Note arm64 (Apple Silicon / Snapdragon)
+
+Sur les machines arm64 (Qualcomm X1E, Apple M1/M2/M3), le build Docker peut échouer avec `E: Dynamic MMap ran out of room`. C'est un bug connu : la liste des paquets Debian bullseye est trop volumineuse pour le cache APT par défaut. Le `Dockerfile.juicelab` du projet intègre déjà le correctif (`APT::Cache-Start "100663296"`). Si tu rencontres cette erreur sur un autre Dockerfile, la solution est :
+
+```dockerfile
+RUN printf 'APT::Cache-Start "100663296";\n' > /etc/apt/apt.conf.d/70cache \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends <paquet> \
+ && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/70cache
+```
