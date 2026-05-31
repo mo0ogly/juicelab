@@ -97,7 +97,7 @@ In order :
 1. Verifies that Docker, Docker Compose, and OpenSSL are available.
 2. Copies `docker/.env.example` into `docker/.env` if it does not exist yet.
 3. Generates two random 32-character secrets (`TEACHER_ADMIN_TOKEN`, `DASHBOARD_TEACHER_TOKEN`) using `openssl rand -hex 16` (or .NET's RNG on Windows if OpenSSL is missing).
-4. Writes `JUICELAB_COHORT_ID` based on `-c <cohort>`, the env file, or an interactive prompt.
+4. Writes `JUICELAB_COHORT_ID` based on `-c <cohort>`, the env file, or an interactive prompt, and `JUICELAB_INSTANCE_LABEL` based on `-l`. This label is the **name of your machine** as seen by the teacher in the cohort matrix — it is independent of the Juice Shop account you will create afterwards.
 5. Runs `docker compose --env-file .env up -d --build`.
 6. Polls `http://127.0.0.1:3000/` and `http://127.0.0.1:5000/api/health` until both answer.
 7. Prints the URLs and the two teacher tokens.
@@ -142,6 +142,15 @@ End-to-end smoke test :
 7. Open `/dashboard?cohort=<your-cohort>`. You should see your row with `solved`, `journal`, `quiz`, `flag verified`.
 
 If any of those fail, see § 6 below.
+
+> **Two separate identities**
+>
+> | Identifier | Source | Role |
+> |---|---|---|
+> | **Label** (`-l fabrice`) | `docker/.env`, set by the teacher at install time | Identifies **your machine** in the teacher's cohort matrix — fixed, independent of Juice Shop |
+> | **Juice Shop email** | Account you create on `/#/register` | Unlocks the JuiceLab panel — can be any address |
+>
+> The teacher sees column `fabrice` in the cohort matrix. The Juice Shop account email is never shown in standard TD mode (scenario 4). You can use `student@juicelab.local` or anything else.
 
 ---
 

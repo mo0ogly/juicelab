@@ -359,6 +359,22 @@ def build_eleve(tmp: Path) -> None:
                   "http://127.0.0.1:" + SHOP_PORT + "/#/score-board.")
     para(doc, "Des que tu reveles un indice ou resous un challenge, ta progression "
               "remonte automatiquement chez le prof.")
+    add_table(
+        doc,
+        ["Identifiant", "Origine", "Role"],
+        [
+            ["Label (-l fabrice)",
+             "docker/.env, defini par le prof a l'install",
+             "Identifie ton poste dans la matrice cohorte — fixe, independant de Juice Shop"],
+            ["Email Juice Shop",
+             "Compte cree sur /#/register",
+             "Deverrouille le panneau JuiceLab — peut etre n'importe quelle adresse"],
+        ],
+        [40, 65, 65],
+    )
+    note(doc, "Le prof voit la colonne avec ton label (ex. « fabrice ») dans sa matrice. "
+              "L'email Juice Shop n'est jamais affiche en TD standard. "
+              "Tu peux mettre eleve@juicelab.local ou n'importe quoi.")
 
     doc.add_heading("7. Depannage", level=1)
     add_table(

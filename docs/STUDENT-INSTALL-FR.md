@@ -97,7 +97,7 @@ Dans l'ordre :
 1. Verifie que Docker, Docker Compose et OpenSSL sont disponibles.
 2. Copie `docker/.env.example` vers `docker/.env` s'il n'existe pas encore.
 3. Genere deux secrets aleatoires de 32 caracteres (`TEACHER_ADMIN_TOKEN`, `DASHBOARD_TEACHER_TOKEN`) avec `openssl rand -hex 16` (ou le RNG .NET sur Windows si OpenSSL est absent).
-4. Ecrit `JUICELAB_COHORT_ID` selon l'argument `-c`, le fichier env, ou un prompt interactif.
+4. Ecrit `JUICELAB_COHORT_ID` selon l'argument `-c`, le fichier env, ou un prompt interactif, et `JUICELAB_INSTANCE_LABEL` selon `-l`. Ce label est le **nom de ton poste** visible par le prof dans sa matrice cohorte — il est independant du compte Juice Shop que tu creeras ensuite.
 5. Lance `docker compose --env-file .env up -d --build`.
 6. Attend que `http://127.0.0.1:3000/` et `http://127.0.0.1:5000/api/health` repondent.
 7. Affiche les URLs et les deux tokens enseignant.
@@ -142,6 +142,15 @@ Smoke test bout-en-bout :
 7. Ouvre `/dashboard?cohort=<ta-cohorte>`. Tu dois voir ta ligne avec `solved`, `journal`, `quiz`, `flag verified`.
 
 Si quelque chose echoue, voir § 6 ci-dessous.
+
+> **Deux identites distinctes**
+>
+> | Identifiant | Origine | Role |
+> |---|---|---|
+> | **Label** (`-l fabrice`) | `docker/.env`, defini par le prof a l'install | Identifie **ton poste** dans la matrice du prof — fixe, independant de Juice Shop |
+> | **Email Juice Shop** | Compte que tu crees sur `/#/register` | Deverrouille le panneau JuiceLab — peut etre n'importe quelle adresse |
+>
+> Le prof voit la colonne `fabrice` dans sa matrice cohorte. L'email du compte Juice Shop n'est jamais affiche en TD standard (scenario 4). Tu peux mettre `eleve@juicelab.local` ou n'importe quoi.
 
 ---
 
