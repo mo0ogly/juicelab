@@ -150,7 +150,7 @@ If any of those fail, see § 6 below.
 > | **Label** (`-l fabrice`) | `docker/.env`, set by the teacher at install time | Identifies **your machine** in the teacher's cohort matrix — fixed, independent of Juice Shop |
 > | **Juice Shop email** | Account you create on `/#/register` | Unlocks the JuiceLab panel — can be any address |
 >
-> The teacher sees column `fabrice` in the cohort matrix. The Juice Shop account email is never shown in standard TD mode (scenario 4). You can use `student@juicelab.local` or anything else.
+> The teacher sees column `fabrice` in the cohort matrix. The Juice Shop account email is never shown in standard TD mode (scenario 4). You can use `fabrice@juicelab.local` or any made-up address — Juice Shop requires email format (`x@y.z`) but never verifies that the address exists.
 
 ---
 

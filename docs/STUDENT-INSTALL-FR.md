@@ -150,7 +150,7 @@ Si quelque chose echoue, voir § 6 ci-dessous.
 > | **Label** (`-l fabrice`) | `docker/.env`, defini par le prof a l'install | Identifie **ton poste** dans la matrice du prof — fixe, independant de Juice Shop |
 > | **Email Juice Shop** | Compte que tu crees sur `/#/register` | Deverrouille le panneau JuiceLab — peut etre n'importe quelle adresse |
 >
-> Le prof voit la colonne `fabrice` dans sa matrice cohorte. L'email du compte Juice Shop n'est jamais affiche en TD standard (scenario 4). Tu peux mettre `eleve@juicelab.local` ou n'importe quoi.
+> Le prof voit la colonne `fabrice` dans sa matrice cohorte. L'email du compte Juice Shop n'est jamais affiche en TD standard (scenario 4). Tu peux mettre `fabrice@juicelab.local` ou n'importe quelle adresse fictive — Juice Shop exige le format email (`x@y.z`) mais ne verifie pas que l'adresse existe.
 
 ---
 
