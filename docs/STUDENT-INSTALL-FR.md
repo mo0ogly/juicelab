@@ -150,7 +150,11 @@ Si quelque chose echoue, voir § 6 ci-dessous.
 > | **Label** (`-l fabrice`) | `docker/.env`, defini par le prof a l'install | Identifie **ton poste** dans la matrice du prof — fixe, independant de Juice Shop |
 > | **Email Juice Shop** | Compte que tu crees sur `/#/register` | Deverrouille le panneau JuiceLab — peut etre n'importe quelle adresse |
 >
-> Le prof voit la colonne `fabrice` dans sa matrice cohorte. L'email du compte Juice Shop n'est jamais affiche en TD standard (scenario 4). Tu peux mettre `fabrice@juicelab.local` ou n'importe quelle adresse fictive — Juice Shop exige le format email (`x@y.z`) mais ne verifie pas que l'adresse existe.
+> Le prof voit la colonne `fabrice` dans sa matrice cohorte. L'email du compte Juice Shop n'est jamais affiche en TD standard (scenario 4).
+
+Pour le compte Juice Shop, deux options :
+- **Email fictif** : `fabrice@juicelab.local` ou n'importe quelle adresse au format `x@y.z` — Juice Shop ne verifie pas que l'adresse existe.
+- **Login Google** : le bouton "Login with Google" fonctionne sur `127.0.0.1:3000`. OWASP a prevu un proxy (`local3000.owasp-juice.shop`) qui intercepte le callback OAuth et le redirige vers localhost. L'email reel de ton compte Google sera alors utilise comme identifiant Juice Shop.
 
 ---
 

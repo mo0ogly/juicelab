@@ -374,8 +374,10 @@ def build_eleve(tmp: Path) -> None:
     )
     note(doc, "Le prof voit la colonne avec ton label (ex. « fabrice ») dans sa matrice. "
               "L'email Juice Shop n'est jamais affiche en TD standard. "
-              "Tu peux mettre fabrice@juicelab.local ou n'importe quelle adresse fictive : "
-              "Juice Shop exige le format email (x@y.z) mais ne verifie pas que l'adresse existe.")
+              "Deux options : (1) email fictif type fabrice@juicelab.local — format x@y.z requis, "
+              "adresse non verifiee. (2) Login Google : le bouton fonctionne sur 127.0.0.1:3000 "
+              "grace au proxy OWASP (local3000.owasp-juice.shop) qui redirige le callback OAuth "
+              "vers localhost.")
 
     doc.add_heading("7. Depannage", level=1)
     add_table(
