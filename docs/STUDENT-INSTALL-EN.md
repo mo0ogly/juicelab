@@ -123,9 +123,13 @@ Open these URLs in your browser :
 | URL | Expected |
 |---|---|
 | <http://127.0.0.1:3000/#/score-board> | Juice Shop score-board with a **TD** button on each of the 13 selected challenge cards |
-| <http://127.0.0.1:3000/#/juicelab> | JuiceLab parcours panel (13 challenges grouped by half-day) |
+| <http://127.0.0.1:3000/#/juicelab> | "Log in to Juice Shop" screen (normal before login) |
 | <http://127.0.0.1:5000/login> | Dashboard login page |
 | <http://127.0.0.1:5000/api/health> | `{"ok": true}` |
+
+> **`/#/juicelab` shows "Log in to Juice Shop"?** That is expected. The JuiceLab panel is only shown to authenticated users. Follow the smoke test below — the panel appears as soon as you are logged in.
+
+> **`!!! Teacher dashboard unreachable` during install?** Also expected if the teacher has not started their dashboard yet, or if you are not on the same network. The install is still successful: events will be pushed as soon as the dashboard becomes available.
 
 End-to-end smoke test :
 

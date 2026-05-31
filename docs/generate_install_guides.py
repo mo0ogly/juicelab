@@ -349,6 +349,12 @@ def build_eleve(tmp: Path) -> None:
     numbered(doc, "Le script affiche « Installation OK » avec un recapitulatif.")
     numbered(doc, "Ouvre ton navigateur sur l'adresse ci-dessous :")
     code_block(doc, ["http://127.0.0.1:" + SHOP_PORT + "/#/juicelab"])
+    note(doc, "Tu vois « Connecte-toi a Juice Shop » ? C'est normal avant le login. "
+              "Va sur /#/register, cree un compte, connecte-toi, puis reviens ici — "
+              "le panneau s'affiche automatiquement.")
+    note(doc, "Le script affiche « !!! Dashboard prof injoignable » ? Normal si le prof "
+              "n'a pas encore lance son dashboard ou que tu n'es pas sur le meme reseau. "
+              "L'installation est reussie : les events partiront des que le dashboard sera disponible.")
     numbered(doc, "Tu dois voir le parcours TD JuiceLab. Le score-board OWASP est sur "
                   "http://127.0.0.1:" + SHOP_PORT + "/#/score-board.")
     para(doc, "Des que tu reveles un indice ou resous un challenge, ta progression "

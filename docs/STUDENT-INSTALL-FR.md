@@ -123,9 +123,13 @@ Ouvre ces URLs dans ton navigateur :
 | URL | Attendu |
 |---|---|
 | <http://127.0.0.1:3000/#/score-board> | Score-board Juice Shop avec un bouton **TD** sur chacun des 13 challenges selectionnes |
-| <http://127.0.0.1:3000/#/juicelab> | Panel parcours JuiceLab (13 challenges groupes par demi-journee) |
+| <http://127.0.0.1:3000/#/juicelab> | Ecran « Connecte-toi a Juice Shop » (normal avant login) |
 | <http://127.0.0.1:5000/login> | Page de login dashboard |
 | <http://127.0.0.1:5000/api/health> | `{"ok": true}` |
+
+> **`/#/juicelab` affiche « Connecte-toi a Juice Shop » ?** C'est normal. Le panneau JuiceLab est reserve aux comptes authentifies. Suis le smoke test ci-dessous — le panneau s'affiche des que tu es connecte.
+
+> **`!!! Dashboard prof injoignable` a l'installation ?** Aussi normal si le prof n'a pas encore lance son dashboard, ou si tu n'es pas sur le meme reseau. L'installation est quand meme reussie : les events seront pousses des que le dashboard sera disponible.
 
 Smoke test bout-en-bout :
 
