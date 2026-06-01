@@ -109,7 +109,7 @@ Toutes lues par `dashboard/app.py`. À mettre dans `docker/.env` (pour Docker) o
 | Variable | Default | Usage |
 |---|---|---|
 | **`DASHBOARD_TEACHER_TOKEN`** | (vide → 503) | secret de login enseignant. Min 16 chars, sinon dashboard refuse de booter |
-| **`DASHBOARD_PROOF_SECRET`** | (vide → vérification flag désactivée) | HMAC-SHA256 secret pour signer les preuves de flag |
+| **`DASHBOARD_PROOF_SECRET`** | (vide ou < 16 chars → signature désactivée, **503**) | HMAC-SHA256 qui signe **les preuves de lab, les diplômes ET le téléchargement de preuve côté élève** (overlay + coach PwnzzAI). Min 16 chars. Voir l'encadré ci-dessous. |
 | `JUICESHOP_CTF_SECRET` | (vide) | secret CTF côté Juice Shop, doit matcher si tu actives flag verification |
 | `DASHBOARD_DB` | `./data/dashboard.sqlite` | chemin du fichier SQLite |
 | `DASHBOARD_PORT` | `5000` | port HTTP |
@@ -121,6 +121,36 @@ Toutes lues par `dashboard/app.py`. À mettre dans `docker/.env` (pour Docker) o
 | `TEACHER_ADMIN_TOKEN` | — | secret admin Juice Shop (purge instances, reset accounts) |
 | `JUICELAB_COHORT_ID` | — | cohorte par défaut côté Juice Shop overlay |
 | `JUICELAB_DEFAULT_LANGUAGE` | `fr` | langue UI overlay |
+
+### ⚠️ VITAL — `DASHBOARD_PROOF_SECRET` (signature des preuves et diplômes)
+
+Le dashboard signe les preuves de lab, les diplômes et le bouton
+« Télécharger la preuve » (overlay Juice Shop **et** coach PwnzzAI) avec un
+HMAC-SHA256 sous cette variable.
+
+**Symptôme si absente ou < 16 chars :** clic sur diplôme/preuve →
+`503 diploma signing disabled (DASHBOARD_PROOF_SECRET missing)`, et le
+bouton de preuve élève renvoie une erreur.
+
+**Mise en place (une seule fois, sur la machine qui sert le dashboard) :**
+
+```bash
+# 1. générer un secret fort (>= 16 chars ; 64 chars hex recommandés)
+openssl rand -hex 32
+# 2. l'ajouter au .env Docker
+echo 'DASHBOARD_PROOF_SECRET=<le_hex_genere>' >> docker/.env
+# 3. rebuild (le code est bâti dans l'image, pas un simple restart)
+./scripts/dashboard.sh rebuild
+```
+
+**Ne JAMAIS le changer une fois des preuves/diplômes signés.** L'ancien
+secret est requis pour les vérifier (`python dashboard/verify_proof.py`).
+Le changer rend invérifiables toutes les preuves déjà émises. Choisis-le
+une fois, sauvegarde-le hors ligne.
+
+> Rappel déploiement : `docker/.env` n'est lu que par
+> `docker compose --env-file`. Un `python3 app.py` lancé à la main ignore ce
+> fichier — le secret doit alors être `export`é dans le shell appelant.
 
 ---
 
@@ -268,7 +298,7 @@ curl -X POST -H "X-Teacher-Token: <TOKEN>" \
 ## 10. Sécurité — checklist avant un vrai TD
 
 - [ ] `DASHBOARD_TEACHER_TOKEN` ≥ 32 chars, généré aléatoirement (`openssl rand -hex 16`). **JAMAIS** `change-me-please-1234567890` (placeholder de tests).
-- [ ] `DASHBOARD_PROOF_SECRET` configuré si tu utilises la vérification de flag.
+- [ ] `DASHBOARD_PROOF_SECRET` configuré (≥ 16 chars). **Requis** pour preuves de lab, diplômes et téléchargement de preuve élève — sinon `503`. Voir l'encadré section 5.
 - [ ] `JUICESHOP_CTF_SECRET` matche celui du Juice Shop côté élève (si flag verify activé).
 - [ ] `DASHBOARD_BIND=127.0.0.1` + reverse proxy si VPS exposé internet.
 - [ ] `DASHBOARD_HTTPS=true` derrière un reverse proxy TLS.
