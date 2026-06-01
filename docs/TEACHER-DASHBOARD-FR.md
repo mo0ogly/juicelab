@@ -1,5 +1,8 @@
 # Guide enseignant — installer et exploiter le dashboard JuiceLab
 
+> Topologie multi-produits (JuiceLab + PwnzzAI sur un seul dashboard) :
+> voir [DASHBOARD-CENTRAL.md](DASHBOARD-CENTRAL.md).
+
 > Localized version: [TEACHER-DASHBOARD-EN.md](./TEACHER-DASHBOARD-EN.md).
 
 > Cible : enseignant qui veut deployer le dashboard JuiceLab sur sa machine (laptop, VM ou VPS) pour suivre une cohorte d'eleves en temps reel.
