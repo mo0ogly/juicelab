@@ -25,6 +25,8 @@ Aucun élève n'accède au dashboard : tout est protégé par un cookie `teacher
 
 L'UI s'ouvre par défaut sur un **thème clair** (lisible en salle, vidéoprojecteur). Un sélecteur **clair / sombre** est dans la topbar, juste à côté du sélecteur de langue ; le choix est mémorisé par navigateur (`localStorage`).
 
+![Matrice de cohorte en thème sombre](img/prof-dashboard-dark.png)
+
 ### 1.1 Topologie : un dashboard central pour plusieurs produits
 
 Le dashboard se déploie **une seule fois**. JuiceLab **et** PwnzzAI sont tous deux des **clients** qui pointent dessus via `JUICELAB_DASHBOARD_URL` ; aucun des deux n'embarque ni ne redéploie le serveur. Une instance, une base SQLite, une matrice cohorte unifiée. Détails, topologie et anti-patterns : [DASHBOARD-CENTRAL.md](./DASHBOARD-CENTRAL.md).
@@ -306,6 +308,8 @@ UI :
 - `/admin/students?cohort=ANSSI` — matrice avec ligne par élève
 - `/dashboard?cohort=ANSSI` — vue agrégée
 - `/api/cohorts/ANSSI/csv` — export CSV (auth via header `X-Teacher-Token: <token>`)
+
+![Tableau de bord prof — matrice de cohorte (thème clair)](img/prof-dashboard-light.png)
 
 ---
 

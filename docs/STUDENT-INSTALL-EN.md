@@ -141,6 +141,10 @@ End-to-end smoke test :
 6. Log in to the dashboard (`/login`, paste `DASHBOARD_TEACHER_TOKEN` from the installer recap).
 7. Open `/dashboard?cohort=<your-cohort>`. You should see your row with `solved`, `journal`, `quiz`, `flag verified`.
 
+Once logged in, the pedagogical Coach panel shows up on `/#/juicelab` (briefing, graded hints, quiz, badges) :
+
+![Student-side pedagogical Coach panel](img/student-overlay.png)
+
 If any of those fail, see § 6 below.
 
 > **Two separate identities**

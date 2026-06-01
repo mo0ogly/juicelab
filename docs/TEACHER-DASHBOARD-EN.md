@@ -22,6 +22,8 @@ No student accesses the dashboard : everything is gated by a `teacher_token` coo
 
 The UI opens on a **light theme** by default (readable in a classroom, on a projector). A **light / dark** toggle sits in the topbar, right next to the language switch; the choice is persisted per browser (`localStorage`).
 
+![Cohort matrix in dark theme](img/prof-dashboard-dark.png)
+
 ### 1.1 Topology: one central dashboard for several products
 
 The dashboard is deployed **once**. JuiceLab **and** PwnzzAI are both **clients** pointing at it via `JUICELAB_DASHBOARD_URL`; neither embeds nor re-deploys the server. One instance, one SQLite database, one unified cohort matrix. Topology, details and anti-patterns: [DASHBOARD-CENTRAL.md](./DASHBOARD-CENTRAL.md).
@@ -284,6 +286,8 @@ UI :
 - `/admin/students?cohort=ANSSI` — matrix with one row per student
 - `/dashboard?cohort=ANSSI` — aggregate view
 - `/api/cohorts/ANSSI/csv` — CSV export (auth via `X-Teacher-Token: <token>` header)
+
+![Teacher dashboard — cohort matrix (light theme)](img/prof-dashboard-light.png)
 
 ---
 

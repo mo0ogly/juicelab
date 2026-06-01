@@ -141,6 +141,10 @@ Smoke test bout-en-bout :
 6. Connecte-toi au dashboard (`/login`, colle le `DASHBOARD_TEACHER_TOKEN` affiche par l'installeur).
 7. Ouvre `/dashboard?cohort=<ta-cohorte>`. Tu dois voir ta ligne avec `solved`, `journal`, `quiz`, `flag verified`.
 
+Une fois connecte, le panneau Coach pedagogique s'affiche sur `/#/juicelab` (briefing, indices gradues, quiz, badges) :
+
+![Panneau Coach pedagogique cote eleve](img/student-overlay.png)
+
 Si quelque chose echoue, voir § 6 ci-dessous.
 
 > **Deux identites distinctes**
