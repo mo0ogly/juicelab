@@ -51,8 +51,16 @@ SHOP_PORT = "3000"
 EXAMPLE_IP = "192.168.1.10"
 
 DOCS_DIR = Path(__file__).resolve().parent
+IMG_DIR = DOCS_DIR / "img"
 ELEVE_OUT = DOCS_DIR / "GUIDE-INSTALL-ELEVE.docx"
 PROF_OUT = DOCS_DIR / "GUIDE-INSTALL-PROF.docx"
+
+# Captures d'ecran reelles de l'UI (sources de verite : docs/img/).
+IMG_PROF_LIGHT = IMG_DIR / "prof-dashboard-light.png"
+IMG_PROF_DARK = IMG_DIR / "prof-dashboard-dark.png"
+IMG_PROF_COHORTS = IMG_DIR / "prof-cohorts.png"
+IMG_PROF_STUDENTS = IMG_DIR / "prof-students.png"
+IMG_STUDENT_OVERLAY = IMG_DIR / "student-overlay.png"
 
 # Palette
 BLUE = RGBColor(0x2E, 0x75, 0xB6)
@@ -357,6 +365,8 @@ def build_eleve(tmp: Path) -> None:
               "L'installation est reussie : les events partiront des que le dashboard sera disponible.")
     numbered(doc, "Tu dois voir le parcours TD JuiceLab. Le score-board OWASP est sur "
                   "http://127.0.0.1:" + SHOP_PORT + "/#/score-board.")
+    add_diagram(doc, IMG_STUDENT_OVERLAY,
+                "Panneau Coach pedagogique cote eleve (briefing, indices gradues, quiz, badges).")
     para(doc, "Des que tu reveles un indice ou resous un challenge, ta progression "
               "remonte automatiquement chez le prof.")
     add_table(
@@ -426,6 +436,9 @@ def build_prof(tmp: Path) -> None:
               "installe juice-shop sur le sien et le configure pour pousser sa "
               "progression vers ton dashboard. Tu obtiens une matrice cohorte "
               "(eleves x challenges) en temps reel.")
+    note(doc, "Le dashboard est central et partage : une seule instance sert a la fois "
+              "JuiceLab et PwnzzAI (deux clients pointant sur la meme base). Ne deploie "
+              "jamais un second dashboard. Topologie et anti-patterns : docs/DASHBOARD-CENTRAL.md.")
 
     pngseq = tmp / "sequence.png"
     render_mermaid(MERMAID_SEQUENCE, pngseq, tmp)
@@ -509,8 +522,51 @@ def build_prof(tmp: Path) -> None:
     ])
     numbered(doc, "Connecte-toi avec DASHBOARD_TEACHER_TOKEN (affiche par le script).")
     numbered(doc, "La matrice cohorte se met a jour en direct (flux SSE).")
+    add_diagram(doc, IMG_PROF_LIGHT,
+                "Tableau de bord prof - matrice de cohorte (theme clair).")
+    note(doc, "Un selecteur clair / sombre est dans la topbar, a cote du selecteur de "
+              "langue ; le choix est memorise par navigateur (localStorage). Le theme "
+              "clair s'affiche par defaut, lisible en salle et au videoprojecteur.")
+    add_diagram(doc, IMG_PROF_DARK,
+                "Meme matrice en theme sombre (bascule via la topbar).")
 
-    doc.add_heading("7. Reseau et securite", level=1)
+    doc.add_heading("7. Gerer les cohortes et les eleves", level=1)
+    para(doc, "Depuis la topbar du dashboard, tu administres les cohortes (creation, "
+              "renommage, suppression, purge des orphelins) et la liste des eleves "
+              "rattaches a chaque cohorte. Chaque ligne correspond a un label de poste "
+              "eleve (independant du compte Juice Shop).")
+    add_diagram(doc, IMG_PROF_COHORTS,
+                "Administration des cohortes (creation, renommage, suppression).")
+    add_diagram(doc, IMG_PROF_STUDENTS,
+                "Liste des eleves d'une cohorte (label de poste, dernier event).")
+
+    doc.add_heading("8. Exploiter le dashboard au quotidien", level=1)
+    para(doc, "Le code du dashboard est bati dans l'image Docker (pas monte en volume) : "
+              "tout changement de code exige un rebuild, jamais un simple restart. Le "
+              "script scripts/dashboard.sh centralise ces operations sans jamais detruire "
+              "la base SQLite (le volume juicelab_dashboard_data survit a toutes les "
+              "sous-commandes).")
+    para(doc, "Lance-le sans argument pour le menu interactif :")
+    code_block(doc, ["./scripts/dashboard.sh"])
+    para(doc, "Ou appelle directement une sous-commande :")
+    add_table(
+        doc,
+        ["Sous-commande", "Effet"],
+        [
+            ["update", "git pull origin main PUIS rebuild de l'image (deployer une maj)"],
+            ["rebuild", "rebuild image + recreate du container (sans git pull)"],
+            ["start", "demarre le dashboard (sans rebuild)"],
+            ["stop", "arrete le container"],
+            ["restart", "stop + start (sans rebuild)"],
+            ["status", "etat du container + healthcheck"],
+            ["logs", "suit les logs (Ctrl-C pour sortir)"],
+        ],
+        [40, 130],
+    )
+    note(doc, "Pour appliquer une mise a jour du code prof : ./scripts/dashboard.sh update "
+              "(git pull main + rebuild). La base cohorte est preservee.")
+
+    doc.add_heading("9. Reseau et securite", level=1)
     add_table(
         doc,
         ["Point", "A verifier"],
@@ -524,7 +580,7 @@ def build_prof(tmp: Path) -> None:
         [40, 130],
     )
 
-    doc.add_heading("8. Arreter / nettoyer", level=1)
+    doc.add_heading("10. Arreter / nettoyer", level=1)
     code_block(doc, [
         "cd docker",
         "docker compose --env-file .env down       # arret du dashboard",
