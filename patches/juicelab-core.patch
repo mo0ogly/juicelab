@@ -523,7 +523,7 @@ index 02a4513..b2cf650 100644
    "NFT_MINT_TEXT_CONFIRM": "Confirm Mint...",
 -  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process..."
 +  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process...",
-+  "JUICELAB_BADGES_TITLE": "Selos",
++  "JUICELAB_BADGES_TITLE": "Conquistas",
 +  "JUICELAB_COACH_TITLE": "JuiceLab Coach",
 +  "JUICELAB_COACH_TOOLTIP": "JuiceLab Coach: dicas, diário de bordo, quiz, prova assinada",
 +  "JUICELAB_COACH_BADGE": "TD",
