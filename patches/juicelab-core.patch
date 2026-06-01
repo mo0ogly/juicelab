@@ -260,12 +260,13 @@ diff --git a/frontend/src/assets/i18n/en.json b/frontend/src/assets/i18n/en.json
 index 17d5f58..c498fcf 100644
 --- a/frontend/src/assets/i18n/en.json
 +++ b/frontend/src/assets/i18n/en.json
-@@ -480,5 +480,73 @@
+@@ -480,5 +480,74 @@
    "NFT_MINT_TEXT_SUCCESS": "Minted Successfully",
    "NFT_MINT_TEXT_AWAITING_APPROVAL": "Awaiting Approval",
    "NFT_MINT_TEXT_CONFIRM": "Confirm Mint...",
 -  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process..."
 +  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process...",
++  "JUICELAB_BADGES_TITLE": "Badges",
 +  "JUICELAB_COACH_TITLE": "JuiceLab Coach",
 +  "JUICELAB_COACH_TOOLTIP": "JuiceLab Coach: hints, logbook, quiz, signed proof",
 +  "JUICELAB_COACH_BADGE": "TD",
@@ -339,12 +340,13 @@ diff --git a/frontend/src/assets/i18n/fr_FR.json b/frontend/src/assets/i18n/fr_F
 index 9966f7d..dbcc793 100644
 --- a/frontend/src/assets/i18n/fr_FR.json
 +++ b/frontend/src/assets/i18n/fr_FR.json
-@@ -480,5 +480,73 @@
+@@ -480,5 +480,74 @@
    "NFT_MINT_TEXT_SUCCESS": "Minted Successfully",
    "NFT_MINT_TEXT_AWAITING_APPROVAL": "En attente d’approbation",
    "NFT_MINT_TEXT_CONFIRM": "Confirm Mint...",
 -  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process..."
 +  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process...",
++  "JUICELAB_BADGES_TITLE": "Badges",
 +  "JUICELAB_COACH_TITLE": "Coach JuiceLab",
 +  "JUICELAB_COACH_TOOLTIP": "Coach JuiceLab : indices, journal, quiz, preuve signee",
 +  "JUICELAB_COACH_BADGE": "TD",
