@@ -48,3 +48,4 @@ dashboard/sbom.cdx.xml
 
 # coverage runtime artefact
 .coverage
+docs/.venv
