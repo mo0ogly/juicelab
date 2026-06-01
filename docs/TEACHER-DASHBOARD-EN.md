@@ -20,6 +20,12 @@ The JuiceLab dashboard is a Flask service (default port `5000`) that :
 
 No student accesses the dashboard : everything is gated by a `teacher_token` cookie issued from `DASHBOARD_TEACHER_TOKEN`.
 
+The UI opens on a **light theme** by default (readable in a classroom, on a projector). A **light / dark** toggle sits in the topbar, right next to the language switch; the choice is persisted per browser (`localStorage`).
+
+### 1.1 Topology: one central dashboard for several products
+
+The dashboard is deployed **once**. JuiceLab **and** PwnzzAI are both **clients** pointing at it via `JUICELAB_DASHBOARD_URL`; neither embeds nor re-deploys the server. One instance, one SQLite database, one unified cohort matrix. Topology, details and anti-patterns: [DASHBOARD-CENTRAL.md](./DASHBOARD-CENTRAL.md).
+
 ---
 
 ## 2. Prerequisites
@@ -152,9 +158,54 @@ offline.
 > `docker compose --env-file`. A hand-launched `python3 app.py` ignores that
 > file — the secret must then be `export`ed in the calling shell.
 
+### Generate / check secrets in one command
+
+`./juice.sh secrets` generates and **persists** the missing secrets (`DASHBOARD_TEACHER_TOKEN`, `DASHBOARD_PROOF_SECRET`) into `docker/.env`. It is **idempotent**: a secret that is already valid (>= 16 chars) is NEVER overwritten — otherwise proofs/diplomas already signed would become unverifiable. Run it once before the first build; `./juice.sh build` also calls it automatically.
+
 ---
 
-## 6. Persist the dashboard with systemd (LAN / multi-day course)
+## 6. Drive the dashboard — `scripts/dashboard.sh`
+
+The dashboard code is **baked into the Docker image** (not bind-mounted): a change to a `.py` / `.css` / template requires a **rebuild**, not a plain restart. The SQLite volume survives every sub-command below — none of them destroys data.
+
+### Interactive menu
+
+Run with **no argument**, `scripts/dashboard.sh` shows a numbered menu :
+
+```bash
+./scripts/dashboard.sh
+```
+
+```
+=== JuiceLab dashboard prof ===
+  1) update   - git pull + rebuild (deploy an update)
+  2) rebuild  - rebuild image (no git pull)
+  3) start    - start
+  4) stop     - stop
+  5) restart  - restart (no rebuild)
+  6) status   - state + healthcheck
+  7) logs     - follow logs (Ctrl-C to exit)
+  0) quit
+```
+
+### Direct sub-commands (scriptable)
+
+| Command | Effect |
+|---|---|
+| `dashboard.sh update` | **`git pull origin main` THEN rebuild** — deploy a code update |
+| `dashboard.sh rebuild` | rebuild image + recreate (no git pull) |
+| `dashboard.sh start` | start (no rebuild) |
+| `dashboard.sh stop` | stop the container |
+| `dashboard.sh restart` | stop + start (no rebuild) |
+| `dashboard.sh status` | state + healthcheck |
+| `dashboard.sh logs` | follow logs (`Ctrl-C` to exit) |
+| `dashboard.sh menu` | force the interactive menu |
+
+`update` is the standard path to apply a new commit: it runs `git pull origin main` at the repo root then chains the rebuild. If the repo is already up to date, it still rebuilds to re-apply the image. Every action that (re)starts the container waits for the `healthcheck` before returning.
+
+---
+
+## 7. Persist the dashboard with systemd (LAN / multi-day course)
 
 So that the dashboard survives reboots and restarts on its own, create a systemd user service.
 
@@ -180,7 +231,7 @@ If you prefer the Docker path : replace `ExecStart` and `WorkingDirectory` to ca
 
 ---
 
-## 7. Network — exposing the dashboard to students
+## 8. Network — exposing the dashboard to students
 
 Students must reach `http://<YOUR_IP>:<PORT>`. Three cases :
 
@@ -213,7 +264,7 @@ Read [`docs/VPS_HARDENING.md`](./VPS_HARDENING.md) (HSTS, nginx + Let's Encrypt 
 
 ---
 
-## 8. Verify students are arriving
+## 9. Verify students are arriving
 
 Once your dashboard is up and the message has been sent to students :
 
@@ -236,7 +287,7 @@ UI :
 
 ---
 
-## 9. Cohort management — typical workflow
+## 10. Cohort management — typical workflow
 
 ### Create a cohort
 
@@ -276,7 +327,7 @@ curl -X POST -H "X-Teacher-Token: <TOKEN>" \
 
 ---
 
-## 10. Security — checklist before a real lab
+## 11. Security — checklist before a real lab
 
 - [ ] `DASHBOARD_TEACHER_TOKEN` ≥ 32 chars, randomly generated (`openssl rand -hex 16`). **NEVER** `change-me-please-1234567890` (test placeholder).
 - [ ] `DASHBOARD_PROOF_SECRET` set (>= 16 chars). **Required** for lab proofs, diplomas and the student proof download — otherwise `503`. See the box in section 5.
@@ -289,7 +340,7 @@ curl -X POST -H "X-Teacher-Token: <TOKEN>" \
 
 ---
 
-## 11. DB backup / restore
+## 12. DB backup / restore
 
 ```bash
 # backup (hot, SQLite supports concurrent readers)
@@ -304,7 +355,7 @@ docker compose --env-file .env restart dashboard
 
 ---
 
-## 12. Troubleshooting
+## 13. Troubleshooting
 
 ### `/login` gives 503 "Dashboard disabled"
 
@@ -336,8 +387,9 @@ Common cause: `DASHBOARD_TEACHER_TOKEN` < 16 chars → fail-fast at boot.
 
 ---
 
-## 13. Going further
+## 14. Going further
 
+- [`docs/DASHBOARD-CENTRAL.md`](./DASHBOARD-CENTRAL.md) — one central dashboard, several client products (JuiceLab + PwnzzAI)
 - [`docs/COHORT_WORKFLOW.md`](./COHORT_WORKFLOW.md) — manual approval workflow
 - [`docs/CLASSROOM-DEPLOYMENT.md`](./CLASSROOM-DEPLOYMENT.md) — multi-laptop classroom deployment
 - [`docs/CTF-INTEGRATION.md`](./CTF-INTEGRATION.md) — CTFd integration (Mode C)
