@@ -797,4 +797,8 @@ if __name__ == "__main__":  # pragma: no cover
     WSGIRequestHandler.sys_version = ""
     port = int(os.environ.get("DASHBOARD_PORT", "5000"))
     app = create_app()
-    app.run(host=os.environ.get("DASHBOARD_BIND", "0.0.0.0"), port=port, debug=False)  # noqa: S104 nosec B104 (binding overridable; production deploys must set DASHBOARD_BIND=127.0.0.1 + reverse proxy, see docs/VPS_HARDENING.md)
+    # threaded=True: the SSE endpoint /api/cohort/stream holds a long-lived
+    # generator open per connected client. Without threading the single dev
+    # worker is occupied by one EventSource client and every other request
+    # (including the Docker /api/health probe) starves and times out.
+    app.run(host=os.environ.get("DASHBOARD_BIND", "0.0.0.0"), port=port, debug=False, threaded=True)  # noqa: S104 nosec B104 (binding overridable; production deploys must set DASHBOARD_BIND=127.0.0.1 + reverse proxy, see docs/VPS_HARDENING.md)

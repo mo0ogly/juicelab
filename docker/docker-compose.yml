@@ -41,9 +41,13 @@ services:
       - "${DASHBOARD_PORT:-5050}:5000"
     networks: [juicelab_net]
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=2); sys.exit(0)"]
+      test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=8); sys.exit(0)"]
       interval: 10s
-      timeout: 3s
+      # 12s budget: the probe spawns a fresh Python interpreter, whose cold
+      # start alone reaches ~3s under high host load (load avg >10 on the
+      # shared VPS). 3s starved the probe and flapped the container to
+      # unhealthy while the app itself answered /api/health in <10ms.
+      timeout: 12s
       retries: 5
     restart: unless-stopped
     # Container hardening (cycle 18) :
