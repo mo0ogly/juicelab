@@ -27,7 +27,7 @@ No data leaves your laptop. The dashboard runs locally on `127.0.0.1` only.
 | Tool | Minimum version | Where to get it |
 |---|---|---|
 | **Docker Desktop** (Windows / macOS) or **Docker Engine** (Linux) | 24+ | <https://www.docker.com/products/docker-desktop> |
-| **Docker Compose v2** | bundled with Docker Desktop ; on Linux : `sudo apt install docker-compose-plugin` | — |
+| **Docker Compose v2** | bundled with Docker Desktop ; on Linux : `sudo apt install docker-compose-v2` (distro) or `docker-compose-plugin` (official Docker repo) — see Appendix A | — |
 | **Git** | any recent version | <https://git-scm.com/downloads> |
 | **OpenSSL** | bundled with Git for Windows, macOS, all Linux distros | — |
 | **RAM** | 4 GB free | — |
@@ -42,7 +42,7 @@ git --version
 openssl version             # any output is fine
 ```
 
-If `docker compose version` errors out, your Docker is too old. On Linux : `sudo apt install docker-compose-plugin`. On Windows / macOS : update Docker Desktop.
+If `docker compose version` errors out, your Docker is too old. On Linux : `sudo apt install docker-compose-v2` (Ubuntu/Debian standard) or `sudo apt install docker-compose-plugin` (official Docker repo). On Windows / macOS : update Docker Desktop.
 
 ---
 
@@ -97,7 +97,7 @@ In order :
 1. Verifies that Docker, Docker Compose, and OpenSSL are available.
 2. Copies `docker/.env.example` into `docker/.env` if it does not exist yet.
 3. Generates two random 32-character secrets (`TEACHER_ADMIN_TOKEN`, `DASHBOARD_TEACHER_TOKEN`) using `openssl rand -hex 16` (or .NET's RNG on Windows if OpenSSL is missing).
-4. Writes `JUICELAB_COHORT_ID` based on `-c <cohort>`, the env file, or an interactive prompt.
+4. Writes `JUICELAB_COHORT_ID` based on `-c <cohort>`, the env file, or an interactive prompt, and `JUICELAB_INSTANCE_LABEL` based on `-l`. This label is the **name of your machine** as seen by the teacher in the cohort matrix — it is independent of the Juice Shop account you will create afterwards.
 5. Runs `docker compose --env-file .env up -d --build`.
 6. Polls `http://127.0.0.1:3000/` and `http://127.0.0.1:5000/api/health` until both answer.
 7. Prints the URLs and the two teacher tokens.
@@ -123,9 +123,13 @@ Open these URLs in your browser :
 | URL | Expected |
 |---|---|
 | <http://127.0.0.1:3000/#/score-board> | Juice Shop score-board with a **TD** button on each of the 13 selected challenge cards |
-| <http://127.0.0.1:3000/#/juicelab> | JuiceLab parcours panel (13 challenges grouped by half-day) |
+| <http://127.0.0.1:3000/#/juicelab> | "Log in to Juice Shop" screen (normal before login) |
 | <http://127.0.0.1:5000/login> | Dashboard login page |
 | <http://127.0.0.1:5000/api/health> | `{"ok": true}` |
+
+> **`/#/juicelab` shows "Log in to Juice Shop"?** That is expected. The JuiceLab panel is only shown to authenticated users. Follow the smoke test below — the panel appears as soon as you are logged in.
+
+> **`!!! Teacher dashboard unreachable` during install?** Also expected if the teacher has not started their dashboard yet, or if you are not on the same network. The install is still successful: events will be pushed as soon as the dashboard becomes available.
 
 End-to-end smoke test :
 
@@ -138,6 +142,19 @@ End-to-end smoke test :
 7. Open `/dashboard?cohort=<your-cohort>`. You should see your row with `solved`, `journal`, `quiz`, `flag verified`.
 
 If any of those fail, see § 6 below.
+
+> **Two separate identities**
+>
+> | Identifier | Source | Role |
+> |---|---|---|
+> | **Label** (`-l fabrice`) | `docker/.env`, set by the teacher at install time | Identifies **your machine** in the teacher's cohort matrix — fixed, independent of Juice Shop |
+> | **Juice Shop email** | Account you create on `/#/register` | Unlocks the JuiceLab panel — can be any address |
+>
+> The teacher sees column `fabrice` in the cohort matrix. The Juice Shop account email is never shown in standard TD mode (scenario 4).
+
+Two options for the Juice Shop account:
+- **Fake email**: `fabrice@juicelab.local` or any address in `x@y.z` format — Juice Shop never verifies that the address exists.
+- **Google login**: the "Login with Google" button works on `127.0.0.1:3000`. OWASP ships a proxy (`local3000.owasp-juice.shop`) that intercepts the OAuth callback and redirects it to localhost. Your real Google account email will then be used as the Juice Shop identifier.
 
 ---
 
@@ -173,8 +190,11 @@ Another app is squatting the port. Either stop it, or change the host port mappi
 ### `docker compose: command not found`
 
 Your Docker is too old or Compose plugin is missing.
-- Linux : `sudo apt install docker-compose-plugin`
+- Linux (Ubuntu/Debian standard) : `sudo apt install docker-compose-v2`
+- Linux (official Docker repo) : `sudo apt install docker-compose-plugin`
 - Windows / macOS : update Docker Desktop to the latest version.
+
+> **Note:** the two packages are mutually exclusive — do not install both. On Ubuntu 25.04 and later, use `docker-compose-v2`.
 
 ### `permission denied` on the script (Linux / macOS)
 
@@ -238,3 +258,52 @@ docker image prune                       # optional, free disk
   - the exact command that failed and its full output
 
 Your teacher and `gabrielhociel@gmail.com` are the maintainers.
+
+---
+
+## Appendix A — Installing Docker and Docker Compose on Linux
+
+Two **mutually exclusive** methods. Pick one OR the other.
+
+### Method A — distribution packages (recommended for a lab)
+
+```bash
+sudo apt update
+sudo apt install -y docker-compose-v2
+sudo usermod -aG docker $USER
+newgrp docker   # or log out and back in
+docker compose version
+```
+
+`docker-compose-v2` pulls `docker.io` as a dependency: a single command installs everything. This is the pragmatic choice for a student laptop — version freshness does not matter here.
+
+### Method B — official Docker repository (if you need the latest version)
+
+```bash
+# Set up the official repository first: https://docs.docker.com/engine/install/ubuntu/
+sudo apt install -y docker-ce docker-ce-cli containerd.io \
+    docker-buildx-plugin docker-compose-plugin
+sudo usermod -aG docker $USER
+newgrp docker
+docker compose version
+```
+
+> **Pitfall:** if you already ran Method A, remove it first: `sudo apt remove docker-compose-v2 docker.io`
+
+### Verification (both methods)
+
+```bash
+docker run --rm hello-world
+docker compose version
+```
+
+### arm64 note (Apple Silicon / Snapdragon)
+
+On arm64 machines (Qualcomm X1E, Apple M1/M2/M3), Docker builds may fail with `E: Dynamic MMap ran out of room`. This is a known issue: the Debian bullseye package list is too large for the default APT cache. The project's `Dockerfile.juicelab` already includes the fix (`APT::Cache-Start "100663296"`). If you encounter this on another Dockerfile, the solution is:
+
+```dockerfile
+RUN printf 'APT::Cache-Start "100663296";\n' > /etc/apt/apt.conf.d/70cache \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends <package> \
+ && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/70cache
+```

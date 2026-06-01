@@ -27,8 +27,10 @@ WORKDIR /build
 
 # git is required for the clone + apply --3way step. ca-certificates is
 # needed for the HTTPS clone.
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+RUN printf 'APT::Cache-Start "100663296";\n' > /etc/apt/apt.conf.d/70cache \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends git ca-certificates \
+ && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/70cache
 
 ARG JUICE_SHOP_REPO=https://github.com/juice-shop/juice-shop.git
 ARG JUICE_SHOP_COMMIT=3b178fd
@@ -71,8 +73,11 @@ ENV NODE_ENV=production \
     PORT=3000
 
 # tini reaps zombie children when running under docker / docker-compose
-RUN apt-get update && apt-get install -y --no-install-recommends tini && \
-    rm -rf /var/lib/apt/lists/*
+# APT::Cache-Start increased for arm64 (bullseye package list exceeds 29 MB default)
+RUN printf 'APT::Cache-Start "100663296";\n' > /etc/apt/apt.conf.d/70cache \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends tini \
+ && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/70cache
 
 WORKDIR /juice-shop
 COPY --from=builder /build/juice-shop /juice-shop

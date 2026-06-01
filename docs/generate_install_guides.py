@@ -313,7 +313,7 @@ def build_eleve(tmp: Path) -> None:
         [
             ["Windows 10/11", "Docker Desktop (avec WSL2) + Git for Windows (fournit Git et OpenSSL)"],
             ["macOS", "Docker Desktop + Git (xcode-select --install)"],
-            ["Linux", "Docker Engine + plugin docker compose v2 + git + openssl"],
+            ["Linux", "Docker Engine + docker compose v2 + git + openssl (voir Annexe B)"],
         ],
         [45, 125],
     )
@@ -349,10 +349,35 @@ def build_eleve(tmp: Path) -> None:
     numbered(doc, "Le script affiche « Installation OK » avec un recapitulatif.")
     numbered(doc, "Ouvre ton navigateur sur l'adresse ci-dessous :")
     code_block(doc, ["http://127.0.0.1:" + SHOP_PORT + "/#/juicelab"])
+    note(doc, "Tu vois « Connecte-toi a Juice Shop » ? C'est normal avant le login. "
+              "Va sur /#/register, cree un compte, connecte-toi, puis reviens ici — "
+              "le panneau s'affiche automatiquement.")
+    note(doc, "Le script affiche « !!! Dashboard prof injoignable » ? Normal si le prof "
+              "n'a pas encore lance son dashboard ou que tu n'es pas sur le meme reseau. "
+              "L'installation est reussie : les events partiront des que le dashboard sera disponible.")
     numbered(doc, "Tu dois voir le parcours TD JuiceLab. Le score-board OWASP est sur "
                   "http://127.0.0.1:" + SHOP_PORT + "/#/score-board.")
     para(doc, "Des que tu reveles un indice ou resous un challenge, ta progression "
               "remonte automatiquement chez le prof.")
+    add_table(
+        doc,
+        ["Identifiant", "Origine", "Role"],
+        [
+            ["Label (-l fabrice)",
+             "docker/.env, defini par le prof a l'install",
+             "Identifie ton poste dans la matrice cohorte — fixe, independant de Juice Shop"],
+            ["Email Juice Shop",
+             "Compte cree sur /#/register",
+             "Deverrouille le panneau JuiceLab — peut etre n'importe quelle adresse"],
+        ],
+        [40, 65, 65],
+    )
+    note(doc, "Le prof voit la colonne avec ton label (ex. « fabrice ») dans sa matrice. "
+              "L'email Juice Shop n'est jamais affiche en TD standard. "
+              "Deux options : (1) email fictif type fabrice@juicelab.local — format x@y.z requis, "
+              "adresse non verifiee. (2) Login Google : le bouton fonctionne sur 127.0.0.1:3000 "
+              "grace au proxy OWASP (local3000.owasp-juice.shop) qui redirige le callback OAuth "
+              "vers localhost.")
 
     doc.add_heading("7. Depannage", level=1)
     add_table(
@@ -417,7 +442,7 @@ def build_prof(tmp: Path) -> None:
         [
             ["Windows 10/11", "Docker Desktop (avec WSL2) + Git for Windows"],
             ["macOS", "Docker Desktop + Git"],
-            ["Linux", "Docker Engine + plugin docker compose v2 + git + openssl"],
+            ["Linux", "Docker Engine + docker compose v2 + git + openssl (voir Annexe B)"],
         ],
         [45, 125],
     )
@@ -573,14 +598,26 @@ def annexes(doc: Document) -> None:
     code_block(doc, ["docker run --rm hello-world", "docker compose version"])
 
     doc.add_heading("Linux (Debian / Ubuntu)", level=3)
-    para(doc, "Installe Docker Engine + le plugin compose v2 (depot officiel Docker), "
-              "puis ajoute ton utilisateur au groupe docker :")
+    para(doc, "Deux methodes mutuellement exclusives. Choisis l'une OU l'autre.")
+    para(doc, "Methode A — paquets de la distribution (recommandee pour un TD) :")
     code_block(doc, [
-        "# suivre https://docs.docker.com/engine/install/ pour le depot apt officiel",
+        "sudo apt update",
+        "sudo apt install -y docker-compose-v2",
         "sudo usermod -aG docker $USER",
-        "# se deconnecter / reconnecter (ou : newgrp docker) pour appliquer le groupe",
+        "newgrp docker   # ou se deconnecter puis se reconnecter",
         "docker compose version",
     ])
+    para(doc, "Methode B — depot officiel Docker (si tu veux la derniere version) :")
+    code_block(doc, [
+        "# configurer le depot officiel : https://docs.docker.com/engine/install/ubuntu/",
+        "sudo apt install -y docker-ce docker-ce-cli containerd.io \\",
+        "    docker-buildx-plugin docker-compose-plugin",
+        "sudo usermod -aG docker $USER",
+        "newgrp docker",
+        "docker compose version",
+    ])
+    note(doc, "Les deux paquets sont mutuellement exclusifs. Sur Ubuntu 25.04+, "
+              "utilise la methode A (docker-compose-v2). Ne melange jamais les deux.")
 
     # ---- C : Git / OpenSSL ------------------------------------------------
     doc.add_heading("Annexe C — Git et OpenSSL", level=2)
@@ -613,8 +650,10 @@ def annexes(doc: Document) -> None:
              "un reseau ouvert pour le clone."],
             ["Le build s'arrete au telechargement d'images",
              "Proxy Docker : configure le proxy dans Docker Desktop (Settings > Resources > Proxies)."],
-            ["docker compose version affiche v1.x",
-             "Plugin compose v2 absent : installe docker compose v2 (docker-compose-plugin)."],
+            ["docker compose version affiche v1.x ou commande introuvable",
+             "Plugin compose v2 absent. Ubuntu/Debian standard : sudo apt install docker-compose-v2. "
+             "Depot officiel Docker : sudo apt install docker-compose-plugin. "
+             "Ne pas installer les deux (conflit)."],
         ],
         [60, 110],
     )
