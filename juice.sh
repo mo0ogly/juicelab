@@ -37,6 +37,64 @@ DEFAULT_TEACHER_TOKEN='change-me-please-1234567890'
 DEFAULT_PROOF_SECRET='change-me-proof-secret-1234567890'
 CTF_KEY_FILE="$ROOT/juice-shop/ctf.key"
 CONFIG_JSON="$ROOT/juice-shop/frontend/src/assets/juicelab/config.json"
+DOCKER_ENV="$ROOT/docker/.env"
+DOCKER_ENV_EXAMPLE="$ROOT/docker/.env.example"
+# Secrets >= 16 chars exiges par le dashboard. Absents -> 503 sur la
+# signature des preuves/diplomes (DASHBOARD_PROOF_SECRET) ou refus de boot
+# (DASHBOARD_TEACHER_TOKEN). On les genere et persiste dans docker/.env.
+REQUIRED_SECRETS='DASHBOARD_TEACHER_TOKEN DASHBOARD_PROOF_SECRET'
+
+# Genere un secret hex fort (32 octets). openssl de preference, repli python.
+gen_secret() {
+  if command -v openssl >/dev/null 2>&1; then
+    openssl rand -hex 32
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import secrets; print(secrets.token_hex(32))'
+  else
+    date +%s%N | sha256sum | cut -c1-64
+  fi
+}
+
+# Valeur courante d'une variable dans docker/.env (vide si absente).
+# tr -d '\042\047' retire les guillemets " et ' eventuels autour de la valeur.
+env_file_value() { # name
+  [ -f "$DOCKER_ENV" ] || return 0
+  grep -E "^$1=" "$DOCKER_ENV" 2>/dev/null | tail -n1 | cut -d= -f2- | tr -d '\042\047'
+}
+
+# Garantit que docker/.env existe et porte des secrets >= 16 chars. Idempotent :
+# un secret deja valide n'est JAMAIS reecrit (sinon les preuves deja signees
+# deviennent invalides). Genere + persiste les manquants.
+ensure_secrets() {
+  if [ ! -f "$DOCKER_ENV" ]; then
+    if [ -f "$DOCKER_ENV_EXAMPLE" ]; then
+      cp "$DOCKER_ENV_EXAMPLE" "$DOCKER_ENV"; warn "docker/.env cree depuis .env.example"
+    else
+      : > "$DOCKER_ENV"; warn "docker/.env cree (vide)"
+    fi
+  fi
+  local name cur val changed=0
+  for name in $REQUIRED_SECRETS; do
+    cur="$(env_file_value "$name")"
+    if [ "${#cur}" -ge 16 ]; then
+      say "$name deja configure dans docker/.env (inchange)"
+      continue
+    fi
+    val="$(gen_secret)"
+    if grep -qE "^$name=" "$DOCKER_ENV" 2>/dev/null; then
+      sed -i.bak "s|^$name=.*|$name=$val|" "$DOCKER_ENV" && rm -f "$DOCKER_ENV.bak"
+    else
+      printf '%s=%s\n' "$name" "$val" >> "$DOCKER_ENV"
+    fi
+    ok "$name genere et ecrit dans docker/.env"
+    changed=1
+  done
+  if [ "$changed" -eq 1 ]; then
+    warn "Secrets ecrits dans docker/.env. Sauvegarde-les hors ligne et NE LES"
+    warn "CHANGE PLUS apres signature de preuves/diplomes (ils deviendraient"
+    warn "invalides). Verifie avec : grep DASHBOARD_PROOF_SECRET docker/.env"
+  fi
+}
 
 mkdir -p "$RUN_DIR" "$LOG_DIR"
 
@@ -204,14 +262,18 @@ start_dash() {
 
   export DASHBOARD_PORT="$DASH_PORT"
 
-  if [ -z "${DASHBOARD_TEACHER_TOKEN:-}" ] || [ "${#DASHBOARD_TEACHER_TOKEN}" -lt 16 ]; then
-    export DASHBOARD_TEACHER_TOKEN="$DEFAULT_TEACHER_TOKEN"
-    warn "DASHBOARD_TEACHER_TOKEN non defini, valeur par defaut utilisee (a changer en prod)."
-  fi
-  if [ -z "${DASHBOARD_PROOF_SECRET:-}" ] || [ "${#DASHBOARD_PROOF_SECRET}" -lt 16 ]; then
-    export DASHBOARD_PROOF_SECRET="$DEFAULT_PROOF_SECRET"
-    warn "DASHBOARD_PROOF_SECRET non defini, valeur par defaut utilisee (a changer en prod). Utilise pour signer les preuves de lab."
-  fi
+  # Secrets : on garantit des vraies valeurs persistees dans docker/.env, puis
+  # le process python adopte les memes que la prod docker. Fini le placeholder
+  # insecure (qui causait un 503 sur la signature des preuves/diplomes).
+  ensure_secrets
+  local _name _shellval _fileval
+  for _name in $REQUIRED_SECRETS; do
+    eval "_shellval=\${$_name:-}"
+    if [ -z "$_shellval" ] || [ "${#_shellval}" -lt 16 ]; then
+      _fileval="$(env_file_value "$_name")"
+      [ "${#_fileval}" -ge 16 ] && export "$_name=$_fileval"
+    fi
+  done
   if [ -z "${DASHBOARD_DEFAULT_COHORT:-}" ]; then
     if [ -f "$CONFIG_JSON" ]; then
       local cohort=""
@@ -320,6 +382,11 @@ show_logs() {
 
 # ---- Build (Juice Shop only) ----------------------------------------------
 invoke_build() {
+  # Provisionne les secrets dashboard des le build, pour que le 1er demarrage
+  # (dev python ou prod docker compose --env-file) ait deja un
+  # DASHBOARD_PROOF_SECRET valide et ne tombe pas en 503.
+  say 'verification des secrets dashboard (docker/.env)'
+  ensure_secrets
   if ! command -v npm >/dev/null 2>&1; then
     errp 'npm introuvable dans le PATH'
     return
@@ -348,7 +415,9 @@ Commandes :
   status                      affiche PIDs et ports
   logs     shop|dash          tail -F sur le log
   health                      ping HTTP des deux services
-  build                       npm install + build du Juice Shop
+  build                       genere les secrets manquants + npm install/build
+  secrets                     genere/verifie DASHBOARD_TEACHER_TOKEN +
+                              DASHBOARD_PROOF_SECRET dans docker/.env (idempotent)
   help                        cet ecran
 
 Environnement :
@@ -392,6 +461,7 @@ case "${cmd,,}" in
   health)  test_health ;;
   logs)    show_logs "${target,,}" ;;
   build)   invoke_build ;;
+  secrets) ensure_secrets ;;
   help|-h|--help) show_help ;;
   *)
     errp "commande inconnue '$cmd'"
