@@ -182,6 +182,22 @@ For deeper diagrams (data flow, anti-leak gating, score formula, deployment mode
 
 ---
 
+## Screenshots
+
+Teacher dashboard, cohort matrix (light theme; a light/dark toggle sits in the topbar):
+
+![Teacher dashboard - cohort matrix](docs/img/prof-dashboard-light.png)
+
+Same matrix in dark theme:
+
+![Teacher dashboard - dark theme](docs/img/prof-dashboard-dark.png)
+
+Student side, the JuiceLab Coach panel inside Juice Shop (graduated hints, quiz, logbook, badges):
+
+![Student Coach panel](docs/img/student-overlay.png)
+
+---
+
 ## The pedagogical contract
 
 JuiceLab is grounded in three explicit pedagogical decisions. The "why" of every UI element traces back to one of these.

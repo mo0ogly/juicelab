@@ -182,6 +182,22 @@ Pour des diagrammes plus détaillés (flux de données, anti-fuite, formule de s
 
 ---
 
+## Captures d'écran
+
+Dashboard prof, matrice de cohorte (thème clair ; un toggle clair/sombre est dans la barre du haut) :
+
+![Dashboard prof - matrice de cohorte](docs/img/prof-dashboard-light.png)
+
+La même matrice en thème sombre :
+
+![Dashboard prof - thème sombre](docs/img/prof-dashboard-dark.png)
+
+Côté élève, le panneau Coach JuiceLab dans Juice Shop (indices gradués, quiz, journal, badges) :
+
+![Panneau Coach élève](docs/img/student-overlay.png)
+
+---
+
 ## Le contrat pédagogique
 
 JuiceLab est fondé sur trois décisions pédagogiques explicites. Le « pourquoi » de chaque élément d'UI remonte à l'une d'entre elles.
