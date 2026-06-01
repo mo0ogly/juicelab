@@ -563,13 +563,20 @@ def delete_cohort(conn: sqlite3.Connection, cohort_id: str) -> dict[str, int]:
 
 
 def names_for_cohort(conn: sqlite3.Connection, cohort_id: str) -> dict[str, str]:
-    """token -> display_name map, skipping NULLs. Drop-in for load_roster()."""
+    """token -> human label map. Uses display_name, falling back to email
+    when the prof has not renamed the student inline. Students enrolled via
+    the cohort-join flow carry only an email (display_name stays NULL), so
+    without this fallback they surface in the matrix as opaque tokens. Rows
+    with neither a name nor an email are skipped."""
     rows = conn.execute(
-        "SELECT student_token, display_name FROM students "
-        "WHERE cohort_id = ? AND display_name IS NOT NULL AND display_name <> ''",
+        "SELECT student_token, "
+        "       COALESCE(NULLIF(display_name, ''), email) AS label "
+        "  FROM students "
+        " WHERE cohort_id = ? "
+        "   AND COALESCE(NULLIF(display_name, ''), email) IS NOT NULL",
         (cohort_id,),
     ).fetchall()
-    return {r["student_token"]: r["display_name"] for r in rows}
+    return {r["student_token"]: r["label"] for r in rows}
 
 
 # ------------------------------------------------------------------
