@@ -17,7 +17,7 @@ JuiceLab does **not** modify Juice Shop's challenges. It adds a thin coaching ov
 
 - [Why this project](#why-this-project)
 - [What it adds to Juice Shop](#what-it-adds-to-juice-shop)
-- [Architecture at a glance](#architecture-at-a-glance)
+- [Architecture](#architecture)
 - [The pedagogical contract](#the-pedagogical-contract)
 - [CTF integration (Mode A / B / C)](#ctf-integration-mode-a--b--c)
 - [Quick start](#quick-start)
@@ -64,7 +64,79 @@ JuiceLab is a **non-fork overlay**. The OWASP Juice Shop sources stay on the ups
 
 ---
 
-## Architecture at a glance
+## Architecture
+
+The stack has three independent moving parts: the student-facing Juice Shop instance (with the JuiceLab overlay), the **central teacher dashboard** (one shared instance — see [`docs/DASHBOARD-CENTRAL.md`](./docs/DASHBOARD-CENTRAL.md)), and an optional CTFd leaderboard.
+
+### Runtime topology
+
+The `overlay/` tree is **not** a runtime component: it is the mirror of the pedagogical files (Angular overlay, YAML packs, Express routes) that `scripts/apply-overlay.sh` merges into a vanilla Juice Shop clone at build time. At runtime, the merged result is the single Juice Shop image on port 3000.
+
+```mermaid
+flowchart LR
+  subgraph Build["Build time"]
+    OVL[("overlay/<br/>frontend + data + routes")]
+    APPLY["apply-overlay.sh"]
+    OVL --> APPLY
+  end
+
+  subgraph Student["Student browser"]
+    JSUI[Juice Shop UI<br/>:3000]
+    OV[JuiceLab overlay<br/>route /juicelab<br/>badges, hints, quiz, briefing]
+    JSUI --- OV
+  end
+
+  subgraph JS["juice-shop + overlay (Express :3000)"]
+    CORE[Juice Shop core]
+    GATED["routes/juicelab.ts<br/>(JWT-gated, sequential)"]
+    PACKS[("YAML v2 packs<br/>briefing / hints / quiz")]
+    APPLY -.merged at build.-> CORE
+    CORE --- GATED
+    GATED --> PACKS
+  end
+
+  subgraph DashHost["Central teacher dashboard (shared)"]
+    FLASK["Flask :5050"]
+    SQLITE[("data/dashboard.sqlite<br/>event log")]
+    FLASK --> SQLITE
+  end
+
+  OV -- "POST /api/sync<br/>cohort_id + student_token<br/>X-Instance-Label: juicelab" --> FLASK
+  PWNZZAI["PwnzzAI Coach students<br/>X-Instance-Label: pwnzzai"] -- "POST /api/sync" --> FLASK
+  TEACHER["Teacher"] -- "cookie login + CSRF<br/>X-Teacher-Token" --> FLASK
+```
+
+The dashboard is **server-authoritative**: scores, hint penalties and event ordering are computed dashboard-side from the `/api/sync` stream, not trusted from the client. One single dashboard instance serves **both** JuiceLab and PwnzzAI cohorts; the `X-Instance-Label` header tags the source so both products land in the same teacher matrix.
+
+### Event + proof sequence
+
+```mermaid
+sequenceDiagram
+  participant S as Student browser
+  participant JS as juice-shop + overlay :3000
+  participant DB as Dashboard :5050
+  S->>JS: open /juicelab, request hint level N
+  JS->>JS: gate (N served only if N-1 consumed + challenge state)
+  JS-->>S: hint N (cost 5/10/20/35/50 %)
+  S->>JS: solve OWASP challenge
+  S->>DB: POST /api/sync (cohort_id, student_token, X-Instance-Label: juicelab)
+  DB->>DB: server-authoritative scoring -> dashboard.sqlite
+  S->>DB: POST /api/verify-flag (HMAC)
+  DB-->>S: { valid, bonus }
+  S->>DB: GET /api/proof
+  DB-->>S: signed proof.md (HMAC-SHA-256)
+```
+
+### Deployment surfaces
+
+| Compose file | Brings up | Use |
+|---|---|---|
+| `docker/docker-compose.yml` | dashboard + juice-shop (full stack) | single-machine smoke test / solo lab |
+| `docker/docker-compose.dashboard.yml` | dashboard only | the shared central instance (VPS) |
+| `docker/Dockerfile.juicelab` | Juice Shop with the overlay merged | student image |
+| `docker/Dockerfile.dashboard` | Flask + SQLite | dashboard image |
+
+### Full reference diagram (gating + CTFd + shared HMAC)
 
 ```mermaid
 flowchart LR
