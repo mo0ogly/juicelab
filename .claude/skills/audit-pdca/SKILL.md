@@ -182,12 +182,12 @@ Classer chaque fichier :
 
 Output : `C_USAGE_TRIAGE.md` (tableau fichier/categorie/symboles/appels)
 
-### C.1 : Recette securite (SKILLS: improve-hook + review + frontend-design + create-ui-help)
+### C.1 : Recette securite (SKILLS: improve-hook + review + redesign-existing-projects + high-end-visual-design + create-ui-help)
 
 1. **Checks automatiques SEC-01 a SEC-10** (grep/count sur le perimetre)
 2. **Hook securite** : APPELER `/improve-hook` en mode audit si disponible (gosec + semgrep)
 3. **Code review** : APPELER `/review` sur les fichiers du perimetre
-4. **Design quality** : APPELER `/frontend-design` en mode audit sur les composants React
+4. **Design quality (taste-skills)** : APPELER `/redesign-existing-projects` + `/high-end-visual-design` en mode audit sur les composants React (`/design-taste-frontend` si nouvel ecran cree). Remplace l'ancien `/frontend-design`.
 5. **UI Help audit (BLOQUANT)** : HelpButton par tab, entrees EN+FR en base, parite bilingue
 6. **UI Help manquant** : APPELER `/create-ui-help` en mode audit
 
@@ -284,7 +284,7 @@ Pour chaque phase (1 -> 4), pour chaque tache :
 2. `/commit-check` apres chaque fichier modifie
 3. `/test-first` (Go) ou `/react-recette` + `/react-best-practices` (React)
 4. `/create-ui-help` EN+FR pour chaque composant React cree/modifie (gate bloquante)
-5. `/frontend-design` review si React
+5. `/redesign-existing-projects` + `/high-end-visual-design` review si React (`/design-taste-frontend` si nouvel ecran)
 6. `/review` -> findings CRITICAL/HIGH = BLOQUANT
 7. Si erreur : `/debug-go` ou `/debug-react`
 8. Commit conventionnel (R1)
@@ -443,7 +443,7 @@ Dream audit    : /dream audit → {CLEAN|NEEDS_CONSOLIDATION|CRITICAL}
   |     ACTIF = scorer | DEAD/PROTOTYPE = exclure du scoring
   |     Output: C_USAGE_TRIAGE.md
   |
-  |-- [C.1] /improve-hook (audit) + /review + /frontend-design (audit)
+  |-- [C.1] /improve-hook (audit) + /review + /redesign-existing-projects + /high-end-visual-design (audit)
   |     Recette securite : gosec, semgrep, grep patterns
   |     Design quality : theme-aware, responsive, loading states
   |     UI Help audit : HelpButton par tab, entrees EN+FR en base
@@ -470,7 +470,7 @@ Dream audit    : /dream audit → {CLEAN|NEEDS_CONSOLIDATION|CRITICAL}
   |     |     |-- /commit-check
   |     |     |-- /test-first OU /react-recette
   |     |     |-- /review -> fix CRITICAL/HIGH (BLOQUANT)
-  |     |     |-- /frontend-design (si React) -> fix design quality
+  |     |     |-- /redesign-existing-projects + /high-end-visual-design (si React) -> fix design quality
   |     |     |-- /create-ui-help (si ecran cree) -> EN+FR + HelpButton par tab
   |     |     |-- SI erreur : /debug-go OU /debug-react
   |     |     +-- git commit

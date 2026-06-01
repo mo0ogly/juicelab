@@ -87,7 +87,7 @@ Classification :
 | HYG-07 | manual | `grep -rn 'Chip' sigma-react-frontend/src/components/{perimetre}/ --include="*.tsx"` -> verifier borderRadius: 1 | Tous Chip = borderRadius: 1 | Frontend -- pas d'ovales |
 | HYG-08 | grep_count | `grep -rn "mockData\|MOCK_\|fakeData\|dummyData\|lorem ipsum\|example\.com" cmd/sigma_web/ sigma-react-frontend/src/` | 0 | Tous -- donnees fictives |
 
-## Checks design quality (C.1 -- /frontend-design audit)
+## Checks design quality (C.1 -- taste-skills audit : /redesign-existing-projects + /high-end-visual-design, /design-taste-frontend si nouvel ecran)
 
 | Check | Description | Condition FAIL |
 |-------|-------------|----------------|
