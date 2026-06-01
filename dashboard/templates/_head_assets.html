@@ -6,3 +6,5 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,300..600&family=Geist:wght@300..700&family=JetBrains+Mono:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}" integrity="{{ css_sri }}" crossorigin="anonymous">
 <link rel="stylesheet" href="{{ url_for('static', filename='dashboard-widgets.css') }}" integrity="{{ css_widgets_sri }}" crossorigin="anonymous">
+{# Sets data-theme before first paint (no FOUC), wires the topbar toggle. #}
+<script src="{{ url_for('static', filename='dashboard-theme.js') }}" nonce="{{ csp_nonce }}"></script>

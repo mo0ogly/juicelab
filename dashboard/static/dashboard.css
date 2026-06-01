@@ -1,22 +1,77 @@
 /* ============================================================
    JuiceLab dashboard - core stylesheet.
-   Cyber-pedagogique sombre raffine. Dark-first via :root,
-   light = paper editorial via @media (prefers-color-scheme: light).
+   Light-first (default) so the dashboard stays readable in a bright room /
+   on a projector. The teacher flips light <-> dark via the topbar toggle
+   (static/dashboard-theme.js), choice persisted in localStorage. Dark is the
+   [data-theme="dark"] override below. Both themes target WCAG AA contrast.
    Display Fraunces italic, body Geist, mono JetBrains Mono.
    Fonts loaded via templates/_head_assets.html (preconnect + <link>),
    dashboard-widgets.css loaded as separate <link> (its own SRI hash).
    ============================================================ */
 
 :root {
+  /* Light theme = default (paper editorial), contrast-boosted. */
+  --bg:           #f6f3ec;
+  --bg-elev:      #fdfbf6;
+  --bg-soft:      #efeae0;
+  --bg-row-alt:   #f2eee5;
+  --border:       #d3cab8;
+  --border-strong:#a89c82;
+  --text:         #15201b;
+  --text-soft:    #3d4742;
+  --text-mute:    #545f54;
+
+  --accent:       #1f7a52;
+  --accent-deep:  #14573a;
+  --accent-soft:  rgba(31,122,82,0.10);
+  --accent-glow:  rgba(31,122,82,0.22);
+
+  --rose:         #c63d6f;
+  --rose-soft:    rgba(198,61,111,0.12);
+  --amber:        #8f5e10;
+  --amber-soft:   rgba(143,94,16,0.14);
+  --cobalt:       #2c4f9e;
+  --cobalt-soft:  rgba(44,79,158,0.12);
+
+  --danger:       #b3261e;
+  --danger-soft:  rgba(179,38,30,0.10);
+  --warn:         var(--amber);
+  --warn-soft:    var(--amber-soft);
+  --ok:           var(--accent);
+  --ok-soft:      var(--accent-soft);
+  --info:         var(--cobalt);
+  --info-soft:    var(--cobalt-soft);
+  --purple:       var(--rose);
+  --purple-soft:  var(--rose-soft);
+  --indigo:       var(--cobalt);
+  --indigo-soft:  var(--cobalt-soft);
+
+  --shadow-card:  0 1px 2px rgba(26,31,28,0.04), 0 6px 18px rgba(26,31,28,0.06);
+  --shadow-pop:   0 20px 60px rgba(26,31,28,0.25);
+  --shadow-focus: 0 0 0 3px var(--accent-glow);
+
+  --radius:       6px;
+  --radius-sm:    4px;
+  --radius-pill:  999px;
+
+  --font-display: "Fraunces", "Iowan Old Style", "Baskerville", Georgia, serif;
+  --font-body:    "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI Variable", "Segoe UI", sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  /* Dark theme override, contrast-boosted (muted text lightened). */
   --bg:           #0a100d;
   --bg-elev:      #131a16;
   --bg-soft:      #0f1612;
   --bg-row-alt:   #111814;
-  --border:       #1f2a24;
-  --border-strong:#2a3a32;
+  --border:       #243029;
+  --border-strong:#33453b;
   --text:         #e8f0ea;
-  --text-soft:    #a8b8b0;
-  --text-mute:    #6b7d73;
+  --text-soft:    #bcc9c1;
+  --text-mute:    #9fb4a8;
 
   --accent:       #7df9b8;
   --accent-deep:  #4cc890;
@@ -32,60 +87,14 @@
 
   --danger:       #ff7a7a;
   --danger-soft:  rgba(255,122,122,0.10);
-  --warn:         var(--amber);
-  --warn-soft:    var(--amber-soft);
-  --ok:           var(--accent);
-  --ok-soft:      var(--accent-soft);
-  --info:         var(--cobalt);
-  --info-soft:    var(--cobalt-soft);
-  --purple:       var(--rose);
-  --purple-soft:  var(--rose-soft);
-  --indigo:       var(--cobalt);
-  --indigo-soft:  var(--cobalt-soft);
 
   --shadow-card:  0 1px 0 rgba(255,255,255,0.02) inset, 0 8px 24px rgba(0,0,0,0.36);
   --shadow-pop:   0 24px 72px rgba(0,0,0,0.65), 0 0 0 1px rgba(125,249,184,0.06);
-  --shadow-focus: 0 0 0 3px var(--accent-glow);
 
-  --radius:       6px;
-  --radius-sm:    4px;
-  --radius-pill:  999px;
-
-  --font-display: "Fraunces", "Iowan Old Style", "Baskerville", Georgia, serif;
-  --font-body:    "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI Variable", "Segoe UI", sans-serif;
-  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg:           #f6f3ec;
-    --bg-elev:      #fdfbf6;
-    --bg-soft:      #efeae0;
-    --bg-row-alt:   #f2eee5;
-    --border:       #d8d0c0;
-    --border-strong:#b8ad96;
-    --text:         #1a1f1c;
-    --text-soft:    #4a544e;
-    --text-mute:    #6b7569;
-    --accent:       #1f7a52;
-    --accent-deep:  #14573a;
-    --accent-soft:  rgba(31,122,82,0.10);
-    --accent-glow:  rgba(31,122,82,0.22);
-    --rose:         #c63d6f;
-    --rose-soft:    rgba(198,61,111,0.12);
-    --amber:        #a06a14;
-    --amber-soft:   rgba(160,106,20,0.14);
-    --cobalt:       #2c4f9e;
-    --cobalt-soft:  rgba(44,79,158,0.12);
-    --danger:       #b3261e;
-    --danger-soft:  rgba(179,38,30,0.10);
-    --shadow-card:  0 1px 2px rgba(26,31,28,0.04), 0 6px 18px rgba(26,31,28,0.06);
-    --shadow-pop:   0 20px 60px rgba(26,31,28,0.25);
-  }
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { color-scheme: dark light; }
 
 body {
   font-family: var(--font-body);
@@ -165,6 +174,28 @@ body::before {
 .lang-pill.active { background: var(--accent); color: var(--bg); }
 .lang-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
+/* -------- Theme switcher (light / dark toggle) -------- */
+.theme-switch {
+  display: inline-flex; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-elev);
+}
+.theme-pill {
+  font-family: var(--font-mono); font-size: 10.5px; padding: 7px 11px;
+  color: var(--text-soft); background: transparent; cursor: pointer;
+  font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+  border: 0; border-right: 1px solid var(--border);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .theme-pill { transition: color 160ms ease, background 160ms ease; }
+}
+.theme-pill:last-child { border-right: 0; }
+.theme-pill:hover { background: var(--bg-soft); color: var(--text); }
+.theme-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+:root[data-theme="light"] .theme-pill[data-theme-set="light"],
+:root[data-theme="dark"]  .theme-pill[data-theme-set="dark"] {
+  background: var(--accent); color: var(--bg);
+}
+
 /* -------- Buttons & links -------- */
 .btn, .logout {
   font-family: var(--font-body); font-size: 12.5px; font-weight: 500;
@@ -205,9 +236,9 @@ body::before {
 }
 .kpi:hover::before { opacity: 1; box-shadow: 0 0 12px var(--accent); }
 .kpi-label {
-  font-family: var(--font-mono); font-size: 10px;
-  text-transform: uppercase; letter-spacing: 0.18em;
-  color: var(--text-mute); font-weight: 500;
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.13em;
+  color: var(--text-soft); font-weight: 500;
 }
 .kpi-value {
   font-family: var(--font-mono); font-size: 34px; font-weight: 500;
@@ -323,9 +354,9 @@ body::before {
 table { border-collapse: separate; border-spacing: 0; min-width: 100%; font-size: 13px; }
 th, td { border-bottom: 1px solid var(--border); padding: 11px 14px; text-align: left; vertical-align: top; }
 thead th {
-  background: var(--bg-soft); color: var(--text-mute);
-  font-family: var(--font-mono); font-weight: 500; font-size: 10.5px;
-  text-transform: uppercase; letter-spacing: 0.14em;
+  background: var(--bg-soft); color: var(--text-soft);
+  font-family: var(--font-mono); font-weight: 600; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.11em;
   position: sticky; top: 0; z-index: 3;
   box-shadow: inset 0 -1px 0 var(--border-strong); padding: 13px 14px;
 }

@@ -2,3 +2,7 @@
   <a href="?lang=fr{% if request.args.get('cohort') %}&cohort={{ request.args.get('cohort') }}{% endif %}" class="lang-pill {% if current_lang == 'fr' %}active{% endif %}" aria-current="{% if current_lang == 'fr' %}true{% else %}false{% endif %}">{{ t('LANG_SWITCH_FR') }}</a>
   <a href="?lang=en{% if request.args.get('cohort') %}&cohort={{ request.args.get('cohort') }}{% endif %}" class="lang-pill {% if current_lang == 'en' %}active{% endif %}" aria-current="{% if current_lang == 'en' %}true{% else %}false{% endif %}">{{ t('LANG_SWITCH_EN') }}</a>
 </div>
+<div class="theme-switch" role="group" aria-label="{{ t('ARIA_THEME_SWITCH') }}">
+  <button type="button" class="theme-pill" data-theme-set="light" aria-pressed="false">{{ t('THEME_LIGHT') }}</button>
+  <button type="button" class="theme-pill" data-theme-set="dark" aria-pressed="false">{{ t('THEME_DARK') }}</button>
+</div>

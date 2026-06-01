@@ -2,6 +2,9 @@
   "LANG_NAME": "Francais",
   "LANG_SWITCH_FR": "FR",
   "LANG_SWITCH_EN": "EN",
+  "THEME_LIGHT": "Clair",
+  "THEME_DARK": "Sombre",
+  "ARIA_THEME_SWITCH": "Changer le theme clair ou sombre",
 
   "BRAND_SUBTITLE_DASHBOARD": "Suivi pedagogique - TD Juice Shop M2",
   "BRAND_SUBTITLE_COHORTS": "Gestion des cohortes et demandes d'inscription",

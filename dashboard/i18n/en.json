@@ -2,6 +2,9 @@
   "LANG_NAME": "English",
   "LANG_SWITCH_FR": "FR",
   "LANG_SWITCH_EN": "EN",
+  "THEME_LIGHT": "Light",
+  "THEME_DARK": "Dark",
+  "ARIA_THEME_SWITCH": "Switch light or dark theme",
 
   "BRAND_SUBTITLE_DASHBOARD": "Pedagogical monitoring - Juice Shop M2 lab",
   "BRAND_SUBTITLE_COHORTS": "Cohort management and join requests",
