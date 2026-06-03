@@ -10,12 +10,20 @@ mission_fr: |
   precedents (DOM et Reflected).
 
   Methode recommandee : utilise le meme vecteur que pour le DOM XSS
-  (champ de recherche) ou le Reflected XSS (parametre URL), mais
-  remplace le payload alert par une iframe avec un src vers un
-  fragment Soundcloud (la cible exacte est documentee dans la
-  hint N4 ou trouvable via les tags contextuels du challenge sur le
-  score-board). Le challenge se valide quand l'iframe Soundcloud
-  s'affiche.
+  (champ de recherche), mais remplace le payload alert par l'iframe
+  Soundcloud exacte ci-dessous. Le serveur valide le challenge par
+  comparaison stricte (utils.contains) avec cette chaine exacte : un
+  caractere different, un retour a la ligne, ou un "&amp;" au lieu de
+  "&" et le challenge NE se valide PAS, meme si l'audio se lance.
+
+  Payload exact (copier-coller tel quel, une seule ligne, ne modifie
+  pas les "&", ce ne sont PAS des "&amp;") :
+
+  <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/771984076&color=%23ff5500&auto_play=true&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>
+
+  Colle-le dans le champ de recherche en haut de page, appuie sur
+  Entree. Une lecture audio demarre : le challenge se valide alors
+  automatiquement (et le solve remonte au dashboard prof).
 
   Note la difference d'impact entre alert(1) (cosmetique) et
   l'execution d'une vraie iframe externe (chargement de tracking
@@ -31,11 +39,20 @@ mission_en: |
   previous XSS challenges (DOM and Reflected).
 
   Recommended method: use the same vector as the DOM XSS (search
-  field) or Reflected XSS (URL parameter), but swap the alert
-  payload for an iframe with a src pointing to a Soundcloud
-  fragment (the exact target is documented in hint N4 or
-  retrievable from the contextual tags on the score-board card).
-  The challenge solves when the Soundcloud iframe shows up.
+  field), but swap the alert payload for the exact Soundcloud iframe
+  below. The server validates via a strict comparison
+  (utils.contains) against this exact string: one different
+  character, a line break, or an "&amp;" instead of "&" and the
+  challenge will NOT solve, even though the audio plays.
+
+  Exact payload (copy-paste as-is, single line, do not change the
+  "&", they are NOT "&amp;"):
+
+  <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/771984076&color=%23ff5500&auto_play=true&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true"></iframe>
+
+  Paste it into the top search bar, press Enter. Audio playback
+  starts: the challenge then auto-validates (and the solve is pushed
+  to the teacher dashboard).
 
   Note the impact difference between alert(1) (cosmetic) and
   loading a real external iframe (cross-origin tracking, possible
