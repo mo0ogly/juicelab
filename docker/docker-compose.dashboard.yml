@@ -25,6 +25,7 @@ services:
     environment:
       DASHBOARD_TEACHER_TOKEN: "${DASHBOARD_TEACHER_TOKEN:?must be set in .env}"
       DASHBOARD_PROOF_SECRET: "${DASHBOARD_PROOF_SECRET:-}"
+      JUICESHOP_CTF_SECRET: "${JUICESHOP_CTF_SECRET:-}"
       DASHBOARD_PORT: "5000"
       DASHBOARD_DB: "/app/data/dashboard.sqlite"
       DASHBOARD_BIND: "${DASHBOARD_BIND:-0.0.0.0}"
