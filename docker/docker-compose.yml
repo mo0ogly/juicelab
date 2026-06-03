@@ -30,6 +30,8 @@ services:
       DASHBOARD_DB: "/app/data/dashboard.sqlite"
       DASHBOARD_CORS_ORIGINS: "${DASHBOARD_CORS_ORIGINS:-http://127.0.0.1:3000,http://localhost:3000}"
       DASHBOARD_LOG_LEVEL: "${DASHBOARD_LOG_LEVEL:-INFO}"
+      DASHBOARD_PROOF_SECRET: "${DASHBOARD_PROOF_SECRET:?must be set in .env}"
+      JUICESHOP_CTF_SECRET: "${JUICESHOP_CTF_SECRET:-}"
       # CTFd integration (Mode C, opt-in). Empty values keep Mode A active.
       CTFD_URL: "${CTFD_URL:-}"
       CTFD_ADMIN_TOKEN: "${CTFD_ADMIN_TOKEN:-}"

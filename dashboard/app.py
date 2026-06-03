@@ -581,7 +581,7 @@ def create_app() -> Flask:
     init_schema()
     app = Flask(__name__)
     CORS(app, resources={r"/api/*": {"origins": _cors_origins()}},
-         allow_headers=["Content-Type", "Authorization", "X-Teacher-Token", "X-Instance-Label", "X-Student-Token"],
+         allow_headers=["Content-Type", "Authorization", "X-Teacher-Token", "X-Instance-Label", "X-Student-Token", "X-User-Email"],
          methods=["GET", "POST", "DELETE", "OPTIONS"])
     register_i18n(app); register_students_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_cohorts_routes(app, _check_teacher_auth, _check_teacher_auth_html); register_join_routes(app); register_sync_routes(app, _validate_event, _insert_event); register_proof_routes(app, _check_teacher_auth, expected_flag=_expected_flag, insert_event=_insert_event, events_for=_events_for, proof_secret=_proof_secret); register_diploma_routes(app, _check_teacher_auth_html, _check_teacher_auth, proof_secret=_proof_secret); register_sse_routes(app, _check_teacher_auth, _cohort_summary); register_tags_routes(app, _check_teacher_auth); register_alerts_routes(app, _check_teacher_auth); register_pdf_routes(app, _check_teacher_auth, _cohort_summary)
     if os.environ.get("DASHBOARD_MONITOR_ENABLED", "1").strip() != "0": import db as _dbm; start_monitor(_dbm, lambda a: persist_alert(_dbm, a))
