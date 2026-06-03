@@ -240,6 +240,32 @@ grep TOKEN juicelab/docker/.env
 
 Tokens are stored there in plain text on your laptop. If you want to rotate them : delete the lines from `docker/.env` and re-run the installer — it will regenerate fresh ones.
 
+### Dashboard does not receive my events (CORS `X-User-Email` error) or proof / flag check returns 503
+
+Symptoms in the browser console :
+
+- `Request header field X-User-Email is not allowed by Access-Control-Allow-Headers`
+- `Proof download failed: HTTP 503 (proof signing disabled)`
+
+These are bugs fixed in a recent version of the repo. Update your clone, then rebuild the dashboard :
+
+```bash
+cd juicelab
+git pull
+cd docker
+docker compose --env-file .env up -d --build dashboard
+```
+
+Check (the header must show up in the response) :
+
+```bash
+curl -s -i -X OPTIONS http://127.0.0.1:5050/api/sync \
+  -H 'Origin: http://127.0.0.1:3000' \
+  -H 'Access-Control-Request-Headers: X-User-Email' | grep -i allow-headers
+```
+
+Note : CTF flag verification stays disabled until `JUICESHOP_CTF_SECRET` is set in `docker/.env` (sync and proof download work without it). Ask your teacher for the key if the exercise requires flag verification.
+
 ---
 
 ## 7. Uninstall

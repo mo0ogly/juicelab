@@ -240,6 +240,32 @@ grep TOKEN juicelab/docker/.env
 
 Les tokens sont en clair dans ce fichier sur ton portable. Pour les regenerer : supprime les lignes correspondantes dans `docker/.env` et relance l'installeur — il en genere des neufs.
 
+### Le dashboard ne recoit pas mes events (erreur CORS `X-User-Email`) ou preuve / verif de flag en 503
+
+Symptomes dans la console du navigateur :
+
+- `Request header field X-User-Email is not allowed by Access-Control-Allow-Headers`
+- `Echec du telechargement de la preuve : HTTP 503 (proof signing disabled)`
+
+Ce sont des bugs corriges dans une version recente du repo. Mets a jour ton clone puis reconstruis le dashboard :
+
+```bash
+cd juicelab
+git pull
+cd docker
+docker compose --env-file .env up -d --build dashboard
+```
+
+Verification (le header doit apparaitre dans la reponse) :
+
+```bash
+curl -s -i -X OPTIONS http://127.0.0.1:5050/api/sync \
+  -H 'Origin: http://127.0.0.1:3000' \
+  -H 'Access-Control-Request-Headers: X-User-Email' | grep -i allow-headers
+```
+
+Note : la verification de flag CTF reste desactivee tant que `JUICESHOP_CTF_SECRET` n'est pas renseigne dans `docker/.env` (la sync et le telechargement de preuve fonctionnent sans). Demande la cle a ton enseignant si l'exercice exige la verif de flag.
+
 ---
 
 ## 7. Desinstaller
