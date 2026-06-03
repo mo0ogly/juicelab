@@ -252,6 +252,36 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 This bug was patched on the repo side (see `overlay/frontend/src/assets/flag-icons-patched.min.css`). If you still hit it, you cloned an old revision : `git pull` and re-run the installer with `--reset`.
 
+### The build fails: `patch does not apply` (Windows / line endings)
+
+Symptom — the build stops at the `git apply` step with, on many files:
+
+```
+error: patch failed: config/default.yml:458
+error: config/default.yml: patch does not apply
+```
+
+Cause — you are on **Windows** and Git rewrote the patch line endings to CRLF
+(`core.autocrlf=true` by default). The CRLF patch does not apply to Juice Shop's
+LF sources inside the Linux build container. macOS / Linux are unaffected.
+
+Fix — the repo now pins LF line endings (`.gitattributes`). **Re-clone cleanly**
+to get the files in the right format:
+
+```powershell
+cd ..
+Remove-Item -Recurse -Force juicelab
+git clone https://github.com/mo0ogly/juicelab.git
+cd juicelab
+.\scripts\install-student.ps1 -Dashboard 187.124.39.123 -Cohort JUICELAB-JUIN-2026 -Label PRENOM
+```
+
+If the error persists after re-cloning, force the Git config BEFORE re-cloning:
+
+```powershell
+git config --global core.autocrlf false
+```
+
 ### Dashboard returns 401 / 403
 
 The token in your browser cookie does not match the one in `docker/.env`. Open `docker/.env`, copy the value of `DASHBOARD_TEACHER_TOKEN`, log in again at `/login`.

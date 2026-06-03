@@ -252,6 +252,36 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 Ce bug a ete patche cote repo (voir `overlay/frontend/src/assets/flag-icons-patched.min.css`). Si tu le rencontres encore, tu as clone une vieille revision : `git pull` puis relance l'installeur avec `--reset`.
 
+### Le build echoue : `patch does not apply` (Windows / fins de ligne)
+
+Symptome — le build s'arrete a l'etape `git apply` avec, sur de nombreux fichiers :
+
+```
+error: patch failed: config/default.yml:458
+error: config/default.yml: patch does not apply
+```
+
+Cause — tu es sous **Windows** et Git a converti les fins de ligne du patch en CRLF
+(`core.autocrlf=true` par defaut). Le patch CRLF ne s'applique pas aux sources LF
+de Juice Shop dans le conteneur Linux. macOS / Linux ne sont pas concernes.
+
+Correctif — le depot impose desormais des fins de ligne LF (`.gitattributes`).
+**Re-clone proprement** pour recuperer les fichiers au bon format :
+
+```powershell
+cd ..
+Remove-Item -Recurse -Force juicelab
+git clone https://github.com/mo0ogly/juicelab.git
+cd juicelab
+.\scripts\install-student.ps1 -Dashboard 187.124.39.123 -Cohort JUICELAB-JUIN-2026 -Label PRENOM
+```
+
+Si l'erreur persiste apres re-clone, force la config Git AVANT de re-cloner :
+
+```powershell
+git config --global core.autocrlf false
+```
+
 ### Le dashboard retourne 401 / 403
 
 Le token dans le cookie de ton navigateur ne correspond pas a celui de `docker/.env`. Ouvre `docker/.env`, copie la valeur de `DASHBOARD_TEACHER_TOKEN`, reconnecte-toi sur `/login`.

@@ -503,6 +503,26 @@ docker compose --env-file .env logs --tail=200 dashboard
 
 Cause fréquente : `DASHBOARD_TEACHER_TOKEN` < 16 chars → exit fail-fast au boot.
 
+### Un élève Windows : `patch does not apply` pendant le build
+
+Symptôme côté élève — le build Docker s'arrête à l'étape `git apply` avec
+`error: <fichier>: patch does not apply` sur de nombreux fichiers. Cause : Git
+for Windows a converti le patch en CRLF (`core.autocrlf=true`), incompatible
+avec les sources LF de Juice Shop dans le conteneur. Le dépôt impose désormais
+des fins de ligne LF (`.gitattributes`). Dis à l'élève de **re-cloner
+proprement** (un vieux clone Windows garde le CRLF) :
+
+```powershell
+cd ..
+Remove-Item -Recurse -Force juicelab
+git clone https://github.com/mo0ogly/juicelab.git
+cd juicelab
+.\scripts\install-student.ps1 -Dashboard 187.124.39.123 -Cohort JUICELAB-JUIN-2026 -Label PRENOM
+```
+
+Si ça persiste : `git config --global core.autocrlf false` puis re-cloner.
+macOS / Linux ne sont jamais concernés. Détail élève : `STUDENT-INSTALL-FR.md` § 6.
+
 ---
 
 ## 14. Pour aller plus loin

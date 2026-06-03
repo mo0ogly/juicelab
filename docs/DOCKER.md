@@ -700,9 +700,25 @@ dashboard.juicelab.tld {
 
 ### Build échoue à `git apply --3way`
 
-Cause habituelle : `JUICE_SHOP_COMMIT` overridé sans regénérer le patch. Le patch a été généré contre `3b178fd` ; sur un autre commit, certains hunks ne matchent plus.
+Symptôme : `error: <fichier>: patch does not apply` sur de nombreux fichiers
+(`config/default.yml:458`, `server.ts:100`, etc.).
 
-Fix : soit revenir au default, soit suivre [§ Procédure de rebase](#procédure-de-rebase-owasp).
+Deux causes distinctes :
+
+1. **Fins de ligne CRLF (Windows) — la plus fréquente en TD.** Git for Windows
+   (`core.autocrlf=true` par défaut) réécrit `patches/juicelab-core.patch` et les
+   sources `overlay/` en CRLF au checkout. Le patch CRLF ne s'applique pas aux
+   sources LF de Juice Shop clonées dans le conteneur Linux, et TOUS les hunks
+   échouent. macOS / Linux (LF) ne sont jamais concernés.
+   Fix : le dépôt impose désormais LF via `.gitattributes`. Un **clone neuf**
+   récupère les fichiers en LF. Sur un vieux clone Windows :
+   `git config --global core.autocrlf false` puis re-cloner. Détail élève :
+   `STUDENT-INSTALL-FR.md` § 6.
+
+2. **`JUICE_SHOP_COMMIT` overridé sans regénérer le patch.** Le patch a été
+   généré contre `3b178fd` ; sur un autre commit, certains hunks ne matchent
+   plus. Fix : revenir au default, ou suivre
+   [§ Procédure de rebase](#procédure-de-rebase-owasp).
 
 ### Build échoue à `npm install`
 
