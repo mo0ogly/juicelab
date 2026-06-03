@@ -1,5 +1,7 @@
 # JuiceLab Dashboard - Security Posture
 
+> French version: [SECURITY_POSTURE-FR.md](./SECURITY_POSTURE-FR.md).
+
 Snapshot of the hardening achieved through 17 PDCA cycles on the
 `dashboard/` scope. This document is the single-page summary intended
 for OWASP review, audit reports, and procurement questionnaires. The

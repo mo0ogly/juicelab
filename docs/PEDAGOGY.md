@@ -1,5 +1,7 @@
 # PEDAGOGY — Learning theory behind JuiceLab
 
+> French version: [PEDAGOGY-FR.md](./PEDAGOGY-FR.md).
+
 This document explains the *why* of JuiceLab's design. Every UI element, every default value, every gating rule traces back to one of the three pedagogical pillars below.
 
 > **Audience** — teachers evaluating whether JuiceLab fits their course, and contributors who want to write a new pedagogical pack and need to understand the design constraints. If you only want to *use* JuiceLab, [`README.md`](../README.md) is enough.

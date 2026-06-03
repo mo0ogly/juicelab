@@ -1,43 +1,43 @@
-# VPS hardening — deploy JuiceLab dashboard on the public internet
+# Durcissement VPS — déployer le tableau de bord JuiceLab sur l'internet public
 
-> French version: [VPS_HARDENING-FR.md](./VPS_HARDENING-FR.md).
+> Version anglaise : [VPS_HARDENING.md](./VPS_HARDENING.md).
 
-This guide walks through deploying the JuiceLab teacher dashboard
-(Flask + SQLite) on a single VPS exposed via a public domain
-(e.g. `juice.tonprof.fr`). It assumes a single-tenant install : one
-teacher, one VPS, many students hitting the same dashboard.
+Ce guide décrit le déploiement du tableau de bord enseignant JuiceLab
+(Flask + SQLite) sur un VPS unique exposé via un domaine public
+(ex. `juice.tonprof.fr`). Il suppose une installation mono-locataire : un
+seul enseignant, un seul VPS, de nombreux étudiants sollicitant le même tableau de bord.
 
-Scope : **dashboard only**. Juice Shop itself runs **on each student's
-laptop** in local mode and pushes events over HTTPS to the dashboard.
-The dashboard is the only public surface.
+Périmètre : **tableau de bord uniquement**. Juice Shop tourne **sur le poste
+de chaque étudiant** en mode local et pousse des événements en HTTPS vers le tableau de bord.
+Le tableau de bord est la seule surface exposée publiquement.
 
-> **Audience** : operators with sudo on a fresh Ubuntu 22.04+ VPS.
-> Read end-to-end before running any command. If you only have one
-> VPS and one cohort, no automation script is provided ; copy-paste
-> the snippets in the listed order.
+> **Public cible** : opérateurs disposant de sudo sur un VPS Ubuntu 22.04+ fraîchement installé.
+> Lire intégralement avant d'exécuter la moindre commande. Si vous ne disposez que d'un seul
+> VPS et d'une seule cohorte, aucun script d'automatisation n'est fourni ; copiez-collez
+> les extraits dans l'ordre indiqué.
 
-## 0. Threat model in two sentences
+## 0. Modèle de menace en deux phrases
 
-The dashboard token (`DASHBOARD_TEACHER_TOKEN`) is the single line of
-defense for the teacher-facing surface. The student-facing surface
-(`/api/cohort/join`, `/api/student/status`, `/api/sync`) is public by
-design but rate-limited and gated server-side on the per-student
-`status` column ; an attacker who knows a cohort code can flood
-pending join requests, so we rate-limit at the reverse-proxy level.
+Le jeton enseignant (`DASHBOARD_TEACHER_TOKEN`) constitue l'unique ligne de
+défense pour la surface accessible à l'enseignant. La surface accessible aux étudiants
+(`/api/cohort/join`, `/api/student/status`, `/api/sync`) est publique par
+conception, mais soumise à un contrôle de débit et filtrée côté serveur sur la colonne
+`status` de chaque étudiant ; un attaquant qui connaît un code de cohorte peut inonder
+de demandes d'adhésion en attente, d'où la limitation de débit au niveau du mandataire inverse.
 
-## 1. VPS prerequisites
+## 1. Prérequis du VPS
 
-| Item | Value |
+| Élément | Valeur |
 |---|---|
-| OS | Ubuntu 22.04+ or Debian 12+ (`apt`-based) |
-| CPU / RAM | 2 vCPU / 2 GB RAM minimum |
-| Disk | 20 GB minimum (SQLite + backups) |
-| Network | Public IPv4. IPv6 if available. |
-| DNS | An `A` (and optionally `AAAA`) record `juice.tonprof.fr` pointing at the VPS, propagated before step 4 |
-| SSH | Key-only auth (no password), non-root sudo user |
-| Snapshots | At least one snapshot before first deploy (rollback option if hardening breaks something) |
+| OS | Ubuntu 22.04+ ou Debian 12+ (basé sur `apt`) |
+| CPU / RAM | 2 vCPU / 2 Go de RAM minimum |
+| Disque | 20 Go minimum (SQLite + sauvegardes) |
+| Réseau | IPv4 publique. IPv6 si disponible. |
+| DNS | Un enregistrement `A` (et optionnellement `AAAA`) `juice.tonprof.fr` pointant vers le VPS, propagé avant l'étape 4 |
+| SSH | Authentification par clé uniquement (sans mot de passe), utilisateur sudo non-root |
+| Instantanés | Au moins un instantané avant le premier déploiement (option de retour arrière si le durcissement casse quelque chose) |
 
-## 2. Create the unprivileged service user
+## 2. Créer l'utilisateur de service sans privilèges
 
 ```bash
 sudo useradd -r -m -d /opt/juicelab -s /bin/bash juicelab
@@ -46,23 +46,21 @@ sudo install -d -o juicelab -g juicelab -m 0750 /var/lib/juicelab
 sudo install -d -o juicelab -g juicelab -m 0750 /var/log/juicelab
 ```
 
-Clone the repos as the service user :
+Cloner les dépôts en tant qu'utilisateur de service :
 
 ```bash
 sudo -u juicelab git clone https://github.com/mo0ogly/juicelab /opt/juicelab/juicelab
 sudo -u juicelab git -C /opt/juicelab/juicelab clone https://github.com/mo0ogly/juice-shop juice-shop
 ```
 
-> If you maintain a private fork, replace the URLs and set up a
-> deploy key per repo. Do not store private SSH keys in the
-> `juicelab` user home — keep them in `/etc/ssh/deploy_keys/` with
-> `chmod 0400` and `User=juicelab` in a `Match User` ssh-config
-> block.
+> Si vous maintenez un fork privé, remplacez les URL et configurez une clé de déploiement
+> par dépôt. Ne stockez pas les clés SSH privées dans le répertoire personnel de
+> l'utilisateur `juicelab` — conservez-les dans `/etc/ssh/deploy_keys/` avec
+> `chmod 0400` et `User=juicelab` dans un bloc `Match User` de la configuration ssh.
 
 ## 3. Secrets
 
-Generate three independent secrets, **none of which appears in any
-git-tracked file** :
+Générez trois secrets indépendants, **qu'aucun fichier suivi par git ne doit contenir** :
 
 ```bash
 TEACHER_TOK=$(openssl rand -hex 32)
@@ -70,7 +68,7 @@ PROOF_SEC=$(openssl rand -hex 32)
 CTF_SEC=$(openssl rand -hex 32)
 ```
 
-Write them to `/etc/juicelab/env` :
+Écrivez-les dans `/etc/juicelab/env` :
 
 ```bash
 sudo install -d -o root -g juicelab -m 0750 /etc/juicelab
@@ -94,18 +92,17 @@ sudo chown root:juicelab /etc/juicelab/env
 sudo chmod 0640 /etc/juicelab/env
 ```
 
-Verification (the file must not be world-readable) :
+Vérification (le fichier ne doit pas être lisible par tous) :
 
 ```bash
 ls -la /etc/juicelab/env
 # -rw-r----- 1 root juicelab ... /etc/juicelab/env
 ```
 
-Hand the value of `DASHBOARD_TEACHER_TOKEN` to the teacher via an
-out-of-band channel (1Password / Signal / in-person). Never email it
-in plaintext.
+Transmettez la valeur de `DASHBOARD_TEACHER_TOKEN` à l'enseignant via un
+canal hors-bande (1Password / Signal / en personne). Ne l'envoyez jamais par courriel en clair.
 
-## 4. systemd unit
+## 4. Unité systemd
 
 `sudo tee /etc/systemd/system/juicelab-dashboard.service >/dev/null <<'EOF'`
 
@@ -151,7 +148,7 @@ WantedBy=multi-user.target
 EOF
 ```
 
-Enable + start :
+Activation et démarrage :
 
 ```bash
 sudo systemctl daemon-reload
@@ -160,16 +157,16 @@ sudo systemctl status juicelab-dashboard --no-pager
 journalctl -u juicelab-dashboard -n 30 --no-pager
 ```
 
-Health check (must answer locally, not yet over public IP) :
+Vérification de santé (doit répondre en local, pas encore via l'IP publique) :
 
 ```bash
 curl -sf http://127.0.0.1:5050/api/health
 # {"ok":true,...}
 ```
 
-## 5. Caddy reverse proxy + auto-TLS
+## 5. Mandataire inverse Caddy + TLS automatique
 
-Install :
+Installation :
 
 ```bash
 sudo apt update
@@ -222,20 +219,20 @@ sudo systemctl reload caddy
 sudo systemctl status caddy --no-pager
 ```
 
-Wait 30-60 s for Let's Encrypt issuance, then :
+Attendez 30 à 60 secondes pour l'émission du certificat Let's Encrypt, puis :
 
 ```bash
 curl -sf https://juice.tonprof.fr/api/health
 # {"ok":true,...}
 ```
 
-Optional : add basic rate-limiting via the
-[`caddy-ratelimit`](https://github.com/mholt/caddy-ratelimit) module
-(build a custom caddy binary with `xcaddy build --with github.com/mholt/caddy-ratelimit`).
-For a single-classroom deployment, fail2ban at the OS level (step 7)
-is usually enough.
+Facultatif : ajoutez une limitation de débit basique via le module
+[`caddy-ratelimit`](https://github.com/mholt/caddy-ratelimit)
+(compilez un binaire caddy personnalisé avec `xcaddy build --with github.com/mholt/caddy-ratelimit`).
+Pour un déploiement en salle de classe unique, fail2ban au niveau OS (étape 7)
+est généralement suffisant.
 
-## 6. UFW firewall
+## 6. Pare-feu UFW
 
 ```bash
 sudo ufw default deny incoming
@@ -249,14 +246,14 @@ sudo ufw enable
 sudo ufw status verbose
 ```
 
-Verify from another host :
+Vérification depuis un autre hôte :
 
 ```bash
 nc -vz juice.tonprof.fr 443    # OK
 nc -vz juice.tonprof.fr 5050   # connection refused
 ```
 
-## 7. fail2ban for /login
+## 7. fail2ban pour /login
 
 ```bash
 sudo apt install -y fail2ban
@@ -282,12 +279,12 @@ sudo systemctl reload fail2ban
 sudo fail2ban-client status juicelab
 ```
 
-Note : Caddy logs JSON. Adapt the filter regex to match
-`"status":401` and `"uri":"/login"` if you switch to JSON-only.
+Remarque : Caddy journalise en JSON. Adaptez l'expression régulière du filtre pour correspondre à
+`"status":401` et `"uri":"/login"` si vous passez en mode JSON exclusif.
 
-## 8. Encrypted daily backups
+## 8. Sauvegardes quotidiennes chiffrées
 
-`age` is a minimal modern encryption tool (Go, single binary).
+`age` est un outil de chiffrement moderne et minimal (Go, binaire unique).
 
 ```bash
 sudo apt install -y age cron
@@ -304,7 +301,7 @@ EOF
 sudo chmod 0644 /etc/juicelab/backup.pub
 ```
 
-Backup script :
+Script de sauvegarde :
 
 ```bash
 sudo tee /usr/local/sbin/juicelab-backup >/dev/null <<'EOF'
@@ -330,7 +327,7 @@ sudo tee /etc/cron.d/juicelab-backup >/dev/null <<'EOF'
 EOF
 ```
 
-Restore drill (run quarterly) :
+Exercice de restauration (à effectuer chaque trimestre) :
 
 ```bash
 # Pull the latest .age locally, then on your laptop :
@@ -338,7 +335,7 @@ age -d -i ~/juicelab-backup.key < dashboard-XXXXX.sqlite.age > dashboard.sqlite
 sqlite3 dashboard.sqlite ".schema students"   # smoke test
 ```
 
-## 9. Auto-updates
+## 9. Mises à jour automatiques
 
 ```bash
 sudo apt install -y unattended-upgrades
@@ -349,7 +346,7 @@ sudo sed -i 's|//Unattended-Upgrade::Automatic-Reboot "false";|Unattended-Upgrad
 sudo sed -i 's|//Unattended-Upgrade::Automatic-Reboot-Time "02:00";|Unattended-Upgrade::Automatic-Reboot-Time "04:30";|' /etc/apt/apt.conf.d/50unattended-upgrades
 ```
 
-## 10. SSH lockdown
+## 10. Verrouillage SSH
 
 `sudo tee /etc/ssh/sshd_config.d/juicelab.conf >/dev/null <<'EOF'`
 
@@ -366,12 +363,11 @@ EOF
 sudo systemctl reload ssh
 ```
 
-Verify you can still log in from a SECOND terminal before closing the
-first one.
+Vérifiez que vous pouvez toujours vous connecter depuis un SECOND terminal avant de fermer le premier.
 
-## 11. Post-deploy verification checklist
+## 11. Liste de contrôle post-déploiement
 
-Run from a laptop, NOT the VPS :
+À exécuter depuis un poste de travail, PAS depuis le VPS :
 
 ```bash
 # 1. DNS
@@ -405,37 +401,37 @@ ssh juicelab-vps "sudo grep -i 'teacher_token=[^&\"]\\+' /var/log/caddy/juicelab
 # expect empty (Caddy stores headers and bodies separately if format=json)
 ```
 
-## 12. Day-2 operations
+## 12. Opérations courantes (jour 2)
 
-| Operation | Command |
+| Opération | Commande |
 |---|---|
-| Tail dashboard logs | `journalctl -u juicelab-dashboard -f` |
-| Tail caddy logs | `tail -f /var/log/caddy/juicelab.log` |
-| Rotate teacher token | follow `docs/COHORT_WORKFLOW.md` § 7 |
-| Update code | `sudo -u juicelab git -C /opt/juicelab/juicelab pull && sudo systemctl restart juicelab-dashboard` |
-| Restart all | `sudo systemctl restart juicelab-dashboard caddy fail2ban` |
-| Restore from backup | `age -d -i ~/key < dashboard-TS.sqlite.age > dashboard.sqlite ; sudo systemctl stop juicelab-dashboard ; sudo cp dashboard.sqlite /var/lib/juicelab/ ; sudo chown juicelab:juicelab /var/lib/juicelab/dashboard.sqlite ; sudo systemctl start juicelab-dashboard` |
-| Wipe a cohort | use `/admin/cohorts` UI |
-| Renew TLS manually | `sudo systemctl reload caddy` (Caddy renews automatically) |
+| Suivre les journaux du tableau de bord | `journalctl -u juicelab-dashboard -f` |
+| Suivre les journaux de Caddy | `tail -f /var/log/caddy/juicelab.log` |
+| Renouveler le jeton enseignant | suivre `docs/COHORT_WORKFLOW.md` § 7 |
+| Mettre à jour le code | `sudo -u juicelab git -C /opt/juicelab/juicelab pull && sudo systemctl restart juicelab-dashboard` |
+| Redémarrer tout | `sudo systemctl restart juicelab-dashboard caddy fail2ban` |
+| Restaurer depuis une sauvegarde | `age -d -i ~/key < dashboard-TS.sqlite.age > dashboard.sqlite ; sudo systemctl stop juicelab-dashboard ; sudo cp dashboard.sqlite /var/lib/juicelab/ ; sudo chown juicelab:juicelab /var/lib/juicelab/dashboard.sqlite ; sudo systemctl start juicelab-dashboard` |
+| Supprimer une cohorte | utiliser l'interface `/admin/cohorts` |
+| Renouveler le TLS manuellement | `sudo systemctl reload caddy` (Caddy renouvelle automatiquement) |
 
-## 13. What this guide does NOT cover
+## 13. Ce que ce guide ne couvre pas
 
-- **Multi-tenant** : multiple teachers on a single VPS sharing the
-  dashboard. The teacher token is a single shared secret ; pivot to
-  OIDC / SSO if you outgrow that. Out of scope here.
-- **High availability** : single-VPS deployment. For HA, put a load
-  balancer in front of two replicas and migrate SQLite to PostgreSQL.
-- **WAF** : Caddy basic. For Cloudflare-grade WAF, put the dashboard
-  behind Cloudflare and enable proxy mode.
-- **Aggregated audit logs** : SIEM ingestion. Pipe Caddy logs to
-  Loki or Vector if needed.
-- **CTFd integration** : see `docs/CTF-INTEGRATION.md`.
+- **Multi-locataire** : plusieurs enseignants sur un seul VPS partageant le
+  tableau de bord. Le jeton enseignant est un secret partagé unique ; passez à
+  OIDC / SSO si vous dépassez ce cadre. Hors périmètre ici.
+- **Haute disponibilité** : déploiement mono-VPS. Pour la HA, placez un
+  répartiteur de charge devant deux réplicas et migrez SQLite vers PostgreSQL.
+- **WAF** : Caddy en configuration de base. Pour un WAF de niveau Cloudflare, placez le tableau de bord
+  derrière Cloudflare et activez le mode proxy.
+- **Journaux d'audit agrégés** : ingestion SIEM. Redirigez les journaux de Caddy vers
+  Loki ou Vector si nécessaire.
+- **Intégration CTFd** : voir `docs/CTF-INTEGRATION.md`.
 
-## 14. References
+## 14. Références
 
 - Caddy server : https://caddyserver.com/docs/
-- systemd security : `man systemd.exec` (sandbox section)
+- Sécurité systemd : `man systemd.exec` (section sandbox)
 - fail2ban : https://www.fail2ban.org/wiki/index.php/Main_Page
-- age encryption : https://age-encryption.org/
-- OWASP best practices for VPS / Linux hardening :
+- Chiffrement age : https://age-encryption.org/
+- Bonnes pratiques OWASP pour le durcissement VPS / Linux :
   https://cheatsheetseries.owasp.org/cheatsheets/Linux_security_baseline.html

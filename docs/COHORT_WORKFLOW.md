@@ -1,5 +1,7 @@
 # Cohort workflow — operational guide
 
+> French version: [COHORT_WORKFLOW-FR.md](./COHORT_WORKFLOW-FR.md).
+
 This document describes the **trilateral cohort workflow**, the
 **login flow**, the **multilingual support**, the **help popups**, and
 the **operational concerns** (Google OAuth, teacher token rotation,

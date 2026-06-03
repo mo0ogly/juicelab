@@ -1,40 +1,39 @@
-# Phase 0 outreach — channels and ready-to-post text
+# Phase 0 - diffusion — canaux et textes prêts à publier
 
-> French version: [PEDAGOGY_COMPANION_PHASE0_OUTREACH-FR.md](./PEDAGOGY_COMPANION_PHASE0_OUTREACH-FR.md).
+> Version anglaise : [PEDAGOGY_COMPANION_PHASE0_OUTREACH.md](./PEDAGOGY_COMPANION_PHASE0_OUTREACH.md).
 
-GitHub **Discussions is not enabled** on `juice-shop/juice-shop`. The
-maintainers point external feedback to two channels (verified
-2026-05-11) :
+Les **Discussions GitHub ne sont pas activées** sur `juice-shop/juice-shop`. Les
+mainteneurs redirigent les retours externes vers deux canaux (vérifié
+le 2026-05-11) :
 
-| Channel | URL | Use for |
+| Canal | URL | Utilisation |
 |---|---|---|
-| Issue tracker | https://github.com/juice-shop/juice-shop/issues/new/choose | Feature request via the official `[🚀]` template |
-| Gitter chat | https://gitter.im/bkimminich/juice-shop | Conversational support / live ping a maintainer |
+| Gestionnaire d'issues | https://github.com/juice-shop/juice-shop/issues/new/choose | Demande de fonctionnalité via le modèle officiel `[🚀]` |
+| Chat Gitter | https://gitter.im/bkimminich/juice-shop | Support conversationnel / ping direct à un mainteneur |
 
-**Recommended primary** : open a Feature request Issue (traceable,
-referenceable from a future PR). **Optional secondary** : ping
-@bkimminich on Gitter pointing at the Issue.
-
----
-
-## Pre-flight checklist before posting
-
-- [ ] Search open AND closed Issues for "pedagogy", "overlay", "lab",
-      "training", "academic" — make sure no prior request covers this.
-- [ ] Verify `mo0ogly/juice-shop` is public on GitHub.
-- [ ] Verify `PEDAGOGY_COMPANION.md` is on `master` of the fork.
-- [ ] Replace `<DASHBOARD_REPO_URL>` below with the actual companion
-      dashboard repo URL.
-- [ ] Use your personal GitHub account (not anonymous).
+**Priorité recommandée** : ouvrir une issue de demande de fonctionnalité (traçable,
+référençable depuis une future PR). **Option secondaire** : pinger
+@bkimminich sur Gitter en pointant vers l'issue.
 
 ---
 
-## Feature request — ready-to-paste
+## Liste de vérification avant publication
 
-Pick the **"🚀 Feature request"** template at
+- [ ] Rechercher dans les issues ouvertes ET fermées les termes « pedagogy », « overlay », « lab »,
+      « training », « academic » — s'assurer qu'aucune demande antérieure ne couvre ce sujet.
+- [ ] Vérifier que `mo0ogly/juice-shop` est public sur GitHub.
+- [ ] Vérifier que `PEDAGOGY_COMPANION.md` est sur `master` du fork.
+- [ ] Remplacer `<DASHBOARD_REPO_URL>` ci-dessous par l'URL réelle du dépôt du tableau de bord compagnon.
+- [ ] Utiliser votre compte GitHub personnel (pas anonyme).
+
+---
+
+## Demande de fonctionnalité — texte prêt à coller
+
+Choisir le modèle **"🚀 Feature request"** sur
 https://github.com/juice-shop/juice-shop/issues/new/choose .
 
-### Title
+### Titre
 
 ```
 [🚀] Pedagogy Companion overlay — non-invasive academic lab on top of Juice Shop
@@ -122,9 +121,9 @@ validated before commit.
 
 ---
 
-## Optional Gitter follow-up (after the Issue is filed)
+## Suivi Gitter optionnel (après le dépôt de l'issue)
 
-Once the Issue has an URL, you can ping the maintainer chat with :
+Une fois que l'issue dispose d'une URL, il est possible de pinger le chat des mainteneurs avec :
 
 ```
 Hi all, just opened a non-invasive Pedagogy Companion proposal as a
@@ -133,16 +132,15 @@ a maintainer before I prepare any code PR. Happy to discuss either
 here or on the Issue.
 ```
 
-Keep it short ; maintainers triage Gitter conversationally.
+Rester concis ; les mainteneurs traitent Gitter de façon conversationnelle.
 
 ---
 
-## Why we did NOT open a PR yet
+## Pourquoi nous n'avons pas encore ouvert de PR
 
-This is a temperature check, NOT a PR. Per the deferred rebrand plan
-in `docs/REBRAND_PLAN.md`, we wait for a maintainer signal before
-investing the 2-3 days needed to strip the internal "JuiceLab" name
-from 140+ i18n keys, 12 components, 7 services, 4 path roots, 3
-localStorage keys, the dashboard, and the documentation. If the
-maintainers prefer the external repo path, the rebrand stays
-unnecessary.
+Il s'agit d'une prise de température, PAS d'une PR. Conformément au plan de
+rebranding différé dans `docs/REBRAND_PLAN.md`, nous attendons un signal des
+mainteneurs avant d'investir les 2 à 3 jours nécessaires pour supprimer le nom
+interne « JuiceLab » dans 140+ clés i18n, 12 composants, 7 services, 4 racines
+de chemin, 3 clés localStorage, le tableau de bord et la documentation. Si les
+mainteneurs préfèrent la voie du dépôt externe, le rebranding reste superflu.

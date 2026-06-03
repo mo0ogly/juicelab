@@ -1,5 +1,7 @@
 # Branch protection for `main`
 
+> French version: [BRANCH_PROTECTION-FR.md](./BRANCH_PROTECTION-FR.md).
+
 This document captures the GitHub branch-protection settings that
 operationalise the CI gates added during the PDCA cycles. The settings
 live in GitHub repository configuration, not in source code, so they

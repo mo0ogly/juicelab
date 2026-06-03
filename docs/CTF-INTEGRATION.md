@@ -1,5 +1,7 @@
 # CTF-INTEGRATION — Mode C deep-dive
 
+> French version: [CTF-INTEGRATION-FR.md](./CTF-INTEGRATION-FR.md).
+
 This document is the comprehensive reference for **Mode C**, the optional CTFd integration that turns JuiceLab into a public, real-effort competition. Read [`README.md`](../README.md) for the elevator pitch and [`docker/README.md`](../docker/README.md) for the operational setup. This file explains *why* Mode C exists and *how* the cryptographic chain holds together.
 
 > **Audience** — course coordinators evaluating Mode C, OWASP reviewers auditing the security claims, and contributors implementing new penalty formulae.

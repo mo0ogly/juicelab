@@ -1,5 +1,7 @@
 # ARCHITECTURE
 
+> French version: [ARCHITECTURE-FR.md](./ARCHITECTURE-FR.md).
+
 This document explains how JuiceLab is structured, how data flows between the three independent components, and how the anti-leak guarantee is enforced. Everything is illustrated with Mermaid diagrams.
 
 > **Audience** — engineers and OWASP reviewers who want to evaluate the security and pedagogical claims of the README. Teachers who only want to *run* JuiceLab should read [`INSTALL.md`](./INSTALL.md) instead.

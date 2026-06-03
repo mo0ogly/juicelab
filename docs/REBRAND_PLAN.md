@@ -1,5 +1,7 @@
 # Rebrand plan — JuiceLab -> Pedagogy Companion
 
+> French version: [REBRAND_PLAN-FR.md](./REBRAND_PLAN-FR.md).
+
 Status : **DEFERRED**. To be executed only if the OWASP Phase 0
 Discussion comes back positive AND a maintainer accepts the Pedagogy
 Companion plugin path. Until then the internal code keeps the

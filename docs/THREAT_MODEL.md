@@ -1,5 +1,7 @@
 # Threat model — JuiceLab teacher dashboard
 
+> French version: [THREAT_MODEL-FR.md](./THREAT_MODEL-FR.md).
+
 This document is the security-side companion to
 [`SECURITY.md`](../SECURITY.md). It enumerates the assets, the
 actors, the attack surfaces, and the controls in scope of the
