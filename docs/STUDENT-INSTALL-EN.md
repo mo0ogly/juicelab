@@ -1,24 +1,37 @@
 # Student install guide — JuiceLab
 
-> Goal: get a working JuiceLab instance on your laptop in **5 to 10 minutes**, with the OWASP Juice Shop on `http://127.0.0.1:3000` and the teacher dashboard on `http://127.0.0.1:5000`.
+> Goal: get OWASP Juice Shop + the JuiceLab overlay working on your laptop in **5 to 10 minutes**, on `http://127.0.0.1:3000`.
 
 > Localized version: [STUDENT-INSTALL-FR.md](./STUDENT-INSTALL-FR.md) (français).
 
 ---
 
+## 0. Pick your mode BEFORE installing
+
+There are **two modes** and they install differently. Read this table first.
+
+| Your situation | Mode | What you run | The teacher dashboard ? |
+|---|---|---|---|
+| **Lab with a teacher** (normal case) | **Cohort** | Juice Shop **only** ; your events are pushed to the teacher's dashboard | **NO, you do NOT install it.** The teacher hosts it. |
+| You work **alone, no teacher** (revision, self-study) | **Solo** | Juice Shop **+** your own local dashboard | Yes, locally on `127.0.0.1:5000` |
+
+> **WARNING — common mistake.** During a lab, **do not install the dashboard on your laptop**. Every student who runs their own dashboard ends up isolated: the teacher cannot see your progress in the cohort matrix. Use the **cohort mode** (command with `-d`, section 3.2) and ask your teacher for the **teacher dashboard IP**.
+
+---
+
 ## 1. What you will install
 
-A single Docker stack with three containers :
+| Container | Port | What it does | Installed in mode... |
+|---|---|---|---|
+| `juicelab-juiceshop` | 3000 | OWASP Juice Shop + the JuiceLab pedagogical overlay (`/#/juicelab`) | Cohort **and** Solo |
+| `juicelab-dashboard` | 5000 | Teacher dashboard (cohort matrix, hint usage, journal preview) | **Solo only** |
+| `juicelab-db` | internal | SQLite volume holding the event log | Solo only |
 
-| Container | Port | What it does |
-|---|---|---|
-| `juicelab-juiceshop` | 3000 | OWASP Juice Shop + the JuiceLab pedagogical overlay (`/#/juicelab`) |
-| `juicelab-dashboard` | 5000 | Teacher dashboard (cohort matrix, hint usage, journal preview) |
-| `juicelab-db` | internal | SQLite volume holding the event log |
+In **cohort mode**, only `juicelab-juiceshop` runs on your machine ; your events are pushed to the teacher's dashboard (so you have no dashboard container and no local database).
 
 The first build downloads ~700 MB and takes 5 to 8 minutes. After that, every `docker compose up` is roughly 10 seconds.
 
-No data leaves your laptop. The dashboard runs locally on `127.0.0.1` only.
+No sensitive data leaves your laptop beyond the progression events sent to the teacher dashboard you point to.
 
 ---
 
@@ -59,25 +72,40 @@ cd juicelab
 
 ### 3.2 Run the installer
 
-#### Linux / macOS — `bash`
+Replace `M2-IA-2026` with the cohort identifier your teacher gave you, and `192.168.1.10` with the **teacher dashboard IP** they gave you. If you do not pass `-c`, the script asks for the cohort interactively.
+
+#### Cohort mode — lab with a teacher (recommended)
+
+Juice Shop only, events pushed to the teacher dashboard. **You do not install a dashboard.**
 
 ```bash
+# Linux / macOS
+./scripts/install-student.sh -c M2-IA-2026 -d 192.168.1.10
+```
+
+```powershell
+# Windows PowerShell 7+
+.\scripts\install-student.ps1 -Cohort M2-IA-2026 -Dashboard 192.168.1.10
+```
+
+#### Solo mode — no teacher (self-study)
+
+Installs Juice Shop **and** a local dashboard on `127.0.0.1:5000`. Only use this if you work alone.
+
+```bash
+# Linux / macOS
 ./scripts/install-student.sh -c M2-IA-2026
 ```
 
-Replace `M2-IA-2026` with the cohort identifier your teacher gave you. If you do not pass `-c`, the script asks you for it interactively.
+```powershell
+# Windows PowerShell 7+
+.\scripts\install-student.ps1 -Cohort M2-IA-2026
+```
 
-If the script is not executable yet :
+If the bash script is not executable yet :
 
 ```bash
 chmod +x scripts/install-student.sh
-./scripts/install-student.sh -c M2-IA-2026
-```
-
-#### Windows — PowerShell 7+
-
-```powershell
-.\scripts\install-student.ps1 -Cohort M2-IA-2026
 ```
 
 If PowerShell complains about execution policy, run once :
@@ -96,11 +124,11 @@ In order :
 
 1. Verifies that Docker, Docker Compose, and OpenSSL are available.
 2. Copies `docker/.env.example` into `docker/.env` if it does not exist yet.
-3. Generates two random 32-character secrets (`TEACHER_ADMIN_TOKEN`, `DASHBOARD_TEACHER_TOKEN`) using `openssl rand -hex 16` (or .NET's RNG on Windows if OpenSSL is missing).
+3. Generates three random 32-character secrets (`TEACHER_ADMIN_TOKEN`, `DASHBOARD_TEACHER_TOKEN`, `DASHBOARD_PROOF_SECRET`) using `openssl rand -hex 16` (or .NET's RNG on Windows if OpenSSL is missing).
 4. Writes `JUICELAB_COHORT_ID` based on `-c <cohort>`, the env file, or an interactive prompt, and `JUICELAB_INSTANCE_LABEL` based on `-l`. This label is the **name of your machine** as seen by the teacher in the cohort matrix — it is independent of the Juice Shop account you will create afterwards.
-5. Runs `docker compose --env-file .env up -d --build`.
-6. Polls `http://127.0.0.1:3000/` and `http://127.0.0.1:5000/api/health` until both answer.
-7. Prints the URLs and the two teacher tokens.
+5. In cohort mode (`-d HOST`), writes `DASHBOARD_PUBLIC_HOST` = the teacher dashboard IP, then runs `docker compose up -d --build juicelab-demo` (Juice Shop only). In solo mode, runs `docker compose up -d --build` (Juice Shop + local dashboard).
+6. Polls `http://127.0.0.1:3000/` (and, in solo mode, `http://127.0.0.1:5000/api/health`) until it answers.
+7. Prints the URLs and the tokens.
 
 The installer is **idempotent** : re-running it does not regenerate tokens that are already valid. If you want a clean reinstall, add `--reset` (bash) or `-Reset` (PowerShell).
 
@@ -108,8 +136,10 @@ The installer is **idempotent** : re-running it does not regenerate tokens that 
 
 | Command | Effect |
 |---|---|
-| `./scripts/install-student.sh` | interactive, asks for cohort_id |
-| `./scripts/install-student.sh -y` | non-interactive, takes all defaults (cohort = `M2-IA-2026`) |
+| `./scripts/install-student.sh -c COHORT -d TEACHER_IP` | **cohort mode** : Juice Shop only, events to the teacher dashboard at `TEACHER_IP` |
+| `./scripts/install-student.sh -c COHORT` | **solo mode** : Juice Shop + local dashboard on `127.0.0.1:5000` |
+| `./scripts/install-student.sh` | interactive, asks for cohort_id (solo mode) |
+| `./scripts/install-student.sh -y` | non-interactive, takes all defaults (cohort = `M2-IA-2026`, solo mode) |
 | `./scripts/install-student.sh --reset` | `docker compose down -v` + reinstall from scratch (wipes events) |
 | `.\scripts\install-student.ps1 -Yes` | same, PowerShell |
 | `.\scripts\install-student.ps1 -Reset` | same, PowerShell |
@@ -247,24 +277,28 @@ Symptoms in the browser console :
 - `Request header field X-User-Email is not allowed by Access-Control-Allow-Headers`
 - `Proof download failed: HTTP 503 (proof signing disabled)`
 
-These are bugs fixed in a recent version of the repo. Update your clone, then rebuild the dashboard :
+These are bugs fixed in a recent version of the repo. Update your clone and re-run the installer in **your usual mode** (it is idempotent: it adds the missing proof secret and re-applies the fixes without touching your existing tokens) :
 
 ```bash
 cd juicelab
 git pull
-cd docker
-docker compose --env-file .env up -d --build dashboard
+# same arguments as your initial install :
+./scripts/install-student.sh -c M2-IA-2026 -d 192.168.1.10   # cohort mode
+# or, in solo mode :
+./scripts/install-student.sh -c M2-IA-2026
 ```
 
-Check (the header must show up in the response) :
+> **Cohort mode:** the 503 proof error comes from the **teacher's dashboard**, not yours (you have no local dashboard). Report it to your teacher — they must set `DASHBOARD_PROOF_SECRET` server-side. The CORS error is fixed on the teacher dashboard after their `git pull`.
+
+CORS check (the header must show up in the queried dashboard's response) :
 
 ```bash
-curl -s -i -X OPTIONS http://127.0.0.1:5050/api/sync \
+curl -s -i -X OPTIONS http://<DASHBOARD_IP>:5000/api/sync \
   -H 'Origin: http://127.0.0.1:3000' \
   -H 'Access-Control-Request-Headers: X-User-Email' | grep -i allow-headers
 ```
 
-Note : CTF flag verification stays disabled until `JUICESHOP_CTF_SECRET` is set in `docker/.env` (sync and proof download work without it). Ask your teacher for the key if the exercise requires flag verification.
+Note : CTF flag verification stays disabled until `JUICESHOP_CTF_SECRET` is set in the dashboard's `docker/.env` (sync and proof work without it). Ask your teacher for the key if the exercise requires flag verification.
 
 ---
 

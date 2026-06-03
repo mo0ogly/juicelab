@@ -259,6 +259,17 @@ else
     ok "DASHBOARD_TEACHER_TOKEN genere"
 fi
 
+# Secret de signature des preuves (mode solo : active /api/proof et le diplome).
+# Inoffensif a generer en mode cohorte : le dashboard prof a le sien.
+CURRENT_PROOF="$(env_get DASHBOARD_PROOF_SECRET || true)"
+if is_token_valid "${CURRENT_PROOF}"; then
+    ok "DASHBOARD_PROOF_SECRET deja configure (preserve)"
+else
+    NEW="$(gen_token)"
+    env_set DASHBOARD_PROOF_SECRET "${NEW}"
+    ok "DASHBOARD_PROOF_SECRET genere"
+fi
+
 if [[ -z "${COHORT_ID}" ]]; then
     if [[ -n "${CURRENT_COHORT}" && "${CURRENT_COHORT}" != replace-me-with-* ]]; then
         COHORT_ID="${CURRENT_COHORT}"

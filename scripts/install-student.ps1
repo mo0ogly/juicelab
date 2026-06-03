@@ -207,6 +207,15 @@ if (Test-Token $currentDashboard) {
     Ok 'DASHBOARD_TEACHER_TOKEN genere'
 }
 
+# Secret de signature des preuves (mode solo : active /api/proof et le diplome).
+$currentProof = Get-EnvValue 'DASHBOARD_PROOF_SECRET'
+if (Test-Token $currentProof) {
+    Ok 'DASHBOARD_PROOF_SECRET deja configure (preserve)'
+} else {
+    Set-EnvValue 'DASHBOARD_PROOF_SECRET' (New-Token)
+    Ok 'DASHBOARD_PROOF_SECRET genere'
+}
+
 if (-not $Cohort) {
     if ($currentCohort -and $currentCohort -notmatch '^replace-me-with') {
         $Cohort = $currentCohort
