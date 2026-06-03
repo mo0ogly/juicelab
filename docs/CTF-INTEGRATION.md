@@ -157,6 +157,19 @@ grep -A1 "Score Board" cohort-2026.csv | grep -o "[0-9a-f]\{40\}"
 
 All three must print `2614339936e8282e2f820f023d4d998a1f95e02a` (or the same hash for your custom key). If any one differs, re-align that source and re-import / restart.
 
+> **Flag verification is a base feature (Mode A/B), not Mode C only.** The
+> dashboard `/api/verify-flag` endpoint works WITHOUT CTFd — only the third file
+> (CSV → CTFd) is Mode C specific. The first two (`ctf.key` → Juice Shop, and
+> `JUICESHOP_CTF_SECRET` → dashboard) are enough for the score-board "Verify
+> flag" button and the `flag_verified` +10 bonus event.
+>
+> **If `JUICESHOP_CTF_SECRET` is unset on the dashboard**, the endpoint returns
+> `503 flag verification disabled (JUICESHOP_CTF_SECRET missing)` and the overlay
+> shows `Flag verification disabled (server secret missing)`. Setup, the
+> `ctf.key` fetch command, and the wiring check live in
+> [TEACHER-DASHBOARD-EN.md section 5bis](TEACHER-DASHBOARD-EN.md#5bis-vital--juiceshop_ctf_secret-flag-verification)
+> (FR: [TEACHER-DASHBOARD-FR.md section 5bis](TEACHER-DASHBOARD-FR.md#5bis-vital--juiceshop_ctf_secret-vérification-des-flags)).
+
 ---
 
 ## Penalty formulae

@@ -19,7 +19,7 @@ Le dashboard JuiceLab est un service Flask (port `5000` par défaut) qui :
 - agrège ces évènements dans une base SQLite locale (`data/dashboard.sqlite`)
 - expose une matrice cohorte (qui a fait quoi) au format HTML + JSON + CSV
 - gère la cohorte (création, renommage, suppression, purge orphelins)
-- vérifie cryptographiquement les flags (HMAC-SHA256 avec un secret partagé Juice Shop ↔ dashboard)
+- vérifie cryptographiquement les flags des challenges (HMAC-SHA1 sur le nom du challenge avec la clé CTF partagée Juice Shop ↔ dashboard — setup détaillé en [section 5bis](#5bis-vital--juiceshop_ctf_secret-vérification-des-flags))
 
 Aucun élève n'accède au dashboard : tout est protégé par un cookie `teacher_token` issu de `DASHBOARD_TEACHER_TOKEN`.
 
@@ -121,7 +121,7 @@ Toutes lues par `dashboard/app.py`. À mettre dans `docker/.env` (pour Docker) o
 |---|---|---|
 | **`DASHBOARD_TEACHER_TOKEN`** | (vide → 503) | secret de login enseignant. Min 16 chars, sinon dashboard refuse de booter |
 | **`DASHBOARD_PROOF_SECRET`** | (vide ou < 16 chars → signature désactivée, **503**) | HMAC-SHA256 qui signe **les preuves de lab, les diplômes ET le téléchargement de preuve côté élève** (overlay + coach PwnzzAI). Min 16 chars. Voir l'encadré ci-dessous. |
-| `JUICESHOP_CTF_SECRET` | (vide) | secret CTF côté Juice Shop, doit matcher si tu actives flag verification |
+| **`JUICESHOP_CTF_SECRET`** | (vide → flag verify désactivé, **503**) | clé CTF qui valide les flags de challenge (bouton « Vérifier le flag » du score-board, +10 pts bonus). **Doit être identique au fichier `ctf.key` du Juice Shop des élèves.** Voir l'encadré [section 5bis](#5bis-vital--juiceshop_ctf_secret-vérification-des-flags). |
 | `DASHBOARD_DB` | `./data/dashboard.sqlite` | chemin du fichier SQLite |
 | `DASHBOARD_PORT` | `5000` | port HTTP |
 | `DASHBOARD_BIND` | `0.0.0.0` | interface d'écoute. **Production : `127.0.0.1` + reverse proxy** |
@@ -162,6 +162,56 @@ une fois, sauvegarde-le hors ligne.
 > Rappel déploiement : `docker/.env` n'est lu que par
 > `docker compose --env-file`. Un `python3 app.py` lancé à la main ignore ce
 > fichier — le secret doit alors être `export`é dans le shell appelant.
+
+### 5bis. ⚠️ VITAL — `JUICESHOP_CTF_SECRET` (vérification des flags)
+
+Distinct de `DASHBOARD_PROOF_SECRET`. Cette clé sert **uniquement** à valider
+les flags de challenge : quand un élève résout un challenge Juice Shop en mode
+CTF, le score-board affiche un flag `HMAC-SHA1(nom_du_challenge, ctf.key)`.
+L'élève le colle dans l'overlay JuiceLab, qui POST vers
+`/api/verify-flag` ; le dashboard recalcule le même HMAC avec
+`JUICESHOP_CTF_SECRET` et compare. Match → event `flag_verified` + 10 pts bonus.
+
+**La clé doit être IDENTIQUE au fichier `ctf.key` baké dans l'image Juice Shop
+des élèves.** Le patch JuiceLab active `ctf.showFlagsInNotifications: true` mais
+n'override pas `ctf.key` : l'image utilise donc la valeur par défaut du dépôt
+juice-shop au commit épinglé. Récupère-la :
+
+```bash
+# valeur par défaut au commit épinglé (lue depuis l'image élève ou GitHub)
+docker run --rm --entrypoint sh juicelab:latest -c 'cat /juice-shop/ctf.key'
+# ou, sans image locale :
+curl -s https://raw.githubusercontent.com/juice-shop/juice-shop/3b178fd/ctf.key
+```
+
+**Symptôme si absente :** le bouton « Vérifier le flag » de l'overlay affiche
+`Flag verification disabled (server secret missing)` et `/api/verify-flag`
+renvoie `503 flag verification disabled (JUICESHOP_CTF_SECRET missing)`.
+
+**Mise en place (sur la machine qui sert le dashboard) :**
+
+```bash
+# 1. ajouter la cle ctf.key au .env du dashboard
+echo 'JUICESHOP_CTF_SECRET=<contenu_de_ctf.key>' >> docker/.env
+# 2. rebuild (code bati dans l'image, pas un simple restart)
+./scripts/dashboard.sh rebuild
+```
+
+**Vérifier que c'est branché :**
+
+```bash
+# le conteneur doit exposer la cle
+docker exec juicelab-dashboard printenv JUICESHOP_CTF_SECRET
+# faux flag -> 200 {"valid":false} (et NON 503 = secret bien present)
+curl -s -X POST http://127.0.0.1:5050/api/verify-flag \
+  -H "Content-Type: application/json" \
+  -d '{"student_token":"t","cohort_id":"c","challenge_key":"scoreBoardChallenge","challenge_name":"Score Board","flag":"wrong"}'
+```
+
+> Les deux fichiers compose (`docker-compose.yml` plat ET
+> `docker-compose.dashboard.yml` du mode `--server`) forwardent
+> `JUICESHOP_CTF_SECRET` au conteneur. Si tu pars d'un vieux clone, vérifie que
+> le bloc `environment:` du service `dashboard` contient bien la ligne.
 
 ### Générer / vérifier les secrets en une commande
 
@@ -303,13 +353,35 @@ cd docker
 docker compose --env-file .env logs -f dashboard
 ```
 
+### 9.1 Se connecter au dashboard (prof)
+
+1. Ouvre `http://<TON_IP>:<PORT>/login` (en local : `http://127.0.0.1:5050/login`).
+2. Colle le `DASHBOARD_TEACHER_TOKEN` (affiché par l'installeur, ou `grep DASHBOARD_TEACHER_TOKEN docker/.env`).
+3. Le token est stocké dans un cookie `HttpOnly` ; `/logout` le supprime.
+
+![Page de login enseignant](img/prof-login.png)
+
+À la première connexion, le dashboard redirige vers `/admin/cohorts` pour
+**choisir la cohorte** à piloter. La liste affiche, par cohorte, le nombre
+d'élèves et d'évènements ingérés.
+
+![Sélection de cohorte](img/prof-cohorts.png)
+
+### 9.2 Routes UI
+
 UI :
 - `/admin/cohorts` — liste / crée / purge cohortes
 - `/admin/students?cohort=ANSSI` — matrice avec ligne par élève
 - `/dashboard?cohort=ANSSI` — vue agrégée
 - `/api/cohorts/ANSSI/csv` — export CSV (auth via header `X-Teacher-Token: <token>`)
 
+La vue agrégée donne une ligne par élève, une colonne par challenge, avec les
+badges `solved` / `hints N/5` / `quiz X/100` / `journal` / `flag +10`. Sélecteur
+clair/sombre dans la topbar.
+
 ![Tableau de bord prof — matrice de cohorte (thème clair)](img/prof-dashboard-light.png)
+
+![Tableau de bord prof — matrice de cohorte (thème sombre)](img/prof-dashboard-dark.png)
 
 ---
 
@@ -326,6 +398,26 @@ curl -X POST -H "X-Teacher-Token: <TOKEN>" -H "Content-Type: application/json" \
 ```
 
 Format `cohort_id` accepté : `[a-zA-Z0-9_.-]{1,64}`.
+
+### Noms des élèves (display_name)
+
+Le roster affiche `COALESCE(display_name, student_token)` : sans nom, l'élève
+apparaît avec son UUID technique. Deux façons de remplir le nom :
+
+1. **Automatique via `-l PRENOM`** — quand l'élève lance
+   `./scripts/install-student.sh -d <IP> -c <COHORTE> -l Amelie`, le prénom est
+   envoyé dans le header `X-Instance-Label` à chaque event. Le dashboard
+   **promeut ce label en `display_name`** au premier event ingéré (tant que le
+   nom est vide). Plus jamais d'UUID si l'élève passe `-l`.
+2. **Manuel** — l'écran `/admin/students?cohort=<COHORTE>` permet de poser /
+   corriger un nom. **Un nom posé à la main est prioritaire** : il n'est jamais
+   écrasé par un label élève ultérieur.
+
+![Roster élèves — noms auto-remplis depuis -l PRENOM](img/prof-students.png)
+
+> Un élève lancé **sans `-l`** n'a aucun label à promouvoir → il reste en UUID
+> tant que tu ne le nommes pas à la main, ou qu'il ne relance pas avec
+> `-l PRENOM`. La promotion auto agit sur les **nouveaux** events.
 
 ### Approuver / bloquer un élève (optionnel)
 
