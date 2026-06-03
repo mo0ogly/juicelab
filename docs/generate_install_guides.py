@@ -45,10 +45,10 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 REPO_URL = "https://github.com/mo0ogly/juicelab.git"
-COHORT = "M2-IA-2026"
+COHORT = "JUICELAB-JUIN-2026"
 DASHBOARD_PORT = "5050"
 SHOP_PORT = "3000"
-EXAMPLE_IP = "192.168.1.10"
+EXAMPLE_IP = "187.124.39.123"
 
 DOCS_DIR = Path(__file__).resolve().parent
 IMG_DIR = DOCS_DIR / "img"
@@ -337,6 +337,10 @@ def build_eleve(tmp: Path) -> None:
         ".\\scripts\\install-student.ps1 -Dashboard " + EXAMPLE_IP +
         " -Label amelie -Cohort " + COHORT,
     ])
+    note(doc, "IMPORTANT : garde TOUJOURS -Dashboard " + EXAMPLE_IP + ". Sans ce "
+              "parametre, le script installe en plus un dashboard local isole sur ton "
+              "poste et le prof ne voit pas ta progression. Le -Label <prenom> affiche "
+              "ton nom dans la matrice du prof (sinon tu apparais en code technique).")
     note(doc, "Si PowerShell bloque le script : "
               "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass puis relance.")
 
@@ -349,6 +353,10 @@ def build_eleve(tmp: Path) -> None:
         "./scripts/install-student.sh -d " + EXAMPLE_IP +
         " -l amelie -c " + COHORT,
     ])
+    note(doc, "IMPORTANT : garde TOUJOURS -d " + EXAMPLE_IP + ". Sans ce parametre, le "
+              "script installe en plus un dashboard local isole sur ton poste et le prof "
+              "ne voit pas ta progression. Le -l <prenom> affiche ton nom dans la matrice "
+              "du prof (sinon tu apparais en code technique).")
     note(doc, "macOS (Apple Silicon M1/M2/M3) : aucune manipulation Rosetta requise, "
               "l'image se construit en natif arm64 ; le premier build peut juste etre "
               "un peu plus long. Docker Desktop doit etre ouvert avant de lancer.")
@@ -389,7 +397,21 @@ def build_eleve(tmp: Path) -> None:
               "grace au proxy OWASP (local3000.owasp-juice.shop) qui redirige le callback OAuth "
               "vers localhost.")
 
-    doc.add_heading("7. Depannage", level=1)
+    doc.add_heading("7. Valider un flag de challenge (bonus +10)", level=1)
+    para(doc, "Certains challenges OWASP affichent un flag (chaine de 40 caracteres "
+              "hexadecimaux) quand tu les resous en mode CTF. Le valider rapporte 10 "
+              "points bonus visibles dans la matrice du prof. Tu n'as AUCUN secret a "
+              "configurer : tout est deja integre cote serveur.")
+    numbered(doc, "Resous un challenge dans Juice Shop : une notification affiche le flag.")
+    numbered(doc, "Copie ce flag (les 40 caracteres hex).")
+    numbered(doc, "Dans le panneau JuiceLab du challenge, colle-le dans le champ flag "
+                  "puis clique « Verifier le flag ».")
+    numbered(doc, "Si le flag est correct : badge « flag +10 » + 10 points bonus chez le prof.")
+    note(doc, "Le flag ne marche pas alors que tu l'as copie exactement ? Previens le "
+              "prof : la cle de verification (JUICESHOP_CTF_SECRET) est reglee sur SON "
+              "dashboard, pas sur ton poste. Toi tu n'as rien a faire de ce cote.")
+
+    doc.add_heading("8. Depannage", level=1)
     add_table(
         doc,
         ["Symptome", "Cause probable / solution"],
@@ -408,7 +430,7 @@ def build_eleve(tmp: Path) -> None:
         [55, 115],
     )
 
-    doc.add_heading("8. Arreter / nettoyer", level=1)
+    doc.add_heading("9. Arreter / nettoyer", level=1)
     code_block(doc, [
         "cd docker",
         "docker compose --env-file .env down       # arret (garde les donnees)",
