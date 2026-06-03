@@ -268,19 +268,38 @@ def count_pending_award_events(conn: sqlite3.Connection) -> int:
 
 # ---- Students roster helpers ----------------------------------------------
 
-def ensure_student(conn: sqlite3.Connection, cohort_id: str, student_token: str, now: str) -> None:
+def ensure_student(
+    conn: sqlite3.Connection,
+    cohort_id: str,
+    student_token: str,
+    now: str,
+    instance_label: str | None = None,
+) -> None:
     """Idempotent upsert: register a (cohort, token) pair on first sighting.
-    display_name stays NULL so the prof can fill it via /admin/students.
     status='validated' for the legacy auto-discovery path (events arriving
     without a prior /api/cohort/join). ON CONFLICT DO NOTHING preserves
     any decision the prof already made on an existing row (pending,
-    rejected, or validated)."""
+    rejected, or validated).
+
+    When the event carries an X-Instance-Label header (the student name
+    passed via install-student.sh -l PRENOM), promote it to display_name
+    so the roster shows readable names instead of UUID tokens. The promote
+    only fills an empty display_name : a name the prof set manually via
+    /admin/students is authoritative and never overwritten."""
     conn.execute(
         "INSERT INTO students (cohort_id, student_token, display_name, status, created_at, updated_at) "
         "VALUES (?, ?, NULL, 'validated', ?, ?) "
         "ON CONFLICT(cohort_id, student_token) DO NOTHING",
         (cohort_id, student_token, now, now),
     )
+    label = (instance_label or "").strip()
+    if label:
+        conn.execute(
+            "UPDATE students SET display_name = ?, updated_at = ? "
+            "WHERE cohort_id = ? AND student_token = ? "
+            "AND (display_name IS NULL OR display_name = '')",
+            (label, now, cohort_id, student_token),
+        )
 
 
 def list_students(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]:

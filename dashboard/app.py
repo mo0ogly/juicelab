@@ -449,7 +449,7 @@ def _insert_event(payload: dict[str, Any], instance_label: str | None) -> int:
              data_json, payload.get("client_timestamp", server_ts), server_ts, instance_label),
         )
         new_id = int(cur.lastrowid or 0)
-        ensure_cohort(conn, coh, server_ts); ensure_student(conn, coh, tok, server_ts)
+        ensure_cohort(conn, coh, server_ts); ensure_student(conn, coh, tok, server_ts, instance_label)
 
     # CTFd Mode C hook : best-effort push of the hint penalty to the central
     # CTFd. No-op in Mode A / Mode B (env vars absent). Wrapped at the
