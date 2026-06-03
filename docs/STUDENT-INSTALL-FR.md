@@ -13,7 +13,7 @@ Il y a **deux modes** et ils ne s'installent pas pareil. Lis ce tableau en premi
 | Ta situation | Mode | Ce que tu lances | Le dashboard prof ? |
 |---|---|---|---|
 | **TD avec un enseignant** (cas normal) | **Cohorte** | Juice Shop **seul** ; tes events partent vers le dashboard du prof | **NON, tu ne l'installes PAS.** C'est le prof qui l'heberge. |
-| Tu bosses **seul, sans prof** (revision, autonomie) | **Solo** | Juice Shop **+** ton propre dashboard local | Oui, en local sur `127.0.0.1:5000` |
+| Tu bosses **seul, sans prof** (revision, autonomie) | **Solo** | Juice Shop **+** ton propre dashboard local | Oui, en local sur `127.0.0.1:5050` |
 
 > **ATTENTION — erreur frequente.** En TD, **n'installe pas le dashboard sur ton portable**. Chaque eleve qui lance son propre dashboard se retrouve isole : le prof ne voit pas ta progression dans sa matrice cohorte. Utilise le **mode cohorte** (commande avec `-d`, section 3.2) et demande l'**IP du dashboard prof** a ton enseignant.
 
@@ -90,7 +90,7 @@ Juice Shop seul, events pousses vers le dashboard du prof. **Tu n'installes pas 
 
 #### Mode solo — sans prof (autonomie)
 
-Installe Juice Shop **et** un dashboard local sur `127.0.0.1:5000`. N'utilise ce mode que si tu travailles seul.
+Installe Juice Shop **et** un dashboard local sur `127.0.0.1:5050`. N'utilise ce mode que si tu travailles seul.
 
 ```bash
 # Linux / macOS
@@ -127,7 +127,7 @@ Dans l'ordre :
 3. Genere trois secrets aleatoires de 32 caracteres (`TEACHER_ADMIN_TOKEN`, `DASHBOARD_TEACHER_TOKEN`, `DASHBOARD_PROOF_SECRET`) avec `openssl rand -hex 16` (ou le RNG .NET sur Windows si OpenSSL est absent).
 4. Ecrit `JUICELAB_COHORT_ID` selon l'argument `-c`, le fichier env, ou un prompt interactif, et `JUICELAB_INSTANCE_LABEL` selon `-l`. Ce label est le **nom de ton poste** visible par le prof dans sa matrice cohorte — il est independant du compte Juice Shop que tu creeras ensuite.
 5. En mode cohorte (`-d HOST`), ecrit `DASHBOARD_PUBLIC_HOST` = l'IP du dashboard prof, puis lance `docker compose up -d --build juicelab-demo` (Juice Shop seul). En mode solo, lance `docker compose up -d --build` (Juice Shop + dashboard local).
-6. Attend que `http://127.0.0.1:3000/` reponde (et, en mode solo, `http://127.0.0.1:5000/api/health`).
+6. Attend que `http://127.0.0.1:3000/` reponde (et, en mode solo, `http://127.0.0.1:5050/api/health`).
 7. Affiche les URLs et les tokens.
 
 L'installeur est **idempotent** : le relancer ne regenere pas les tokens deja valides. Pour une reinstallation propre, ajoute `--reset` (bash) ou `-Reset` (PowerShell).
@@ -137,7 +137,7 @@ L'installeur est **idempotent** : le relancer ne regenere pas les tokens deja va
 | Commande | Effet |
 |---|---|
 | `./scripts/install-student.sh -c COHORTE -d IP_PROF` | **mode cohorte** : Juice Shop seul, events vers le dashboard prof a `IP_PROF` |
-| `./scripts/install-student.sh -c COHORTE` | **mode solo** : Juice Shop + dashboard local sur `127.0.0.1:5000` |
+| `./scripts/install-student.sh -c COHORTE` | **mode solo** : Juice Shop + dashboard local sur `127.0.0.1:5050` |
 | `./scripts/install-student.sh` | interactif, demande le cohort_id (mode solo) |
 | `./scripts/install-student.sh -y` | non interactif, accepte tous les defauts (cohort = `M2-IA-2026`, mode solo) |
 | `./scripts/install-student.sh --reset` | `docker compose down -v` + reinstall complet (efface les events) |
@@ -154,8 +154,10 @@ Ouvre ces URLs dans ton navigateur :
 |---|---|
 | <http://127.0.0.1:3000/#/score-board> | Score-board Juice Shop avec un bouton **TD** sur chacun des 13 challenges selectionnes |
 | <http://127.0.0.1:3000/#/juicelab> | Ecran « Connecte-toi a Juice Shop » (normal avant login) |
-| <http://127.0.0.1:5000/login> | Page de login dashboard |
-| <http://127.0.0.1:5000/api/health> | `{"ok": true}` |
+| `http://<DASHBOARD>:5050/login` | Page de login dashboard |
+| `http://<DASHBOARD>:5050/api/health` | `{"ok": true}` |
+
+> **`<DASHBOARD>` = quelle adresse ?** En **mode solo**, c'est `127.0.0.1` (le dashboard tourne sur ton portable). En **mode cohorte**, le dashboard est **distant** : utilise l'**IP du serveur prof** (`-d <IP>`), jamais `127.0.0.1`. Ton Juice Shop, lui, reste toujours sur `127.0.0.1:3000`. Le port hote du dashboard est **5050** par defaut (`5000` n'est que le port interne du conteneur).
 
 > **`/#/juicelab` affiche « Connecte-toi a Juice Shop » ?** C'est normal. Le panneau JuiceLab est reserve aux comptes authentifies. Suis le smoke test ci-dessous — le panneau s'affiche des que tu es connecte.
 
@@ -293,7 +295,7 @@ git pull
 Verification CORS (le header doit apparaitre dans la reponse du dashboard interroge) :
 
 ```bash
-curl -s -i -X OPTIONS http://<IP_DASHBOARD>:5000/api/sync \
+curl -s -i -X OPTIONS http://<IP_DASHBOARD>:5050/api/sync \
   -H 'Origin: http://127.0.0.1:3000' \
   -H 'Access-Control-Request-Headers: X-User-Email' | grep -i allow-headers
 ```
