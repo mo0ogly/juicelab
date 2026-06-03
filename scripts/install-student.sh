@@ -284,8 +284,14 @@ ok "JUICELAB_COHORT_ID = ${COHORT_ID}"
 # ---- Step 2b : cablage scenario 4 (eleve distant) --------------------------
 
 if [[ -n "${DASHBOARD_HOST}" ]]; then
+    # Accepte HOST ou HOST:PORT. Si le prof expose 5000 au lieu du defaut
+    # 5050, l'eleve passe -d IP:5000 et l'URL bakee suit.
+    if [[ "${DASHBOARD_HOST}" == *:* ]]; then
+        env_set DASHBOARD_PORT "${DASHBOARD_HOST##*:}"
+        DASHBOARD_HOST="${DASHBOARD_HOST%%:*}"
+    fi
     env_set DASHBOARD_PUBLIC_HOST "${DASHBOARD_HOST}"
-    ok "DASHBOARD_PUBLIC_HOST = ${DASHBOARD_HOST} (events pousses vers le dashboard prof)"
+    ok "DASHBOARD_PUBLIC_HOST = ${DASHBOARD_HOST}, DASHBOARD_PORT = $(env_get DASHBOARD_PORT || echo 5050) (events pousses vers le dashboard prof)"
 
     # Label unique de l'instance dans la matrice prof. Defaut : nom de session.
     if [[ -z "${INSTANCE_LABEL}" ]]; then

@@ -230,6 +230,13 @@ Ok "JUICELAB_COHORT_ID = $Cohort"
 # ---- Step 2b : cablage scenario 4 (eleve distant) --------------------------
 
 if ($Dashboard) {
+    # Accepte HOST ou HOST:PORT. Si le prof expose 5000 au lieu du defaut
+    # 5050, l'eleve passe -Dashboard IP:5000 et l'URL bakee suit.
+    if ($Dashboard -match ':') {
+        $parts = $Dashboard -split ':', 2
+        $Dashboard = $parts[0]
+        Set-EnvValue 'DASHBOARD_PORT' $parts[1]
+    }
     Set-EnvValue 'DASHBOARD_PUBLIC_HOST' $Dashboard
     Ok "DASHBOARD_PUBLIC_HOST = $Dashboard (events pousses vers le dashboard prof)"
 

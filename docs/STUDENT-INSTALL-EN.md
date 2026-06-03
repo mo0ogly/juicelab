@@ -88,6 +88,8 @@ Juice Shop only, events pushed to the teacher dashboard. **You do not install a 
 .\scripts\install-student.ps1 -Cohort M2-IA-2026 -Dashboard 192.168.1.10
 ```
 
+> **Teacher dashboard port.** Default `5050`. If your teacher exposes a different port (often `5000`), append it to the address : `-d 192.168.1.10:5000` (or `-Dashboard 192.168.1.10:5000`). The event-push URL will follow that port.
+
 #### Solo mode — no teacher (self-study)
 
 Installs Juice Shop **and** a local dashboard on `127.0.0.1:5050`. Only use this if you work alone.
@@ -136,7 +138,7 @@ The installer is **idempotent** : re-running it does not regenerate tokens that 
 
 | Command | Effect |
 |---|---|
-| `./scripts/install-student.sh -c COHORT -d TEACHER_IP` | **cohort mode** : Juice Shop only, events to the teacher dashboard at `TEACHER_IP` |
+| `./scripts/install-student.sh -c COHORT -d TEACHER_IP[:PORT]` | **cohort mode** : Juice Shop only, events to the teacher dashboard at `TEACHER_IP` (port `5050` by default, `:5000` or other if specified) |
 | `./scripts/install-student.sh -c COHORT` | **solo mode** : Juice Shop + local dashboard on `127.0.0.1:5050` |
 | `./scripts/install-student.sh` | interactive, asks for cohort_id (solo mode) |
 | `./scripts/install-student.sh -y` | non-interactive, takes all defaults (cohort = `M2-IA-2026`, solo mode) |
