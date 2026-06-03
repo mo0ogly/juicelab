@@ -1,0 +1,41 @@
+# Line-ending normalization.
+#
+# The Docker build (docker/Dockerfile.juicelab) applies patches/juicelab-core.patch
+# and the overlay/ tree to a juice-shop checkout INSIDE a Linux container with
+# `git apply --3way`. Git for Windows defaults to core.autocrlf=true, which
+# rewrites LF -> CRLF on checkout. A CRLF patch (or CRLF overlay source) does not
+# apply to the LF juice-shop sources and `git apply` fails on every hunk:
+#   error: patch failed: config/default.yml:458
+#   error: <file>: patch does not apply
+# Forcing LF on checkout for all text files makes the build deterministic on
+# Windows / macOS / Linux alike.
+* text=auto eol=lf
+
+# Build-critical: must always be LF regardless of platform or local git config.
+*.patch text eol=lf
+*.sh    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.ts    text eol=lf
+*.html  text eol=lf
+*.scss  text eol=lf
+*.css   text eol=lf
+
+# Binaries — never normalize.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.svg   binary
+*.docx  binary
+*.pdf   binary
+*.zip   binary
+*.gz    binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.otf   binary
