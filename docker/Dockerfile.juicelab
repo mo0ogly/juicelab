@@ -59,7 +59,10 @@ RUN cd /build/juice-shop && \
 
 # Install root deps (triggers the frontend build via the postinstall pipeline
 # declared in juice-shop/package.json) and compile the TypeScript backend.
+# /bin/sh is dash here and has no pipefail : without bash -o pipefail, the
+# `| tail` below returns tail's status and a failed npm install passes.
 WORKDIR /build/juice-shop
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN npm install --unsafe-perm 2>&1 | tail -20
 RUN npm run build:server
 
