@@ -5,7 +5,7 @@
  */
 
 import { CommonModule } from '@angular/common'
-import { Component, OnDestroy, computed, inject, signal } from '@angular/core'
+import { Component, OnDestroy, computed, inject } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { MatButtonModule } from '@angular/material/button'
 import { MatCardModule } from '@angular/material/card'
@@ -20,8 +20,6 @@ import { type SelectedChallenge } from '../models/juicelab.types'
 import { JuicelabAuthService } from '../services/juicelab-auth.service'
 import { JuicelabBridgeService } from '../services/juicelab-bridge.service'
 import { JuicelabPackService } from '../services/juicelab-pack.service'
-import { JuicelabStateService } from '../services/juicelab-state.service'
-import { JuicelabSyncService } from '../services/juicelab-sync.service'
 import { BadgesDisplayComponent } from '../badges-display/badges-display.component'
 import { BriefingPanelComponent } from '../briefing-panel/briefing-panel.component'
 import { HintsPanelComponent } from '../hints-panel/hints-panel.component'
@@ -163,8 +161,6 @@ import { TranslateModule } from '@ngx-translate/core'
 })
 export class JuicelabPanelComponent implements OnDestroy {
   private readonly packSvc = inject(JuicelabPackService)
-  private readonly stateSvc = inject(JuicelabStateService)
-  private readonly syncSvc = inject(JuicelabSyncService)
   private readonly bridgeSvc = inject(JuicelabBridgeService)
   private readonly authSvc = inject(JuicelabAuthService)
   private readonly router = inject(Router)
@@ -214,20 +210,9 @@ export class JuicelabPanelComponent implements OnDestroy {
   readonly selectedChallengeDifficulty = computed(() => this.selectedMeta()?.difficulty ?? 0)
 
   ngOnInit(): void {
-    // Idempotent : wires the Juice Shop core 'challenge solved' socket
-    // listener, only on the first call across the whole session.
-    this.bridgeSvc.start()
-    this.packSvc.getConfig().subscribe({
-      next: (cfg) => {
-        this.stateSvc.ensureStudent(cfg.cohort_id, cfg.default_language)
-        this.syncSvc.configure(cfg.dashboard_url, cfg.instance_label)
-      },
-      error: () => {
-        // Do not fabricate a cohort id : config.json must be the single
-        // source of truth. Leaving state empty triggers the auth banner
-        // path which prompts the user to fix the config + reload.
-      },
-    })
+    // Idempotent session bootstrap (socket listener, student record, sync
+    // target, backfill). Normally already done by the sidenav at app load.
+    this.bridgeSvc.bootstrap()
     // Poll the Juice Shop login token every 2s so the panel switches
     // to the authenticated layout as soon as the student finishes login
     // in another tab or via the navbar.

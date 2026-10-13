@@ -96,6 +96,19 @@ npm run build
 
 The build must be green before any PR.
 
+Overlay end-to-end guard (built image + headless Chrome + mock dashboard).
+It checks that a TD challenge solve reaches the teacher dashboard even when
+the student never opens `/#/juicelab`, or solved it over plain HTTP with no
+tab open. Run it after any change to the overlay sync / bridge services or
+to `patches/juicelab-core.patch`:
+
+```bash
+docker build -f docker/Dockerfile.juicelab -t juicelab:latest .
+cd tests/e2e-overlay
+npm install
+./run.sh juicelab:latest
+```
+
 ---
 
 ## Adding a new pedagogical pack

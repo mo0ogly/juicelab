@@ -1,5 +1,5 @@
 diff --git a/config/default.yml b/config/default.yml
-index 96d6a0d..9327ce0 100644
+index 96d6a0d96..9327ce093 100644
 --- a/config/default.yml
 +++ b/config/default.yml
 @@ -458,7 +458,10 @@ memories:
@@ -15,7 +15,7 @@ index 96d6a0d..9327ce0 100644
    countryMapping: ~
    systemWideNotifications:
 diff --git a/frontend/package.json b/frontend/package.json
-index 5991bda..88fc70f 100644
+index 5991bdabc..88fc70ffd 100644
 --- a/frontend/package.json
 +++ b/frontend/package.json
 @@ -45,6 +45,7 @@
@@ -35,7 +35,7 @@ index 5991bda..88fc70f 100644
      "@types/node": "^20.17.19",
      "@types/socket.io-client": "^1.4.33",
 diff --git a/frontend/src/app/app.routing.ts b/frontend/src/app/app.routing.ts
-index d3508e8..d0df4d5 100644
+index d3508e8c3..d0df4d5ec 100644
 --- a/frontend/src/app/app.routing.ts
 +++ b/frontend/src/app/app.routing.ts
 @@ -59,6 +59,23 @@ const loadWeb3SandboxModule = async () => {
@@ -63,7 +63,7 @@ index d3508e8..d0df4d5 100644
      path: 'administration', // vuln-code-snippet vuln-line adminSectionChallenge
      component: AdministrationComponent, // vuln-code-snippet neutral-line adminSectionChallenge
 diff --git a/frontend/src/app/navbar/navbar.component.html b/frontend/src/app/navbar/navbar.component.html
-index 8d010e4..9dc9ef3 100644
+index 8d010e44b..9dc9ef3af 100644
 --- a/frontend/src/app/navbar/navbar.component.html
 +++ b/frontend/src/app/navbar/navbar.component.html
 @@ -112,6 +112,12 @@
@@ -80,7 +80,7 @@ index 8d010e4..9dc9ef3 100644
        aria-label="Language selection menu"
        matTooltip="{{ 'LANGUAGE_SEL_HINT' | translate }}" matTooltipPosition="below">
 diff --git a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html
-index 15436aa..3cc22d2 100644
+index 15436aae9..3cc22d249 100644
 --- a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html
 +++ b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html
 @@ -16,6 +16,18 @@
@@ -103,7 +103,7 @@ index 15436aa..3cc22d2 100644
      @if (challenge.disabledEnv !== null && challenge.disabledEnv !== 'safetyMode') {
        <button
 diff --git a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss
-index 66c25de..3352bd0 100644
+index 66c25def3..3352bd0b7 100644
 --- a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss
 +++ b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss
 @@ -5,6 +5,35 @@
@@ -143,7 +143,7 @@ index 66c25de..3352bd0 100644
    background-color: var(--theme-background-darker);
    border-radius: 2px;
 diff --git a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts
-index b7618d8..a098d62 100644
+index b7618d85e..a098d6204 100644
 --- a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts
 +++ b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts
 @@ -1,4 +1,4 @@
@@ -206,7 +206,7 @@ index b7618d8..a098d62 100644
  
    ngOnChanges (changes: SimpleChanges): void {
 diff --git a/frontend/src/app/sidenav/sidenav.component.html b/frontend/src/app/sidenav/sidenav.component.html
-index 70be2d2..f048d61 100644
+index 70be2d20b..f048d613e 100644
 --- a/frontend/src/app/sidenav/sidenav.component.html
 +++ b/frontend/src/app/sidenav/sidenav.component.html
 @@ -276,6 +276,15 @@
@@ -226,24 +226,26 @@ index 70be2d2..f048d61 100644
      <a mat-list-item (click)="startHackingInstructor()"
        aria-label="Launch beginners tutorial">
 diff --git a/frontend/src/app/sidenav/sidenav.component.ts b/frontend/src/app/sidenav/sidenav.component.ts
-index f272108..f33a4c9 100644
+index f272108d0..0b21bcdaa 100644
 --- a/frontend/src/app/sidenav/sidenav.component.ts
 +++ b/frontend/src/app/sidenav/sidenav.component.ts
-@@ -5,7 +5,8 @@
+@@ -5,7 +5,9 @@
  
  import { environment } from '../../environments/environment'
  import { ChallengeService } from '../Services/challenge.service'
 -import { Component, EventEmitter, NgZone, type OnInit, Output, inject } from '@angular/core'
 +import { Component, EventEmitter, NgZone, type OnInit, Output, computed, inject } from '@angular/core'
++import { JuicelabBridgeService } from '../juicelab-overlay/services/juicelab-bridge.service'
 +import { JuicelabStateService } from '../juicelab-overlay/services/juicelab-state.service'
  import { SocketIoService } from '../Services/socket-io.service'
  import { AdministrationService } from '../Services/administration.service'
  import { Router, RouterLink } from '@angular/router'
-@@ -39,6 +40,15 @@ export class SidenavComponent implements OnInit {
+@@ -39,6 +41,16 @@ export class SidenavComponent implements OnInit {
    private readonly router = inject(Router)
    private readonly configurationService = inject(ConfigurationService)
    private readonly loginGuard = inject(LoginGuard)
 +  private readonly juicelabState = inject(JuicelabStateService)
++  private readonly juicelabBridge = inject(JuicelabBridgeService)
 +
 +  // Cabinet (trophy room) menu entry — appears only after the student has
 +  // captured at least one CTF flag, so the hidden /#/cabinet route is not
@@ -255,8 +257,19 @@ index f272108..f33a4c9 100644
  
    public applicationName = 'OWASP Juice Shop'
    public showGitHubLink = true
+@@ -52,6 +64,10 @@ export class SidenavComponent implements OnInit {
+   @Output() public sidenavToggle = new EventEmitter()
+ 
+   ngOnInit (): void {
++    // JuiceLab : the sidenav is mounted at app load whatever the first page,
++    // so TD challenge solves reach the teacher dashboard even when the
++    // student never opens /#/juicelab (idempotent session bootstrap).
++    this.juicelabBridge.bootstrap()
+     this.administrationService.getApplicationVersion().subscribe({
+       next: (version: any) => {
+         if (version) {
 diff --git a/frontend/src/assets/i18n/en.json b/frontend/src/assets/i18n/en.json
-index 17d5f58..c498fcf 100644
+index 17d5f5802..11c050dd7 100644
 --- a/frontend/src/assets/i18n/en.json
 +++ b/frontend/src/assets/i18n/en.json
 @@ -480,5 +480,74 @@
@@ -336,7 +349,7 @@ index 17d5f58..c498fcf 100644
 +  "JUICELAB_SCORE_FORMULA": "Formula: total = (challenge + quiz) / 2. challenge = 100 - sum of hint costs. quiz = average of Q1+Q2+Q3."
  }
 diff --git a/frontend/src/assets/i18n/fr_FR.json b/frontend/src/assets/i18n/fr_FR.json
-index 9966f7d..dbcc793 100644
+index 9966f7d71..a69c6ddd0 100644
 --- a/frontend/src/assets/i18n/fr_FR.json
 +++ b/frontend/src/assets/i18n/fr_FR.json
 @@ -480,5 +480,74 @@
@@ -416,7 +429,7 @@ index 9966f7d..dbcc793 100644
 +  "JUICELAB_SCORE_FORMULA": "Formule : total = (challenge + quiz) / 2. challenge = 100 - somme des couts d'indices. quiz = moyenne Q1+Q2+Q3."
  }
 diff --git a/ftp/acquisitions.md b/ftp/acquisitions.md
-index 0c76ae7..a94d8c6 100644
+index 0c76ae741..a94d8c63d 100644
 --- a/ftp/acquisitions.md
 +++ b/ftp/acquisitions.md
 @@ -2,18 +2,51 @@
@@ -486,7 +499,7 @@ index 0c76ae7..a94d8c6 100644
 +*JuiceLab Holdings Ltd. internal document. Do not distribute.*
 \ No newline at end of file
 diff --git a/server.ts b/server.ts
-index b09ebf6..9af298a 100644
+index b09ebf644..9af298a95 100644
 --- a/server.ts
 +++ b/server.ts
 @@ -100,6 +100,7 @@ import { captchas, verifyCaptcha } from './routes/captcha'
@@ -513,7 +526,7 @@ index b09ebf6..9af298a 100644
    app.get('/rest/products/search', searchProducts())
    app.get('/rest/basket/:id', retrieveBasket())
 diff --git a/frontend/src/assets/i18n/pt_BR.json b/frontend/src/assets/i18n/pt_BR.json
-index 02a4513..b2cf650 100644
+index 02a451366..ce395c661 100644
 --- a/frontend/src/assets/i18n/pt_BR.json
 +++ b/frontend/src/assets/i18n/pt_BR.json
 @@ -480,5 +480,74 @@

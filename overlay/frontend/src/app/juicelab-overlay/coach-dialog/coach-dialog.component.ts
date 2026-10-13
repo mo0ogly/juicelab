@@ -24,9 +24,7 @@ import { JournalFormComponent } from '../journal-form/journal-form.component'
 import { QuizFormComponent } from '../quiz-form/quiz-form.component'
 import { JuicelabAuthService } from '../services/juicelab-auth.service'
 import { JuicelabBridgeService } from '../services/juicelab-bridge.service'
-import { JuicelabPackService } from '../services/juicelab-pack.service'
 import { JuicelabStateService } from '../services/juicelab-state.service'
-import { JuicelabSyncService } from '../services/juicelab-sync.service'
 
 export interface CoachDialogData {
   challengeKey: string
@@ -137,8 +135,6 @@ export interface CoachDialogData {
 export class JuicelabCoachDialogComponent {
   private readonly authSvc = inject(JuicelabAuthService)
   private readonly stateSvc = inject(JuicelabStateService)
-  private readonly syncSvc = inject(JuicelabSyncService)
-  private readonly packSvc = inject(JuicelabPackService)
   private readonly bridgeSvc = inject(JuicelabBridgeService)
   private readonly translate = inject(TranslateService)
   readonly isAuthenticated = this.authSvc.isAuthenticated
@@ -147,11 +143,8 @@ export class JuicelabCoachDialogComponent {
     public readonly dialogRef: MatDialogRef<JuicelabCoachDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public readonly data: CoachDialogData,
   ) {
-    // Bootstrap that normally happens in juicelab-panel.ngOnInit. When the
-    // student opens the coach from /#/score-board the panel is never
-    // mounted, so we replicate the init here : load runtime config, ensure
-    // the student record exists, and configure the sync service so the
-    // download-proof button can reach the dashboard.
+    // Session bootstrap normally runs from the sidenav at app load ; calling
+    // it again is a no-op and keeps the dialog safe if that hook is missing.
     this.bootstrap()
 
     // Mirror the Juice Shop active language onto our state so the YAML
@@ -162,22 +155,9 @@ export class JuicelabCoachDialogComponent {
   }
 
   private bootstrap(): void {
-    // Idempotent — only the first call wires the socket listener for
-    // 'challenge solved' events emitted by Juice Shop core.
-    this.bridgeSvc.start()
-    this.packSvc.getConfig().subscribe({
-      next: (cfg) => {
-        this.stateSvc.ensureStudent(cfg.cohort_id, cfg.default_language)
-        this.syncSvc.configure(cfg.dashboard_url, cfg.instance_label)
-      },
-      error: () => {
-        // Config asset unreachable. We do NOT fabricate a cohort id : that
-        // would silently bind the student to a phantom cohort the teacher
-        // does not know about. Leave the state empty ; the journal save +
-        // download-proof flows will surface a clean error and the user can
-        // reload after fixing config.json.
-      },
-    })
+    // Idempotent session bootstrap (socket listener, student record, sync
+    // target, backfill). Normally already done by the sidenav at app load.
+    this.bridgeSvc.bootstrap()
   }
 
   private syncLang(): void {

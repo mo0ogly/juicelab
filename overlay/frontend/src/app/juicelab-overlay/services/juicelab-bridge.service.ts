@@ -12,8 +12,8 @@
  *   - capture the Juice Shop CTF flag if shown in the notification (mode
  *     ctf.showFlagsInNotifications=true).
  *
- * The service is mounted ONCE for the whole session, ideally from
- * AppComponent or any always-alive component. It is idempotent : the
+ * The service is mounted ONCE for the whole session through bootstrap(),
+ * called from the always-mounted Juice Shop sidenav. It is idempotent : the
  * native `socket.on` is registered only once thanks to the
  * `subscribed` guard.
  *
@@ -21,6 +21,8 @@
  */
 
 import { Injectable, inject } from '@angular/core'
+import { forkJoin } from 'rxjs'
+import { ChallengeService } from '../../Services/challenge.service'
 import { SocketIoService } from '../../Services/socket-io.service'
 import { JuicelabPackService } from './juicelab-pack.service'
 import { JuicelabStateService } from './juicelab-state.service'
@@ -40,9 +42,56 @@ export class JuicelabBridgeService {
   private readonly stateSvc = inject(JuicelabStateService)
   private readonly syncSvc = inject(JuicelabSyncService)
   private readonly packSvc = inject(JuicelabPackService)
+  private readonly challengeSvc = inject(ChallengeService)
 
   private subscribed = false
+  private bootstrapped = false
   private tdKeys: Set<string> = new Set()
+
+  /**
+   * Full overlay session bootstrap, idempotent. Called from the always-mounted
+   * Juice Shop sidenav (core patch) so it runs at app load whatever the first
+   * page is, and from the panel / coach dialog as a fallback. Starts the
+   * socket listener, ensures the student record, configures the sync target,
+   * then forwards TD challenges already solved server-side that never reached
+   * the dashboard : solves made over plain HTTP with no tab open, or whose
+   * socket notification Juice Shop core consumed before the student token
+   * existed (core acks every notification on receipt, so it is not replayed).
+   */
+  bootstrap(): void {
+    this.start()
+    if (this.bootstrapped) return
+    this.bootstrapped = true
+    this.packSvc.getConfig().subscribe({
+      next: (cfg) => {
+        this.stateSvc.ensureStudent(cfg.cohort_id, cfg.default_language)
+        this.syncSvc.configure(cfg.dashboard_url, cfg.instance_label)
+        this.backfillSolved()
+      },
+      error: () => {
+        // Do not fabricate a cohort id : config.json must be the single
+        // source of truth. Without it no student record exists and nothing
+        // is sent ; the panel surfaces the problem to the student.
+        this.bootstrapped = false
+      },
+    })
+  }
+
+  private backfillSolved(): void {
+    forkJoin([this.packSvc.getTdKeySet(), this.challengeSvc.find()]).subscribe({
+      next: ([tdKeys, challenges]) => {
+        const local = this.stateSvc.state().challenges
+        for (const c of challenges) {
+          if (!c.solved || !tdKeys.has(c.key) || local[c.key]?.solved_at) continue
+          this.handleChallengeSolved({ key: c.key }, 'juice-shop-backfill')
+        }
+      },
+      error: () => {
+        // Juice Shop API unreachable : live socket events still flow, the
+        // next app load retries the backfill.
+      },
+    })
+  }
 
   /**
    * Wire up the socket listener. Safe to call multiple times — only the
@@ -78,11 +127,17 @@ export class JuicelabBridgeService {
     }
   }
 
-  private handleChallengeSolved(raw: ChallengeSolvedPayload): void {
+  private handleChallengeSolved(raw: ChallengeSolvedPayload, source = 'juice-shop-socket'): void {
     const key = raw?.key ?? raw?.challenge ?? ''
     if (!key) return
     // Only interested in challenges that belong to the TD parcours.
     if (this.tdKeys.size > 0 && !this.tdKeys.has(key)) return
+
+    // No student record yet (config.json still loading) : leave the local
+    // state untouched so backfillSolved() picks this solve up once the
+    // record exists, instead of marking it solved and never sending it.
+    const s = this.stateSvc.state()
+    if (!s.student.token || !s.student.cohort) return
 
     // Update local state idempotently.
     this.stateSvc.markSolved(key)
@@ -91,8 +146,6 @@ export class JuicelabBridgeService {
     // CTF mode is on (config/default.yml ctf.showFlagsInNotifications=true)
     // — otherwise the field will be undefined and the dashboard ignores
     // it.
-    const s = this.stateSvc.state()
-    if (!s.student.token || !s.student.cohort) return
     this.syncSvc.send({
       student_token: s.student.token,
       cohort_id: s.student.cohort,
@@ -100,7 +153,7 @@ export class JuicelabBridgeService {
       challenge_key: key,
       data: {
         flag: raw?.flag ?? raw?.hash ?? null,
-        source: 'juice-shop-socket',
+        source,
       },
       client_timestamp: new Date().toISOString(),
     })
