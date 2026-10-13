@@ -45,7 +45,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 REPO_URL = "https://github.com/mo0ogly/juicelab.git"
-COHORT = "JUICELAB-JUIN-2026"
+COHORT = "M2-IBI-CYBER-2027"
 DASHBOARD_PORT = "5050"
 SHOP_PORT = "3000"
 EXAMPLE_IP = "187.124.39.123"
@@ -319,7 +319,8 @@ def build_eleve(tmp: Path) -> None:
         doc,
         ["Systeme", "A installer"],
         [
-            ["Windows 10/11", "Docker Desktop (avec WSL2) + Git for Windows (fournit Git et OpenSSL)"],
+            ["Windows 10/11", "Docker Desktop (avec WSL2) + Git for Windows (fournit Git et OpenSSL) "
+                              "+ PowerShell 7 (la version 5.1 livree avec Windows 10 ne suffit pas)"],
             ["macOS", "Docker Desktop + Git (xcode-select --install)"],
             ["Linux", "Docker Engine + docker compose v2 + git + openssl (voir Annexe B)"],
         ],
@@ -426,9 +427,26 @@ def build_eleve(tmp: Path) -> None:
             ["Ma progression n'apparait pas chez le prof",
              "Verifie que tu as bien passe -d / -Dashboard avec la bonne IP "
              "et la meme cohorte (" + COHORT + ") que la classe."],
+            ["Windows : le build echoue sur « patch does not apply » "
+             "(config/default.yml, server.ts...)",
+             "Fins de ligne converties en CRLF par Git for Windows. Supprime le "
+             "dossier juicelab, desactive la conversion puis re-clone (commandes ci-dessous)."],
+            ["J'avais deja clone le depot lors d'une session precedente",
+             "Fais git pull (ou un clone neuf) avant de relancer l'installeur : "
+             "il est idempotent et garde tes tokens."],
         ],
         [55, 115],
     )
+    para(doc, "Correctif Windows « patch does not apply » (PowerShell) :")
+    code_block(doc, [
+        "cd ..",
+        "Remove-Item -Recurse -Force juicelab",
+        "git config --global core.autocrlf false",
+        "git clone " + REPO_URL,
+        "cd juicelab",
+        ".\\scripts\\install-student.ps1 -Dashboard " + EXAMPLE_IP +
+        " -Label amelie -Cohort " + COHORT,
+    ])
 
     doc.add_heading("9. Arreter / nettoyer", level=1)
     code_block(doc, [

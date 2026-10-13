@@ -493,7 +493,7 @@ cd ..
 Remove-Item -Recurse -Force juicelab
 git clone https://github.com/mo0ogly/juicelab.git
 cd juicelab
-.\scripts\install-student.ps1 -Dashboard 187.124.39.123 -Cohort JUICELAB-JUIN-2026 -Label PRENOM
+.\scripts\install-student.ps1 -Dashboard 187.124.39.123 -Cohort M2-IBI-CYBER-2027 -Label PRENOM
 ```
 
 If it persists: `git config --global core.autocrlf false` then re-clone.
