@@ -49,3 +49,6 @@ dashboard/sbom.cdx.xml
 # coverage runtime artefact
 .coverage
 docs/.venv
+
+# Communications eleves / prof (brouillons locaux, non versionnes)
+comms/
