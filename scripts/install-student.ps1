@@ -321,7 +321,7 @@ if (-not $dashboardPort) { $dashboardPort = '5050' }
 if ($Server) {
     [void] (Wait-Http "http://127.0.0.1:$dashboardPort/api/health" 'Dashboard /api/health')
 } elseif ($Dashboard) {
-    [void] (Wait-Http 'http://127.0.0.1:3000/' 'Juice Shop')
+    [void] (Wait-Http "http://127.0.0.1:$demoPort/" 'Juice Shop')
     try {
         $r = Invoke-WebRequest -Uri "http://${Dashboard}:$dashboardPort/api/health" -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
         if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 500) {
@@ -332,7 +332,7 @@ if ($Server) {
         Warn "Verifier que le prof a lance -Server, le LAN plat, et le firewall (port $dashboardPort)."
     }
 } else {
-    [void] (Wait-Http 'http://127.0.0.1:3000/'                     'Juice Shop')
+    [void] (Wait-Http "http://127.0.0.1:$demoPort/" 'Juice Shop')
     [void] (Wait-Http "http://127.0.0.1:$dashboardPort/api/health" 'Dashboard /api/health')
 }
 
@@ -366,8 +366,8 @@ if ($Server) {
 } elseif ($Dashboard) {
     Write-Host '  Mode eleve (scenario 4) : juice-shop lance, events pousses vers le prof.'
     Write-Host ''
-    Write-Host "  Eleve  -> http://127.0.0.1:3000/#/juicelab           (parcours TD)"
-    Write-Host "  Eleve  -> http://127.0.0.1:3000/#/score-board        (challenges OWASP)"
+    Write-Host "  Eleve  -> http://127.0.0.1:${demoPort}/#/juicelab           (parcours TD)"
+    Write-Host "  Eleve  -> http://127.0.0.1:${demoPort}/#/score-board        (challenges OWASP)"
     Write-Host ''
     Write-Host "  Cohorte           : $Cohort"
     Write-Host ("  Instance (label)  : {0}" -f (Get-EnvValue 'JUICELAB_INSTANCE_LABEL'))
@@ -375,8 +375,8 @@ if ($Server) {
 } else {
     Write-Host '  Mode solo local : dashboard + juice-shop sur cette machine.'
     Write-Host ''
-    Write-Host "  Eleve  -> http://127.0.0.1:3000/#/juicelab           (parcours TD)"
-    Write-Host "  Eleve  -> http://127.0.0.1:3000/#/score-board        (challenges OWASP)"
+    Write-Host "  Eleve  -> http://127.0.0.1:${demoPort}/#/juicelab           (parcours TD)"
+    Write-Host "  Eleve  -> http://127.0.0.1:${demoPort}/#/score-board        (challenges OWASP)"
     Write-Host "  Prof   -> http://127.0.0.1:$dashboardPort/login            (token ci-dessous)"
     Write-Host "  Prof   -> http://127.0.0.1:$dashboardPort/dashboard?cohort=$Cohort"
     Write-Host ''

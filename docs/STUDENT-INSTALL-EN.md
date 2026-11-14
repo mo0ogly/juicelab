@@ -223,7 +223,10 @@ Your Juice Shop progress, journals, and quiz answers are stored client-side in `
 
 ### Port already in use (`3000` or `5000`)
 
-Another app is squatting the port. Either stop it, or change the host port mapping in `docker/docker-compose.yml` and rebuild.
+Another app is squatting the port. The installer tries to free the port, then stops with `Port 3000 toujours occupe` if it cannot.
+
+- **Cohort mode (class)**: stop the other app and keep port `3000`. The teacher dashboard only accepts events from `http://127.0.0.1:3000` and `http://localhost:3000` (CORS): on another port, your solves are not reported.
+- **Solo mode**: you may instead pick another host port with `JUICELAB_DEMO_PORT=3300` in `docker/.env`, then rerun the installer; it then waits for and prints that port.
 
 ### `docker compose: command not found`
 

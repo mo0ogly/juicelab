@@ -364,7 +364,7 @@ DASHBOARD_PORT="$(env_get DASHBOARD_PORT)"; DASHBOARD_PORT="${DASHBOARD_PORT:-50
 if [[ "${SERVER_ONLY}" -eq 1 ]]; then
     wait_http "http://127.0.0.1:${DASHBOARD_PORT}/api/health" "Dashboard /api/health"
 elif [[ -n "${DASHBOARD_HOST}" ]]; then
-    wait_http "http://127.0.0.1:3000/" "Juice Shop"
+    wait_http "http://127.0.0.1:${DEMO_PORT}/" "Juice Shop"
     # Dashboard distant : verification best-effort (le LAN/firewall peut bloquer).
     if curl -fsS --max-time 3 "http://${DASHBOARD_HOST}:${DASHBOARD_PORT}/api/health" >/dev/null 2>&1; then
         ok "Dashboard prof joignable : http://${DASHBOARD_HOST}:${DASHBOARD_PORT}/api/health"
@@ -373,7 +373,7 @@ elif [[ -n "${DASHBOARD_HOST}" ]]; then
         warn "Verifier que le prof a lance --server, que le LAN est plat, et le firewall (port ${DASHBOARD_PORT})."
     fi
 else
-    wait_http "http://127.0.0.1:3000/" "Juice Shop"
+    wait_http "http://127.0.0.1:${DEMO_PORT}/" "Juice Shop"
     wait_http "http://127.0.0.1:${DASHBOARD_PORT}/api/health" "Dashboard /api/health"
 fi
 
@@ -405,8 +405,8 @@ elif [[ -n "${DASHBOARD_HOST}" ]]; then
     cat <<EOF
   Mode eleve (scenario 4) : juice-shop lance, events pousses vers le prof.
 
-  Eleve  -> http://127.0.0.1:3000/#/juicelab           (parcours TD)
-  Eleve  -> http://127.0.0.1:3000/#/score-board        (challenges OWASP)
+  Eleve  -> http://127.0.0.1:${DEMO_PORT}/#/juicelab           (parcours TD)
+  Eleve  -> http://127.0.0.1:${DEMO_PORT}/#/score-board        (challenges OWASP)
 
   Cohorte           : ${COHORT_ID}
   Instance (label)  : $(env_get JUICELAB_INSTANCE_LABEL)
@@ -416,8 +416,8 @@ else
     cat <<EOF
   Mode solo local : dashboard + juice-shop sur cette machine.
 
-  Eleve  -> http://127.0.0.1:3000/#/juicelab           (parcours TD)
-  Eleve  -> http://127.0.0.1:3000/#/score-board        (challenges OWASP)
+  Eleve  -> http://127.0.0.1:${DEMO_PORT}/#/juicelab           (parcours TD)
+  Eleve  -> http://127.0.0.1:${DEMO_PORT}/#/score-board        (challenges OWASP)
   Prof   -> http://127.0.0.1:${DASHBOARD_PORT}/login            (token ci-dessous)
   Prof   -> http://127.0.0.1:${DASHBOARD_PORT}/dashboard?cohort=${COHORT_ID}
 

@@ -223,7 +223,10 @@ Ta progression Juice Shop, tes journaux et tes reponses au quiz sont stockes cot
 
 ### Port deja utilise (`3000` ou `5000`)
 
-Une autre appli squatte le port. Soit tu l'arretes, soit tu changes le port hote dans `docker/docker-compose.yml` et tu rebuild.
+Une autre appli squatte le port. L'installeur tente de liberer le port puis s'arrete avec `Port 3000 toujours occupe` s'il n'y arrive pas.
+
+- **Mode cohorte (TD)** : arrete l'autre appli et garde le port `3000`. Le dashboard prof n'accepte les events que depuis `http://127.0.0.1:3000` et `http://localhost:3000` (CORS) : sur un autre port, tes resolutions ne remontent pas.
+- **Mode solo** : tu peux aussi choisir un autre port hote avec `JUICELAB_DEMO_PORT=3300` dans `docker/.env`, puis relancer l'installeur ; il attend et affiche alors ce port.
 
 ### `docker compose: command not found`
 
