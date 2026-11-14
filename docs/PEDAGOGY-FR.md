@@ -7,6 +7,15 @@ un patch de raccordement : « surcouche » ne signifie pas absence de tout patch
 
 Version anglaise : [PEDAGOGY.md](PEDAGOGY.md).
 
+## Séance pilote en deux demi journées
+
+Le [kit pilote francophone](pilote-juicelab/LIRE_AVANT_DISTRIBUTION.txt) réunit le
+PowerPoint, les consignes, la première installation, la reprise d’un ancien labo,
+le compte rendu et les évaluations. La préparation sélectionne des passages des
+cours S1 ISI5, avec leurs [références vérifiées](pilote-juicelab/REFERENCES_COURS.md).
+Deux blocs de quatre heures sont proposés ; ils ne garantissent pas treize
+résolutions individuelles. Le parcours produit de douze heures reste distinct.
+
 ## Avant pendant et après le défi
 
 Chaque briefing public du parcours présente une mission d’apprentissage, deux

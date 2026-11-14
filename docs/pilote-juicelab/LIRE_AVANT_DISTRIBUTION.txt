@@ -1,0 +1,60 @@
+JUICELAB — KIT PILOTE V2 — 14 NOVEMBRE 2026
+
+Deux demi-journées de quatre heures, pauses comprises ; treize défis planifiés.
+Les horaires sont des propositions, pas une garantie de résolution par chacun.
+Le parcours produit habituel de douze heures reste distinct.
+
+POUR LE PROFESSEUR
+01_Professeur_deroule.docx : préparation, déroulé, accompagnement et corrigé A/B.
+06_Grille_avant_apres.docx : grille sur huit points et bilan apparié.
+09_JuiceLab_deux_demi_journees_v2_cours.pptx : 34 diapositives, schémas modifiables,
+captures réelles, deux extraits des notes S1 ISI5 et notes de présentation.
+12_Professeur_preparation_et_planches.docx : lectures, usage des planches,
+réponses à la préparation formative et limites techniques des transpositions.
+
+POUR LES ÉLÈVES AVANT LE COURS
+02_Eleves_installation.docx : première installation ou accès hébergé.
+10_Eleves_mise_a_jour_et_reprise.docx : ancien labo Node, Docker ou hébergé ;
+conservation des travaux, clones séparés, contrôles avant/après et repli.
+11_Eleves_preparation_avec_les_cours.docx : passages précis à lire et préparation.
+Les lectures sont proposées hors des huit heures du pilote ; prévoir environ
+45 minutes de lecture et 5 minutes de réponse, à adapter au groupe.
+03_Eleves_consignes.docx : ce qu'il faut faire et rendre, suivi des treize défis.
+08_Eleves_compte_rendu.docx : modèle à remplir pendant la séance.
+07_Autres_defis.docx : 105 autres défis observés et sélection progressive.
+
+AU MOMENT PRÉVU UNIQUEMENT
+04_Evaluation_A.docx avant les explications ; 05_Evaluation_B.docx en fin
+de séance. Quinze minutes chacun, individuellement, mêmes conditions et
+pseudonyme. Ne pas distribuer les réponses ou la grille détaillée à l'avance.
+Le point de départ est placé juste après la couverture du PowerPoint.
+Si les lectures ont précédé A, noter que ce point de départ est après préparation.
+
+Le ZIP complet contient les corrigés : il est destiné au professeur.
+Ne pas envoyer cette archive entière aux élèves. Les dossiers Eleves,
+Professeur et Evaluations_a_distribuer facilitent la distribution séparée.
+
+COURS DE RÉFÉRENCE
+REFERENCES_COURS.md distingue les séries de cours retrouvées sur Lexar et
+les pages vérifiées. Le professeur fournit les notes sélectionnées et le PDF
+XSS, déjà disponibles sur sa clé ; les cours complets ne sont pas republiés
+avec ce kit. Le cours8 MITM existe dans le dossier voisin cours ; il n'est pas
+présent dans la sélection cour cyber/fr. Les numérotations des séries diffèrent.
+
+AVANT ACCUEIL
+Renseigner dates, horaires, URL du labo et du dashboard, cohorte, pseudonymes,
+nom d'instance, lieu et échéance de remise dans le déroulé professeur.
+Pour couvrir les treize défis, préparer une instance native isolée par élève
+ou binôme annoncé, et contrôler leur disponibilité réelle sur le poste cible.
+Reflected XSS porte une restriction Docker dans l'image contrôlée ; respecter
+les protections. L'état des défis est global à une instance.
+
+L'absence du dialogue Join et le sync legacy de l'image élève sont acceptés
+pour le TD selon le constat de Fabrice. Vérifier la réception côté professeur.
+L'harmonisation de l'image reste distincte et non réalisée par ces documents.
+Ne pas recréer un ancien conteneur ou réappliquer l'overlay pour mettre à jour
+sans conservation des travaux : aucune migration automatique de progression
+ou restauration exacte de base n'est annoncée. Voir le guide10.
+
+Les essais sur les postes de classe restent à faire. La recette historique
+indépendante de l'identité du défi13 reste ouverte ; ce kit ne la clôt pas.

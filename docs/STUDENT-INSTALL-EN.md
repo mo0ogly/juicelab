@@ -4,6 +4,17 @@
 
 > Localized version: [STUDENT-INSTALL-FR.md](./STUDENT-INSTALL-FR.md) (français).
 
+## Thirteen-challenge pilot and existing installations
+
+For the full two-half-day pilot, use the French
+[First installation](pilote-juicelab/02_Eleves_installation.docx) and
+[Upgrade and recovery](pilote-juicelab/10_Eleves_mise_a_jour_et_reprise.docx) guides.
+They distinguish hosted access, a fresh native lab and an existing lab to preserve.
+The pilot uses native deployment for all thirteen challenges: Reflected XSS is
+reported unavailable in the inspected Docker environment. Catalogue presence does
+not prove availability. The existing Docker flow below does not guarantee all
+thirteen challenges or a data migration. The new handouts are in French.
+
 ---
 
 ## 0. Pick your mode BEFORE installing

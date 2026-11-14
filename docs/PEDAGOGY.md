@@ -7,6 +7,15 @@ not mean the upstream files have never been patched.
 
 French version: [PEDAGOGY-FR.md](PEDAGOGY-FR.md).
 
+## Pilot in two half days
+
+The [French pilot kit](pilote-juicelab/LIRE_AVANT_DISTRIBUTION.txt) includes the
+PowerPoint, student tasks, first installation, existing-lab upgrade guidance,
+report template and assessments. Selected S1 ISI5 readings have
+[checked references](pilote-juicelab/REFERENCES_COURS.md). Two four-hour blocks
+are proposed, without guaranteeing thirteen individual solutions. The regular
+twelve-hour product course remains separate. The new handouts are in French.
+
 ## Before during and after a challenge
 
 Each public course briefing provides a learning mission, two objectives,

@@ -4,6 +4,17 @@
 
 > Version anglaise : [STUDENT-INSTALL-EN.md](./STUDENT-INSTALL-EN.md).
 
+## Pilote des treize défis et installation existante
+
+Pour le pilote complet en deux demi-journées, commencer par les guides
+[Première installation](pilote-juicelab/02_Eleves_installation.docx) et
+[Mise à jour et reprise](pilote-juicelab/10_Eleves_mise_a_jour_et_reprise.docx).
+Ils distinguent accès hébergé, nouveau labo natif et ancien labo à préserver.
+Le mode natif est retenu pour les treize défis : Reflected XSS est signalé
+indisponible dans l’environnement Docker contrôlé. La présence au catalogue ne
+prouve pas la disponibilité. Le guide ci-dessous décrit le flux Docker existant ;
+il ne garantit ni la résolution des treize défis ni une migration des données.
+
 ---
 
 ## 0. Choisis ton mode AVANT d'installer

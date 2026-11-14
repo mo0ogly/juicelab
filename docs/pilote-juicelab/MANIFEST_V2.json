@@ -1,0 +1,68 @@
+{
+  "version": "pilote-v2",
+  "slides": 34,
+  "word_pages": 26,
+  "acceptance": "Documentary checks; classroom deployment and learning effect not established",
+  "files": {
+    "Professeur/01_Professeur_deroule.docx": {
+      "sha256": "4b3bcf04d7b98d349f0922e7b8718953d22af5fa0bb01cb1288e7c0f3a7d00c3",
+      "bytes": 41905
+    },
+    "Eleves/02_Eleves_installation.docx": {
+      "sha256": "6efa560a708685eb7aaccb5d25c8d9ab9fb8eb74ae1006ad11c8b3206a779937",
+      "bytes": 40689
+    },
+    "Eleves/03_Eleves_consignes.docx": {
+      "sha256": "1a887efe190ee7d922af04eea56ab2d525140f56c0948a6b442799e3f781162c",
+      "bytes": 39586
+    },
+    "Evaluations_a_distribuer/04_Evaluation_A.docx": {
+      "sha256": "3f38e896231816e2edf7d929290ed08aa393597ba6a3093d10f86e1beaab377b",
+      "bytes": 38020
+    },
+    "Evaluations_a_distribuer/05_Evaluation_B.docx": {
+      "sha256": "1c6cf57ef398560ab3348509f4bf8802e87151ea634ea54789978033d332b74e",
+      "bytes": 38045
+    },
+    "Professeur/06_Grille_avant_apres.docx": {
+      "sha256": "b00feaea9cb1ae4b53c395cddd1388e7db8e24b1cb7c6680e11308bae4440324",
+      "bytes": 39314
+    },
+    "Eleves/07_Autres_defis.docx": {
+      "sha256": "72e7e5999b751af58870181235af61f6a702a8234457254f027699dc2167e2bb",
+      "bytes": 40199
+    },
+    "Eleves/08_Eleves_compte_rendu.docx": {
+      "sha256": "742203e913b520275ae6a57627449203b4184f20b6f5c786dd7033159b234191",
+      "bytes": 38261
+    },
+    "Eleves/10_Eleves_mise_a_jour_et_reprise.docx": {
+      "sha256": "26754c47af0fbd327b0e534c587ccac56a2e035d5efe5673980669de55987906",
+      "bytes": 41035
+    },
+    "Eleves/11_Eleves_preparation_avec_les_cours.docx": {
+      "sha256": "a9336ac523d17094945d34eaf0bdbfd076f5ca8e03f5259b56e1e2053e1a3cf4",
+      "bytes": 39596
+    },
+    "Professeur/12_Professeur_preparation_et_planches.docx": {
+      "sha256": "beffb2f939a0288fe1693d2690dbbdfefeef5bd242bdf0a84249a514500dfd01",
+      "bytes": 39935
+    },
+    "Professeur/09_JuiceLab_deux_demi_journees_v2_cours.pptx": {
+      "sha256": "c4363b0dd1b0a3efcb29697cdff3989c1ec8510c713c53f3ca0fa14c53d66f64",
+      "bytes": 551640
+    },
+    "LIRE_AVANT_DISTRIBUTION.txt": {
+      "sha256": "be2ab0cfd2cadefd35e52c06d5d65863ddcff9db99db2322565debcbfa97722b",
+      "bytes": 3669
+    },
+    "REFERENCES_COURS.md": {
+      "sha256": "030ea71af9f77ce938184aee142b440c9367e7027dfc70a15ffc84d9e914f63c",
+      "bytes": 2273
+    },
+    "SOURCES_COURS.json": {
+      "sha256": "0b9631b751e7de9411b5f32e6981f266135940a4aef9d678da932b9d68cff14b",
+      "bytes": 1135
+    }
+  }
+}
