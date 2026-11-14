@@ -238,8 +238,8 @@ selected_challenges:
 
   forgedFeedbackChallenge:
     name_official: "Forged Feedback"
-    demi_journee: 2
-    position: 10
+    demi_journee: 3
+    position: 4
     difficulty: 3
     category: "Broken Access Control"
 
@@ -559,13 +559,6 @@ selected_challenges:
     position: 3
     difficulty: 1
     category: "XSS"
-
-  bullyChatbotChallenge:
-    name_official: "Bully Chatbot"
-    demi_journee: 3
-    position: 4
-    difficulty: 1
-    category: "Miscellaneous"
 
   changePasswordBenderChallenge:
     name_official: "Change Bender's Password"

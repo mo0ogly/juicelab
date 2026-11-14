@@ -52,3 +52,6 @@ docs/.venv
 
 # Communications eleves / prof (brouillons locaux, non versionnes)
 comms/
+
+# Fixtures de test locales (0700, jamais versionnees)
+.swarm-fixtures/

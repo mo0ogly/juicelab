@@ -119,13 +119,13 @@ The parcours fits a 12-hour TD split into three half-days (DJ1, DJ2, DJ3). Five 
 | 3 | 1 | `localXssChallenge` | A03 Injection (XSS, DOM-based) | First XSS. Concept : the URL fragment is rendered. |
 | 3 | 2 | `reflectedXssChallenge` | A03 Injection (XSS, reflected) | Concept : a query string can be reflected. |
 | 3 | 3 | `xssBonusChallenge` | A03 Injection (XSS, payload variation) | Practice — the same surface, a different payload. |
-| 3 | 4 | `bullyChatbotChallenge` | A03 Injection (LLM prompt injection) | Bridges to AI security. Concept : an LLM is just another code path. |
+| 3 | 4 | `forgedFeedbackChallenge` | A01 Broken Access Control | Identity forgery : the student posts feedback as another user via the hidden `userId` field. Concept : the author's identity derives from the session, never from the client. |
 
 The parcours is calibrated so a typical student :
 
 - Solves **DJ1 in 4 hours** with a max of 1 to 2 hints per challenge.
 - Solves **DJ2 in 4 hours** with 2 to 3 hints on `loginAdmin` and 1 to 2 on the others.
-- Solves **DJ3 in 4 hours** with similar pacing and the bridge to LLM security at the end.
+- Solves **DJ3 in 4 hours** with similar pacing and the identity-forgery challenge as the closing one.
 
 > **Why not include `usernameXssChallenge` or `persistedXssFeedbackChallenge`?** Both are great challenges but they require the student to have solved earlier ones first, and a 12-hour TD does not have the slack. They are good follow-ups for a second TD.
 

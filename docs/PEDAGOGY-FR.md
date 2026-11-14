@@ -119,13 +119,13 @@ Le parcours s'inscrit dans un TD de 12 heures réparti en trois demi-journées (
 | 3 | 1 | `localXssChallenge` | A03 Injection (XSS, basé DOM) | Premier XSS. Concept : le fragment d'URL est rendu. |
 | 3 | 2 | `reflectedXssChallenge` | A03 Injection (XSS, réfléchi) | Concept : une chaîne de requête peut être réfléchie. |
 | 3 | 3 | `xssBonusChallenge` | A03 Injection (XSS, variation de charge utile) | Pratique — même surface, charge utile différente. |
-| 3 | 4 | `bullyChatbotChallenge` | A03 Injection (injection de prompt LLM) | Passerelle vers la sécurité de l'IA. Concept : un LLM n'est qu'un chemin de code parmi d'autres. |
+| 3 | 4 | `forgedFeedbackChallenge` | A01 Broken Access Control | Usurpation d'identité : l'étudiant poste un avis au nom d'un autre utilisateur via le champ caché `userId`. Concept : l'identité de l'auteur se dérive de la session, jamais du client. |
 
 Le parcours est calibré pour qu'un étudiant type :
 
 - Résolve **DJ1 en 4 heures** avec au maximum 1 à 2 indices par défi.
 - Résolve **DJ2 en 4 heures** avec 2 à 3 indices sur `loginAdmin` et 1 à 2 sur les autres.
-- Résolve **DJ3 en 4 heures** avec un rythme similaire et la passerelle vers la sécurité LLM à la fin.
+- Résolve **DJ3 en 4 heures** avec un rythme similaire et l'usurpation d'identité en clôture.
 
 > **Pourquoi ne pas inclure `usernameXssChallenge` ou `persistedXssFeedbackChallenge` ?** Ces deux défis sont excellents, mais ils exigent que l'étudiant ait résolu des défis antérieurs, et un TD de 12 heures ne laisse pas cette marge. Ils constituent de bons prolongements pour un second TD.
 
