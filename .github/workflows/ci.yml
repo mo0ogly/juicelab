@@ -24,7 +24,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.15"
           cache: pip
           cache-dependency-path: dashboard/requirements.txt
 
@@ -60,7 +60,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.15"
           cache: pip
           cache-dependency-path: dashboard/requirements.txt
 
@@ -155,7 +155,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.15"
           cache: pip
           cache-dependency-path: dashboard/requirements.txt
 
@@ -178,7 +178,19 @@ jobs:
           echo "lockfile in sync"
 
       - name: Install security tooling
-        run: pip install bandit ruff pip-audit semgrep safety coverage pytest pytest-asyncio pip-tools cyclonedx-bom pip-licenses
+        run: pip install bandit ruff pip-audit safety coverage pytest pytest-asyncio pip-tools cyclonedx-bom pip-licenses
+
+      # semgrep does not run when installed with pip under Python 3.15
+      # ("semgrep-core exited with unexpected output"). The official image
+      # bundles its own runtime, so it is decoupled from the project Python.
+      - name: Install semgrep (official container image)
+        run: |
+          docker pull semgrep/semgrep:1.185.0
+          printf '%s\n' '#!/usr/bin/env bash' \
+            'exec docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.185.0 semgrep --metrics=off "$@"' \
+            | sudo tee /usr/local/bin/semgrep > /dev/null
+          sudo chmod +x /usr/local/bin/semgrep
+          semgrep --version
 
       - name: Install gitleaks
         run: |
@@ -219,7 +231,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.15"
 
       - name: Install pyyaml
         run: pip install pyyaml

@@ -204,7 +204,7 @@ Conséquence : pour changer le cohort id, on n'a pas besoin de rebuild — `dock
 Plus simple — pas de multi-stage parce qu'il n'y a pas de compile step. Python + Flask + SQLite, c'est tout.
 
 ```dockerfile
-FROM python:3.11-slim AS runtime
+FROM python:3.15-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 DASHBOARD_PORT=5000
 RUN apt-get update && apt-get install -y --no-install-recommends tini
 WORKDIR /app
@@ -220,7 +220,7 @@ CMD ["python", "app.py"]
 
 Décisions :
 
-- **`python:3.11-slim`** : Python 3.13 disponible mais 3.11 est plus stable pour `Flask 3.0.3` + `flask-cors 5.0.0` + `requests 2.32.3` à ce jour.
+- **`python:3.15-slim`** : même version de Python que la CI (`actions/setup-python` 3.15) et que la génération de `dashboard/requirements.lock.txt`, pour que le lockfile hashé et l'image restent alignés. Suite pytest du dashboard validée en 3.15.
 - **`requirements.txt` copié AVANT le reste** : Docker layer caching. Si le code change mais pas les deps, `pip install` reste en cache.
 - **`--no-cache-dir`** : évite le cache pip (~150 MB économisés sur l'image).
 - **`/app/data` créé puis chowné** : monté en volume par compose (`dashboard_data`). Sans `mkdir` initial, Docker crée le mount point en root et le `chown` échoue.
@@ -410,7 +410,7 @@ docker compose --env-file .env up -d --build
 Phases :
 
 1. **0-5s** : build context envoyé au daemon (~5 MB grâce au `.dockerignore`)
-2. **5-30s** : pull des images de base (`node:24-bullseye`, `python:3.11-slim`)
+2. **5-30s** : pull des images de base (`node:24-bullseye`, `python:3.15-slim`)
 3. **30-60s** : `apt-get install git` dans le builder
 4. **60-120s** : `git clone` upstream + `git checkout` du commit pinné
 5. **120-130s** : `COPY overlay/` + `git apply --3way` patch
@@ -628,7 +628,7 @@ Référence courante :
 | Image | Taille | Composition |
 |---|---|---|
 | `juicelab:latest` | ~ 700 MB | node:24-bullseye-slim base (~150) + juice-shop build (~550) |
-| `juicelab-dashboard:latest` | ~ 180 MB | python:3.11-slim base (~120) + dashboard + deps (~60) |
+| `juicelab-dashboard:latest` | ~ 220 MB | python:3.15-slim base (~185) + dashboard + deps (~35) |
 
 ### Pistes d'optimisation (non appliquées par défaut)
 

@@ -198,3 +198,37 @@ def test_student_status_unknown(isolated_app):
 def test_student_status_missing_param(isolated_app):
     r = isolated_app.get("/api/student/status")
     assert r.status_code in (200, 400)
+
+
+# --- /api/cohort/export.csv : CSV formula injection (OWASP) --------------
+
+@pytest.mark.parametrize("raw, expected", [
+    ("=HYPERLINK(\"http://evil\",\"x\")", "'=HYPERLINK(\"http://evil\",\"x\")"),
+    ("+1+1", "'+1+1"),
+    ("-2+3", "'-2+3"),
+    ("@SUM(A1:A2)", "'@SUM(A1:A2)"),
+    ("\tcmd", "'\tcmd"),
+    ("\rcmd", "'\rcmd"),
+    ("Alice", "Alice"),
+    ("", ""),
+    (42, 42),
+    (-5, -5),
+])
+def test_csv_safe_cell(isolated_app, raw, expected):
+    import cohorts_routes
+    assert cohorts_routes._csv_safe_cell(raw) == expected
+
+
+def test_export_csv_neutralizes_formula_display_name(isolated_app):
+    from db import get_connection, upsert_student_name
+    payload = "=HYPERLINK(\"http://evil\",\"click\")"
+    with get_connection() as conn:
+        upsert_student_name(conn, "CSV-COHORT", "tok-csv-1", payload,
+                            "2026-11-14T00:00:00+00:00")
+    r = isolated_app.get("/api/cohort/export.csv?cohort=CSV-COHORT", headers=AUTH)
+    assert r.status_code == 200
+    import csv
+    from io import StringIO
+    rows = list(csv.reader(StringIO(r.data.decode("utf-8-sig")), delimiter=";"))
+    student = next(row for row in rows if row[0] == "tok-csv-1")
+    assert student[1] == "'" + payload

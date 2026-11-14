@@ -35,6 +35,25 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# Leading characters that make Excel / LibreOffice / Google Sheets evaluate a
+# CSV cell as a formula (OWASP "CSV Injection"). Tab and carriage return are
+# included because spreadsheet importers strip them before evaluation.
+_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe_cell(value: Any) -> Any:
+    """Neutralize spreadsheet formula injection in an exported CSV cell.
+
+    Student-controlled strings (display_name comes from the X-Instance-Label
+    header, email from the join form) are prefixed with a single quote when
+    they start with a formula trigger, so the spreadsheet renders them as
+    text. Numbers and empty values are returned unchanged so numeric columns
+    stay numeric (a negative int is not attacker-controlled here)."""
+    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
+        return "'" + value
+    return value
+
+
 def _clean_id(raw: str) -> str:
     """Cohort IDs are short identifiers reused in URL paths so we keep them
     URL-safe and short. Allow only alnum, dash, underscore, dot."""
@@ -177,7 +196,7 @@ def register_cohorts_routes(
             cs = int(st["challenges_solved"] or 0) if st else 0
             hp = int(st["hint_penalty_sum"] or 0) if st else 0
             qavg = st["quiz_avg_score"] if st else None
-            w.writerow([
+            row = [
                 s["student_token"], s["display_name"] or "",
                 (s["email"] if "email" in s.keys() else "") or "",
                 (s["status"] if "status" in s.keys() else "validated") or "",
@@ -190,7 +209,12 @@ def register_cohorts_routes(
                 (st["last_event_ts"] if st else "") or "",
                 s["created_at"] or "",
                 (s["decided_by"] if "decided_by" in s.keys() else "") or "",
-            ])
+            ]
+            # Every cell goes through _csv_safe_cell (formula prefixes neutralized,
+            # covered by tests/test_cohorts_join_routes.py). The rule below only
+            # recognizes the defusedcsv library as a sanitizer.
+            # nosemgrep: python.flask.security.injection.csv-writer-injection.csv-writer-injection
+            w.writerow([_csv_safe_cell(cell) for cell in row])
         body = "\ufeff" + buf.getvalue()  # UTF-8 BOM for Excel
         filename = f"cohort_{cohort}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.csv"
         return Response(
