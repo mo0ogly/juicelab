@@ -83,7 +83,7 @@ cd juicelab
 
 Skip directly to **§ 1.2** below. The `docker compose up --build` in § 1.3 handles the upstream clone, overlay copy and patch application inside the builder stage. Nothing else needs to be on disk.
 
-> **What the Dockerfile does internally** : in the `builder` stage, `Dockerfile.juicelab` clones <https://github.com/juice-shop/juice-shop.git> at the pinned commit `3b178fd` (overridable via `--build-arg JUICE_SHOP_COMMIT=…`), copies every file under `overlay/` into the cloned tree, then runs `git apply --3way patches/juicelab-core.patch` to wire the JuiceLab additions into the Juice Shop core. The runtime stage only contains the merged, built tree — no git, no overlay/, no patches/.
+> **What the Dockerfile does internally** : in the `builder` stage, `Dockerfile.juicelab` clones <https://github.com/juice-shop/juice-shop.git> at the pinned commit `443e5f2041af8e9a1943e1079d245b2f4c983f12` (overridable via `--build-arg JUICE_SHOP_COMMIT=…`), copies every file under `overlay/` into the cloned tree, then runs `git apply --3way patches/juicelab-core.patch` to wire the JuiceLab additions into the Juice Shop core. The runtime stage only contains the merged, built tree — no git, no overlay/, no patches/.
 
 #### 1.1.b — Native dev (overlay editing on host)
 
@@ -411,6 +411,10 @@ For anything not listed, open a Discussion or an Issue.
 
 ## Next steps
 
-- Read [`ARCHITECTURE.md`](./ARCHITECTURE.md) to understand the data flow.
+- Read [`ARCHITECTURE.md`](./docs/ARCHITECTURE.md) to understand the data flow.
 - Read [`docs/PEDAGOGY.md`](./docs/PEDAGOGY.md) to understand the why.
 - Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before opening a PR.
+
+### Pedagogical snapshot (14 November 2026)
+
+The default source pin and regenerated overlay patch now target Juice Shop `20.4.0-SNAPSHOT` (`443e5f2041af8e9a1943e1079d245b2f4c983f12`). The thirteen-challenge badge engine and progress display share their key list, ending with `forgedFeedbackChallenge`. The overlay Angular configuration now follows the snapshot’s `@angular/build` builders. npm uses `--legacy-peer-deps` for this dependency graph; installation and compilation failures still fail the build. The source pin does not establish byte-for-byte image reproducibility because dependency ranges and base-image tags remain mutable. Local evidence directories are excluded from the Docker build context.

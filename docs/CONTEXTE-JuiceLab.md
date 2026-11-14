@@ -3,6 +3,19 @@
 Document de reference pour gestion multisession. A lire en debut de session
 quand le travail concerne JuiceLab / TD Juice Shop / juicelab-overlay.
 
+## Reprise pédagogique du 14 novembre 2026
+
+Parcours actif : treize défis, avec Forged Feedback en clôture. Catalogue110
+historique conservé dans docs/reference et retiré du sélecteur actif. Briefings
+publics avec objectifs et prérequis ; treize journaux de justification et transfert.
+Barème overlay aligné sur preuve professeur (plancher0, coûts cumulatifs) ;
+arrondi dashboard aligné sur la preuve. Grille manuelle8 points séparée des scores
+automatiques. Sources et limites : [PEDAGOGY-FR.md](PEDAGOGY-FR.md),
+[TEACHER-GUIDE-FR.md](TEACHER-GUIDE-FR.md),
+[suivi de livraison](AMELIORATIONS-PEDAGOGIQUES-20261114.md).
+Aucun gain mesuré ni recette13 complète déduit de cette amélioration.
+Les paragraphes suivants gardent leur contexte antérieur hors des points actualisés.
+
 ## Identite et cadre
 
 - Auteur : Fabrice Pizzi (handle `mo0ogly`).
@@ -44,7 +57,7 @@ signals) ajoute dans le frontend Juice Shop :
 - Services :
   - `JuicelabPackService` (parse YAML via `js-yaml`).
   - `JuicelabStateService` (LocalStorage v1).
-  - `JuicelabScoringService` (deductif plancher 50).
+  - `JuicelabScoringService` (deductif plancher 0).
   - `JuicelabSyncService` (POST events vers dashboard cloud, queue offline).
   - `JuicelabBadgeEngineService` (4 regles, extensible).
 - Route lazy `/juicelab` + bouton icone `school` dans la navbar.

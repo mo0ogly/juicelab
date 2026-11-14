@@ -459,6 +459,14 @@ def _insert_event(payload: dict[str, Any], instance_label: str | None) -> int:
 
 
 def _cohort_summary(cohort_id: str) -> dict[str, Any]:
+    """Read roster-bound events and return matrix cells and per-student totals.
+
+    Requires an initialised dashboard database and a cohort identifier. Final
+    scores include only challenges with a submitted quiz; round ties to even,
+    matching the per-challenge proof, before the existing verified-flag bonus.
+    Partial scores remain separate. Database errors propagate to the caller.
+    Reads data only; event truth and author identity are not established here.
+    """
     with get_connection() as conn:
         # Only surface events that belong to a student still registered in
         # the roster. Without this, the matrix shows orphan tokens left
@@ -539,7 +547,8 @@ def _cohort_summary(cohort_id: str) -> dict[str, Any]:
             quiz = slot.get("quiz_score")
             if isinstance(quiz, int):
                 bonus = 10 if slot.get("flag_verified") else 0
-                sums.append(min(100, (score_chall + quiz) // 2 + bonus)); chall_done += 1
+                # Match the proof generator: nearest integer, ties to even (Python round).
+                sums.append(min(100, round((score_chall + quiz) / 2) + bonus)); chall_done += 1
             else:
                 partials.append(score_chall)
         avg = round(sum(sums) / len(sums)) if sums else None

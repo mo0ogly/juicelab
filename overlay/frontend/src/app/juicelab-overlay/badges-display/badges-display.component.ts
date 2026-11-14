@@ -12,7 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip'
 import { TranslateModule } from '@ngx-translate/core'
 
 import { type Badge, type LocalState } from '../models/juicelab.types'
-import { BADGES, JuicelabBadgeEngineService } from '../services/juicelab-badge-engine.service'
+import { ALL_KEYS, DJ1_KEYS, BADGES, JuicelabBadgeEngineService } from '../services/juicelab-badge-engine.service'
 import { JuicelabStateService } from '../services/juicelab-state.service'
 
 type Tier = 'recon' | 'grit' | 'meta' | 'apex'
@@ -28,25 +28,6 @@ interface DecoratedBadge extends Badge {
   tierLabel: string
   tierIcon: string
 }
-
-const DJ1_KEYS = [
-  'scoreBoardChallenge',
-  'privacyPolicyChallenge',
-  'directoryListingChallenge',
-  'exposedCredentialsChallenge',
-  'passwordHashLeakChallenge',
-]
-const ALL_KEYS = [
-  ...DJ1_KEYS,
-  'loginAdminChallenge',
-  'adminSectionChallenge',
-  'basketAccessChallenge',
-  'feedbackChallenge',
-  'localXssChallenge',
-  'reflectedXssChallenge',
-  'xssBonusChallenge',
-  'bullyChatbotChallenge',
-]
 
 @Component({
   selector: 'juicelab-badges-display',

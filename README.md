@@ -7,7 +7,7 @@
 
 > A graduated, scaffolded teaching layer on top of [OWASP Juice Shop](https://github.com/juice-shop/juice-shop), built for a 12-hour M2 Master classroom (Sorbonne, Paris) and designed to scale to any cybersecurity training programme.
 
-JuiceLab does **not** modify Juice Shop's challenges. It adds a thin coaching overlay (briefings, graduated hints, post-solve quiz), a tamper-evident lab proof, a teacher dashboard, and an opt-in bridge to a CTFd scoreboard. The student plays the same OWASP challenges; the *experience around them* is what changes.
+JuiceLab adds coaching around OWASP challenges: briefings, graduated hints, journals and quizzes, signed lab proofs and a teacher dashboard. The build merges the overlay and applies an existing integration patch documented in [DOCKER.md](docs/DOCKER.md). This teaching increment preserves challenge mechanisms.
 
 > **Read this in French:** [README_FR.md](./README_FR.md)
 
@@ -29,12 +29,20 @@ JuiceLab does **not** modify Juice Shop's challenges. It adds a thin coaching ov
 
 ---
 
+## Updated teaching support
+
+Thirteen briefings include objectives and prerequisites. Hint roles are visible,
+and journals ask for observation, explanation, protection and defensive transfer.
+[Student before/after assessment](docs/ASSESSMENT.md) ·
+[Teacher rubric and monitoring](docs/TEACHER-GUIDE.md).
+Learning effects remain to be measured.
+
 ## Why this project
 
 OWASP Juice Shop is the gold standard for hands-on web-app security training, but the raw experience has two pedagogical gaps when used in a classroom with heterogeneous beginners:
 
-1. **No scaffolding.** A student who cannot solve `loginAdmin` either gives up, peeks at the upstream walkthrough (and gets the full solution in one click), or asks the teacher who then has to interrupt the room. There is no graduated cognitive support between *zero hint* and *full solution*.
-2. **No teacher signal.** The teacher cannot see, in real time, which students are stuck on which step, who has read hints (and how many), and who needs a one-on-one intervention. The Juice Shop score-board reports binary completion, not learning.
+1. **Course-specific guidance.** The course provides progressive hints, writing prompts and common criteria for assessing students’ explanations.
+2. **Teacher guidance.** Read progress, hints, journals and quizzes together when planning support or class debriefing. These signals do not automatically measure understanding.
 
 JuiceLab fills both gaps without forking Juice Shop:
 
@@ -48,7 +56,7 @@ JuiceLab fills both gaps without forking Juice Shop:
 
 ## What it adds to Juice Shop
 
-JuiceLab is a **non-fork overlay**. The OWASP Juice Shop sources stay on the upstream `juice-shop/juice-shop` main branch; we only add new files and apply two small patches (one Express route, one Angular route + navbar button + score-board card).
+The build starts from the OWASP commit pinned in `docker/Dockerfile.juicelab`, merges `overlay/` and applies `patches/juicelab-core.patch`. Teaching support is maintained in JuiceLab. This does not imply that all image files are byte-identical to upstream files.
 
 | Layer | What we add | Where it lives |
 |---|---|---|
@@ -60,7 +68,7 @@ JuiceLab is a **non-fork overlay**. The OWASP Juice Shop sources stay on the ups
 | Deploy | Docker Compose (single instance, cohort of N, VPS) + CTFd opt-in | `docker/` |
 | Local launcher | PowerShell orchestration script (start / stop / health / logs / build) | `juice.ps1` |
 
-> **The 13 selected challenges** — five DJ1 reconnaissance challenges (`scoreBoard`, `privacyPolicy`, `directoryListing`, `exposedCredentials`, `passwordHashLeak`), four DJ2 auth/access (`loginAdmin`, `adminSection`, `basketAccess`, `feedback`), four DJ3 XSS (`localXss`, `reflectedXss`, `xssBonus`, `bullyChatbot`). The list is the contract: see [`selected_challenges.yml`](./juice-shop/frontend/src/assets/juicelab/selected_challenges.yml).
+> **The 13 selected challenges** — five DJ1 reconnaissance challenges (`scoreBoard`, `privacyPolicy`, `directoryListing`, `exposedCredentials`, `passwordHashLeak`), four DJ2 auth/access (`loginAdmin`, `adminSection`, `basketAccess`, `feedback`), four DJ3 XSS (`localXss`, `reflectedXss`, `xssBonus`, `forgedFeedback`). The list is the contract: see [`selected_challenges.yml`](./overlay/frontend/src/assets/juicelab/selected_challenges.yml).
 
 ---
 
@@ -178,7 +186,7 @@ flowchart LR
 
 Three independent moving parts — none of them required to run the others — and a **single shared HMAC secret** (`ctf.key`) that ties Juice Shop, the dashboard, and CTFd together when the student validates a flag.
 
-For deeper diagrams (data flow, anti-leak gating, score formula, deployment modes), see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+For deeper diagrams (data flow, anti-leak gating, score formula, deployment modes), see [`ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
 
 ---
 
@@ -214,7 +222,7 @@ A challenge is in a student's ZPD when they can solve it *with the right amount 
 | **N4** | 35 % | Guided steps — ordered list of what to do, no payload yet |
 | **N5** | 50 % | Complete solution — the exact payload + walkthrough |
 
-The cost cohort `5/10/20/35/50` is not arbitrary — it is calibrated so a student who consumes all five hints can still pass with a non-zero score (50 challenge + bonus quiz + bonus flag), but a student who solves the challenge unaided is unambiguously rewarded.
+Hint costs `5/10/20/35/50` accumulate. After all five hints the challenge score is zero; with a quiz score of 100 and no bonus, the final score is 50. [Formula, examples and limits](docs/PEDAGOGY.md#scoring-explained).
 
 ### 2. Bloom's Taxonomy — quiz anchors the concept
 

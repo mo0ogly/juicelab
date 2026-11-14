@@ -10,6 +10,8 @@ __pycache__/
 
 # Secrets et tokens — NE JAMAIS COMMITTER
 docker/.env
+docker/.env.*
+!docker/.env.example
 .env
 .env.local
 .env.*.local

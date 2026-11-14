@@ -33,7 +33,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install --require-hashes -r requirements.lock.txt
           # tools not in the lockfile (test-only); installed loose
-          pip install pytest pytest-asyncio
+          pip install pytest pytest-asyncio PyYAML
 
       - name: Smoke imports (schema migration on fresh DB)
         env:

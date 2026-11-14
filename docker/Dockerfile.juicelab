@@ -18,8 +18,7 @@
 # Build-time args (override with --build-arg) :
 #   JUICE_SHOP_REPO    Upstream OWASP Juice Shop URL (default : juice-shop/juice-shop)
 #   JUICE_SHOP_COMMIT  Pinned commit hash the JuiceLab patch was generated against
-#                      (default : 3b178fd, the upstream commit "Add update
-#                      mechanism back for legacy website"). Bump together with
+#                      (default : 443e5f2041af8e9a1943e1079d245b2f4c983f12, OWASP Juice Shop 20.4.0-SNAPSHOT). Bump together with
 #                      a regenerated patches/juicelab-core.patch when rebasing.
 
 FROM node:24-bullseye AS builder
@@ -33,7 +32,7 @@ RUN printf 'APT::Cache-Start "100663296";\n' > /etc/apt/apt.conf.d/70cache \
  && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/70cache
 
 ARG JUICE_SHOP_REPO=https://github.com/juice-shop/juice-shop.git
-ARG JUICE_SHOP_COMMIT=3b178fd
+ARG JUICE_SHOP_COMMIT=443e5f2041af8e9a1943e1079d245b2f4c983f12
 
 # Clone the pinned upstream tree. We do not use --depth 1 because git
 # apply --3way needs blob ancestry to resolve context drift.
@@ -63,7 +62,7 @@ RUN cd /build/juice-shop && \
 # `| tail` below returns tail's status and a failed npm install passes.
 WORKDIR /build/juice-shop
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN npm install --unsafe-perm 2>&1 | tail -20
+RUN npm install --legacy-peer-deps --unsafe-perm 2>&1 | tail -20
 RUN npm run build:server
 
 # Drop dev-only artefacts after build to slim the runtime image

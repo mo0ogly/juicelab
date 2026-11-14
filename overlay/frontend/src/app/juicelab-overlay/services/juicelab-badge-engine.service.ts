@@ -9,7 +9,8 @@ import { Injectable, inject } from '@angular/core'
 import { type Badge, type LocalState } from '../models/juicelab.types'
 import { JuicelabStateService } from './juicelab-state.service'
 
-const DJ1_KEYS = [
+/** Canonical first half-day keys shared by evaluation and progress display. */
+export const DJ1_KEYS = [
   'scoreBoardChallenge',
   'privacyPolicyChallenge',
   'directoryListingChallenge',
@@ -26,9 +27,10 @@ const DJ3_KEYS = [
   'localXssChallenge',
   'reflectedXssChallenge',
   'xssBonusChallenge',
-  'bullyChatbotChallenge',
+  'forgedFeedbackChallenge',
 ]
-const ALL_KEYS = [...DJ1_KEYS, ...DJ2_KEYS, ...DJ3_KEYS]
+/** Canonical thirteen-challenge TD for the pinned 20.4 snapshot. */
+export const ALL_KEYS = [...DJ1_KEYS, ...DJ2_KEYS, ...DJ3_KEYS]
 
 export const BADGES: Badge[] = [
   {
@@ -43,8 +45,8 @@ export const BADGES: Badge[] = [
     key: 'perseverant',
     label_fr: 'Perseverant',
     label_en: 'Persistent',
-    description_fr: 'TD entier resolu malgre la consommation maximale d indices.',
-    description_en: 'Whole TD solved despite consuming the maximum hints.',
+    description_fr: 'TD entier resolu avec plus de 30 indices consommes.',
+    description_en: 'Whole TD solved with more than 30 hints consumed.',
     icon: 'fitness_center',
   },
   {

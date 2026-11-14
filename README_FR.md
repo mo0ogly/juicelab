@@ -7,7 +7,7 @@
 
 > Une couche d'enseignement graduée et étayée par-dessus [OWASP Juice Shop](https://github.com/juice-shop/juice-shop), conçue pour un TD de 12 h en M2 (Sorbonne, Paris) et pensée pour s'adapter à n'importe quelle formation en cybersécurité.
 
-JuiceLab **ne modifie pas** les challenges Juice Shop. Il ajoute une fine couche de coaching (briefings, indices gradués, quiz après résolution), une preuve de lab inviolable, un dashboard pour l'enseignant, et un pont opt-in vers un scoreboard CTFd. L'élève joue les mêmes challenges OWASP ; ce qui change, c'est *l'expérience qui les entoure*.
+JuiceLab ajoute une couche de coaching autour des défis OWASP : briefings, indices gradués, journal et quiz, preuve de lab signée et dashboard enseignant. Le build fusionne l’overlay et applique un patch d’intégration existant, décrit dans [DOCKER.md](docs/DOCKER.md). Cet incrément pédagogique conserve les mécanismes des défis.
 
 > **Read this in English:** [README.md](./README.md)
 
@@ -29,18 +29,26 @@ JuiceLab **ne modifie pas** les challenges Juice Shop. Il ajoute une fine couche
 
 ---
 
+## Accompagnement pédagogique actualisé
+
+Objectifs et prérequis dans les treize briefings, rôle des cinq niveaux affiché,
+journal guidé par observation, explication, protection et transfert.
+[Évaluation élève avant après](docs/ASSESSMENT-FR.md) ·
+[Grille et suivi professeur](docs/TEACHER-GUIDE-FR.md).
+Les effets sur les apprentissages restent à mesurer.
+
 ## Pourquoi ce projet
 
 OWASP Juice Shop est la référence pour la formation pratique en sécurité applicative web, mais l'expérience brute laisse deux trous pédagogiques quand on l'utilise dans une classe de débutants hétérogènes :
 
-1. **Aucun étayage.** Un élève qui ne sait pas résoudre `loginAdmin` abandonne, va lire le walkthrough upstream (et obtient la solution complète en un clic), ou interpelle l'enseignant qui doit alors interrompre toute la salle. Il n'y a pas de gradation cognitive entre *aucun indice* et *solution complète*.
-2. **Aucun signal pour l'enseignant.** L'enseignant ne peut pas voir, en temps réel, qui est bloqué sur quelle étape, qui a lu combien d'indices, qui aurait besoin d'une intervention individuelle. Le score-board Juice Shop ne signale qu'une complétion binaire, pas un apprentissage.
+1. **Un accompagnement adapté à la séance.** Le TD prévoit des indices progressifs, des consignes de rédaction et une évaluation des explications, communs à la promotion.
+2. **Des repères pour l’enseignant.** Rapprocher progression, indices, journal et quiz aide à préparer une intervention ou une reprise collective. Ces signaux ne constituent pas une mesure automatique de la compréhension.
 
 JuiceLab comble les deux trous sans forker Juice Shop :
 
 - Une **échelle d'indices à 5 niveaux** inspirée de Vygotsky, chacun avec un coût explicite (5 % / 10 % / 20 % / 35 % / 50 % du score du challenge), avec un gating côté serveur qui empêche l'élève de sauter une marche.
 - Un **journal après résolution + un quiz QCM de 3 questions** qui ancre le concept de sécurité, pas seulement l'astuce.
-- Une **preuve de lab inviolable** signée HMAC-SHA-256, téléchargeable comme fichier Markdown que l'élève rend à l'enseignant ou que celui-ci utilise pour noter.
+- Une **preuve de lab signée** signée HMAC-SHA-256, téléchargeable comme fichier Markdown que l'élève rend à l'enseignant ou que celui-ci utilise pour noter.
 - Un **dashboard cohorte** (Flask + SQLite) qui affiche, dans une seule matrice, chaque élève × chaque challenge avec les indices consommés, le statut du journal, le score du quiz, la vérification du flag.
 - Un **push CTFd opt-in** qui répercute les pénalités d'indices JuiceLab vers un leaderboard CTFd public, pour qu'une compétition reflète *l'effort réel*, pas la rapidité à copier-coller un flag.
 
@@ -48,7 +56,7 @@ JuiceLab comble les deux trous sans forker Juice Shop :
 
 ## Ce que cela ajoute à Juice Shop
 
-JuiceLab est un **overlay sans fork**. Les sources OWASP Juice Shop restent sur la branche `main` de `juice-shop/juice-shop` upstream ; nous ajoutons uniquement de nouveaux fichiers et appliquons deux petits patches (une route Express, plus une route Angular + un bouton de navbar + une carte sur le score-board).
+Le build part du commit OWASP épinglé dans `docker/Dockerfile.juicelab`, fusionne `overlay/` et applique `patches/juicelab-core.patch`. L’accompagnement pédagogique est maintenu dans JuiceLab. Cette organisation ne signifie pas que tous les fichiers de l’image sont identiques aux fichiers upstream.
 
 | Couche | Ce qu'on ajoute | Où ça vit |
 |---|---|---|
@@ -60,7 +68,7 @@ JuiceLab est un **overlay sans fork**. Les sources OWASP Juice Shop restent sur 
 | Déploiement | Docker Compose (instance unique, cohorte de N, VPS) + CTFd opt-in | `docker/` |
 | Lanceur local | Script PowerShell d'orchestration (start / stop / health / logs / build) | `juice.ps1` |
 
-> **Les 13 challenges sélectionnés** — cinq de la DJ1 reconnaissance (`scoreBoard`, `privacyPolicy`, `directoryListing`, `exposedCredentials`, `passwordHashLeak`), quatre de la DJ2 auth/accès (`loginAdmin`, `adminSection`, `basketAccess`, `feedback`), quatre de la DJ3 XSS (`localXss`, `reflectedXss`, `xssBonus`, `bullyChatbot`). La liste est le contrat : voir [`selected_challenges.yml`](./juice-shop/frontend/src/assets/juicelab/selected_challenges.yml).
+> **Les 13 challenges sélectionnés** — cinq de la DJ1 reconnaissance (`scoreBoard`, `privacyPolicy`, `directoryListing`, `exposedCredentials`, `passwordHashLeak`), quatre de la DJ2 auth/accès (`loginAdmin`, `adminSection`, `basketAccess`, `feedback`), quatre de la DJ3 XSS (`localXss`, `reflectedXss`, `xssBonus`, `forgedFeedback`). La liste est le contrat : voir [`selected_challenges.yml`](./overlay/frontend/src/assets/juicelab/selected_challenges.yml).
 
 ---
 
@@ -178,7 +186,7 @@ flowchart LR
 
 Trois pièces mobiles indépendantes — aucune n'est requise pour faire tourner les autres — et **un seul secret HMAC partagé** (`ctf.key`) qui relie Juice Shop, le dashboard, et CTFd quand l'élève valide un flag.
 
-Pour des diagrammes plus détaillés (flux de données, anti-fuite, formule de score, modes de déploiement), voir [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+Pour des diagrammes plus détaillés (flux de données, anti-fuite, formule de score, modes de déploiement), voir [`ARCHITECTURE.md`](./docs/ARCHITECTURE-FR.md).
 
 ---
 
@@ -214,11 +222,11 @@ Un challenge est dans la ZPD d'un élève quand il peut le résoudre *avec la bo
 | **N4** | 35 % | Étapes guidées — liste ordonnée à suivre, sans le payload |
 | **N5** | 50 % | Solution complète — le payload exact + le walkthrough |
 
-Le barème `5/10/20/35/50` n'est pas arbitraire — il est calibré pour qu'un élève qui consomme les 5 indices garde un score non nul (50 challenge + bonus quiz + bonus flag), tout en récompensant sans ambiguïté l'élève qui résout sans aide.
+Les coûts `5/10/20/35/50` sont cumulatifs. Après cinq indices, le score du défi est zéro ; avec un quiz à 100 et sans bonus, le score final est 50. [Formule, exemples et limites](docs/PEDAGOGY-FR.md#barème-expliqué).
 
 ### 2. Taxonomie de Bloom — le quiz ancre le concept
 
-Une fois le challenge résolu, l'élève ne passe pas au suivant. Il affronte trois QCM qui visent la compréhension **conceptuelle**, pas l'astuce :
+Après le défi, le quiz vérifie des connaissances conceptuelles. Le journal demande aussi une justification et un transfert défensif, évalués par le professeur :
 
 - *À quelle catégorie de l'OWASP Top 10 appartient ce que je viens d'exploiter ?*
 - *Quelle défense aurait empêché cela dans le code ?*
@@ -226,7 +234,7 @@ Une fois le challenge résolu, l'élève ne passe pas au suivant. Il affronte tr
 
 Le score du quiz `(Q1 + Q2 + Q3) / 3` se moyenne avec le score du challenge, la note finale récompense donc à la fois *faire* et *comprendre* — l'écart que Juice Shop seul laisse ouvert.
 
-### 3. Preuve inviolable — passation à l'enseignant
+### 3. Preuve signée — passation à l'enseignant
 
 À la fin de chaque challenge, l'élève télécharge un fichier Markdown signé HMAC-SHA-256 par le dashboard. Le fichier contient le brief, l'entrée de journal, les indices consommés, les réponses du quiz, le détail du score, et l'horodatage. L'enseignant vérifie la signature avec `dashboard/verify_proof.py` — pas besoin de faire confiance à un screenshot.
 

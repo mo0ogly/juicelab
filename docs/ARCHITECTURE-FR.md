@@ -101,12 +101,12 @@ juice-shop/
         │       ├── trophy-room/         affichage des trophées dorés cachés /#/cabinet
         │       ├── badges-display/
         │       ├── models/
-        │       │   ├── juicelab-i18n.ts catalogue de chaînes UI (pas de texte codé en dur)
+        │       │   ├── briefings FR/EN et libellés bilingues des composants
         │       │   └── juicelab.types.ts types partagés
         │       ├── services/
         │       │   ├── juicelab-pack.service.ts        appels HTTP vers /api/juicelab/*
         │       │   ├── juicelab-state.service.ts       LocalStorage v1
-        │       │   ├── juicelab-scoring.service.ts     déductif plancher 50
+        │       │   ├── juicelab-scoring.service.ts     déductif plancher 0
         │       │   ├── juicelab-sync.service.ts        POST /api/sync (file hors ligne)
         │       │   ├── juicelab-bridge.service.ts      écouteur socket.io (Juice Shop core)
         │       │   └── juicelab-badge-engine.service.ts 4 règles, extensible

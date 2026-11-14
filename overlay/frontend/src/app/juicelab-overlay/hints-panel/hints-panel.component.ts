@@ -40,6 +40,9 @@ const ORDER: HintLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
         | {{ 'JUICELAB_HINTS_CONSUMED' | translate }} : <strong>{{ consumed().length }}</strong> / 5
       </mat-card-subtitle>
       <mat-card-content>
+        <p class="scoring-explainer">{{ language() === 'fr'
+          ? 'Les coûts s’additionnent : N1 à N3 coûtent 35 points, N1 à N5 coûtent 120 points. Le score du défi est borné à zéro. Le quiz est noté séparément ; le professeur évalue ton raisonnement dans le journal.'
+          : 'Costs add up: N1 through N3 cost 35 points; N1 through N5 cost 120 points. The challenge score has a zero floor. The quiz is scored separately; your teacher assesses reasoning in the journal.' }}</p>
         <div *ngFor="let lvl of order" class="hint-row" [class.consumed]="isConsumed(lvl)">
           <div class="hint-header">
             <strong>{{ lvl }}</strong>
@@ -54,6 +57,7 @@ const ORDER: HintLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
               {{ (loading() ? 'JUICELAB_HINTS_LOADING' : 'JUICELAB_HINTS_REVEAL') | translate }}
             </button>
           </div>
+          <div class="hint-purpose">{{ purpose(lvl) }}</div>
           <div *ngIf="isConsumed(lvl) && revealedText(lvl)" class="hint-body">
             {{ revealedText(lvl) }}
           </div>
@@ -69,6 +73,8 @@ const ORDER: HintLevel[] = ['N1', 'N2', 'N3', 'N4', 'N5']
     .hint-header { display: flex; gap: 12px; align-items: center; }
     .cost { opacity: 0.65; font-size: 12px; flex: 1; }
     .hint-body { padding: 8px 0 0 28px; line-height: 1.5; }
+    .hint-purpose { padding: 4px 0; opacity: 0.8; font-size: 12px; }
+    .scoring-explainer { font-size: 13px; line-height: 1.5; }
     .error { color: #f87171; padding: 8px; font-size: 13px; }
   `],
 })
@@ -91,6 +97,15 @@ export class HintsPanelComponent {
   readonly consumed = computed(() => this.state()?.hints_consumed ?? [])
   readonly score = computed(() => this.scoringSvc.scoreFromConsumedHints(this.consumed()))
   readonly language = computed(() => this.stateSvc.state().student.language)
+
+  /** Describe the intended guidance level in FR/EN without revealing hint text.
+   * Accepts a typed N1–N5 level, has no I/O and does not grant access to a hint.
+   */
+  purpose(level: HintLevel): string {
+    const fr = { N1: 'Question pour orienter la réflexion', N2: 'Direction de recherche', N3: 'Indice technique', N4: 'Étapes guidées', N5: 'Solution complète' }
+    const en = { N1: 'Question to guide reflection', N2: 'Research direction', N3: 'Technical clue', N4: 'Guided steps', N5: 'Complete solution' }
+    return (this.language() === 'fr' ? fr : en)[level]
+  }
 
   constructor () {
     // Hydrate the in-memory revealed map from the server for hints already

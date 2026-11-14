@@ -1,0 +1,14 @@
+# Package a production frontend rebuilt for an existing JuiceLab base image.
+# This path is only for frontend-only increments; backend/private-pack changes
+# require a full Dockerfile.juicelab build first. The base image must already
+# contain the matching upstream version and server-side teaching packs.
+#
+# Build context: a staged project with frontend/dist/frontend and frontend/src.
+# Required build arg: JUICELAB_BASE_IMAGE (a locally verified image tag/digest).
+# The caller must build with the supported npm run build:frontend production
+# script, verify dependency versions and inspect served assets after activation.
+ARG JUICELAB_BASE_IMAGE
+FROM ${JUICELAB_BASE_IMAGE}
+COPY --chown=1001:1001 frontend/dist/frontend/. /juice-shop/frontend/dist/frontend/
+COPY --chown=1001:1001 frontend/src/app/juicelab-overlay/. /juice-shop/frontend/src/app/juicelab-overlay/
+COPY --chown=1001:1001 frontend/src/assets/juicelab/. /juice-shop/frontend/src/assets/juicelab/

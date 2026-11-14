@@ -64,6 +64,13 @@ export interface BriefingPack {
   schema_version: string
   mission_fr: string
   mission_en: string
+  /** Optional bilingual guidance for newer packs; legacy packs remain readable. */
+  learning_objectives_fr?: string[]
+  learning_objectives_en?: string[]
+  prerequisites_fr?: string[]
+  prerequisites_en?: string[]
+  deliverable_fr?: string
+  deliverable_en?: string
   concepts: BriefingConcept[]
 }
 
@@ -206,5 +213,6 @@ export const HINT_COST_BY_LEVEL: Record<HintLevel, number> = {
   N5: 50,
 }
 
-export const SCORE_FLOOR = 50
+/** Same zero floor as the teacher proof after cumulative hint costs. */
+export const SCORE_FLOOR = 0
 export const SCORE_INITIAL = 100

@@ -55,3 +55,6 @@ docker/data/
 docs/
 !docker/README.md
 !overlay/README.md
+
+# Private local acceptance evidence and isolated runtime copies
+.swarm-fixtures/

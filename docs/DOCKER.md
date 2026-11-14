@@ -10,6 +10,18 @@ Ce document complète [`docker/README.md`](../docker/README.md) (procédures pas
 
 Lecture conseillée AVANT d'auditer une production ou de modifier une Dockerfile. Lecture optionnelle pour un simple `docker compose up --build`.
 
+La livraison pédagogique locale du 14 novembre est décrite dans
+[AMELIORATIONS-PEDAGOGIQUES-20261114.md](AMELIORATIONS-PEDAGOGIQUES-20261114.md).
+Le build standard reste nécessaire pour le serveur et les packs privés.
+Pour un incrément frontend seul, [Dockerfile.frontend-refresh](../docker/Dockerfile.frontend-refresh)
+emballe un frontend déjà compilé par `npm run build:frontend` en production.
+Il exige un contexte de staging avec `frontend/dist/frontend` et `frontend/src`,
+ainsi qu'un argument `JUICELAB_BASE_IMAGE` explicitement fourni : image locale
+vérifiée contenant la même base OWASP et les packs privés correspondants.
+Ce chemin ne compile pas lui-même et ne valide pas la cohérence backend ;
+contrôler ensuite l'identité du conteneur, le bundle et les ressources servies.
+La recette locale conserve les commandes et sorties réellement exercées.
+
 ---
 
 ## Table des matières
@@ -86,7 +98,7 @@ Pourquoi `node:24-bullseye` et pas `:alpine` :
 
 ```dockerfile
 ARG JUICE_SHOP_REPO=https://github.com/juice-shop/juice-shop.git
-ARG JUICE_SHOP_COMMIT=3b178fd
+ARG JUICE_SHOP_COMMIT=443e5f2041af8e9a1943e1079d245b2f4c983f12
 RUN git clone "${JUICE_SHOP_REPO}" /build/juice-shop && \
     cd /build/juice-shop && \
     git checkout "${JUICE_SHOP_COMMIT}"
@@ -94,8 +106,8 @@ RUN git clone "${JUICE_SHOP_REPO}" /build/juice-shop && \
 
 Pourquoi un **commit hash** et pas un tag :
 
-- Les tags OWASP (`v17.x.x`) bougent quand l'équipe rebase pour des fixes de sécurité. Un commit hash est immuable.
-- Le commit `3b178fd` est l'ancêtre exact contre lequel `patches/juicelab-core.patch` a été généré. Tout autre commit ferait potentiellement échouer `git apply --3way` ou pire, appliquer le patch sur un fichier qui a changé sens.
+- Un tag est une référence qui peut être déplacée. Le hash complet du commit identifie la révision source retenue.
+- Le commit `443e5f2041af8e9a1943e1079d245b2f4c983f12` est l'ancêtre exact contre lequel `patches/juicelab-core.patch` a été généré. Tout autre commit ferait potentiellement échouer `git apply --3way` ou pire, appliquer le patch sur un fichier qui a changé sens.
 
 Pourquoi pas `--depth 1` :
 
@@ -134,7 +146,7 @@ Si le patch échoue (par exemple parce que `JUICE_SHOP_COMMIT` a été overridé
 
 ```dockerfile
 WORKDIR /build/juice-shop
-RUN npm install --unsafe-perm 2>&1 | tail -20
+RUN npm install --legacy-peer-deps --unsafe-perm 2>&1 | tail -20
 RUN npm run build:server
 ```
 
@@ -278,7 +290,7 @@ Exception : `!docker/README.md` et `!overlay/README.md` sont conservés pour qu'
 | Arg | Default | Where set | Effet |
 |---|---|---|---|
 | `JUICE_SHOP_REPO` | `https://github.com/juice-shop/juice-shop.git` | `Dockerfile.juicelab` | URL de l'upstream à cloner. Peut pointer vers un fork. |
-| `JUICE_SHOP_COMMIT` | `3b178fd` | `Dockerfile.juicelab` | Commit pinné de l'upstream. Doit matcher le base du patch. |
+| `JUICE_SHOP_COMMIT` | `443e5f2041af8e9a1943e1079d245b2f4c983f12` | `Dockerfile.juicelab` | Commit pinné de l'upstream. Doit matcher le base du patch. |
 
 Usage :
 
@@ -499,7 +511,7 @@ git diff > /path/to/juicelab/patches/juicelab-core.patch
 Dans `docker/Dockerfile.juicelab` :
 
 ```diff
--ARG JUICE_SHOP_COMMIT=3b178fd
+-ARG JUICE_SHOP_COMMIT=443e5f2041af8e9a1943e1079d245b2f4c983f12
 +ARG JUICE_SHOP_COMMIT=abc1234
 ```
 
@@ -716,7 +728,7 @@ Deux causes distinctes :
    `STUDENT-INSTALL-FR.md` § 6.
 
 2. **`JUICE_SHOP_COMMIT` overridé sans regénérer le patch.** Le patch a été
-   généré contre `3b178fd` ; sur un autre commit, certains hunks ne matchent
+   généré contre `443e5f2041af8e9a1943e1079d245b2f4c983f12` ; sur un autre commit, certains hunks ne matchent
    plus. Fix : revenir au default, ou suivre
    [§ Procédure de rebase](#procédure-de-rebase-owasp).
 
@@ -803,3 +815,11 @@ juice-shop/
 - [Docker Compose specification](https://docs.docker.com/reference/compose-file/)
 - [Docker BuildKit](https://docs.docker.com/build/buildkit/)
 - [`provision.py`](../docker/provision.py) — generator de cohorte
+
+## Snapshot pédagogique du 14 novembre 2026
+
+Le Dockerfile et le patch ciblent le commit complet `443e5f2041af8e9a1943e1079d245b2f4c983f12`, dont le manifeste porte `20.4.0-SNAPSHOT`. La configuration `overlay/frontend/angular.json` utilise les builders `@angular/build` de cette base ; l’ancienne copie Angular 19 empêchait le build standard. Le patch a été régénéré contre cette base, à partir des adaptations du laboratoire ; il inclut le raccordement des cartes au coach et le middleware de session de `whoami`. Les badges et leur affichage partagent désormais les treize clés, avec `forgedFeedbackChallenge` en clôture.
+
+`--legacy-peer-deps` est nécessaire pour l’installation npm de cette base et de l’overlay ; il ne supprime pas les erreurs de compilation. Le code de sortie npm reste propagé par `pipefail`. Le commit identifie les sources upstream ; cette configuration ne promet pas une image identique octet pour octet : les images Node et les dépendances npm ne sont pas toutes figées par digest/verrou. Voir le suivi de validation pour le build effectivement exercé et ses limites.
+
+Les copies de laboratoire et preuves privées sous `.swarm-fixtures/` sont exclues du contexte Docker.

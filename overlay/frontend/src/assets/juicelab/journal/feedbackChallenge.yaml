@@ -1,0 +1,16 @@
+challenge_key: feedbackChallenge
+journal_prompts:
+  before_solve_fr: Avant le défi, explique ce que tu sais déjà sur autorisation des suppressions.
+    Quelle observation pourrait confirmer ou réfuter ton hypothèse ? N’écris pas de solution attendue.
+  before_solve_en: Before the challenge, explain what you already know about deletion authorisation.
+    Which observation could support or refute your hypothesis? Do not write an expected solution.
+  after_solve_fr: 'À propos de autorisation des suppressions : 1. Décris une observation et sa preuve,
+    puis une limite. 2. Explique la cause du risque. 3. Justifie une protection côté approprié. 4.
+    Transpose-la à une application de réservation fictive et décris un contrôle défensif et le résultat
+    attendu. Distingue ce contrôle proposé d’un contrôle exécuté. Vise au moins 50 mots utiles ;
+    le compteur ne note pas la qualité.'
+  after_solve_en: 'For deletion authorisation: 1. Describe one observation, its evidence and a limit.
+    2. Explain the cause of the risk. 3. Justify a protection in the appropriate layer. 4. Transfer
+    it to a fictional booking app and describe a defensive check and expected result. Distinguish
+    a proposed check from an executed one. Aim for at least 50 useful words; word count does not
+    grade quality.'

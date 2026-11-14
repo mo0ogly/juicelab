@@ -1,101 +1,34 @@
-challenge_key: "feedbackChallenge"
-schema_version: "juicelab.briefing.v2"
-
-mission_fr: |
-  Objectif officiel du defi (description OWASP sur la carte) :
-  "Get rid of all 5-star customer feedback" — supprime TOUS les
-  avis clients a cinq etoiles. Le defi se valide quand il ne reste
-  plus AUCUN avis a 5 etoiles dans le boutique (et non quand la
-  moyenne passe a 5).
-
-  Methode recommandee : pre-requis = session administrateur (defi
-  Login Admin valide). Ouvre la section Administration, rubrique
-  Customer Feedback. Repere les lignes affichant cinq etoiles et
-  supprime chacune avec le bouton corbeille de sa ligne. Parcours
-  les pages de la table si necessaire : le critere est ZERO avis a
-  5 etoiles restant, sur TOUTES les pages. Reviens au tableau des
-  defis pour verifier la carte Five-Star Feedback.
-
-  Note la chaine d'attaque (SQLi -> session admin -> suppression
-  sans controle metier) et reflechis aux defenses qui auraient
-  casse la chaine. Tu en parleras dans le journal "apres".
-
-mission_en: |
-  Official challenge goal (OWASP description on the card):
-  "Get rid of all 5-star customer feedback" — delete ALL
-  five-star customer reviews. The challenge validates when NO
-  5-star review remains in the shop (not when the average
-  reaches 5).
-
-  Recommended method: prerequisite = administrator session
-  (solved Login Admin challenge). Open the Administration
-  section, Customer Feedback area. Spot the rows showing five
-  stars and delete each with its row trashcan button. Page
-  through the table if needed: the criterion is ZERO 5-star
-  reviews left, across ALL pages. Return to the Score Board to
-  check the Five-Star Feedback card.
-
-  Note the attack chain (SQLi -> admin session -> deletion with
-  no business control) and think about the defenses that would
-  have broken the chain. You will report it in the "after"
-  logbook.
-
+challenge_key: feedbackChallenge
+schema_version: juicelab.briefing.v2
+mission_fr: Dans le laboratoire local autorisé, étudie le défi « Five-Star Feedback ». Définir les
+  droits nécessaires pour supprimer un avis et les traces utiles à une revue de modération. Limite
+  tes observations à l’instance prévue pour le TD.
+mission_en: In the authorised local lab, study the “Five-Star Feedback” challenge. Define permissions
+  needed to delete feedback and evidence useful to a moderation review. Keep observations within
+  the instance provided for this course.
+learning_objectives_fr:
+- Définir les droits nécessaires pour supprimer un avis et les traces utiles à une revue de modération.
+- Séparer ce qui est observé, ce qui est déduit et ce qui reste à vérifier.
+learning_objectives_en:
+- Define permissions needed to delete feedback and evidence useful to a moderation review.
+- Separate observations, inferences and what remains to be verified.
+prerequisites_fr:
+- Savoir utiliser le navigateur et ses outils de développement.
+- Connaître le périmètre autorisé du laboratoire et la différence client/serveur.
+prerequisites_en:
+- Know how to use the browser and its developer tools.
+- Know the authorised lab scope and the client/server distinction.
+deliverable_fr: 'Dans le journal après le défi : une observation précise et sa preuve, une explication
+  du risque, une protection justifiée et une vérification défensive sur un autre cas. Le nombre de
+  mots ne suffit pas à établir la qualité du raisonnement.'
+deliverable_en: 'In the post-challenge journal: one precise observation and its evidence, an explanation
+  of the risk, a justified protection and a defensive check for a different case. Word count alone
+  does not establish reasoning quality.'
 concepts:
-  - title_fr: "Composition de vulnerabilites : 1 + 1 = catastrophique"
-    title_en: "Vulnerability composition: 1 + 1 = catastrophic"
-    body_fr: |
-      Une SQLi seule est mauvaise mais souvent contenue (le user
-      reste non-admin). Un BAC seul peut etre tolere si l'app n'a
-      pas d'utilisateurs sensibles. La COMPOSITION change tout :
-      SQLi pour escalader, BAC pour exploiter les privileges
-      escaledes. C'est la regle du pentest reel : les vulns
-      isolees mineures s'additionnent en risque majeur. Auditer
-      chaque vuln SEULE n'est pas suffisant, il faut auditer les
-      CHAINES possibles.
-    body_en: |
-      A lone SQLi is bad but often contained (the user stays
-      non-admin). A lone BAC may be tolerable if the app has no
-      sensitive users. COMPOSITION changes everything: SQLi to
-      escalate, BAC to exploit the escalated privileges. The real
-      pentest rule: minor isolated vulns add up to a major risk.
-      Auditing each vuln ALONE is not enough, you must audit
-      possible CHAINS.
-
-  - title_fr: "Soft delete + audit log : transformer la perte en evenement reversible"
-    title_en: "Soft delete + audit log: turn loss into a reversible event"
-    body_fr: |
-      Pour toute action destructive en production (delete user,
-      delete order, delete feedback), le pattern recommande est le
-      soft delete : marquer la ligne deleted_at = NOW() au lieu de
-      la supprimer physiquement. Couple a un audit log (qui, quand,
-      pourquoi, IP, JWT id), cela transforme une perte definitive
-      en evenement reversible et auditable. La purge physique
-      reelle se fait par un job de retention separe, parametre.
-    body_en: |
-      For any destructive production action (delete user, delete
-      order, delete feedback), the recommended pattern is soft
-      delete: mark the row deleted_at = NOW() instead of
-      physically deleting. Combined with an audit log (who, when,
-      why, IP, JWT id), this turns a definitive loss into a
-      reversible auditable event. Real physical purge runs via a
-      separate parameterized retention job.
-
-  - title_fr: "Detection blue team : SIEM + anomaly detection"
-    title_en: "Blue team detection: SIEM + anomaly detection"
-    body_fr: |
-      Trois niveaux d'observation : audit log (trace de chaque
-      DELETE), SIEM avec alerte temps reel sur burst de DELETE
-      depuis un meme JWT, anomaly detection sur les compteurs
-      metier (disparition brutale des avis a 5 etoiles). Aucun ne
-      PREVENT l'attaque, mais le mean time to detect (MTTD) passe
-      de plusieurs jours a quelques minutes. Combiner avec un
-      processus d'incident response qui peut restaurer les
-      soft-deletes.
-    body_en: |
-      Three observation levels: audit log (trace every DELETE),
-      SIEM with real-time alert on a burst of DELETEs from the
-      same JWT, anomaly detection on business counters (sudden
-      disappearance of 5-star reviews). None PREVENTS the attack,
-      but mean time to detect (MTTD) drops from days to minutes.
-      Pair with an incident response process that can restore
-      soft-deletes.
+- title_fr: Autorisation des suppressions
+  title_en: Deletion authorisation
+  body_fr: 'Le point étudié est : autorisation des suppressions. Une carte résolue indique un état
+    du laboratoire ; le journal doit préciser les observations qui soutiennent ton explication et
+    leurs limites.'
+  body_en: The focus is deletion authorisation. A solved card indicates lab state; your journal must
+    identify observations supporting your explanation and their limits.

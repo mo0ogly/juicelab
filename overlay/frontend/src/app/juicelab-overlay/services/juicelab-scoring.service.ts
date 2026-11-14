@@ -1,6 +1,6 @@
 /*
  * juicelab-overlay - Scoring service
- * Computes deductive score based on consumed hints with floor 50.
+ * Computes deductive score based on consumed hints with the same zero floor as the teacher proof.
  * SPDX-License-Identifier: MIT
  */
 
@@ -15,7 +15,9 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class JuicelabScoringService {
-  /** Compute score after consuming the given hint levels. */
+  /** Return max(0, 100 - cumulative costs) for unique consumed N1–N5 levels.
+   * Pure local display calculation; levels come from the gated hint response.
+   * Does not establish challenge completion, identity or a final teacher grade. */
   scoreFromConsumedHints(consumed: HintLevel[]): number {
     const totalCost = consumed.reduce((sum, lvl) => sum + HINT_COST_BY_LEVEL[lvl], 0)
     return Math.max(SCORE_FLOOR, SCORE_INITIAL - totalCost)

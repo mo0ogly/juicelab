@@ -15,7 +15,7 @@ import { MatCardModule } from '@angular/material/card'
 import { MatIconModule } from '@angular/material/icon'
 import { toObservable, toSignal } from '@angular/core/rxjs-interop'
 import { TranslateModule } from '@ngx-translate/core'
-import { catchError, of, switchMap } from 'rxjs'
+import { catchError, map, of, startWith, switchMap } from 'rxjs'
 
 import { type BriefingPack } from '../models/juicelab.types'
 import { JuicelabPackService } from '../services/juicelab-pack.service'
@@ -47,6 +47,21 @@ import { JuicelabStateService } from '../services/juicelab-state.service'
             {{ 'JUICELAB_BRIEFING_MISSION' | translate }}
           </h3>
           <div class="mission-body">{{ missionText(b) }}</div>
+        </section>
+
+        <section class="block learning-goals" *ngIf="objectives(b).length">
+          <h3>{{ labels().objectives }}</h3>
+          <ul><li *ngFor="let objective of objectives(b)">{{ objective }}</li></ul>
+        </section>
+
+        <section class="block prerequisites" *ngIf="prerequisites(b).length">
+          <h3>{{ labels().prerequisites }}</h3>
+          <ul><li *ngFor="let prerequisite of prerequisites(b)">{{ prerequisite }}</li></ul>
+        </section>
+
+        <section class="block expected-work" *ngIf="deliverable(b)">
+          <h3>{{ labels().deliverable }}</h3>
+          <div class="mission-body">{{ deliverable(b) }}</div>
         </section>
 
         <section class="block concepts" *ngIf="b.concepts?.length">
@@ -145,27 +160,50 @@ export class BriefingPanelComponent {
   readonly challengeDifficulty = input<number>(0)
 
   readonly language = computed(() => this.stateSvc.state().student.language)
+  readonly labels = computed(() => this.language() === 'fr'
+    ? { objectives: 'Objectifs d’apprentissage', prerequisites: 'Prérequis', deliverable: 'Travail attendu après le défi' }
+    : { objectives: 'Learning objectives', prerequisites: 'Prerequisites', deliverable: 'Expected work after the challenge' })
 
   private readonly briefingResult = toSignal(
     toObservable(this.challengeKey).pipe(
       switchMap(k => this.packSvc.getBriefing(k).pipe(
-        catchError(() => of(null as BriefingPack | null)),
+        map(pack => ({ status: 'ready', pack } as const)),
+        startWith({ status: 'loading', pack: null } as const),
+        catchError(() => of({ status: 'error', pack: null } as const)),
       )),
     ),
-    { initialValue: null as BriefingPack | null },
+    { initialValue: { status: 'loading', pack: null } as const },
   )
 
-  readonly briefing = computed(() => this.briefingResult())
-  readonly loading = computed(() => false)
+  readonly briefing = computed(() => this.briefingResult().pack)
+  readonly loading = computed(() => this.briefingResult().status === 'loading')
 
+  /** Localise a pack mission; missing optional text renders empty, without I/O. */
   missionText(b: BriefingPack): string {
     return (this.language() === 'fr' ? b.mission_fr : b.mission_en)?.trim() ?? ''
   }
 
+  /** Return localised goals or an empty list for legacy packs; no mutations. */
+  objectives(b: BriefingPack): string[] {
+    return (this.language() === 'fr' ? b.learning_objectives_fr : b.learning_objectives_en) ?? []
+  }
+
+  /** Return localised prerequisites; absent legacy fields do not block reading. */
+  prerequisites(b: BriefingPack): string[] {
+    return (this.language() === 'fr' ? b.prerequisites_fr : b.prerequisites_en) ?? []
+  }
+
+  /** Return optional post-challenge work text in the selected language, or ''. */
+  deliverable(b: BriefingPack): string {
+    return (this.language() === 'fr' ? b.deliverable_fr : b.deliverable_en)?.trim() ?? ''
+  }
+
+  /** Select the concept heading in the current language; no fallback translation. */
   conceptTitle(c: { title_fr: string, title_en: string }): string {
     return this.language() === 'fr' ? c.title_fr : c.title_en
   }
 
+  /** Select and trim concept content; missing text renders empty, without I/O. */
   conceptBody(c: { body_fr: string, body_en: string }): string {
     return (this.language() === 'fr' ? c.body_fr : c.body_en)?.trim() ?? ''
   }

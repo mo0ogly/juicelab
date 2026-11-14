@@ -5,7 +5,7 @@
  */
 
 import { CommonModule } from '@angular/common'
-import { Component, OnDestroy, computed, inject } from '@angular/core'
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { MatButtonModule } from '@angular/material/button'
 import { MatCardModule } from '@angular/material/card'
@@ -94,7 +94,7 @@ import { TranslateModule } from '@ngx-translate/core'
       <ng-container *ngIf="isAuthenticated()">
         <mat-form-field appearance="outline">
           <mat-label>Challenge en cours</mat-label>
-          <mat-select [(ngModel)]="selectedKey">
+          <mat-select [ngModel]="selectedKey()" (ngModelChange)="selectedKey.set($event)">
             <mat-select-trigger>{{ selectedName() }}</mat-select-trigger>
             <mat-optgroup *ngFor="let dj of djs()" [label]="'DJ' + dj">
               <mat-option *ngFor="let c of byDj()[dj]" [value]="c.key">
@@ -104,22 +104,22 @@ import { TranslateModule } from '@ngx-translate/core'
           </mat-select>
         </mat-form-field>
 
-        <ng-container *ngIf="selectedKey">
+        <ng-container *ngIf="selectedKey()">
           <mat-tab-group>
             <mat-tab [label]="'JUICELAB_TAB_BRIEFING' | translate">
               <juicelab-briefing-panel
-                [challengeKey]="selectedKey"
+                [challengeKey]="selectedKey()"
                 [challengeName]="selectedChallengeName()"
                 [challengeCategory]="selectedChallengeCategory()"
                 [challengeDifficulty]="selectedChallengeDifficulty()"
               ></juicelab-briefing-panel>
             </mat-tab>
             <mat-tab [label]="'JUICELAB_TAB_HINTS' | translate">
-              <juicelab-hints-panel [challengeKey]="selectedKey"></juicelab-hints-panel>
+              <juicelab-hints-panel [challengeKey]="selectedKey()"></juicelab-hints-panel>
             </mat-tab>
             <mat-tab [label]="'JUICELAB_TAB_AFTER' | translate">
               <juicelab-journal-form
-                [challengeKey]="selectedKey"
+                [challengeKey]="selectedKey()"
                 [challengeName]="selectedChallengeName()"
                 [challengeCategory]="selectedChallengeCategory()"
                 [challengeDifficulty]="selectedChallengeDifficulty()"
@@ -127,7 +127,7 @@ import { TranslateModule } from '@ngx-translate/core'
               ></juicelab-journal-form>
             </mat-tab>
             <mat-tab [label]="'JUICELAB_TAB_QUIZ' | translate">
-              <juicelab-quiz-form [challengeKey]="selectedKey"></juicelab-quiz-form>
+              <juicelab-quiz-form [challengeKey]="selectedKey()"></juicelab-quiz-form>
             </mat-tab>
           </mat-tab-group>
         </ng-container>
@@ -165,7 +165,8 @@ export class JuicelabPanelComponent implements OnDestroy {
   private readonly authSvc = inject(JuicelabAuthService)
   private readonly router = inject(Router)
 
-  selectedKey = ''
+  /** Reactive selection invalidates the name and metadata whenever ngModel changes. */
+  readonly selectedKey = signal('')
   readonly isAuthenticated = this.authSvc.isAuthenticated
   private authPoll: ReturnType<typeof setInterval> | null = null
 
@@ -196,13 +197,13 @@ export class JuicelabPanelComponent implements OnDestroy {
   readonly djs = computed(() => Object.keys(this.byDj()).map(Number).sort())
 
   readonly selectedName = computed(() => {
-    if (!this.selectedKey) return 'Choisir un challenge'
-    const c = this.challenges().find(x => x.key === this.selectedKey)
-    return c ? `DJ${c.demi_journee} - ${c.name_official}` : this.selectedKey
+    if (!this.selectedKey()) return 'Choisir un challenge'
+    const c = this.challenges().find(x => x.key === this.selectedKey())
+    return c ? `DJ${c.demi_journee} - ${c.name_official}` : this.selectedKey()
   })
 
   private readonly selectedMeta = computed(() =>
-    this.challenges().find(x => x.key === this.selectedKey),
+    this.challenges().find(x => x.key === this.selectedKey()),
   )
 
   readonly selectedChallengeName = computed(() => this.selectedMeta()?.name_official ?? '')

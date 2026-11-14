@@ -1,8 +1,8 @@
 diff --git a/config/default.yml b/config/default.yml
-index 96d6a0d96..9327ce093 100644
+index 3826eeb5ac510d1d6c9e602b9456249e1b8f906d..ce5e2736dd8e1972d12c079df64bdfd596fb5caa 100644
 --- a/config/default.yml
 +++ b/config/default.yml
-@@ -458,7 +458,10 @@ memories:
+@@ -1077,7 +1077,10 @@
      caption: 'Everything up and running!'
      user: bjoernOwasp
  ctf:
@@ -15,31 +15,31 @@ index 96d6a0d96..9327ce093 100644
    countryMapping: ~
    systemWideNotifications:
 diff --git a/frontend/package.json b/frontend/package.json
-index 5991bdabc..88fc70ffd 100644
+index 6d6e79a34b9141b4f8c21ea766733a929432d9bf..fefc064da2f923ecf246b0ea2745c2b1def09517 100644
 --- a/frontend/package.json
 +++ b/frontend/package.json
-@@ -45,6 +45,7 @@
-     "file-saver": "^2.0.2",
+@@ -50,6 +50,7 @@
+     "ethers": "^5.7.2",
      "flag-icons": "^6.9.2",
      "font-mfizz": "^2.4.1",
 +    "js-yaml": "^4.1.0",
-     "jwt-decode": "^2.2.0",
+     "jwt-decode": "^4.0.0",
      "lodash-es": "^4.17.21",
-     "material-icons": "^0.3.1",
+     "material-icons": "^1.13.14",
 @@ -70,6 +71,7 @@
-     "@types/file-saver": "^2.0.1",
-     "@types/jasmine": "~5.1.0",
-     "@types/jasminewd2": "^2.0.10",
+     "@angular/language-service": "^22.0.1",
+     "@eslint/js": "9.33.0",
+     "@types/express-serve-static-core": "^4.17.9",
 +    "@types/js-yaml": "^4.0.9",
      "@types/jwt-decode": "^2.2.1",
-     "@types/node": "^20.17.19",
+     "@types/node": "^26.0.1",
      "@types/socket.io-client": "^1.4.33",
 diff --git a/frontend/src/app/app.routing.ts b/frontend/src/app/app.routing.ts
-index d3508e8c3..d0df4d5ec 100644
+index d3fd73678df2ac65e7f26feb21d6c6b2db9c2797..2f1d6d93e98b36e82bf01eed8590d6c9fe6bc9bf 100644
 --- a/frontend/src/app/app.routing.ts
 +++ b/frontend/src/app/app.routing.ts
-@@ -59,6 +59,23 @@ const loadWeb3SandboxModule = async () => {
- }
+@@ -76,6 +76,23 @@
+ 
  // vuln-code-snippet start adminSectionChallenge scoreBoardChallenge web3SandboxChallenge
  const routes: Routes = [
 +  {
@@ -63,12 +63,12 @@ index d3508e8c3..d0df4d5ec 100644
      path: 'administration', // vuln-code-snippet vuln-line adminSectionChallenge
      component: AdministrationComponent, // vuln-code-snippet neutral-line adminSectionChallenge
 diff --git a/frontend/src/app/navbar/navbar.component.html b/frontend/src/app/navbar/navbar.component.html
-index 8d010e44b..9dc9ef3af 100644
+index 80ffb93a334e8722a6489240dda1edccb0e0384f..f752cc0b74a413b90b8f19debf0391013109c4ac 100644
 --- a/frontend/src/app/navbar/navbar.component.html
 +++ b/frontend/src/app/navbar/navbar.component.html
-@@ -112,6 +112,12 @@
-       </button>
-     }
+@@ -109,6 +109,12 @@
+       <span class="fa-layers-counter fa-layers-top-right fa-3x warn-notification">{{itemTotal}}</span>
+     </button>
  
 +    <button mat-icon-button routerLink="/juicelab" class="buttons nav-square-button"
 +      aria-label="Coach pedagogique JuiceLab"
@@ -80,10 +80,10 @@ index 8d010e44b..9dc9ef3af 100644
        aria-label="Language selection menu"
        matTooltip="{{ 'LANGUAGE_SEL_HINT' | translate }}" matTooltipPosition="below">
 diff --git a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html
-index 15436aae9..3cc22d249 100644
+index 878e856454a7fc2244f4247f8f395b3804b45cd1..1f52e7b445aaa0d0ec70db534bde2fe455a76846 100644
 --- a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html
 +++ b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.html
-@@ -16,6 +16,18 @@
+@@ -24,6 +24,18 @@
      }
    </div>
    <div class="badge-group">
@@ -100,10 +100,10 @@ index 15436aae9..3cc22d249 100644
 +      </button>
 +    }
      <!-- info text if the challenge is unavailable -->
-     @if (challenge.disabledEnv !== null && challenge.disabledEnv !== 'safetyMode') {
-       <button
+     @if (challenge().disabledEnv !== null && challenge().disabledEnv !== 'safetyMode') {
+     <button class="badge" [matTooltip]="'CHALLENGE_UNAVAILABLE' | translate:{ env: challenge().disabledEnv }">
 diff --git a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss
-index 66c25def3..3352bd0b7 100644
+index 1cac6b40b9251d5c2013dfc989ea7dbe6f4b70ec..869d16180cc0d869f30712913837c78c5decb0dc 100644
 --- a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss
 +++ b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.scss
 @@ -5,6 +5,35 @@
@@ -143,73 +143,76 @@ index 66c25def3..3352bd0b7 100644
    background-color: var(--theme-background-darker);
    border-radius: 2px;
 diff --git a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts
-index b7618d85e..a098d6204 100644
+index 3171b91041a54c8a037741a9420a0ab2f92d8ca8..98b52202853ba7c57e952d20f63d22dc0479b626 100644
 --- a/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts
 +++ b/frontend/src/app/score-board/components/challenge-card/challenge-card.component.ts
 @@ -1,4 +1,4 @@
--import { Component, Input, type OnInit, inject, type OnChanges, type SimpleChanges, ViewChild, HostBinding } from '@angular/core'
-+import { Component, Input, type OnInit, inject, type OnChanges, type SimpleChanges, ViewChild, HostBinding, signal } from '@angular/core'
+-import { Component, input, viewChild, inject, effect, ChangeDetectionStrategy } from '@angular/core'
++import { Component, input, viewChild, inject, effect, computed, signal, HostBinding, ChangeDetectionStrategy } from '@angular/core'
  import { EnrichedChallenge } from '../../types/EnrichedChallenge'
- import { Config } from 'src/app/Services/configuration.service'
+ import { Config } from '../../../../app/Services/configuration.service'
  import { TranslateModule } from '@ngx-translate/core'
-@@ -7,6 +7,9 @@ import { MatTooltip } from '@angular/material/tooltip'
+@@ -8,6 +8,9 @@
  import { NgClass } from '@angular/common'
  import { DifficultyStarsComponent } from '../difficulty-stars/difficulty-stars.component'
- import { SnackBarHelperService } from 'src/app/Services/snack-bar-helper.service'
+ import { SnackBarHelperService } from '../../../../app/Services/snack-bar-helper.service'
 +import { MatDialog } from '@angular/material/dialog'
-+import { JuicelabPackService } from 'src/app/juicelab-overlay/services/juicelab-pack.service'
-+import { JuicelabCoachDialogComponent } from 'src/app/juicelab-overlay/coach-dialog/coach-dialog.component'
++import { JuicelabPackService } from '../../../juicelab-overlay/services/juicelab-pack.service'
++import { JuicelabCoachDialogComponent } from '../../../juicelab-overlay/coach-dialog/coach-dialog.component'
  
  @Component({
-   selector: 'challenge-card',
-@@ -16,6 +19,14 @@ import { SnackBarHelperService } from 'src/app/Services/snack-bar-helper.service
+   changeDetection: ChangeDetectionStrategy.Eager,
+@@ -19,6 +22,33 @@
  })
- export class ChallengeCardComponent implements OnInit, OnChanges {
+ export class ChallengeCardComponent {
    private readonly snackBarHelperService = inject(SnackBarHelperService)
 +  private readonly dialog = inject(MatDialog)
 +  private readonly juicelabPackService = inject(JuicelabPackService)
-+  readonly isTdChallenge = signal(false)
++  private readonly tdKeys = signal<ReadonlySet<string>>(new Set())
++  readonly isTdChallenge = computed(() => this.tdKeys().has(this.challenge().key))
++
++  /** Open the JuiceLab coach for the card's current challenge. */
++  openCoach (): void {
++    const challenge = this.challenge()
++    this.dialog.open(JuicelabCoachDialogComponent, {
++      data: {
++        challengeKey: challenge.key,
++        challengeName: challenge.name,
++        challengeDescription: challenge.description,
++        challengeCategory: challenge.category,
++        challengeDifficulty: challenge.difficulty
++      },
++      width: '900px',
++      maxWidth: '95vw',
++      panelClass: 'juicelab-coach-dialog-panel',
++      autoFocus: false
++    })
++  }
 +
 +  @HostBinding('class.juicelab-td')
 +  get juicelabTdHostClass(): boolean {
 +    return this.isTdChallenge()
 +  }
  
-   @Input()
-   public challenge: EnrichedChallenge
-@@ -57,6 +68,27 @@ export class ChallengeCardComponent implements OnInit, OnChanges {
-     const { hasInstructions, startHackingInstructorFor } = await import('../../../../hacking-instructor')
-     this.hasInstructions = hasInstructions
-     this.startHackingInstructorFor = startHackingInstructorFor
-+    this.juicelabPackService.getTdKeySet().subscribe({
-+      next: (keys) => this.isTdChallenge.set(keys.has(this.challenge?.key)),
-+      error: () => this.isTdChallenge.set(false),
-+    })
-+  }
-+
-+  openCoach (): void {
-+    if (!this.challenge?.key) return
-+    this.dialog.open(JuicelabCoachDialogComponent, {
-+      data: {
-+        challengeKey: this.challenge.key,
-+        challengeName: this.challenge.name,
-+        challengeDescription: this.challenge.description,
-+        challengeCategory: this.challenge.category,
-+        challengeDifficulty: this.challenge.difficulty,
-+      },
-+      width: '900px',
-+      maxWidth: '95vw',
-+      panelClass: 'juicelab-coach-dialog-panel',
-+      autoFocus: false,
-+    })
-   }
+   readonly challenge = input.required<EnrichedChallenge>()
+   readonly repeatChallengeNotification = input<(challengeKey: string) => void>()
+@@ -42,6 +72,11 @@
+       this.startHackingInstructorFor = startHackingInstructorFor
+     })
  
-   ngOnChanges (changes: SimpleChanges): void {
++    this.juicelabPackService.getTdKeySet().subscribe({
++      next: keys => this.tdKeys.set(keys),
++      error: () => this.tdKeys.set(new Set())
++    })
++
+     effect(() => {
+       const challenge = this.challenge()
+       const lastUnlockedKey = this.lastUnlockedChallengeKey()
 diff --git a/frontend/src/app/sidenav/sidenav.component.html b/frontend/src/app/sidenav/sidenav.component.html
-index 70be2d20b..f048d613e 100644
+index 3ec98ec01b7137bcdc4071ad62239711b864919e..f693585640112d92a02f9663ecec3a80dfd7a671 100644
 --- a/frontend/src/app/sidenav/sidenav.component.html
 +++ b/frontend/src/app/sidenav/sidenav.component.html
-@@ -276,6 +276,15 @@
+@@ -284,6 +284,15 @@
        </span>
      </a>
    }
@@ -226,21 +229,21 @@ index 70be2d20b..f048d613e 100644
      <a mat-list-item (click)="startHackingInstructor()"
        aria-label="Launch beginners tutorial">
 diff --git a/frontend/src/app/sidenav/sidenav.component.ts b/frontend/src/app/sidenav/sidenav.component.ts
-index f272108d0..0b21bcdaa 100644
+index 2fa25ac3892628392046c77bc10c857f1dd42cab..2394f2635c629e0189460084ec8abcbfa5f06593 100644
 --- a/frontend/src/app/sidenav/sidenav.component.ts
 +++ b/frontend/src/app/sidenav/sidenav.component.ts
 @@ -5,7 +5,9 @@
  
  import { environment } from '../../environments/environment'
  import { ChallengeService } from '../Services/challenge.service'
--import { Component, EventEmitter, NgZone, type OnInit, Output, inject } from '@angular/core'
-+import { Component, EventEmitter, NgZone, type OnInit, Output, computed, inject } from '@angular/core'
+-import { Component, EventEmitter, NgZone, type OnInit, Output, inject, ChangeDetectionStrategy } from '@angular/core'
++import { Component, EventEmitter, NgZone, type OnInit, Output, computed, inject, ChangeDetectionStrategy } from '@angular/core'
 +import { JuicelabBridgeService } from '../juicelab-overlay/services/juicelab-bridge.service'
 +import { JuicelabStateService } from '../juicelab-overlay/services/juicelab-state.service'
  import { SocketIoService } from '../Services/socket-io.service'
  import { AdministrationService } from '../Services/administration.service'
  import { Router, RouterLink } from '@angular/router'
-@@ -39,6 +41,16 @@ export class SidenavComponent implements OnInit {
+@@ -40,6 +42,16 @@
    private readonly router = inject(Router)
    private readonly configurationService = inject(ConfigurationService)
    private readonly loginGuard = inject(LoginGuard)
@@ -257,7 +260,7 @@ index f272108d0..0b21bcdaa 100644
  
    public applicationName = 'OWASP Juice Shop'
    public showGitHubLink = true
-@@ -52,6 +64,10 @@ export class SidenavComponent implements OnInit {
+@@ -53,6 +65,10 @@
    @Output() public sidenavToggle = new EventEmitter()
  
    ngOnInit (): void {
@@ -269,15 +272,24 @@ index f272108d0..0b21bcdaa 100644
        next: (version: any) => {
          if (version) {
 diff --git a/frontend/src/assets/i18n/en.json b/frontend/src/assets/i18n/en.json
-index 17d5f5802..11c050dd7 100644
+index 4f19eed955ce8a04364707077584c083fc7ce5ec..c7741e1c78f80f0456c7773b9e38f2d9e3ea3955 100644
 --- a/frontend/src/assets/i18n/en.json
 +++ b/frontend/src/assets/i18n/en.json
-@@ -480,5 +480,74 @@
-   "NFT_MINT_TEXT_SUCCESS": "Minted Successfully",
-   "NFT_MINT_TEXT_AWAITING_APPROVAL": "Awaiting Approval",
-   "NFT_MINT_TEXT_CONFIRM": "Confirm Mint...",
--  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process..."
-+  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process...",
+@@ -471,7 +471,7 @@
+   "TAB_FIND_IT": "Find It",
+   "TAB_FIX_IT": "Fix It",
+   "DESCRIPTION_FIND_IT": "Click the line(s) containing the vulnerability.",
+-  "KEYBOARD_NAV_HINT": "Use \u2191\u2193 to navigate lines, Space to select",
++  "KEYBOARD_NAV_HINT": "Use ↑↓ to navigate lines, Space to select",
+   "DESCRIPTION_FIX_IT": "Select the code fix that would have prevented the vulnerability.",
+   "DESCRIPTION_FIX_IT_LOCKED": "Solve the \"Find It\" challenge above to unlock this section.",
+   "BTN_SUBMIT_VULNERABLE_LINES": "Submit line {{lines}} as vulnerable",
+@@ -545,5 +545,74 @@
+   "CHATBOT_DELETE_ALL_CONVERSATIONS": "Delete all conversations",
+   "CHATBOT_EDIT_MESSAGE": "Edit message",
+   "CHATBOT_CANCEL_EDIT": "Cancel",
+-  "CHATBOT_ERROR_LLM_UNREACHABLE": "Oops! Looks like our AI brain is taking a juice break. The AI endpoint is not configured or reachable. Please talk to the shop administrator to get it back on track!"
++  "CHATBOT_ERROR_LLM_UNREACHABLE": "Oops! Looks like our AI brain is taking a juice break. The AI endpoint is not configured or reachable. Please talk to the shop administrator to get it back on track!",
 +  "JUICELAB_BADGES_TITLE": "Badges",
 +  "JUICELAB_COACH_TITLE": "JuiceLab Coach",
 +  "JUICELAB_COACH_TOOLTIP": "JuiceLab Coach: hints, logbook, quiz, signed proof",
@@ -349,15 +361,15 @@ index 17d5f5802..11c050dd7 100644
 +  "JUICELAB_SCORE_FORMULA": "Formula: total = (challenge + quiz) / 2. challenge = 100 - sum of hint costs. quiz = average of Q1+Q2+Q3."
  }
 diff --git a/frontend/src/assets/i18n/fr_FR.json b/frontend/src/assets/i18n/fr_FR.json
-index 9966f7d71..a69c6ddd0 100644
+index a26cc23f314b1182ded348e2366e5895073102f4..dbafe31db9d155c567c6d4ca4359e7c4607cf310 100644
 --- a/frontend/src/assets/i18n/fr_FR.json
 +++ b/frontend/src/assets/i18n/fr_FR.json
-@@ -480,5 +480,74 @@
-   "NFT_MINT_TEXT_SUCCESS": "Minted Successfully",
-   "NFT_MINT_TEXT_AWAITING_APPROVAL": "En attente d’approbation",
-   "NFT_MINT_TEXT_CONFIRM": "Confirm Mint...",
--  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process..."
-+  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process...",
+@@ -545,5 +545,74 @@
+   "CHATBOT_DELETE_ALL_CONVERSATIONS": "Delete all conversations",
+   "CHATBOT_EDIT_MESSAGE": "Edit message",
+   "CHATBOT_CANCEL_EDIT": "Cancel",
+-  "CHATBOT_ERROR_LLM_UNREACHABLE": "Oops! Looks like our AI brain is taking a juice break. The AI endpoint is not configured or reachable. Please talk to the shop administrator to get it back on track!"
++  "CHATBOT_ERROR_LLM_UNREACHABLE": "Oops! Looks like our AI brain is taking a juice break. The AI endpoint is not configured or reachable. Please talk to the shop administrator to get it back on track!",
 +  "JUICELAB_BADGES_TITLE": "Badges",
 +  "JUICELAB_COACH_TITLE": "Coach JuiceLab",
 +  "JUICELAB_COACH_TOOLTIP": "Coach JuiceLab : indices, journal, quiz, preuve signee",
@@ -429,7 +441,7 @@ index 9966f7d71..a69c6ddd0 100644
 +  "JUICELAB_SCORE_FORMULA": "Formule : total = (challenge + quiz) / 2. challenge = 100 - somme des couts d'indices. quiz = moyenne Q1+Q2+Q3."
  }
 diff --git a/ftp/acquisitions.md b/ftp/acquisitions.md
-index 0c76ae741..a94d8c63d 100644
+index 0c76ae74190e8b180f6c535a6a88a2ac121068c4..a94d8c63d7c2ae40ac30778b5c0f8a37168995ba 100644
 --- a/ftp/acquisitions.md
 +++ b/ftp/acquisitions.md
 @@ -2,18 +2,51 @@
@@ -499,10 +511,10 @@ index 0c76ae741..a94d8c63d 100644
 +*JuiceLab Holdings Ltd. internal document. Do not distribute.*
 \ No newline at end of file
 diff --git a/server.ts b/server.ts
-index b09ebf644..9af298a95 100644
+index d1d9a4cc9e9c88e422e88a6009d68506d7d4ca88..97f6661e872f26ca392f90dc04e4dbccb87674e4 100644
 --- a/server.ts
 +++ b/server.ts
-@@ -100,6 +100,7 @@ import { captchas, verifyCaptcha } from './routes/captcha'
+@@ -103,6 +103,7 @@
  import * as restoreProgress from './routes/restoreProgress'
  import { checkKeys, nftUnlocked } from './routes/checkKeys'
  import { retrieveLoggedInUser } from './routes/currentUser'
@@ -510,10 +522,15 @@ index b09ebf644..9af298a95 100644
  import authenticatedUsers from './routes/authenticatedUsers'
  import { securityQuestion } from './routes/securityQuestion'
  import { servePremiumContent } from './routes/premiumReward'
-@@ -596,6 +597,14 @@ restoreOverwrittenFilesWithOriginals().then(() => {
-   app.post('/rest/user/reset-password', resetPassword())
-   app.get('/rest/user/security-question', securityQuestion())
-   app.get('/rest/user/whoami', security.updateAuthenticatedUsers(), retrieveLoggedInUser())
+@@ -636,10 +637,18 @@
+   app.get('/rest/user/change-password', utils.asyncHandler(changePassword()))
+   app.post('/rest/user/reset-password', utils.asyncHandler(resetPassword()))
+   app.get('/rest/user/security-question', utils.asyncHandler(securityQuestion()))
+-  app.get('/rest/user/whoami', utils.asyncHandler(retrieveLoggedInUser()))
++  app.get('/rest/user/whoami', security.updateAuthenticatedUsers(), utils.asyncHandler(retrieveLoggedInUser()))
+   app.get('/rest/user/authentication-details', utils.asyncHandler(authenticatedUsers()))
+   app.get('/rest/products/search', utils.asyncHandler(searchProducts()))
+   app.get('/rest/basket/:id', utils.asyncHandler(retrieveBasket()))
 +
 +  /* JuiceLab phase B - server-side gating for hints / quiz / walkthroughs */
 +  app.use('/data/juicelab-private', juicelab.blockPrivateAssets())
@@ -522,19 +539,19 @@ index b09ebf644..9af298a95 100644
 +  app.post('/api/juicelab/quiz/score', security.updateAuthenticatedUsers(), juicelab.scoreQuiz())
 +  app.get('/api/juicelab/walkthrough', security.updateAuthenticatedUsers(), juicelab.getWalkthrough())
 +  app.get('/api/juicelab/admin/state', juicelab.getAdminState())
-   app.get('/rest/user/authentication-details', authenticatedUsers())
-   app.get('/rest/products/search', searchProducts())
-   app.get('/rest/basket/:id', retrieveBasket())
+   app.post('/rest/basket/:id/checkout', placeOrder())
+   app.put('/rest/basket/:id/coupon/:coupon', utils.asyncHandler(applyCoupon()))
+   app.get('/rest/admin/application-version', utils.asyncHandler(retrieveAppVersion()))
 diff --git a/frontend/src/assets/i18n/pt_BR.json b/frontend/src/assets/i18n/pt_BR.json
-index 02a451366..ce395c661 100644
+index ef356d892257e11828c5e067edea9971b571c9a2..56fdba8cec43fdbf318c1c407e259e2abb8ee3ab 100644
 --- a/frontend/src/assets/i18n/pt_BR.json
 +++ b/frontend/src/assets/i18n/pt_BR.json
-@@ -480,5 +480,74 @@
-   "NFT_MINT_TEXT_SUCCESS": "Minted Successfully",
-   "NFT_MINT_TEXT_AWAITING_APPROVAL": "Awaiting Approval",
-   "NFT_MINT_TEXT_CONFIRM": "Confirm Mint...",
--  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process..."
-+  "NFT_MINT_TEXT_IN_PROGRESS": "Mint in Process...",
+@@ -545,5 +545,74 @@
+   "CHATBOT_DELETE_ALL_CONVERSATIONS": "Delete all conversations",
+   "CHATBOT_EDIT_MESSAGE": "Edit message",
+   "CHATBOT_CANCEL_EDIT": "Cancel",
+-  "CHATBOT_ERROR_LLM_UNREACHABLE": "Oops! Looks like our AI brain is taking a juice break. The AI endpoint is not configured or reachable. Please talk to the shop administrator to get it back on track!"
++  "CHATBOT_ERROR_LLM_UNREACHABLE": "Oops! Looks like our AI brain is taking a juice break. The AI endpoint is not configured or reachable. Please talk to the shop administrator to get it back on track!",
 +  "JUICELAB_BADGES_TITLE": "Conquistas",
 +  "JUICELAB_COACH_TITLE": "JuiceLab Coach",
 +  "JUICELAB_COACH_TOOLTIP": "JuiceLab Coach: dicas, diário de bordo, quiz, prova assinada",
