@@ -61,63 +61,41 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Le challenge OWASP est documente
-      vague — la technique exacte depend de la version Juice
-      Shop. Methode generale : (1) grep le bundle JS pour
-      "callback=" ou "jsonp", (2) tester chaque endpoint
-      candidat avec ?callback=foo, (3) inspecter la response
-      pour voir si JSONP est supporte, (4) construire une
-      page HTML attacker qui include <script src="endpoint?
-      callback=stealEmails"> et stealEmails extrait les
-      donnees.
+      L'endpoint /rest/user/whoami renvoie normalement du JSON. Mais
+      s'il recoit un parametre callback, il repond en JSONP
+      (res.jsonp) : la reponse devient du JavaScript executable
+      cross-origin, ce qui permet a une page tierce de lire ton email.
+      C'est la fuite (routes/currentUser.ts).
     text_en: |
-      OWASP challenge is documented
-      vaguely — exact technique depends on Juice Shop
-      version. General method: (1) grep JS bundle for
-      "callback=" or "jsonp", (2) test each candidate
-      endpoint with ?callback=foo, (3) inspect response to
-      see if JSONP is supported, (4) build an attacker HTML
-      page including <script src="endpoint?callback=
-      stealEmails"> where stealEmails extracts data.
+      The /rest/user/whoami endpoint normally returns JSON. But if it
+      receives a callback parameter, it answers with JSONP (res.jsonp):
+      the response becomes executable cross-origin JavaScript, which
+      lets a third-party page read your email. That is the leak
+      (routes/currentUser.ts).
     pedagogical_intent: |
-      Spell the workflow + acknowledge version-dependency.
+      Reveal the JSONP callback leak on whoami.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Je ne peux pas garantir le
-      payload exact sans tester sur ton instance Juice Shop.
-      Workflow general :
-      1. Inspecte le bundle JS et les responses des
-         /rest/user/* endpoints.
-      2. Identifie quel endpoint supporte JSONP (callback=).
-      3. Construis une page HTML locale :
-         <script src="http://127.0.0.1:3000/<endpoint>?
-         callback=leak"></script>
-         <script>function leak(d) { console.log(d) }</script>
-      4. Ouvre cette page dans un onglet (different domain
-         simulated via file://).
-      5. Le serveur retourne les emails dans le callback,
-         qui les log.
-      Si bloque, fais OSINT sur "Juice Shop emailLeak
-      challenge JSONP" pour le payload version-specific.
-      Defense : (1) supprimer tous les endpoints JSONP (grep callback= dans les handlers). (2) Migrer vers CORS avec Access-Control-Allow-Origin en allowlist explicite (jamais "*" pour les endpoints avec donnees user). (3) Ajouter les headers COOP + COEP + CORP contre les XS-Leaks (OWASP XS-Leaks Cheat Sheet).
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : connecte,
+      appelle whoami avec un callback :
+        GET /rest/user/whoami?callback=leak   (jeton en cookie)
+      La reponse est du JSONP (leak({...email...})) et le challenge est
+      resolu (currentUser.ts:57). Exploitation reelle : une page
+      attaquante inclut <script src=".../rest/user/whoami?callback=leak">
+      et recupere l'email de la victime connectee.
+      Defense : ne pas exposer de donnees via JSONP ; utiliser CORS
+      avec une allowlist stricte et renvoyer uniquement du JSON.
     text_en: |
-      I can't guarantee exact payload
-      without testing on your Juice Shop instance. General
-      workflow:
-      1. Inspect JS bundle and /rest/user/* endpoint
-         responses.
-      2. Identify which endpoint supports JSONP (callback=).
-      3. Build a local HTML page:
-         <script src="http://127.0.0.1:3000/<endpoint>?
-         callback=leak"></script>
-         <script>function leak(d) { console.log(d) }</script>
-      4. Open this page in a tab (different domain simulated
-         via file://).
-      5. Server returns emails in callback, logging them.
-      If stuck, do OSINT on "Juice Shop emailLeak challenge
-      JSONP" for version-specific payload.
-      Defense: (1) decommission all JSONP endpoints (grep callback= in handlers). (2) Migrate to CORS with explicit Access-Control-Allow-Origin allowlist (never "*" for user-data endpoints). (3) Add COOP + COEP + CORP headers for defense in depth against XS-Leaks (OWASP XS-Leaks Cheat Sheet).
+      Solution (verified during testing on Juice Shop 19.2.1): logged
+      in, call whoami with a callback:
+        GET /rest/user/whoami?callback=leak   (token as cookie)
+      The response is JSONP (leak({...email...})) and the challenge
+      solves (currentUser.ts:57). Real exploitation: an attacker page
+      includes <script src=".../rest/user/whoami?callback=leak"> and
+      reads the logged-in victim's email.
+      Defense: do not expose data via JSONP; use CORS with a strict
+      allowlist and return JSON only.
     pedagogical_intent: |
-      Quasi-solution : workflow + version-dependency caveat.
+      Full verified solution: exact JSONP payload, defense.

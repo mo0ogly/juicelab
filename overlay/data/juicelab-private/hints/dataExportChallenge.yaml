@@ -71,62 +71,57 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Strategie de collision : prendre un email cible (ex
-      bender@juice-sh.op), calculer sa deformation
-      (b*nd*r@j**c*-sh.*p), et trouver un email valide a
-      register qui donne la meme deformation. Exemples :
-      "bonder@juice-sh.op", "binder@juice-sh.op",
-      "bunder@juice-sh.op" — tous ont la meme structure de
-      voyelles. Register un de ceux-la, login, click Data
-      Export. Tu obtiens les orders de Bender.
+      L'export GDPR (/rest/user/data-export) inclut tes commandes. Or
+      chaque numero de commande est prefixe par les 4 premiers
+      caracteres du hash de l'email AU MOMENT de la commande. Le serveur
+      marque le challenge resolu des qu'une commande exportee a un
+      prefixe DIFFERENT du hash de ton email COURANT
+      (routes/dataExport.ts). Autrement dit : il faut que l'email de
+      reference ait change entre la commande et l'export.
     text_en: |
-      Collision strategy: take a target email (e.g.
-      bender@juice-sh.op), compute its deformation
-      (b*nd*r@j**c*-sh.*p), and find a valid email to
-      register yielding same deformation. Examples:
-      "bonder@juice-sh.op", "binder@juice-sh.op",
-      "bunder@juice-sh.op" — all share vowel structure.
-      Register one, login, click Data Export. You get
-      Bender's orders.
+      The GDPR export (/rest/user/data-export) includes your orders. But
+      each order number is prefixed with the first 4 characters of the
+      email hash AT ORDER TIME. The server marks the challenge solved as
+      soon as an exported order has a prefix DIFFERENT from your CURRENT
+      email hash (routes/dataExport.ts). In other words: the reference
+      email must have changed between the order and the export.
     pedagogical_intent: |
-      Spell collision strategy + concrete example.
+      Reveal the real condition: order prefix vs current email hash.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Identifie une victime active (order). Bender, Jim,
-         Amy sont des candidats.
-      2. Calcule la deformation : remplace voyelles par '*'.
-         "bender@juice-sh.op" -> "b*nd*r@j**c*-sh.*p"
-      3. Choisis un email VALIDE qui collision : remplace les
-         voyelles de bender par d'autres voyelles.
-         "binder@juice-sh.op" est libre, valide, et a la
-         meme deformation.
-      4. Register : POST /api/Users avec l'email collision.
-      5. Login avec ce nouveau compte.
-      6. Va sur Account > Privacy & Security > Data Export.
-      7. Click le bouton, telecharge le fichier. Il contient
-         les orders de Bender en plus des tiens (vides).
-      8. Le challenge se valide automatiquement.
-      Source : verifie via grep dans routes/dataExport.ts.
-      Defense : (1) query les orders par user.id (cle primaire du JWT), jamais par email transforme. (2) Ne jamais utiliser des transformations lossy comme cle de filtre (CWE-639). (3) Redaction de l'email pour l'affichage uniquement, jamais pour le filtrage.
+      Marche a suivre (mecanisme verifie dans le code ; l'export exige
+      de resoudre le captcha image, non rejoue de bout en bout) :
+      1. Avec un compte, passe une commande (son numero est prefixe par
+         le hash de ton email actuel).
+      2. Change l'email de ton compte (profil / PUT /api/Users/<id>),
+         donc le hash de reference change.
+      3. Lance l'export : POST /rest/user/data-export (resous le captcha
+         image demande). L'export contient toujours la commande avec
+         l'ancien prefixe, different du hash du nouvel email -> le
+         challenge se resout (dataExport.ts).
+      Variante : enregistrer un email qui entre en collision de hash
+      (4 car.) avec une victime. Le point : "voler des donnees sans
+      injection" via une incoherence de hachage.
+      Defense : lier les donnees a un identifiant stable (userId), pas a
+      un hash d'email mutable, et cloisonner strictement l'export par
+      utilisateur.
     text_en: |
-      Complete workflow:
-      1. Identify an active victim (with orders). Bender,
-         Jim, Amy are candidates.
-      2. Compute deformation: replace vowels with '*'.
-         "bender@juice-sh.op" -> "b*nd*r@j**c*-sh.*p"
-      3. Pick a VALID email that collides: replace bender's
-         vowels with others. "binder@juice-sh.op" is free,
-         valid, same deformation.
-      4. Register: POST /api/Users with collision email.
-      5. Login with new account.
-      6. Go to Account > Privacy & Security > Data Export.
-      7. Click button, download file. Contains Bender's
-         orders plus yours (empty).
-      8. Challenge auto-solves.
-      Source: verified via grep in routes/dataExport.ts.
-      Defense: (1) query orders by user.id (primary key from JWT), never by transformed email. (2) Never use lossy transformations as query keys (CWE-639 Authorization Bypass Through User-Controlled Key). (3) Email redaction for display only, never for filtering.
+      Procedure (mechanism verified in the code; the export requires
+      solving the image captcha, not replayed end-to-end):
+      1. With an account, place an order (its number is prefixed with
+         your current email hash).
+      2. Change your account email (profile / PUT /api/Users/<id>), so
+         the reference hash changes.
+      3. Run the export: POST /rest/user/data-export (solve the image
+         captcha it asks for). The export still contains the order with
+         the old prefix, different from the new email's hash -> the
+         challenge solves (dataExport.ts).
+      Variant: register an email that hash-collides (4 chars) with a
+      victim. The point: "steal data without injection" via a hashing
+      inconsistency.
+      Defense: tie data to a stable identifier (userId), not a mutable
+      email hash, and strictly scope the export per user.
     pedagogical_intent: |
-      Quasi-solution : full 8-step workflow.
+      Full solution: real mechanism, captcha caveat, defense.

@@ -67,59 +67,45 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Une fois le pastebin trouve avec les ingredients
-      dangereux du produit, va sur Customer Feedback ou
-      Contact (selon la version Juice Shop, l'endpoint est
-      /#/contact). Dans ton message, mentionne le nom du
-      produit ET les ingredients exacts du pastebin. Le
-      serveur valide automatiquement quand le message contient
-      les keywords cibles.
+      Le produit concerne est "Rippertuer Special Juice" (un produit
+      retire, visible via la SQLi de recherche). Deux de ses
+      ingredients ont fuite sur un pastebin et sont les mots-cles
+      recherches par le serveur : hueteroneel et eurogium edule. La
+      validation exige que le message contienne LES DEUX (Op.and).
     text_en: |
-      Once you find the pastebin with dangerous ingredients,
-      go to Customer Feedback or Contact (depending on Juice
-      Shop version, endpoint is /#/contact). In your
-      message, mention product name AND exact ingredients
-      from pastebin. Server auto-validates when message
-      contains target keywords.
+      The product involved is "Rippertuer Special Juice" (a removed
+      product, visible via the search SQLi). Two of its ingredients
+      leaked on a pastebin and are the keywords the server looks for:
+      hueteroneel and eurogium edule. Validation requires the message to
+      contain BOTH (Op.and).
     pedagogical_intent: |
-      Spell submission step.
+      Give the exact product and the two required keywords.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Resous christmasSpecialChallenge ou execute :
-         /rest/products/search?q=qwert')) OR (1=1)--
-         pour voir tous les produits soft-deleted.
-      2. Cherche le produit avec "unsafe" dans description ou
-         tag. Note son nom.
-      3. Google : "<nom produit> pastebin" ou cherche sur
-         pastebin.com. Trouve le pastebin avec les
-         ingredients.
-      4. Va sur /#/contact, redige un feedback :
-         "The product <name> contains dangerous ingredients
-         like <ingredient1>, <ingredient2>, ..."
-      5. Submit. Le challenge se valide automatiquement quand
-         le serveur detecte les keywords.
-      Source : kill chain composite documentee dans les hints
-      OWASP officiels (#1-5).
-      Defense : (1) prepared statements pour eliminer le vecteur SQLi de recon. (2) DLP monitoring : surveillance continue de Pastebin/GitHub pour le nom de l'entreprise, les noms de produits, les emails internes. (3) Incident response : notices de takedown + rotation des secrets compromis des detection (NIST SP 800-46).
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : soumets un
+      feedback (/#/contact) ou une reclamation (/#/complain) dont le
+      message contient les deux ingredients fuites :
+        "... hueteroneel ... eurogium edule ..."
+      Le serveur detecte les deux mots-cles et resout le challenge
+      (routes/verify.ts, dangerousIngredients, Op.and). Les ingredients
+      se trouvent par OSINT (pastebin lie au produit retire Rippertuer
+      Special Juice).
+      Defense : controler les fuites de donnees (DLP), ne pas publier
+      d'informations produit sensibles hors des canaux maitrises, et
+      surveiller les pastebins pour ses propres donnees.
     text_en: |
-      Complete workflow:
-      1. Solve christmasSpecialChallenge or run:
-         /rest/products/search?q=qwert')) OR (1=1)--
-         to see all soft-deleted products.
-      2. Find the product with "unsafe" in description or
-         tag. Note its name.
-      3. Google: "<product name> pastebin" or search on
-         pastebin.com. Find the pastebin with ingredients.
-      4. Go to /#/contact, write feedback:
-         "The product <name> contains dangerous ingredients
-         like <ingredient1>, <ingredient2>, ..."
-      5. Submit. Challenge auto-solves when server detects
-         keywords.
-      Source: composite kill chain documented in official
-      OWASP hints (#1-5).
-      Defense: (1) prepared statements to fix the SQLi recon vector. (2) DLP monitoring: continuous surveillance of Pastebin/GitHub for company name, product names, internal emails. (3) Incident response: takedown notices + rotation of compromised secrets once detected (NIST SP 800-46).
+      Solution (verified during testing on Juice Shop 19.2.1): submit a
+      feedback (/#/contact) or a complaint (/#/complain) whose message
+      contains both leaked ingredients:
+        "... hueteroneel ... eurogium edule ..."
+      The server detects both keywords and solves the challenge
+      (routes/verify.ts, dangerousIngredients, Op.and). The ingredients
+      are found by OSINT (a pastebin linked to the removed product
+      Rippertuer Special Juice).
+      Defense: enforce data-loss prevention (DLP), do not publish
+      sensitive product information outside controlled channels, and
+      monitor pastebins for your own data.
     pedagogical_intent: |
-      Quasi-solution : full 5-step kill chain.
+      Full verified solution: exact keywords, both-required condition.

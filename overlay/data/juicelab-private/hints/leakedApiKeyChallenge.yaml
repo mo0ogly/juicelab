@@ -66,60 +66,42 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Hint OWASP officiel #4 : "Find the place where the API
-      call happens — not in the web application — and then
-      look for the API key itself". Donc le SCRIPT
-      d'automation est ailleurs — souvent dans le repo Juice
-      Shop GitHub officiel mais dans un folder
-      automation/scripts/, ou dans un repo separe juice-shop-
-      automation. Cherche sur GitHub.
+      Hint OWASP : la cle n'est pas dans l'application web mais dans le
+      script d'automatisation qui appelle une API externe (le bot qui
+      poste des blagues). Ce code est public ; on y trouve une cle API
+      laissee en clair. Le challenge se resout en rapportant cette cle
+      exacte au shop (feedback /#/contact ou reclamation /#/complain).
     text_en: |
-      Official OWASP hint #4: "Find the place where the API
-      call happens — not in the web application — and then
-      look for the API key itself". So the automation SCRIPT
-      is elsewhere — often in the official Juice Shop GitHub
-      repo but in an automation/scripts/ folder, or in a
-      separate juice-shop-automation repo. Search on GitHub.
+      OWASP hint: the key is not in the web application but in the
+      automation script that calls an external API (the bot posting
+      jokes). That code is public; it contains an API key left in
+      cleartext. The challenge solves by reporting that exact key to the
+      shop (feedback /#/contact or complaint /#/complain).
     pedagogical_intent: |
-      Spell GitHub OSINT strategy.
+      Point at the leaked key in the public automation code.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow general (cle exacte a
-      trouver via OSINT actuel) :
-      1. Footer Juice Shop -> link vers Twitter / GitHub.
-      2. Twitter Juice Shop -> regarde les tweets reguliers
-         (typiquement dad jokes via icanhazdadjoke).
-      3. GitHub : repo bkimminich/juice-shop ou
-         juice-shop/juice-shop, cherche le folder
-         data/static/ ou un script bot.
-      4. Code source du bot : grep "API_KEY" ou "X-API-KEY".
-         La cle est typiquement hardcodee en clair.
-      5. Submit la cle dans /#/contact :
-         "I found a leaked API key in your social media bot:
-         <cle exacte>".
-      6. Le challenge se valide automatiquement.
-      Cle OWASP officielle change avec le temps — fais OSINT
-      actuel sur le repo public.
-      Defense : (1) ne jamais hardcoder les cles API dans le code source — utiliser des variables d'environnement ou un secret manager (HashiCorp Vault, AWS Secrets Manager). (2) Activer les alertes GitHub secret scanning sur le repo. (3) Rotater immediatement toute cle trouvee dans des commits publics, puis auditer l'historique pour d'autres leaks.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : soumets la
+      cle exacte dans un feedback ou une reclamation :
+        6PPi37DBxP4lDwlriuaxP15HaDJpsUXY5TspVmie
+      Le serveur la detecte et resout le challenge (routes/verify.ts,
+      checkPatternInFeedbackAndComplaints). L'OSINT consiste a retrouver
+      cette cle dans le code public du bot (lien depuis le pied de page
+      / comptes sociaux du shop vers le depot).
+      Defense : ne jamais committer de cle API ; utiliser des secrets
+      d'environnement, un scan de secrets en CI, et rotater toute cle
+      exposee.
     text_en: |
-      General workflow (exact key to
-      find via current OSINT):
-      1. Juice Shop footer -> link to Twitter / GitHub.
-      2. Twitter Juice Shop -> look at regular tweets
-         (typically dad jokes via icanhazdadjoke).
-      3. GitHub: bkimminich/juice-shop or juice-shop/
-         juice-shop repo, look in data/static/ folder or a
-         bot script.
-      4. Bot source code: grep "API_KEY" or "X-API-KEY".
-         Key is typically hardcoded in cleartext.
-      5. Submit key in /#/contact:
-         "I found a leaked API key in your social media bot:
-         <exact key>".
-      6. Challenge auto-solves.
-      Official OWASP key changes over time — do current
-      OSINT on the public repo.
-      Defense: (1) never hardcode API keys in source code — use environment variables or a secret manager (HashiCorp Vault, AWS Secrets Manager). (2) Enable GitHub secret scanning alerts on the repo. (3) Rotate any key found in public commits immediately, then audit commit history for other leaks.
+      Solution (verified during testing on Juice Shop 19.2.1): submit
+      the exact key in a feedback or complaint:
+        6PPi37DBxP4lDwlriuaxP15HaDJpsUXY5TspVmie
+      The server detects it and solves the challenge (routes/verify.ts,
+      checkPatternInFeedbackAndComplaints). OSINT means finding this key
+      in the bot's public code (linked from the shop's footer / social
+      accounts to the repository).
+      Defense: never commit an API key; use environment secrets, secret
+      scanning in CI, and rotate any exposed key.
     pedagogical_intent: |
-      Quasi-solution : workflow + acknowledge OSINT decay.
+      Full verified solution: exact key, submission channel, defense.

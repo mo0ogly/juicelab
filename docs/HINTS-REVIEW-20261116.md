@@ -171,8 +171,8 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | xxeFileDisclosureChallenge | XXE | 3 | DONE (lot 15) | correct (non modifie) ; upload XML XXE file:///etc/passwd verifie live (fileUpload.ts:85) |
 | accessLogDisclosureChallenge | Observability Failures | 4 | DONE (lot 15) | correct (non modifie) ; GET /support/logs/access.log verifie live (verify.ts:72) |
 | christmasSpecialChallenge | Injection | 4 | DONE (lot 14) | correct (non modifie) ; SQLi search OR true-- (soft-delete), produit id 10 + checkout verifie live |
-| dataExportChallenge | Sensitive Data Exposure | 4 | TODO |  |
-| dlpPastebinDataLeakChallenge | Sensitive Data Exposure | 4 | TODO |  |
+| dataExportChallenge | Sensitive Data Exposure | 4 | DONE (lot 19) | N4-N5 : mecanisme reel (prefixe orderId = hash email au moment commande vs hash email courant) ; commande + changement email + export ; captcha image, non rejoue de bout en bout |
+| dlpPastebinDataLeakChallenge | Sensitive Data Exposure | 4 | DONE (lot 19) | N4-N5 : mots-cles exacts hueteroneel + eurogium edule (produit Rippertuer), Op.and ; soumission verifiee live |
 | easterEggLevelOneChallenge | Broken Access Control | 4 | TODO |  |
 | easterEggLevelTwoChallenge | Cryptographic Issues | 4 | DONE (lot 12) | N4-N5 : etape Base64 manquante avant ROT13 (eastere.gg est base64 puis rot13) ; URL GET verifiee live |
 | ephemeralAccountantChallenge | Injection | 4 | DONE (lot 14) | N4-N5 : role FAUX (accountant -> accounting), 9 col -> 13, totpSecret vide sinon 2FA ; UNION 13 col verifie live |
@@ -190,7 +190,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | persistedXssFeedbackChallenge | XSS | 4 | DONE (lot 3) | N2-N5 : pre-requis file-disclosure recadre (pedagogique, pas technique), sanitize-html 1.4.2, payload <<iframe>... verifie (produit la chaine exacte) ; validation = chaine stockee (feedback.ts) |
 | redirectChallenge | Unvalidated Redirects | 4 | DONE (lot 15) | N4-N5 : chemin obsolete (bkimminich -> juice-shop/juice-shop) ; faille includes(), payload attacker.com?x=<allowlist> verifie live |
 | resetPasswordBenderChallenge | Broken Authentication | 4 | DONE (lot 6) | N3-N5 : question exacte (Company you first work for), reponse exacte Stop'n'Drop (orthographe) ; source resetPassword.ts:59 ; question verifiee live |
-| resetPasswordUvoginChallenge | Sensitive Data Exposure | 4 | TODO |  |
+| resetPasswordUvoginChallenge | Sensitive Data Exposure | 4 | DONE (lot 19) | N4-N5 : question corrigee (anime -> Your favorite movie Q12), reponse Silence of the Lambs (resetPassword.ts:63) ; reset non rejoue |
 | typosquattingNpmChallenge | Vulnerable Components | 4 | DONE (lot 11) | correct (non modifie) ; epilogue-js via complaint verifie live |
 | unionSqlInjectionChallenge | Injection | 4 | DONE (lot 5) | correct ; payload UNION ... FROM Users (9 colonnes) verifie live (emails exfiltres) ; non modifie |
 | usernameXssChallenge | XSS | 4 | DONE (lot 7) | N2-N5 : mecanisme FAUX (username=nonce -> CSP injectee via Image URL profileImage + sanitizeLegacy regex) ; payloads du test cypress officiel, bypass regex verifie hors ligne ; disabledEnv Docker |
@@ -199,11 +199,11 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | xssBonusChallenge | XSS | 1 | DONE (lot 1) | N5 : mecanisme de validation corrige (websocket verifyLocalXssChallenge) + defense |
 | changePasswordBenderChallenge | Broken Authentication | 5 | DONE (lot 13) | correct ; GET change-password?new=slurmCl4ssic&repeat=slurmCl4ssic SANS current (changePassword.ts:53) verifie live |
 | dlpPasswordSprayingChallenge | Observability Failures | 5 | DONE (lot 16) | N5 blinde ; vraie source = fuite access.log (pas spraying), J12934@ / mot de passe exact verifie live |
-| emailLeakChallenge | Sensitive Data Exposure | 5 | TODO |  |
+| emailLeakChallenge | Sensitive Data Exposure | 5 | DONE (lot 19) | N4-N5 : vrai mecanisme JSONP (whoami?callback=, currentUser.ts:57) ; verifie live |
 | extraLanguageChallenge | Broken Anti Automation | 5 | TODO |  |
 | jwtUnsignedChallenge | Vulnerable Components | 5 | DONE (lot 11) | N4-N5 : exp lointain manquant (verif echoue sans), livraison via Authorization/localStorage ; forge alg=none jwtn3d@ verifie live |
 | killChatbotChallenge | Vulnerable Components | 5 | DONE (lot 17) | N4-N5 : vecteur FAUX (template throw -> injection code dans username du profil, payload test cypress) ; code-confirme |
-| leakedApiKeyChallenge | Sensitive Data Exposure | 5 | TODO |  |
+| leakedApiKeyChallenge | Sensitive Data Exposure | 5 | DONE (lot 19) | N4-N5 : cle exacte 6PPi37DBxP4lDwlriuaxP15HaDJpsUXY5TspVmie via feedback/complaint ; verifie live |
 | lfrChallenge | Vulnerable Components | 5 | DONE (lot 17) | N4-N5 : moteur hbs, payload reel layout=../package.json + cookie (pas header), package.json faux ; verifie live (dataErasure.ts) |
 | noSqlOrdersChallenge | Injection | 5 | DONE (lot 14) | N4-N5 : objet $ne FAUX -> injection JS dans la chaine $where ; verifie live (trackOrder.ts:20) |
 | rceChallenge | Insecure Deserialization | 5 | DONE (lot 17) | N4-N5 : endpoint corrige (/api/b2b -> /b2b/v2/orders), while(true){} -> Infinite loop detected ; verifie live (b2bOrder.ts:31) |
