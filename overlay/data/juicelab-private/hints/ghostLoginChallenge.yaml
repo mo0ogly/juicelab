@@ -75,78 +75,51 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Pre-requis materiel :
-      1. Le hash bcrypt de Chris (via SQLi exfil).
-      2. Le password en clair via hashcat (-m 3200, rockyou
-         dict). Pour difficulty-3, le password est
-         typiquement faible (admin / 123456 / chris pattern).
-      3. L'email de Chris (`chris.pike@juice-sh.op` est
-         souvent le pattern pour pop-culture chars dans
-         Juice Shop ; verifie via SQLi).
-      Verification serveur (login.ts:73) : `user.data.id
-      === users.chris.id`. Donc tout ce qui matche
-      l'identite Chris en login = solve auto.
+      Chris est un compte SUPPRIME (son deletedAt est renseigne). La
+      requete de login ajoute "AND deletedAt IS NULL", donc un login
+      normal echoue meme avec le bon mot de passe : c'est un
+      "fantome". Mais c'est exactement la meme injection que pour les
+      autres logins : en commentant la fin de la requete, tu neutralises
+      aussi le filtre deletedAt. Il te faut l'email de Chris.
     text_en: |
-      Material prerequisites:
-      1. Chris's bcrypt hash (via SQLi exfiltration).
-      2. Cleartext password via hashcat (-m 3200, rockyou
-         dict). For difficulty-3, password is typically
-         weak (admin / 123456 / chris pattern).
-      3. Chris's email (`chris.pike@juice-sh.op` often
-         pattern for pop-culture chars in Juice Shop;
-         verify via SQLi).
-      Server verification (login.ts:73): `user.data.id
-      === users.chris.id`. So anything matching Chris
-      identity in login = auto solve.
+      Chris is a DELETED account (its deletedAt is set). The login
+      query appends "AND deletedAt IS NULL", so a normal login fails
+      even with the right password: a "ghost". But it is the very same
+      injection as the other logins: by commenting out the end of the
+      query, you also neutralize the deletedAt filter. You need Chris's
+      email.
     pedagogical_intent: |
-      Spell material prerequisites + solve check.
+      Correct the method: SQLi comment also bypasses the deletedAt filter.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Resoudre exposedCredentialsChallenge ou
-         unionSqlInjectionChallenge prealablement.
-      2. Sur /#/forgot-password ou via SQLi, trouver
-         l'email de Chris (chris.pike@juice-sh.op pattern).
-      3. SQLi UNION SELECT id, email, password, deletedAt
-         FROM Users : tu vois Chris avec deletedAt non-null
-         et un hash bcrypt.
-      4. Crack le hash : hashcat -m 3200 chris.hash
-         rockyou.txt -> password en clair.
-      5. /#/login avec chris.pike@juice-sh.op + cracked
-         password.
-      6. Login succede car le serveur ne filtre pas
-         deletedAt -> challenge solve auto.
-      Source canonique : routes/login.ts:73 (solve
-      condition) + Sequelize paranoid mode docs +
-      cheatsheetseries.owasp.org User Privacy Protection.
-      Defense canonique : (a) Sequelize paranoid: true par
-      defaut + filtre deletedAt obligatoire dans login,
-      (b) hard-delete + anonymization apres RTBF, (c)
-      retention policy + audit log GDPR.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : l'email de
+      Chris est chris.pike@juice-sh.op (visible via une SQLi UNION sur
+      les Users, challenge Database Schema / User Credentials). Dans le
+      champ email du login, saisis :
+        chris.pike@juice-sh.op'--
+      mot de passe quelconque, puis Login. La requete devient
+      "... email='chris.pike@juice-sh.op'-- AND password=... AND
+      deletedAt IS NULL" : tout est commente apres l'email, le filtre
+      deletedAt disparait et tu es connecte en tant que le compte
+      supprime. Le challenge est resolu (login.ts:73, id de Chris).
+      Defense : requetes parametrees (plus d'injection), et filtrer les
+      comptes supprimes dans une clause que l'entree ne peut pas
+      contourner (idealement au niveau applicatif, pas par concatenation).
     text_en: |
-      Full workflow:
-      1. Solve exposedCredentialsChallenge or
-         unionSqlInjectionChallenge first.
-      2. On /#/forgot-password or via SQLi, find Chris's
-         email (chris.pike@juice-sh.op pattern).
-      3. SQLi UNION SELECT id, email, password, deletedAt
-         FROM Users: you see Chris with non-null deletedAt
-         and bcrypt hash.
-      4. Crack hash: hashcat -m 3200 chris.hash
-         rockyou.txt -> cleartext password.
-      5. /#/login with chris.pike@juice-sh.op + cracked
-         password.
-      6. Login succeeds because server doesn't filter
-         deletedAt -> challenge auto-solves.
-      Canonical source: routes/login.ts:73 (solve
-      condition) + Sequelize paranoid mode docs +
-      cheatsheetseries.owasp.org User Privacy
-      Protection.
-      Canonical defense: (a) Sequelize paranoid: true by
-      default + mandatory deletedAt filter in login, (b)
-      hard-delete + anonymization after RTBF, (c)
-      retention policy + GDPR audit log.
+      Solution (verified during testing on Juice Shop 19.2.1): Chris's
+      email is chris.pike@juice-sh.op (visible via a UNION SQLi on the
+      Users, Database Schema / User Credentials challenge). In the login
+      email field, enter:
+        chris.pike@juice-sh.op'--
+      any password, then Login. The query becomes
+      "... email='chris.pike@juice-sh.op'-- AND password=... AND
+      deletedAt IS NULL": everything after the email is commented out,
+      the deletedAt filter disappears and you are logged in as the
+      deleted account. The challenge is solved (login.ts:73, Chris's id).
+      Defense: parameterized queries (no more injection), and filter
+      deleted accounts with a clause the input cannot bypass (ideally
+      at the application level, not by concatenation).
     pedagogical_intent: |
-      Quasi-solution : workflow + defense canonique.
+      Full solution: verified SQLi payload, ghost mechanism, defense.

@@ -105,6 +105,11 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   premiumPaywall (AES invente -> obscurite), nftUnlock (seed dans un avis
   seede -> derivation cle), easterEgg2 (base64 avant rot13). Effets de
   bord : 1 complaint, 1 commande a -80%, submitKey.
+  Lot 13 (Broken Authentication) : weakPassword/oauth/changePasswordBender
+  corrects (verifies live). Corrections : ghostLogin (hashcat -> SQLi sur
+  le compte supprime chris) et 2FA (hashcat sur mdp fort -> vrai defaut =
+  totpSecret en clair, flux 2FA rejoue live). Effets de bord : logins
+  ghost/bender, mdp Bender change (slurmCl4ssic), 2FA wurstbrot resolu.
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -134,7 +139,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | loginRapperChallenge | Sensitive Data Exposure | 2 | TODO |  |
 | nftUnlockChallenge | Sensitive Data Exposure | 2 | DONE (lot 12) | N4-N5 : seed vague -> seed BIP39 dans un avis seede, derivation cle privee + POST /rest/web3/submitKey verifie live |
 | securityPolicyChallenge | Miscellaneous | 2 | TODO |  |
-| weakPasswordChallenge | Broken Authentication | 2 | TODO |  |
+| weakPasswordChallenge | Broken Authentication | 2 | DONE (lot 13) | correct (non modifie) ; admin@/admin123 verifie live (login.ts:60) |
 | weirdCryptoChallenge | Cryptographic Issues | 2 | DONE (lot 12) | correct (non modifie) ; base64 via complaint verifie live (verify.ts:254) |
 | loginAdminChallenge | Injection | 2 | DONE (lot 5) | correct ; payload ' OR true-- verifie live (retourne admin), solve = id admin (login.ts:70) ; non modifie |
 | adminSectionChallenge | Broken Access Control | 2 | DONE (lot 2) | N2-N5 : garde AdminGuard cote client (jwtDecode sans signature), validation = image 19px.png (verify.ts:65), 3 familles de contournement ; voie deduite du code, non rejouee (Chrome) |
@@ -148,7 +153,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | forgedFeedbackChallenge | Broken Access Control | 3 | DONE (lot 9) | correct (non modifie) ; POST /api/Feedbacks UserId!=moi verifie live (solveIf avant captcha, verify.ts:29) |
 | forgedReviewChallenge | Broken Access Control | 3 | DONE (lot 9) | correct ; PUT /rest/products/:id/reviews author=autre (createProductReviews.ts:17) verifie live + PATCH edit avis d autrui (updateProductReviews.ts:24) code-confirme |
 | freeDeluxeChallenge | Improper Input Validation | 3 | DONE (lot 3) | N2-N5 : UserId du corps ecrase par appendUserId (trompeur), pre-requis role customer ; solve = 3e valeur de paymentMode (deluxe.ts) ; teste (paymentMode:none) |
-| ghostLoginChallenge | Broken Authentication | 3 | TODO |  |
+| ghostLoginChallenge | Broken Authentication | 3 | DONE (lot 13) | N4-N5 : hashcat invente -> SQLi sur compte supprime chris (deletedAt contourne par le commentaire) ; chris.pike@juice-sh.op verifie live |
 | loginAmyChallenge | Sensitive Data Exposure | 3 | TODO |  |
 | loginBenderChallenge | Injection | 3 | DONE (lot 5) | N4-N5 : requete exacte (table Users + AND deletedAt IS NULL), citation ligne corrigee (loginBender.ts:101) ; payload verifie live |
 | loginJimChallenge | Injection | 3 | DONE (lot 5) | N3-N5 : email jim@juice-sh.op visible dans les avis produit (verifie served), citations fausses corrigees (:90, pas :99-101) ; payload verifie live |
@@ -180,7 +185,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | noSqlCommandChallenge | Injection | 4 | DONE (lot 1) | N2,N4,N5 reecrits : endpoint et mecanisme faux (POST objet -> GET path, plafond 2000 ms, duree > 2000 ms) ; payload sleep(200) teste |
 | noSqlReviewsChallenge | Injection | 4 | TODO |  |
 | nullByteChallenge | Improper Input Validation | 4 | DONE (lot 10) | correct (non modifie) ; null-byte sur encrypt.pyc / auto-solve via les autres defis /ftp (fileServer.ts:46) |
-| oauthUserPasswordChallenge | Broken Authentication | 4 | TODO |  |
+| oauthUserPasswordChallenge | Broken Authentication | 4 | DONE (lot 13) | correct (non modifie) ; bjoern.kimminich@gmail.com / base64(reverse email) verifie live (login.ts:65) |
 | persistedXssFeedbackChallenge | XSS | 4 | DONE (lot 3) | N2-N5 : pre-requis file-disclosure recadre (pedagogique, pas technique), sanitize-html 1.4.2, payload <<iframe>... verifie (produit la chaine exacte) ; validation = chaine stockee (feedback.ts) |
 | redirectChallenge | Unvalidated Redirects | 4 | TODO |  |
 | resetPasswordBenderChallenge | Broken Authentication | 4 | DONE (lot 6) | N3-N5 : question exacte (Company you first work for), reponse exacte Stop'n'Drop (orthographe) ; source resetPassword.ts:59 ; question verifiee live |
@@ -191,7 +196,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | localXssChallenge | XSS | 1 | DONE (lot 7) | correct (non modifie) ; payload iframe dans le champ de recherche, solve websocket (registerWebsocketEvents.ts:42) |
 | reflectedXssChallenge | XSS | 2 | DONE (lot 7) | N2-N5 : route /#/track-result?id=, sink bypassSecurityTrustHtml, solve trackOrder.ts ; ajout note disabledEnv Docker/Heroku/Gitpod |
 | xssBonusChallenge | XSS | 1 | DONE (lot 1) | N5 : mecanisme de validation corrige (websocket verifyLocalXssChallenge) + defense |
-| changePasswordBenderChallenge | Broken Authentication | 5 | TODO |  |
+| changePasswordBenderChallenge | Broken Authentication | 5 | DONE (lot 13) | correct ; GET change-password?new=slurmCl4ssic&repeat=slurmCl4ssic SANS current (changePassword.ts:53) verifie live |
 | dlpPasswordSprayingChallenge | Observability Failures | 5 | TODO |  |
 | emailLeakChallenge | Sensitive Data Exposure | 5 | TODO |  |
 | extraLanguageChallenge | Broken Anti Automation | 5 | TODO |  |
@@ -207,7 +212,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | supplyChainAttackChallenge | Vulnerable Components | 5 | TODO |  |
 | svgInjectionChallenge | Security Misconfiguration | 5 | TODO |  |
 | tokenSaleChallenge | Security through Obscurity | 5 | TODO |  |
-| twoFactorAuthUnsafeSecretStorageChallenge | Broken Authentication | 5 | TODO |  |
+| twoFactorAuthUnsafeSecretStorageChallenge | Broken Authentication | 5 | DONE (lot 13) | N4-N5 : hashcat sur mdp fort retire -> vrai defaut = totpSecret en clair (users.yml), exfil SQLi + TOTP + /rest/2fa/verify verifie live (2fa.ts:44) |
 | typosquattingAngularChallenge | Vulnerable Components | 5 | DONE (lot 11) | correct (non modifie) ; ngy-cookie via complaint verifie live |
 | xxeDosChallenge | XXE | 5 | TODO |  |
 | yamlBombChallenge | Insecure Deserialization | 5 | TODO |  |
