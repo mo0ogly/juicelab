@@ -61,49 +61,61 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Le serveur n'a pas de check d'ownership sur le BasketId du
-      body. Si tu envoies un BasketId qui n'est pas le tien
-      (typiquement les bids 1-3 appartiennent aux users seedes
-      admin/jim/bender), le serveur cree quand meme le BasketItem
-      avec ce BasketId. Donc il ajoute le produit au basket de
-      l'autre user. Workflow attaque : intercepter la requete
-      legitime (Burp ou simplement re-emit via fetch console),
-      changer BasketId, re-emit.
+      Il y a bien un controle, mais il est contournable. A l'ajout
+      d'article (POST /api/BasketItems), le serveur analyse le corps
+      brut avec un parseur maison (utils.parseJsonCustom) qui collecte
+      TOUTES les occurrences d'une cle. Le controle d'appartenance
+      compare ton bid au PREMIER BasketId, tandis que l'insertion (et
+      la validation du challenge) utilise le DERNIER. En envoyant deux
+      cles BasketId, tu passes le controle avec la tienne et tu ecris
+      dans le panier de la victime.
     text_en: |
-      The server has no ownership check on the body BasketId. If
-      you send a BasketId not yours (typically bids 1-3 belong to
-      seeded users admin/jim/bender), the server still creates
-      the BasketItem with that BasketId. Hence it adds the
-      product to the other user's basket. Attack workflow:
-      intercept the legitimate request (Burp or simply re-emit
-      via fetch console), change BasketId, re-emit.
+      There is a check, but it is bypassable. On add (POST
+      /api/BasketItems), the server parses the raw body with a
+      homegrown parser (utils.parseJsonCustom) that collects ALL
+      occurrences of a key. The ownership check compares your bid to
+      the FIRST BasketId, while the insert (and the challenge
+      validation) use the LAST. By sending two BasketId keys, you pass
+      the check with yours and write into the victim's basket.
     pedagogical_intent: |
-      Explain absence of ownership check + spell attack workflow.
+      Reveal the real flaw: duplicate-key parsing, first checked vs
+      last used.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow concret avec curl ou fetch console :
-      curl -X POST http://127.0.0.1:3000/api/BasketItems/
-        -H "Authorization: Bearer <ton_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"ProductId":1,"BasketId":2,"quantity":1}'
-      Le BasketId=2 appartient a un autre user (typiquement
-      jim@juice-sh.op). Le serveur retourne 200 et stocke le
-      BasketItem. Le challenge se valide automatiquement quand le
-      serveur detecte un BasketItem cree avec BasketId different
-      du JWT user.
-      Defense : (1) verifier l'ownership serveur-side avant insert (basket.UserId === req.user.id, sinon 403). (2) Deduire le BasketId exclusivement du JWT, ne jamais l'accepter du body.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : le corps
+      JSON porte deux BasketId, le tien d'abord, celui de la victime
+      ensuite :
+        curl -s -X POST http://127.0.0.1:3000/api/BasketItems \\
+          -H "Authorization: Bearer <ton_jwt>" \\
+          -H "Content-Type: application/json" \\
+          -d '{"ProductId":6,"BasketId":<ton_bid>,"BasketId":2,"quantity":1}'
+      Reponse 200 : l'article est ajoute au panier 2 (un autre user) et
+      le challenge est resolu. Un seul BasketId etranger renvoie 401
+      "Invalid BasketId" : c'est la duplication qui contourne le
+      controle. Alternative : PUT /api/BasketItems/<id d'un item a toi>
+      avec {"BasketId":2} (le controle de mise a jour ne verifie pas
+      l'appartenance, basketItems.ts:70).
+      Defense : valider le corps avec un parseur strict (rejeter les
+      cles dupliquees), et verifier l'appartenance du panier sur la
+      valeur reellement utilisee pour l'ecriture, pas sur une autre.
     text_en: |
-      Concrete workflow via curl or fetch console:
-      curl -X POST http://127.0.0.1:3000/api/BasketItems/
-        -H "Authorization: Bearer <your_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"ProductId":1,"BasketId":2,"quantity":1}'
-      BasketId=2 belongs to another user (typically
-      jim@juice-sh.op). Server returns 200 and stores the
-      BasketItem. Challenge auto-solves when server detects a
-      BasketItem created with BasketId different from JWT user.
-      Defense: (1) server-side ownership check before insert (basket.UserId === req.user.id, else 403). (2) Derive BasketId exclusively from JWT, never accept it from request body.
+      Solution (verified during testing on Juice Shop 19.2.1): the JSON
+      body carries two BasketId, yours first, the victim's next:
+        curl -s -X POST http://127.0.0.1:3000/api/BasketItems \\
+          -H "Authorization: Bearer <your_jwt>" \\
+          -H "Content-Type: application/json" \\
+          -d '{"ProductId":6,"BasketId":<your_bid>,"BasketId":2,"quantity":1}'
+      Response 200: the item is added to basket 2 (another user) and
+      the challenge is solved. A single foreign BasketId returns 401
+      "Invalid BasketId": it is the duplication that bypasses the
+      check. Alternative: PUT /api/BasketItems/<id of an item you own>
+      with {"BasketId":2} (the update path does not check ownership,
+      basketItems.ts:70).
+      Defense: validate the body with a strict parser (reject
+      duplicate keys), and check basket ownership on the value actually
+      used for the write, not on another.
     pedagogical_intent: |
-      Quasi-solution : full curl command + expected behavior.
+      Full solution: verified duplicate-key payload, the 401 pitfall,
+      alternative path, defense.

@@ -86,6 +86,11 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   null-byte, passwordHashLeak via cookie), exposedCredentials code-confirme.
   Seule correction : renvoi FR faux dans forgottenBackup. Note mecanisme :
   whoami lit le token dans le COOKIE, pas le header Bearer.
+  Lot 9 (Broken Access Control) : basketAccess/forgedFeedback/forgedReview
+  rejoues live, feedback code-confirme (non rejoue, destructif). Seule
+  erreur : basketManipulate (BasketId simple -> 401 ; vraie voie = double
+  cle BasketId / parseJsonCustom, verifiee live). Effets de bord : items
+  ajoutes au panier 2, un avis produit 1 au nom d'admin, un feedback UserId=1.
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -119,15 +124,15 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | weirdCryptoChallenge | Cryptographic Issues | 2 | TODO |  |
 | loginAdminChallenge | Injection | 2 | DONE (lot 5) | correct ; payload ' OR true-- verifie live (retourne admin), solve = id admin (login.ts:70) ; non modifie |
 | adminSectionChallenge | Broken Access Control | 2 | DONE (lot 2) | N2-N5 : garde AdminGuard cote client (jwtDecode sans signature), validation = image 19px.png (verify.ts:65), 3 familles de contournement ; voie deduite du code, non rejouee (Chrome) |
-| basketAccessChallenge | Broken Access Control | 2 | TODO |  |
-| feedbackChallenge | Broken Access Control | 2 | TODO |  |
-| basketManipulateChallenge | Broken Access Control | 3 | TODO |  |
+| basketAccessChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; GET /rest/basket/<autre bid> verifie live (basket.ts:21) |
+| feedbackChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; supprimer tous les avis 5 etoiles (count rating=5 -> 0) ; non rejoue (destructif pour donnees seedees) |
+| basketManipulateChallenge | Broken Access Control | 3 | DONE (lot 9) | N4-N5 : pack faux (BasketId simple -> 401 Invalid BasketId). Vraie voie = double cle BasketId (mienne 1er passe le check, victime en dernier inseree) via parseJsonCustom ; verifie live |
 | captchaBypassChallenge | Broken Anti Automation | 3 | TODO |  |
 | changeProductChallenge | Broken Access Control | 3 | DONE (lot 1) | N4,N5 reecrits : target="_blank" obligatoire (verify.ts), sans jeton ; defense inventee remplacee par codefixes fix 3 ; teste |
 | csafChallenge | Miscellaneous | 3 | DONE (lot 2) | N2-N5 : chemin faux (csaf-aggregator -> /.well-known/csaf/), advisory express-jwt identifie, piege fins de ligne (hash recalcule different si EOL modifiees) ; soumission teste |
 | dbSchemaChallenge | Injection | 3 | DONE (lot 5) | correct ; payload UNION ... FROM sqlite_master (9 colonnes) verifie live (CREATE TABLE) ; non modifie |
-| forgedFeedbackChallenge | Broken Access Control | 3 | TODO |  |
-| forgedReviewChallenge | Broken Access Control | 3 | TODO |  |
+| forgedFeedbackChallenge | Broken Access Control | 3 | DONE (lot 9) | correct (non modifie) ; POST /api/Feedbacks UserId!=moi verifie live (solveIf avant captcha, verify.ts:29) |
+| forgedReviewChallenge | Broken Access Control | 3 | DONE (lot 9) | correct ; PUT /rest/products/:id/reviews author=autre (createProductReviews.ts:17) verifie live + PATCH edit avis d autrui (updateProductReviews.ts:24) code-confirme |
 | freeDeluxeChallenge | Improper Input Validation | 3 | DONE (lot 3) | N2-N5 : UserId du corps ecrase par appendUserId (trompeur), pre-requis role customer ; solve = 3e valeur de paymentMode (deluxe.ts) ; teste (paymentMode:none) |
 | ghostLoginChallenge | Broken Authentication | 3 | TODO |  |
 | loginAmyChallenge | Sensitive Data Exposure | 3 | TODO |  |
