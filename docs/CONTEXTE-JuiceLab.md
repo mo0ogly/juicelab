@@ -346,7 +346,11 @@ a tranche pour l'option A+B :
   "Chargement des indices..." indefini (les requetes 404). C'est attendu.
 - LocalStorage state cle `juicelab_state_v1`. Pour reset pendant les
   tests : `localStorage.removeItem('juicelab_state_v1')` dans la console
-  DevTools.
+  DevTools. Au chargement, `JuicelabBridgeService.backfillSolved()`
+  reconcilie l'etat local avec `/api/Challenges` dans les deux sens
+  (ajoute les resolutions serveur manquantes, retire celles que le serveur
+  ne connait plus), sauf tant qu'un cookie `continueCode` attend la
+  restauration Juice Shop apres redemarrage.
 - Cookies/JWT Juice Shop : la phase B utilisera le JWT existant pour
   identifier l'etudiant (`security.authenticatedUsers.get(req.cookies.token)`).
   Pas de nouveau systeme d'auth.

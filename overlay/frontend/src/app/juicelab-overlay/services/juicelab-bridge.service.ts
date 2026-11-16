@@ -77,13 +77,27 @@ export class JuicelabBridgeService {
     })
   }
 
+  /**
+   * Reconcile the local solved state with the Juice Shop server, both ways.
+   * Solved server-side but not locally : forwarded as a solve (backfill).
+   * Solved locally but not server-side : the local mark is cleared, so the
+   * panel matches the Score Board after a reset (cookies cleared, fresh
+   * instance). Skipped while a continueCode cookie exists : after a restart
+   * the server briefly reports nothing solved until Juice Shop core restores
+   * progress from that cookie, and clearing then would drop valid solves.
+   */
   private backfillSolved(): void {
     forkJoin([this.packSvc.getTdKeySet(), this.challengeSvc.find()]).subscribe({
       next: ([tdKeys, challenges]) => {
         const local = this.stateSvc.state().challenges
+        const restorePending = document.cookie.split('; ').some(c => c.startsWith('continueCode='))
         for (const c of challenges) {
-          if (!c.solved || !tdKeys.has(c.key) || local[c.key]?.solved_at) continue
-          this.handleChallengeSolved({ key: c.key }, 'juice-shop-backfill')
+          if (!tdKeys.has(c.key)) continue
+          if (c.solved && !local[c.key]?.solved_at) {
+            this.handleChallengeSolved({ key: c.key }, 'juice-shop-backfill')
+          } else if (!c.solved && local[c.key]?.solved_at && !restorePending) {
+            this.stateSvc.markUnsolved(c.key)
+          }
         }
       },
       error: () => {

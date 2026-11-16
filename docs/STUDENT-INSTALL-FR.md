@@ -226,7 +226,7 @@ docker compose --env-file .env logs -f
 docker compose --env-file .env down -v
 ```
 
-Ta progression Juice Shop, tes journaux et tes reponses au quiz sont stockes cote client dans `localStorage` (cle `juicelab_state_v1`). Ils survivent aux redemarrages de conteneurs mais **pas** a un `docker compose down -v` (la base du dashboard est aussi effacee).
+Juice Shop est la source de verite des defis resolus : il recree sa base a chaque redemarrage, puis restaure ta progression depuis le cookie `continueCode` de ton navigateur. Tes journaux, indices et reponses au quiz sont stockes dans le `localStorage` de ton navigateur (cle `juicelab_state_v1`) : ils survivent aux redemarrages et a un `docker compose down -v` (qui efface en revanche la base du dashboard). Si tu vides tes cookies, Juice Shop repart de zero et le panneau JuiceLab se realigne au chargement suivant : les defis ne sont plus marques resolus, tes notes restent.
 
 ---
 

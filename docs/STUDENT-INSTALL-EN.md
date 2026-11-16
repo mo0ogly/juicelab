@@ -226,7 +226,7 @@ docker compose --env-file .env logs -f
 docker compose --env-file .env down -v
 ```
 
-Your Juice Shop progress, journals, and quiz answers are stored client-side in `localStorage` (key `juicelab_state_v1`). They survive container restarts but **not** a `docker compose down -v` (because the dashboard DB is wiped too).
+Juice Shop is the source of truth for solved challenges: it recreates its database on every restart, then restores your progress from the `continueCode` cookie in your browser. Your journals, hints and quiz answers live in your browser's `localStorage` (key `juicelab_state_v1`): they survive restarts and a `docker compose down -v` (which does wipe the dashboard DB). If you clear your cookies, Juice Shop starts from scratch and the JuiceLab panel realigns on the next load: challenges are no longer marked solved, your notes stay.
 
 ---
 

@@ -152,6 +152,22 @@ export class JuicelabStateService {
     })
   }
 
+  /**
+   * Clear the solved timestamp of a challenge the Juice Shop server no longer
+   * reports as solved (server is the source of truth). Hints, journal, quiz
+   * and flag data are kept. No-op when the challenge is unknown or unsolved.
+   * The dashboard is not notified : its history of past solves stays intact.
+   */
+  markUnsolved(challengeKey: string): void {
+    const current = this.state()
+    const challenge = current.challenges[challengeKey]
+    if (!challenge?.solved_at) return
+    this.update({
+      ...current,
+      challenges: { ...current.challenges, [challengeKey]: { ...challenge, solved_at: null } },
+    })
+  }
+
   /** Mark the CTF flag as captured for this challenge. Idempotent — keeps
    *  the original timestamp on a second call so the trophy date is stable. */
   markFlagCaptured(challengeKey: string): void {
