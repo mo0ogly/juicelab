@@ -126,14 +126,14 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | exposedCredentialsChallenge | Sensitive Data Exposure | 2 | DONE (lot 8) | correct (non modifie) ; testing@juice-sh.op / IamUsedForTesting (login.ts:66) |
 | passwordHashLeakChallenge | Sensitive Data Exposure | 2 | DONE (lot 8) | correct (non modifie) ; /rest/user/whoami?fields=password via COOKIE verifie live (currentUser.ts:52) |
 | closeNotificationsChallenge | Miscellaneous | 1 | TODO |  |
-| errorHandlingChallenge | Security Misconfiguration | 1 | TODO |  |
+| errorHandlingChallenge | Security Misconfiguration | 1 | DONE (lot 20) | correct (non modifie) ; GET /api/Users/abc -> 500, status>401 (verify.ts:77) ; verifie live |
 | exposedMetricsChallenge | Observability Failures | 1 | DONE (lot 18) | correct (non modifie) ; GET /metrics verifie live (metrics.ts:68) |
 | missingEncodingChallenge | Improper Input Validation | 1 | DONE (lot 3) | N2-N5 : glyphe unicode faux dans N2 (ᔚ -> ᓚ) ; # = separateur de fragment, %23 ; URL encodee verify.ts:71 ; teste |
 | passwordRepeatChallenge | Improper Input Validation | 1 | TODO |  |
 | redirectCryptoCurrencyChallenge | Unvalidated Redirects | 1 | DONE (lot 15) | correct (non modifie) ; /redirect?to=<adresse crypto exacte> verifie live (redirect.ts:17) |
 | web3SandboxChallenge | Broken Access Control | 1 | DONE (lot 18) | N5 : mecanisme precise (pixel 11px.png, verify.ts:64) ; GET verifie live |
 | zeroStarsChallenge | Improper Input Validation | 1 | DONE (lot 1) | N2-N5 reecrits : etoiles inventees -> mat-slider 1-5, bouton disabled par !rating ; API testee, voie UI deduite du code |
-| deprecatedInterfaceChallenge | Security Misconfiguration | 2 | TODO |  |
+| deprecatedInterfaceChallenge | Security Misconfiguration | 2 | DONE (lot 20) | correct (non modifie) ; upload XML -> solve (fileUpload.ts:77) ; verifie live |
 | emptyUserRegistration | Improper Input Validation | 2 | DONE (lot 1) | N4,N5 reecrits : securityQuestion non requise (teste) ; N3 conserve (passwordRepeat verifie) |
 | geoStalkingMetaChallenge | Sensitive Data Exposure | 2 | DONE (lot 16) | N4-N5 : vecteur EXIF GPS (36 57N 84 20W), question 14 corrigee, reponse Daniel Boone National Forest ; reset non rejoue |
 | geoStalkingVisualChallenge | Sensitive Data Exposure | 2 | DONE (lot 4) | N1-N5 : cible fausse (ville/monument -> nom d entreprise, question 10 "Company you first work for"), reponse ITsec verifiee en config/lab ; reset non rejoue (ne pas changer le mdp d Emma) |
@@ -147,7 +147,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | basketAccessChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; GET /rest/basket/<autre bid> verifie live (basket.ts:21) |
 | feedbackChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; supprimer tous les avis 5 etoiles (count rating=5 -> 0) ; non rejoue (destructif pour donnees seedees) ; 2026-11-16 N4 reecrit : bouton jamais disabled (administration.component.html:78), scenario 'erreurs de permission' invente retire ; DELETE /api/Feedbacks/:id autorise par session seule (server.ts:394 servi), verifie jim 200 / anonyme 401 |
 | basketManipulateChallenge | Broken Access Control | 3 | DONE (lot 9) | N4-N5 : pack faux (BasketId simple -> 401 Invalid BasketId). Vraie voie = double cle BasketId (mienne 1er passe le check, victime en dernier inseree) via parseJsonCustom ; verifie live |
-| captchaBypassChallenge | Broken Anti Automation | 3 | TODO |  |
+| captchaBypassChallenge | Broken Anti Automation | 3 | DONE (lot 20) | N4-N5 : endpoint corrige (/api/captcha -> /rest/captcha), 10 feedbacks < 20s ; verifie live |
 | changeProductChallenge | Broken Access Control | 3 | DONE (lot 1) | N4,N5 reecrits : target="_blank" obligatoire (verify.ts), sans jeton ; defense inventee remplacee par codefixes fix 3 ; teste |
 | csafChallenge | Miscellaneous | 3 | DONE (lot 2) | N2-N5 : chemin faux (csaf-aggregator -> /.well-known/csaf/), advisory express-jwt identifie, piege fins de ligne (hash recalcule different si EOL modifiees) ; soumission teste |
 | dbSchemaChallenge | Injection | 3 | DONE (lot 5) | correct ; payload UNION ... FROM sqlite_master (9 colonnes) verifie live (CREATE TABLE) ; non modifie |
@@ -200,7 +200,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | changePasswordBenderChallenge | Broken Authentication | 5 | DONE (lot 13) | correct ; GET change-password?new=slurmCl4ssic&repeat=slurmCl4ssic SANS current (changePassword.ts:53) verifie live |
 | dlpPasswordSprayingChallenge | Observability Failures | 5 | DONE (lot 16) | N5 blinde ; vraie source = fuite access.log (pas spraying), J12934@ / mot de passe exact verifie live |
 | emailLeakChallenge | Sensitive Data Exposure | 5 | DONE (lot 19) | N4-N5 : vrai mecanisme JSONP (whoami?callback=, currentUser.ts:57) ; verifie live |
-| extraLanguageChallenge | Broken Anti Automation | 5 | TODO |  |
+| extraLanguageChallenge | Broken Anti Automation | 5 | DONE (lot 20) | correct (non modifie) ; GET /assets/i18n/tlh_AA.json (Klingon, verify.ts:68) ; verifie live |
 | jwtUnsignedChallenge | Vulnerable Components | 5 | DONE (lot 11) | N4-N5 : exp lointain manquant (verif echoue sans), livraison via Authorization/localStorage ; forge alg=none jwtn3d@ verifie live |
 | killChatbotChallenge | Vulnerable Components | 5 | DONE (lot 17) | N4-N5 : vecteur FAUX (template throw -> injection code dans username du profil, payload test cypress) ; code-confirme |
 | leakedApiKeyChallenge | Sensitive Data Exposure | 5 | DONE (lot 19) | N4-N5 : cle exacte 6PPi37DBxP4lDwlriuaxP15HaDJpsUXY5TspVmie via feedback/complaint ; verifie live |
@@ -211,7 +211,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | resetPasswordMortyChallenge | Broken Anti Automation | 5 | DONE (lot 6) | N1-N5 : scripts bash bruteforce retires, faille rate-limit X-Forwarded-For exacte (server.ts:344-347 max 100/5min), reponse 5N0wb41L (resetPassword.ts:61) ; question verifiee live |
 | retrieveBlueprintChallenge | Sensitive Data Exposure | 5 | DONE (lot 3) | N3-N5 : indice EXIF corrige (Make=OpenSCAD, pas Comment/Description ; chemin non dans EXIF), fichier JuiceShop.stl sous /assets/public/images/products/ (verify.ts:69) ; servi teste |
 | supplyChainAttackChallenge | Vulnerable Components | 5 | DONE (lot 17) | correct (non modifie) ; eslint-scope/issues/39 via complaint verifie live (verify.ts:291) |
-| svgInjectionChallenge | Security Misconfiguration | 5 | TODO |  |
+| svgInjectionChallenge | Security Misconfiguration | 5 | DONE (lot 20) | N4-N5 : vecteur FAUX (fichier SVG -> param testDecal sur /#/deluxe-membership via /redirect), payload test cypress avec suffixe github pour isRedirectAllowed ; code-confirme |
 | tokenSaleChallenge | Security through Obscurity | 5 | TODO |  |
 | twoFactorAuthUnsafeSecretStorageChallenge | Broken Authentication | 5 | DONE (lot 13) | N4-N5 : hashcat sur mdp fort retire -> vrai defaut = totpSecret en clair (users.yml), exfil SQLi + TOTP + /rest/2fa/verify verifie live (2fa.ts:44) |
 | typosquattingAngularChallenge | Vulnerable Components | 5 | DONE (lot 11) | correct (non modifie) ; ngy-cookie via complaint verifie live |

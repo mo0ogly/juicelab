@@ -60,100 +60,56 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Construction : un SVG avec image src
-      path-traversal :
-      ```svg
-      <svg>
-        <image href="../../../redirect?to=
-          https://placecats.com/g/200/200">
-        </image>
-      </svg>
-      ```
-      Le path-traversal `../../../` remonte
-      au root, le redirect endpoint
-      Juice Shop accepte placecats.com
-      via isRedirectAllowed.
+      Le vecteur n'est pas un fichier SVG uploade : c'est un parametre
+      de test oublie, testDecal, sur la page /#/deluxe-membership. Il
+      definit l'image du sticker en passant par l'endpoint /redirect,
+      ce qui permet de charger une image EXTERNE. Pour que le redirect
+      soit accepte, l'URL doit contenir une entree de l'allowlist (la
+      meme faille includes() que redirectChallenge) ; la cible reelle
+      est une image placecats.com.
     text_en: |
-      Construction: SVG with path-traversal
-      image src:
-      ```svg
-      <svg>
-        <image href="../../../redirect?to=
-          https://placecats.com/g/200/200">
-        </image>
-      </svg>
-      ```
-      `../../../` path-traversal climbs to
-      root, Juice Shop redirect endpoint
-      accepts placecats.com via
-      isRedirectAllowed.
+      The vector is not an uploaded SVG file: it is a forgotten test
+      parameter, testDecal, on the /#/deluxe-membership page. It sets
+      the sticker image through the /redirect endpoint, allowing an
+      EXTERNAL image to load. For the redirect to be accepted, the URL
+      must contain an allowlist entry (the same includes() flaw as
+      redirectChallenge); the real target is a placecats.com image.
     pedagogical_intent: |
-      Spell exact payload.
+      Correct the vector: testDecal param on deluxe-membership via redirect.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow :
-      1. Pre-requis : redirectChallenge OR
-         redirectCryptoCurrencyChallenge
-         (Lot 10) pour comprendre le
-         redirect allowlist + bypass.
-      2. Identifier le SVG default des
-         delivery boxes (DevTools, inspect
-         delivery image element).
-      3. Construire un SVG payload avec
-         image src `../../../redirect?to=
-         https://placecats.com/g/200/200`.
-      4. Trigger le upload via le
-         delivery flow (probablement via
-         WebSocket message lors du place
-         order ; lib/startup/
-         registerWebsocketEvents.ts:47
-         hint).
-      5. Le serveur :
-         (a) WebSocket recoit le SVG
-             payload
-         (b) regex match path traversal +
-             placecats.com URL
-         (c) isRedirectAllowed pass
-             (cataas.com whitelisted)
-         (d) solveIf trigger -> challenge
-             solve auto.
-      Source : lib/startup/
-      registerWebsocketEvents.ts:47.
-      Defense : sanitize SVG avec dompurify
-      + redirect allowlist exhaustif +
-      WebSocket payload validation.
+      Solution (payload du test natif ; non rejoue de bout en bout -
+      validation par evenement websocket apres chargement de l'image) :
+      ouvre, connecte, l'URL
+        /#/deluxe-membership?testDecal=<payload URL-encode>
+      ou payload =
+        ../../../<chemin>/redirect?to=https://placecats.com/g/200/100?x=https://github.com/juice-shop/juice-shop
+      Le suffixe ?x=https://github.com/juice-shop/juice-shop satisfait
+      isRedirectAllowed (includes), et la regex de validation reconnait
+      la cible placecats.com. Le frontend emet alors
+      verifySvgInjectionChallenge et le serveur resout le challenge
+      (registerWebsocketEvents.ts:47). Source : test cypress
+      (test/cypress/e2e/deluxe.spec.ts).
+      Defense : supprimer les parametres de debug en production, valider
+      les redirections par correspondance exacte (pas includes), et ne
+      pas charger d'images d'origine arbitraire.
     text_en: |
-      Workflow:
-      1. Prerequisites: redirectChallenge
-         OR redirectCryptoCurrencyChallenge
-         (Lot 10) to understand redirect
-         allowlist + bypass.
-      2. Identify default SVG of delivery
-         boxes (DevTools, inspect delivery
-         image element).
-      3. Build SVG payload with image src
-         `../../../redirect?to=https://
-         placecats.com/g/200/200`.
-      4. Trigger upload via delivery flow
-         (likely via WebSocket message on
-         place order; lib/startup/
-         registerWebsocketEvents.ts:47
-         hint).
-      5. Server:
-         (a) WebSocket receives SVG
-             payload
-         (b) regex matches path traversal
-             + placecats.com URL
-         (c) isRedirectAllowed passes
-             (cataas.com whitelisted)
-         (d) solveIf triggers -> challenge
-             auto solves.
-      Source: lib/startup/
-      registerWebsocketEvents.ts:47.
-      Defense: sanitize SVG with dompurify
-      + exhaustive redirect allowlist +
-      WebSocket payload validation.
+      Solution (native test payload; not replayed end-to-end -
+      validation via a websocket event after the image loads): open,
+      logged in, the URL
+        /#/deluxe-membership?testDecal=<URL-encoded payload>
+      where payload =
+        ../../../<path>/redirect?to=https://placecats.com/g/200/100?x=https://github.com/juice-shop/juice-shop
+      The suffix ?x=https://github.com/juice-shop/juice-shop satisfies
+      isRedirectAllowed (includes), and the validation regex recognizes
+      the placecats.com target. The frontend then emits
+      verifySvgInjectionChallenge and the server solves the challenge
+      (registerWebsocketEvents.ts:47). Source: cypress test
+      (test/cypress/e2e/deluxe.spec.ts).
+      Defense: remove debug parameters in production, validate redirects
+      by exact match (not includes), and do not load images from
+      arbitrary origins.
     pedagogical_intent: |
-      Solution + composition + defense.
+      Full solution: correct vector, exact payload, defense.
