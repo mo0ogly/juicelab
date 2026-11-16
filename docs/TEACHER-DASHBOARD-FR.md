@@ -493,6 +493,11 @@ Bouton **Diplôme** du roster (`/admin/diploma/<token>?cohort=…`) et export
   diplômes répondent 503 plutôt que de deviner le total.
 - **Élèves** : seuls les élèves validés ont un diplôme (409 sinon, page
   comme ZIP).
+- **Habillage** : sceau couleur de la mention, phrase d'accroche par mention,
+  et badges gagnés d'après les vrais résultats — Parcours complet (tout
+  résolu), Sans filet (un challenge résolu sans indice), Chasseur de flags
+  (un flag vérifié), Tête bien faite (quiz ≥ 90 %), Plume retex (un journal).
+  Habillage de page seulement : il n'entre pas dans le bloc signé.
 - **Langue** : le diplôme est rédigé et signé dans la langue de l'interface
   au moment de l'émission. Pour l'autre langue : changer de langue puis
   **Réémettre**.

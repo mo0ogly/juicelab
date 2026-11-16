@@ -468,6 +468,11 @@ by a break longer than the horizon counts as two.
   list, diplomas answer 503 rather than guess the total.
 - **Students**: only validated students get a diploma (409 otherwise, page
   and ZIP).
+- **Look**: seal in the mention colour, one tagline per mention, and badges
+  earned from real results — Full parcours (all solved), No safety net (a
+  challenge solved without hint), Flag hunter (a verified flag), Sharp mind
+  (quiz >= 90 %), Retro writer (a journal). Page dressing only: not part of
+  the signed block.
 - **Language**: the diploma is written and signed in the interface language
   at issuance. For the other language: switch language, then **Re-issue**.
 - **ZIP**: one file per student, `<mention>_<name>_<token start>.md`; two

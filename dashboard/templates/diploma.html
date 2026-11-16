@@ -167,6 +167,54 @@
       .diploma-verif { background: #fafafa; border-color: #ccc; color: #555; }
       .diploma-footer code { background: #f4f4f4; color: #0a6a3a; border-color: #ccc; }
     }
+    /* --- fun layer : seal, juice illustration, tagline, earned badges,
+       signature lines. All driven by real figures (mention, badges). --- */
+    .diploma-print { overflow: hidden; }
+    .diploma-print { --seal: var(--text-mute); }
+    .diploma-print.m-tres_bien { --seal: var(--accent); }
+    .diploma-print.m-bien { --seal: var(--cobalt); }
+    .diploma-print.m-reussite { --seal: var(--amber); }
+    .diploma-seal {
+      position: absolute; top: 46px; right: 30px; width: 112px; height: 112px;
+      color: var(--seal); transform: rotate(-12deg);
+    }
+    .diploma-seal text { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.22em; fill: currentColor; }
+    .diploma-fruit {
+      position: absolute; top: -46px; left: -46px; width: 150px; height: 150px;
+      opacity: 0.16; transform: rotate(18deg); pointer-events: none;
+    }
+    .diploma-divider { display: flex; justify-content: center; gap: 10px; margin: 18px 0 0; }
+    .diploma-divider svg { width: 22px; height: 22px; }
+    .diploma-tagline {
+      font-family: var(--font-display); font-style: italic; font-size: 16px;
+      text-align: center; color: var(--text-soft); margin: -28px 0 32px;
+    }
+    .diploma-badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0 24px; }
+    .diploma-badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+      border: 1px solid var(--seal); border-radius: 999px; color: var(--text);
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+      background: var(--bg-soft);
+    }
+    .diploma-badge svg { width: 14px; height: 14px; color: var(--seal); }
+    .diploma-badges-none { text-align: center; font-size: 12px; color: var(--text-mute); margin: 8px 0 24px; font-style: italic; }
+    .diploma-sign { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 36px; }
+    .diploma-sign div { border-top: 1px solid var(--border-strong); padding-top: 6px;
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-mute); }
+    .diploma-sign .quality { text-align: right; font-style: italic; text-transform: none; letter-spacing: 0; font-family: var(--font-display); font-size: 13px; }
+    @media print {
+      .diploma-print.m-tres_bien { --seal: #0a6a3a; }
+      .diploma-print.m-bien { --seal: #1d3a8a; }
+      .diploma-print.m-reussite { --seal: #8a5a14; }
+      .diploma-print.m-participation { --seal: #555; }
+      .diploma-fruit { opacity: 0.10; }
+      .diploma-tagline, .diploma-badge { color: #333; }
+      .diploma-badge { background: #fff; }
+    }
+    @media (max-width: 640px) {
+      .diploma-seal { width: 78px; height: 78px; top: 18px; right: 12px; }
+      .diploma-print { padding: 36px 20px; }
+    }
   </style>
 </head>
 <body>
@@ -179,13 +227,65 @@
     {% if stale %}<strong class="diploma-stale">{{ t('DIPLOMA_STALE') }}</strong>{% endif %}
     <button id="diploma-reissue-btn" type="button" class="secondary">{{ t('DIPLOMA_REISSUE') }}</button>
   </div>
-  <article class="diploma-print" role="document">
+  <article class="diploma-print m-{{ f.mention }}" role="document">
+    {# Wax-style seal : scalloped rim, cohort text on a circle, juice glass in the centre. #}
+    <svg class="diploma-seal" viewBox="0 0 120 120" aria-hidden="true">
+      <defs><path id="seal-ring" d="M60 60 m-38 0 a38 38 0 1 1 76 0 a38 38 0 1 1 -76 0"/></defs>
+      <path fill="currentColor" opacity="0.14" d="M118.0 60.0 L110.2 73.5 L110.2 89.0 L96.8 96.8 L89.0 110.2 L73.5 110.2 L60.0 118.0 L46.5 110.2 L31.0 110.2 L23.2 96.8 L9.8 89.0 L9.8 73.5 L2.0 60.0 L9.8 46.5 L9.8 31.0 L23.2 23.2 L31.0 9.8 L46.5 9.8 L60.0 2.0 L73.5 9.8 L89.0 9.8 L96.8 23.2 L110.2 31.0 L110.2 46.5Z"/>
+      <circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="60" cy="60" r="27" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 3"/>
+      <text><textPath href="#seal-ring" startOffset="0">JUICELAB &#183; {{ cohort_id[:18] | upper }} &#183;</textPath></text>
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M49 50 h22 l-3 22 a3 3 0 0 1 -3 2.6 h-10 a3 3 0 0 1 -3 -2.6 z"/>
+        <path d="M50.5 58 h19"/>
+        <path d="M64 50 l6 -11 h5"/>
+        <circle cx="50" cy="49" r="6"/>
+      </g>
+    </svg>
+    {# Orange slice watermark, top-left corner. #}
+    <svg class="diploma-fruit" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="var(--amber)"/>
+      <circle cx="50" cy="50" r="39" fill="var(--bg-elev)"/>
+      <g fill="var(--amber)">{% for i in range(8) %}<path transform="rotate({{ i * 45 }} 50 50)" d="M50 50 L44 15 Q50 12 56 15 Z"/>{% endfor %}</g>
+      <circle cx="50" cy="50" r="4" fill="var(--bg-elev)"/>
+    </svg>
     <p class="diploma-institution">{{ institution }}</p>
     <h1 class="diploma-title">{{ t('DIPLOMA_TITLE') }}</h1>
     <p class="diploma-subtitle">{{ t('DIPLOMA_COHORT_LABEL') }} <strong>{{ cohort_id }}</strong></p>
+    <div class="diploma-divider" aria-hidden="true">
+      {% for c in ['var(--amber)', 'var(--rose)', 'var(--accent)'] %}
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="{{ c }}" opacity="0.85"/><g stroke="var(--bg-elev)" stroke-width="1.4">{% for i in range(4) %}<path transform="rotate({{ i * 45 }} 12 12)" d="M12 4 V20"/>{% endfor %}</g></svg>
+      {% endfor %}
+    </div>
 
     <p class="diploma-recipient">{{ student_name or student_token }}</p>
     <p class="diploma-mention {{ f.mention }}">{{ t('DIPLOMA_MENTION_' + f.mention.upper()) }}</p>
+
+    <p class="diploma-tagline">&laquo;&nbsp;{{ t('DIPLOMA_TAGLINE_' + f.mention.upper()) }}&nbsp;&raquo;</p>
+
+    {% set pcs = f.per_challenge or [] %}
+    {% set earned = [] %}
+    {% if f.td_total and f.challenges_solved == f.td_total %}{% set _ = earned.append('FULL') %}{% endif %}
+    {% if pcs | selectattr('score_challenge', 'equalto', 100) | list %}{% set _ = earned.append('NO_HINT') %}{% endif %}
+    {% if f.flags_verified %}{% set _ = earned.append('FLAG') %}{% endif %}
+    {% if f.quiz_pct is not none and f.quiz_pct >= 90 %}{% set _ = earned.append('QUIZ') %}{% endif %}
+    {% if f.journals_written %}{% set _ = earned.append('WRITER') %}{% endif %}
+    {% set icons = {
+      'FULL': 'M5 12l4 4 10-10',
+      'NO_HINT': 'M12 3v4M12 17v4M3 12h4M17 12h4M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6',
+      'FLAG': 'M5 21V4h11l-2 4 2 4H5',
+      'QUIZ': 'M9 9a3 3 0 1 1 4 2.8c-.7.4-1 1-1 1.7V15M12 19h.01',
+      'WRITER': 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4'
+    } %}
+    {% if earned %}
+    <div class="diploma-badges" aria-label="{{ t('DIPLOMA_BADGES_ARIA') }}">
+      {% for b in earned %}
+      <span class="diploma-badge" title="{{ t('DIPLOMA_BADGE_' + b + '_HINT') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ icons[b] }}"/></svg>{{ t('DIPLOMA_BADGE_' + b) }}</span>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="diploma-badges-none">{{ t('DIPLOMA_BADGES_NONE') }}</p>
+    {% endif %}
 
     <div class="diploma-stats">
       <div class="diploma-stat">
@@ -224,6 +324,11 @@
         <span class="lbl">{{ t('DIPLOMA_ISSUED_AT') }}</span>
         <span class="val">{{ issued_at }}</span>
       </div>
+    </div>
+
+    <div class="diploma-sign">
+      <div>{{ t('DIPLOMA_SIGN_TEACHER') }}</div>
+      <div class="quality">{{ t('DIPLOMA_SIGN_QUALITY') }}</div>
     </div>
 
     <div class="diploma-footer">

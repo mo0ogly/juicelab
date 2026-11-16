@@ -427,3 +427,21 @@ def test_zip_names_are_unique_and_safe():
     b = _zip_name("bien", "Jean Dupont", "bbbbbbbb-2222")
     assert a != b and a.startswith("bien_Jean_Dupont_")
     assert "/" not in _zip_name("bien", "../../etc/passwd", "t1") and _zip_name("bien", None, "t1") == "bien_t1.md"
+
+
+# --- seal, tagline, badges (fun layer, driven by real figures) -----------
+
+def test_badges_and_tagline_follow_results(isolated_app):
+    _seed_student(isolated_app, token="stud-star", solve_count=13)
+    html = _diploma_page(isolated_app, "stud-star")
+    assert 'class="diploma-print m-reussite"' in html  # 13/13 without quiz : final 50
+    for badge in ("DIPLOMA_BADGE_FULL", "DIPLOMA_BADGE_NO_HINT"):
+        assert badge not in html, "badge labels are translated"
+    assert html.count('class="diploma-badge"') == 2, "full parcours + no hint ; no flag, quiz, journal"
+    assert 'class="diploma-badges-none"' not in html and 'class="diploma-seal"' in html
+
+
+def test_no_badge_message_for_empty_student(isolated_app):
+    _seed_student(isolated_app, token="stud-none", solve_count=0)
+    html = _diploma_page(isolated_app, "stud-none")
+    assert 'class="diploma-badges-none"' in html and 'class="diploma-badge"' not in html
