@@ -70,48 +70,51 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Pour ce challenge, le payload qui retourne TOUS les orders
-      avec un seul appel est :
-      /rest/track-order/{"$ne":-1}
-      ou
-      /rest/track-order/{"$where":"true"}
-      L'URL doit etre URL-encoded, donc :
-      /rest/track-order/%7B%22%24ne%22%3A-1%7D
-      Pour le tester, tape l'URL dans la barre d'adresse du
-      navigateur (le navigateur fera l'encoding) ou utilise curl
-      avec --data-urlencode.
+      Attention : cet endpoint n'attend PAS un objet operateur Mongo.
+      Le serveur (routes/trackOrder.ts) concatene ton id dans une
+      CHAINE JavaScript evaluee par $where :
+        find({ $where: "this.orderId === '<id>'" })
+      Ton injection doit donc etre du JavaScript qui ferme la chaine et
+      rend la condition toujours vraie, pas un {"$ne":...}. L'id est
+      tronque a 60 caracteres mais sans filtrage de caracteres.
     text_en: |
-      For this challenge, the payload returning ALL orders in a
-      single call is:
-      /rest/track-order/{"$ne":-1}
-      or
-      /rest/track-order/{"$where":"true"}
-      The URL must be URL-encoded, hence:
-      /rest/track-order/%7B%22%24ne%22%3A-1%7D
-      Test it by typing the URL in the browser address bar (the
-      browser handles encoding) or use curl with --data-urlencode.
+      Careful: this endpoint does NOT expect a Mongo operator object.
+      The server (routes/trackOrder.ts) concatenates your id into a
+      JavaScript STRING evaluated by $where:
+        find({ $where: "this.orderId === '<id>'" })
+      So your injection must be JavaScript that closes the string and
+      makes the condition always true, not a {"$ne":...}. The id is
+      truncated to 60 characters but with no character filtering.
     pedagogical_intent: |
-      Spell exact URL with encoding.
+      Correct the injection type: $where string JS injection, not an
+      operator object.
 
   N5:
     cost_pct: 50
     text_fr: |
-      curl 'http://127.0.0.1:3000/rest/track-order/%7B%22%24ne%22%3A-1%7D'
-      -H 'Authorization: Bearer <ton_jwt>'
-      Response : JSON array contenant TOUS les orders de tous les
-      users. Le challenge se valide automatiquement quand le
-      serveur detecte la requete avec un objet operateur sur
-      track-order. Source de validation : la route route.ts du
-      track-order verifie le pattern de l'attaque cote backend.
-      Defense : (1) valider le type de l'input : orderId doit etre une string, rejeter les objets operateurs MongoDB avec un schema Joi/Zod. (2) Filtrer les resultats par l'id de l'utilisateur authentifie cote serveur. (3) Utiliser express-mongo-sanitize pour stripper les operateurs $ des inputs utilisateur.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : passe un
+      id qui rend le $where toujours vrai, par exemple
+        '||'1'=='1
+      soit l'URL
+        GET /rest/track-order/%27%7C%7C%271%27%3D%3D%271
+      Le $where devient "this.orderId === ''||'1'=='1'" : vrai pour
+      chaque commande, la reponse contient TOUTES les commandes de tous
+      les utilisateurs et le challenge se resout (result.data.length >
+      1, trackOrder.ts:20).
+      Defense : ne jamais construire un $where par concatenation ;
+      filtrer l'id (format attendu) et desactiver l'execution
+      JavaScript cote base.
     text_en: |
-      curl 'http://127.0.0.1:3000/rest/track-order/%7B%22%24ne%22%3A-1%7D'
-      -H 'Authorization: Bearer <your_jwt>'
-      Response: JSON array containing ALL orders from every user.
-      The challenge solves automatically when the server detects
-      the request with an operator object on track-order.
-      Validation source: the track-order route.ts checks the
-      attack pattern server-side.
-      Defense: (1) validate input type: orderId must be a string, reject MongoDB operator objects with Joi/Zod schema. (2) Filter query results by authenticated user's id server-side, even if the orderId matches. (3) Use mongoose sanitize plugins (express-mongo-sanitize) to strip $ operators from user inputs.
+      Solution (verified during testing on Juice Shop 19.2.1): pass an
+      id that makes the $where always true, e.g.
+        '||'1'=='1
+      i.e. the URL
+        GET /rest/track-order/%27%7C%7C%271%27%3D%3D%271
+      The $where becomes "this.orderId === ''||'1'=='1'": true for
+      every order, the response contains ALL orders from all users and
+      the challenge solves (result.data.length > 1, trackOrder.ts:20).
+      Defense: never build a $where by concatenation; validate the id
+      (expected format) and disable server-side JavaScript in the
+      database.
     pedagogical_intent: |
-      Quasi-solution : full curl + result expectation.
+      Full solution: verified JS-injection payload, defense.

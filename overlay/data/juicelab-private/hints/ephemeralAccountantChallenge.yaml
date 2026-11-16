@@ -61,48 +61,52 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      La table users de Juice Shop a 9 colonnes pertinentes : id,
-      username, email, password, role, deluxeToken, lastLoginIp,
-      profileImage, totpSecret. Pour fabriquer un user accountant,
-      tu dois passer un UNION qui aligne ces 9 columns avec des
-      valeurs sensees : id (n'importe quel int), email
-      (acc0unt4nt@juice-sh.op), password (hash bidon), role
-      (accountant), totpSecret (chaine vide). Les autres peuvent
-      etre vides ou NULL.
-    text_en: |
-      Juice Shop's users table has 9 relevant columns: id, username,
+      La requete de login fait SELECT * FROM Users : ton UNION doit
+      aligner TOUTES les colonnes de Users, soit 13 (id, username,
       email, password, role, deluxeToken, lastLoginIp, profileImage,
-      totpSecret. To fabricate an accountant user, you must pass a
-      UNION aligning these 9 columns with sensible values: id (any
-      int), email (acc0unt4nt@juice-sh.op), password (dummy hash),
-      role (accountant), totpSecret (empty string). The rest can be
-      empty or NULL.
+      totpSecret, isActive, createdAt, updatedAt, deletedAt). Trois
+      contraintes pour que la session soit valide : l'id (colonne 1)
+      non nul, l'email (colonne 3) = acc0unt4nt@juice-sh.op, le role
+      (colonne 5) = exactement "accounting", et totpSecret (colonne 9)
+      = chaine vide (sinon le serveur reclame un second facteur).
+    text_en: |
+      The login query does SELECT * FROM Users: your UNION must align
+      ALL columns of Users, i.e. 13 (id, username, email, password,
+      role, deluxeToken, lastLoginIp, profileImage, totpSecret,
+      isActive, createdAt, updatedAt, deletedAt). Three constraints for
+      a valid session: a non-null id (column 1), email (column 3) =
+      acc0unt4nt@juice-sh.op, role (column 5) = exactly "accounting",
+      and totpSecret (column 9) = empty string (otherwise the server
+      asks for a second factor).
     pedagogical_intent: |
-      Spell the schema, demystify the alignment.
+      Correct the column count (13) and the exact role value and
+      totpSecret constraint.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Payload type pour le champ email :
-      ' UNION SELECT 0,null,'acc0unt4nt@juice-sh.op',null,'accountant',
-      null,null,null,null FROM Users--
-      avec un mot de passe quelconque dans le champ password. Le
-      backend execute SELECT * FROM Users WHERE email='' UNION
-      SELECT ... FROM Users--' AND password='...'. Le UNION fabrique
-      un row accountant ephemere, le AND password est commente, le
-      JWT est signe pour ce row fictif. Tu es connecte sous une
-      identite qui n'a jamais existe en DB.
-      Defense : (1) prepared statements / binding parametre Sequelize pour empecher l'injection UNION. (2) Ne pas utiliser le resultat brut du SELECT pour signer le JWT — re-fetcher les claims via une seconde query parametree par user_id (defense secondaire).
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : dans le
+      champ email du login, saisis
+        ' UNION SELECT 15,'acc','acc0unt4nt@juice-sh.op','x','accounting','a','a','a','',1,null,null,null FROM Users--
+      mot de passe quelconque. Le UNION fabrique une ligne "accounting"
+      ephemere (aucun enregistrement correspondant en base), le AND
+      password est commente, et tu es connecte comme accountant. Le
+      challenge verifie que ce compte n'existe pas vraiment (count = 0)
+      puis se resout (login.ts:77). Attention : role "accountant"
+      (sans -ing) echoue ; totpSecret non vide force le flux 2FA.
+      Defense : requetes parametrees sur le login, et ne jamais deduire
+      le role d'un resultat de requete falsifiable par l'entree.
     text_en: |
-      Sample payload for the email field:
-      ' UNION SELECT 0,null,'acc0unt4nt@juice-sh.op',null,'accountant',
-      null,null,null,null FROM Users--
-      with any password in the password field. The backend executes
-      SELECT * FROM Users WHERE email='' UNION SELECT ... FROM
-      Users--' AND password='...'. The UNION fabricates an ephemeral
-      accountant row, the AND password gets commented, the JWT is
-      signed for that fake row. You are logged in under an identity
-      that never existed in DB.
-      Defense: (1) prepared statements / Sequelize parameterized binding to prevent UNION injection. (2) Do not use the raw SELECT result to sign the JWT — re-fetch claims via a second parameterized query keyed on user_id (secondary defense).
+      Solution (verified during testing on Juice Shop 19.2.1): in the
+      login email field, enter
+        ' UNION SELECT 15,'acc','acc0unt4nt@juice-sh.op','x','accounting','a','a','a','',1,null,null,null FROM Users--
+      any password. The UNION forges an ephemeral "accounting" row (no
+      matching DB record), the AND password is commented out, and you
+      are logged in as the accountant. The challenge checks the account
+      does not really exist (count = 0) then solves (login.ts:77). Note:
+      role "accountant" (without -ing) fails; a non-empty totpSecret
+      forces the 2FA flow.
+      Defense: parameterized login queries, and never derive the role
+      from a query result forgeable by the input.
     pedagogical_intent: |
-      Quasi-solution : full payload + reconstructed SQL + behavior explained.
+      Full solution: verified 13-column UNION, exact role, defense.

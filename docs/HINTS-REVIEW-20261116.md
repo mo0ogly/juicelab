@@ -169,12 +169,12 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | uploadTypeChallenge | Improper Input Validation | 3 | DONE (lot 10) | correct (non modifie) ; POST /file-upload .png verifie live, sans auth (fileUpload.ts:69) |
 | xxeFileDisclosureChallenge | XXE | 3 | TODO |  |
 | accessLogDisclosureChallenge | Observability Failures | 4 | TODO |  |
-| christmasSpecialChallenge | Injection | 4 | TODO |  |
+| christmasSpecialChallenge | Injection | 4 | DONE (lot 14) | correct (non modifie) ; SQLi search OR true-- (soft-delete), produit id 10 + checkout verifie live |
 | dataExportChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | dlpPastebinDataLeakChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | easterEggLevelOneChallenge | Broken Access Control | 4 | TODO |  |
 | easterEggLevelTwoChallenge | Cryptographic Issues | 4 | DONE (lot 12) | N4-N5 : etape Base64 manquante avant ROT13 (eastere.gg est base64 puis rot13) ; URL GET verifiee live |
-| ephemeralAccountantChallenge | Injection | 4 | TODO |  |
+| ephemeralAccountantChallenge | Injection | 4 | DONE (lot 14) | N4-N5 : role FAUX (accountant -> accounting), 9 col -> 13, totpSecret vide sinon 2FA ; UNION 13 col verifie live |
 | forgottenBackupChallenge | Sensitive Data Exposure | 4 | DONE (lot 8) | correct ; null-byte coupons_2013.md.bak%2500.md verifie live ; FR corrige (renvoi manipulateClock -> forgedCoupon, EN etait deja bon) |
 | forgottenDevBackupChallenge | Sensitive Data Exposure | 4 | DONE (lot 8) | correct (non modifie) ; null-byte /ftp/package.json.bak%2500.md verifie live |
 | hiddenImageChallenge | Security through Obscurity | 4 | DONE (lot 2) | N1-N5 : faux hint OWASP cite, reponse donnee des N3, image inventee ; chaine pickle rick verifiee (verify.ts:287) ; image porteuse 5.png deduite, extraction non reussie |
@@ -183,7 +183,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | manipulateClockChallenge | Improper Input Validation | 4 | DONE (lot 3) | N4-N5 : endpoint faux (/api/Orders -> /rest/basket/:id/checkout), couponData dans le corps du checkout ; base64 WMNSDY2019 correct ; teste |
 | misplacedSignatureFileChallenge | Observability Failures | 4 | TODO |  |
 | noSqlCommandChallenge | Injection | 4 | DONE (lot 1) | N2,N4,N5 reecrits : endpoint et mecanisme faux (POST objet -> GET path, plafond 2000 ms, duree > 2000 ms) ; payload sleep(200) teste |
-| noSqlReviewsChallenge | Injection | 4 | TODO |  |
+| noSqlReviewsChallenge | Injection | 4 | DONE (lot 14) | correct (non modifie) ; PATCH id={$ne:-1} modifie plusieurs avis verifie live (updateProductReviews.ts:23) |
 | nullByteChallenge | Improper Input Validation | 4 | DONE (lot 10) | correct (non modifie) ; null-byte sur encrypt.pyc / auto-solve via les autres defis /ftp (fileServer.ts:46) |
 | oauthUserPasswordChallenge | Broken Authentication | 4 | DONE (lot 13) | correct (non modifie) ; bjoern.kimminich@gmail.com / base64(reverse email) verifie live (login.ts:65) |
 | persistedXssFeedbackChallenge | XSS | 4 | DONE (lot 3) | N2-N5 : pre-requis file-disclosure recadre (pedagogique, pas technique), sanitize-html 1.4.2, payload <<iframe>... verifie (produit la chaine exacte) ; validation = chaine stockee (feedback.ts) |
@@ -204,7 +204,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | killChatbotChallenge | Vulnerable Components | 5 | TODO |  |
 | leakedApiKeyChallenge | Sensitive Data Exposure | 5 | TODO |  |
 | lfrChallenge | Vulnerable Components | 5 | TODO |  |
-| noSqlOrdersChallenge | Injection | 5 | TODO |  |
+| noSqlOrdersChallenge | Injection | 5 | DONE (lot 14) | N4-N5 : objet $ne FAUX -> injection JS dans la chaine $where ; verifie live (trackOrder.ts:20) |
 | rceChallenge | Insecure Deserialization | 5 | TODO |  |
 | resetPasswordBjoernChallenge | Broken Authentication | 5 | DONE (lot 6) | N1-N5 : question fausse (lieu/ecole -> code postal ado), OSINT recadre (twist historique = format PLZ pre-1993), reponse West-2082 (resetPassword.ts:60) ; question verifiee live |
 | resetPasswordMortyChallenge | Broken Anti Automation | 5 | DONE (lot 6) | N1-N5 : scripts bash bruteforce retires, faille rate-limit X-Forwarded-For exacte (server.ts:344-347 max 100/5min), reponse 5N0wb41L (resetPassword.ts:61) ; question verifiee live |
@@ -224,7 +224,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | premiumPaywallChallenge | Cryptographic Issues | 6 | DONE (lot 12) | N4-N5 : AES invente (hints nient toute crypto) -> securite par obscurite, URL cachee en clair ; GET URL verifie live |
 | rceOccupyChallenge | Insecure Deserialization | 6 | TODO |  |
 | ssrfChallenge | Broken Access Control | 6 | TODO |  |
-| sstiChallenge | Injection | 6 | TODO |  |
+| sstiChallenge | Injection | 6 | DONE (lot 14) | N4-N5 : vecteur FAUX (b2b -> eval des accolades diese dans le username du profil, userProfile.ts:54) + endpoint /solve/challenges/server-side ; vecteur code-confirme, chaine malware non rejouee |
 | timingAttackChallenge | Broken Anti Automation | 6 | TODO |  |
 | videoXssChallenge | XSS | 6 | DONE (lot 4) | N2-N5 : enabler faux (rceOccupy -> fileWriteChallenge/Arbitrary File Write), cible = sous-titres owasp_promo.vtt (pas la video), sink = bloc <script id=subtitle> (videoHandler.ts:58) ; chaine non rejouee |
 | web3WalletChallenge | Miscellaneous | 6 | DONE (lot 4) | N1-N5 : quote OWASP inventee corrigee, endpoint /rest/web3/walletExploitAddress, event on-chain ContractExploited (Sepolia, contrat 0x4137..7b0) ; source Solidity hors depot = vuln non verifiable ici ; non rejoue (testnet) |
