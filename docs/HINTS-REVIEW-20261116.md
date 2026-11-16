@@ -69,6 +69,12 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   /search). Premiers packs trouvés déjà corrects : dbSchema et unionSql (non
   modifiés) ; loginAdmin correct. Corrections mineures loginBender/Jim :
   requête SQL exacte + citations de lignes du tutoriel natif.
+  Lot 6 (famille Reset Password) : réponses confirmées en source
+  (resetPassword.ts:58-62), questions confirmées live via
+  /rest/user/security-question (sans effet de bord). Resets NON rejoués
+  pour préserver les mots de passe des comptes seedés. Erreurs majeures :
+  questions fausses (Jim, Bjoern interne) et EMAIL faux pour BjoernOwasp
+  (gmail au lieu de bjoern@owasp.org).
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -121,8 +127,8 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | persistedXssUserChallenge | XSS | 3 | TODO |  |
 | privacyPolicyProofChallenge | Security through Obscurity | 3 | TODO |  |
 | registerAdminChallenge | Improper Input Validation | 3 | TODO |  |
-| resetPasswordBjoernOwaspChallenge | Broken Authentication | 3 | TODO |  |
-| resetPasswordJimChallenge | Broken Authentication | 3 | TODO |  |
+| resetPasswordBjoernOwaspChallenge | Broken Authentication | 3 | DONE (lot 6) | N1-N5 : EMAIL FAUX (gmail -> bjoern@owasp.org, verifie live : gmail = pas de question), reponse Zaya (resetPassword.ts:62) |
+| resetPasswordJimChallenge | Broken Authentication | 3 | DONE (lot 6) | N1-N5 : question fausse (eldest sibling -> eldest siblings MIDDLE name) ; reponse Samuel (middle name de George Samuel Kirk) ; question verifiee live, reponse source (resetPassword.ts:58) |
 | restfulXssChallenge | XSS | 3 | TODO |  |
 | uploadSizeChallenge | Improper Input Validation | 3 | TODO |  |
 | uploadTypeChallenge | Improper Input Validation | 3 | TODO |  |
@@ -147,7 +153,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | oauthUserPasswordChallenge | Broken Authentication | 4 | TODO |  |
 | persistedXssFeedbackChallenge | XSS | 4 | DONE (lot 3) | N2-N5 : pre-requis file-disclosure recadre (pedagogique, pas technique), sanitize-html 1.4.2, payload <<iframe>... verifie (produit la chaine exacte) ; validation = chaine stockee (feedback.ts) |
 | redirectChallenge | Unvalidated Redirects | 4 | TODO |  |
-| resetPasswordBenderChallenge | Broken Authentication | 4 | TODO |  |
+| resetPasswordBenderChallenge | Broken Authentication | 4 | DONE (lot 6) | N3-N5 : question exacte (Company you first work for), reponse exacte Stop'n'Drop (orthographe) ; source resetPassword.ts:59 ; question verifiee live |
 | resetPasswordUvoginChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | typosquattingNpmChallenge | Vulnerable Components | 4 | TODO |  |
 | unionSqlInjectionChallenge | Injection | 4 | DONE (lot 5) | correct ; payload UNION ... FROM Users (9 colonnes) verifie live (emails exfiltres) ; non modifie |
@@ -165,8 +171,8 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | lfrChallenge | Vulnerable Components | 5 | TODO |  |
 | noSqlOrdersChallenge | Injection | 5 | TODO |  |
 | rceChallenge | Insecure Deserialization | 5 | TODO |  |
-| resetPasswordBjoernChallenge | Broken Authentication | 5 | TODO |  |
-| resetPasswordMortyChallenge | Broken Anti Automation | 5 | TODO |  |
+| resetPasswordBjoernChallenge | Broken Authentication | 5 | DONE (lot 6) | N1-N5 : question fausse (lieu/ecole -> code postal ado), OSINT recadre (twist historique = format PLZ pre-1993), reponse West-2082 (resetPassword.ts:60) ; question verifiee live |
+| resetPasswordMortyChallenge | Broken Anti Automation | 5 | DONE (lot 6) | N1-N5 : scripts bash bruteforce retires, faille rate-limit X-Forwarded-For exacte (server.ts:344-347 max 100/5min), reponse 5N0wb41L (resetPassword.ts:61) ; question verifiee live |
 | retrieveBlueprintChallenge | Sensitive Data Exposure | 5 | DONE (lot 3) | N3-N5 : indice EXIF corrige (Make=OpenSCAD, pas Comment/Description ; chemin non dans EXIF), fichier JuiceShop.stl sous /assets/public/images/products/ (verify.ts:69) ; servi teste |
 | supplyChainAttackChallenge | Vulnerable Components | 5 | TODO |  |
 | svgInjectionChallenge | Security Misconfiguration | 5 | TODO |  |
