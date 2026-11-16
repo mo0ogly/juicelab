@@ -96,6 +96,10 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   uploadSize (fenetre de taille 100-200KB, multer plafonne a 200000).
   Rejoues live. Effets de bord : compte role=admin cree, commande a total
   negatif, 2 uploads.
+  Lot 11 (JWT / Vulnerable Components) : les 5 methodes correctes, toutes
+  rejouees live (jwtUnsigned alg=none, jwtForged HS256 key-confusion avec
+  jwt.pub servie, 3 composants via complaint). jwtUnsigned/jwtForged
+  affines (exp, source de cle, Windows). Effets de bord : 3 complaints.
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -165,7 +169,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | forgottenDevBackupChallenge | Sensitive Data Exposure | 4 | DONE (lot 8) | correct (non modifie) ; null-byte /ftp/package.json.bak%2500.md verifie live |
 | hiddenImageChallenge | Security through Obscurity | 4 | DONE (lot 2) | N1-N5 : faux hint OWASP cite, reponse donnee des N3, image inventee ; chaine pickle rick verifiee (verify.ts:287) ; image porteuse 5.png deduite, extraction non reussie |
 | httpHeaderXssChallenge | XSS | 4 | DONE (lot 7) | correct (non modifie) ; header True-Client-IP = payload exact (saveLoginIp.ts:23) |
-| knownVulnerableComponentChallenge | Vulnerable Components | 4 | TODO |  |
+| knownVulnerableComponentChallenge | Vulnerable Components | 4 | DONE (lot 11) | correct (non modifie) ; sanitize-html+1.4.2 / express-jwt+0.1.3 via complaint verifie live |
 | manipulateClockChallenge | Improper Input Validation | 4 | DONE (lot 3) | N4-N5 : endpoint faux (/api/Orders -> /rest/basket/:id/checkout), couponData dans le corps du checkout ; base64 WMNSDY2019 correct ; teste |
 | misplacedSignatureFileChallenge | Observability Failures | 4 | TODO |  |
 | noSqlCommandChallenge | Injection | 4 | DONE (lot 1) | N2,N4,N5 reecrits : endpoint et mecanisme faux (POST objet -> GET path, plafond 2000 ms, duree > 2000 ms) ; payload sleep(200) teste |
@@ -176,7 +180,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | redirectChallenge | Unvalidated Redirects | 4 | TODO |  |
 | resetPasswordBenderChallenge | Broken Authentication | 4 | DONE (lot 6) | N3-N5 : question exacte (Company you first work for), reponse exacte Stop'n'Drop (orthographe) ; source resetPassword.ts:59 ; question verifiee live |
 | resetPasswordUvoginChallenge | Sensitive Data Exposure | 4 | TODO |  |
-| typosquattingNpmChallenge | Vulnerable Components | 4 | TODO |  |
+| typosquattingNpmChallenge | Vulnerable Components | 4 | DONE (lot 11) | correct (non modifie) ; epilogue-js via complaint verifie live |
 | unionSqlInjectionChallenge | Injection | 4 | DONE (lot 5) | correct ; payload UNION ... FROM Users (9 colonnes) verifie live (emails exfiltres) ; non modifie |
 | usernameXssChallenge | XSS | 4 | DONE (lot 7) | N2-N5 : mecanisme FAUX (username=nonce -> CSP injectee via Image URL profileImage + sanitizeLegacy regex) ; payloads du test cypress officiel, bypass regex verifie hors ligne ; disabledEnv Docker |
 | localXssChallenge | XSS | 1 | DONE (lot 7) | correct (non modifie) ; payload iframe dans le champ de recherche, solve websocket (registerWebsocketEvents.ts:42) |
@@ -186,7 +190,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | dlpPasswordSprayingChallenge | Observability Failures | 5 | TODO |  |
 | emailLeakChallenge | Sensitive Data Exposure | 5 | TODO |  |
 | extraLanguageChallenge | Broken Anti Automation | 5 | TODO |  |
-| jwtUnsignedChallenge | Vulnerable Components | 5 | TODO |  |
+| jwtUnsignedChallenge | Vulnerable Components | 5 | DONE (lot 11) | N4-N5 : exp lointain manquant (verif echoue sans), livraison via Authorization/localStorage ; forge alg=none jwtn3d@ verifie live |
 | killChatbotChallenge | Vulnerable Components | 5 | TODO |  |
 | leakedApiKeyChallenge | Sensitive Data Exposure | 5 | TODO |  |
 | lfrChallenge | Vulnerable Components | 5 | TODO |  |
@@ -199,13 +203,13 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | svgInjectionChallenge | Security Misconfiguration | 5 | TODO |  |
 | tokenSaleChallenge | Security through Obscurity | 5 | TODO |  |
 | twoFactorAuthUnsafeSecretStorageChallenge | Broken Authentication | 5 | TODO |  |
-| typosquattingAngularChallenge | Vulnerable Components | 5 | TODO |  |
+| typosquattingAngularChallenge | Vulnerable Components | 5 | DONE (lot 11) | correct (non modifie) ; ngy-cookie via complaint verifie live |
 | xxeDosChallenge | XXE | 5 | TODO |  |
 | yamlBombChallenge | Insecure Deserialization | 5 | TODO |  |
 | continueCodeChallenge | Cryptographic Issues | 6 | DONE (lot 2) | N1 sans endpoint ; N4-N5 : PUT (GET = 500, teste), alphabet sans espaces parasites ; encode(999) + PUT teste |
 | fileWriteChallenge | Vulnerable Components | 6 | TODO |  |
 | forgedCouponChallenge | Cryptographic Issues | 6 | TODO |  |
-| jwtForgedChallenge | Vulnerable Components | 6 | TODO |  |
+| jwtForgedChallenge | Vulnerable Components | 6 | DONE (lot 11) | N4-N5 : cle = jwt.pub servie de CETTE instance (octets exacts, token fige echoue), disabledEnv Windows ; HS256 key-confusion rsa_lord@ forge et verifie live |
 | loginSupportChallenge | Security Misconfiguration | 6 | TODO |  |
 | premiumPaywallChallenge | Cryptographic Issues | 6 | TODO |  |
 | rceOccupyChallenge | Insecure Deserialization | 6 | TODO |  |
