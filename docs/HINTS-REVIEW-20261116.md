@@ -129,7 +129,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | exposedMetricsChallenge | Observability Failures | 1 | TODO |  |
 | missingEncodingChallenge | Improper Input Validation | 1 | DONE (lot 3) | N2-N5 : glyphe unicode faux dans N2 (ᔚ -> ᓚ) ; # = separateur de fragment, %23 ; URL encodee verify.ts:71 ; teste |
 | passwordRepeatChallenge | Improper Input Validation | 1 | TODO |  |
-| redirectCryptoCurrencyChallenge | Unvalidated Redirects | 1 | TODO |  |
+| redirectCryptoCurrencyChallenge | Unvalidated Redirects | 1 | DONE (lot 15) | correct (non modifie) ; /redirect?to=<adresse crypto exacte> verifie live (redirect.ts:17) |
 | web3SandboxChallenge | Broken Access Control | 1 | TODO |  |
 | zeroStarsChallenge | Improper Input Validation | 1 | DONE (lot 1) | N2-N5 reecrits : etoiles inventees -> mat-slider 1-5, bouton disabled par !rating ; API testee, voie UI deduite du code |
 | deprecatedInterfaceChallenge | Security Misconfiguration | 2 | TODO |  |
@@ -167,8 +167,8 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | restfulXssChallenge | XSS | 3 | DONE (lot 7) | N4-N5 : auth JWT inutile (PUT /api/Products/:id sans jeton) verifie live ; description setter (product.ts:47) |
 | uploadSizeChallenge | Improper Input Validation | 3 | DONE (lot 10) | N4-N5 : taille fausse (200KB rejete, multer plafonne a 200000) ; cible 100-200KB, 150KB verifie live (204, sans auth) |
 | uploadTypeChallenge | Improper Input Validation | 3 | DONE (lot 10) | correct (non modifie) ; POST /file-upload .png verifie live, sans auth (fileUpload.ts:69) |
-| xxeFileDisclosureChallenge | XXE | 3 | TODO |  |
-| accessLogDisclosureChallenge | Observability Failures | 4 | TODO |  |
+| xxeFileDisclosureChallenge | XXE | 3 | DONE (lot 15) | correct (non modifie) ; upload XML XXE file:///etc/passwd verifie live (fileUpload.ts:85) |
+| accessLogDisclosureChallenge | Observability Failures | 4 | DONE (lot 15) | correct (non modifie) ; GET /support/logs/access.log verifie live (verify.ts:72) |
 | christmasSpecialChallenge | Injection | 4 | DONE (lot 14) | correct (non modifie) ; SQLi search OR true-- (soft-delete), produit id 10 + checkout verifie live |
 | dataExportChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | dlpPastebinDataLeakChallenge | Sensitive Data Exposure | 4 | TODO |  |
@@ -187,7 +187,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | nullByteChallenge | Improper Input Validation | 4 | DONE (lot 10) | correct (non modifie) ; null-byte sur encrypt.pyc / auto-solve via les autres defis /ftp (fileServer.ts:46) |
 | oauthUserPasswordChallenge | Broken Authentication | 4 | DONE (lot 13) | correct (non modifie) ; bjoern.kimminich@gmail.com / base64(reverse email) verifie live (login.ts:65) |
 | persistedXssFeedbackChallenge | XSS | 4 | DONE (lot 3) | N2-N5 : pre-requis file-disclosure recadre (pedagogique, pas technique), sanitize-html 1.4.2, payload <<iframe>... verifie (produit la chaine exacte) ; validation = chaine stockee (feedback.ts) |
-| redirectChallenge | Unvalidated Redirects | 4 | TODO |  |
+| redirectChallenge | Unvalidated Redirects | 4 | DONE (lot 15) | N4-N5 : chemin obsolete (bkimminich -> juice-shop/juice-shop) ; faille includes(), payload attacker.com?x=<allowlist> verifie live |
 | resetPasswordBenderChallenge | Broken Authentication | 4 | DONE (lot 6) | N3-N5 : question exacte (Company you first work for), reponse exacte Stop'n'Drop (orthographe) ; source resetPassword.ts:59 ; question verifiee live |
 | resetPasswordUvoginChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | typosquattingNpmChallenge | Vulnerable Components | 4 | DONE (lot 11) | correct (non modifie) ; epilogue-js via complaint verifie live |
@@ -214,7 +214,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | tokenSaleChallenge | Security through Obscurity | 5 | TODO |  |
 | twoFactorAuthUnsafeSecretStorageChallenge | Broken Authentication | 5 | DONE (lot 13) | N4-N5 : hashcat sur mdp fort retire -> vrai defaut = totpSecret en clair (users.yml), exfil SQLi + TOTP + /rest/2fa/verify verifie live (2fa.ts:44) |
 | typosquattingAngularChallenge | Vulnerable Components | 5 | DONE (lot 11) | correct (non modifie) ; ngy-cookie via complaint verifie live |
-| xxeDosChallenge | XXE | 5 | TODO |  |
+| xxeDosChallenge | XXE | 5 | DONE (lot 15) | correct (non modifie) ; XML /dev/random ou blowup -> timeout ; code-confirme (DoS non rejoue), disabledEnv Docker |
 | yamlBombChallenge | Insecure Deserialization | 5 | TODO |  |
 | continueCodeChallenge | Cryptographic Issues | 6 | DONE (lot 2) | N1 sans endpoint ; N4-N5 : PUT (GET = 500, teste), alphabet sans espaces parasites ; encode(999) + PUT teste |
 | fileWriteChallenge | Vulnerable Components | 6 | TODO |  |

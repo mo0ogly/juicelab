@@ -46,46 +46,51 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Payload :
-      `/redirect?to=https://www.attacker.com?https://github.com/bkimminich
-      /juice-shop`. La cible reelle est attacker.com mais includes()
-      trouve l'URL juice-shop dans le string et passe. Le serveur redirige
-      vers attacker.com.
+      La faille est dans isRedirectAllowed (lib/insecurity.ts) : il
+      teste url.includes(allowedUrl), pas un prefixe. N'importe quelle
+      URL qui CONTIENT une entree de l'allowlist passe le controle,
+      meme si la vraie cible est ailleurs. L'allowlist actuelle contient
+      https://github.com/juice-shop/juice-shop (et non l'ancien chemin
+      bkimminich). La validation (redirectChallenge) exige en plus que
+      l'URL ne COMMENCE pas par une entree autorisee (redirection
+      reellement detournee).
     text_en: |
-      Payload:
-      `/redirect?to=https://www.attacker.com?https://github.com/bkimminich
-      /juice-shop`. Real target is attacker.com but includes() finds
-      juice-shop URL in string and passes. Server redirects to
-      attacker.com.
+      The flaw is in isRedirectAllowed (lib/insecurity.ts): it tests
+      url.includes(allowedUrl), not a prefix. Any URL that CONTAINS an
+      allowlist entry passes the check, even if the real target is
+      elsewhere. The current allowlist contains
+      https://github.com/juice-shop/juice-shop (not the old bkimminich
+      path). Validation (redirectChallenge) also requires the URL NOT
+      to START with an allowed entry (a genuinely unintended redirect).
     pedagogical_intent: |
-      Spell exact payload.
+      Explain the includes() flaw and the current allowlist entry.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow : (1) Lire lib/insecurity.ts:138
-      `allowed = allowed || url.includes(allowedUrl)` - faille includes().
-      (2) Lire redirectAllowlist (lib/insecurity.ts:124) - URLs autorisees
-      (github.com/bkimminich/juice-shop, etc.). (3) Crafter URL :
-      `http://localhost:3000/redirect?to=https://www.attacker.com?
-      https://github.com/bkimminich/juice-shop`. (4) Naviguer. (5) Le
-      serveur redirect.ts:18
-      `solveIf(() => isUnintendedRedirect(toUrl))` declenche.
-      isUnintendedRedirect verifie que l'URL ne commence PAS par un
-      allowedUrl - donc include passe mais startsWith fail = solve.
-      Defense : `const u = new URL(input); allowedHosts.has(u.hostname)`.
-      Source : lib/insecurity.ts:138.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : fabrique
+      une URL dont la vraie cible est attaquante mais qui contient une
+      entree de l'allowlist en parametre, par exemple
+        /redirect?to=https://www.attacker.com?x=https://github.com/juice-shop/juice-shop
+      (URL-encode la valeur de to). includes() trouve la sous-chaine
+      autorisee donc le redirect est accepte, mais la cible reelle est
+      attacker.com : le challenge se resout. Attention : l'ancien
+      chemin github.com/bkimminich/juice-shop n'est plus dans
+      l'allowlist et echoue (406).
+      Defense : valider l'URL de redirection par correspondance exacte
+      avec une liste blanche (ou un prefixe strict), jamais par
+      includes().
     text_en: |
-      Workflow: (1) Read lib/insecurity.ts:138
-      `allowed = allowed || url.includes(allowedUrl)` - includes() flaw.
-      (2) Read redirectAllowlist (lib/insecurity.ts:124) - allowed URLs
-      (github.com/bkimminich/juice-shop, etc.). (3) Craft URL:
-      `http://localhost:3000/redirect?to=https://www.attacker.com?
-      https://github.com/bkimminich/juice-shop`. (4) Navigate. (5) Server
-      redirect.ts:18 `solveIf(() => isUnintendedRedirect(toUrl))`
-      triggers. isUnintendedRedirect checks URL does NOT start with an
-      allowedUrl - so include passes but startsWith fails = solve.
-      Defense: `const u = new URL(input); allowedHosts.has(u.hostname)`.
-      Source: lib/insecurity.ts:138.
+      Solution (verified during testing on Juice Shop 19.2.1): build a
+      URL whose real target is attacker-controlled but which contains
+      an allowlist entry as a parameter, e.g.
+        /redirect?to=https://www.attacker.com?x=https://github.com/juice-shop/juice-shop
+      (URL-encode the to value). includes() finds the allowed substring
+      so the redirect is accepted, but the real target is attacker.com:
+      the challenge solves. Note: the old path
+      github.com/bkimminich/juice-shop is no longer in the allowlist
+      and fails (406).
+      Defense: validate the redirect URL by exact allowlist match (or a
+      strict prefix), never by includes().
     pedagogical_intent: |
-      Solution + canonical fix.
+      Full solution: verified payload with the current path, defense.
