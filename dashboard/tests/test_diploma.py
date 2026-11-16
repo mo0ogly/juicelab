@@ -20,11 +20,8 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from diploma_routes import (
-    _mention_for,
-    build_diploma_md,
-    sign_diploma,
-)
+from diploma_routes import build_diploma_md, sign_diploma
+from diploma_scores import mention_for as _mention_for
 from verify_proof import verify
 
 TOKEN = "teacher-test-token-very-long-32chars!!"
@@ -32,6 +29,20 @@ AUTH = {"X-Teacher-Token": TOKEN}
 PROOF_SECRET = "diploma-test-secret-very-long-32chars"
 SECRET = PROOF_SECRET.encode()
 COHORT = "M2-IA-2026"
+
+
+ISSUED = "2026-11-16T10:00:00+00:00"
+FIGURES = {
+    "mention": "tres_bien", "progress_pct": 92, "challenges_solved": 12,
+    "score_challenge": 85, "quiz_pct": 80, "quiz_missing": 1, "final_score": 83,
+    "flags_verified": 3, "hints_used": 5, "hint_penalty": 15,
+    "journals_written": 3, "journal_words": 420,
+}
+
+
+def _body(name, cohort):
+    return build_diploma_md(student_token="abc", student_name=name, cohort_id=cohort,
+                            institution="Sorbonne", figures=FIGURES, td_total=13)
 
 
 # --- mention thresholds --------------------------------------------------
@@ -65,49 +76,31 @@ def test_mention_boundaries():
 # --- HMAC roundtrip ------------------------------------------------------
 
 def test_sign_diploma_roundtrip():
-    body = build_diploma_md(
-        student_token="abc", student_name="Alice", cohort_id=COHORT,
-        mention="tres_bien", progress_pct=92, quiz_pct=80,
-        challenges_solved=12, hints_used=5, hint_penalty=15,
-        score_challenge=85, flags_verified=3, quiz_submitted=True,
-        journals_written=3, journal_words=420,
-        institution="Sorbonne",
-    )
+    body = _body("Alice", COHORT)
     signed = sign_diploma(body, secret=SECRET, student_token="abc",
-                          cohort_id=COHORT, mention="tres_bien", score_pct=92)
+                          cohort_id=COHORT, mention="tres_bien", progress_pct=92,
+                          final_score=75, issued_at=ISSUED)
     ok, meta = verify(signed, SECRET)
     assert ok is True
-    assert meta["scheme"] == "diploma.v1"
+    assert meta["scheme"] == "diploma.v2"
     assert meta["student"] == "abc"
 
 
 def test_sign_diploma_tamper_body():
-    body = build_diploma_md(
-        student_token="abc", student_name="Alice", cohort_id=COHORT,
-        mention="tres_bien", progress_pct=92, quiz_pct=80,
-        challenges_solved=12, hints_used=5, hint_penalty=15,
-        score_challenge=85, flags_verified=3, quiz_submitted=True,
-        journals_written=3, journal_words=420,
-        institution="Sorbonne",
-    )
+    body = _body("Alice", COHORT)
     signed = sign_diploma(body, secret=SECRET, student_token="abc",
-                          cohort_id=COHORT, mention="tres_bien", score_pct=92)
+                          cohort_id=COHORT, mention="tres_bien", progress_pct=92,
+                          final_score=75, issued_at=ISSUED)
     tampered = signed.replace("Alice", "Mallory")
     ok, _ = verify(tampered, SECRET)
     assert ok is False
 
 
 def test_sign_diploma_wrong_secret():
-    body = build_diploma_md(
-        student_token="abc", student_name="A", cohort_id="C",
-        mention="bien", progress_pct=60, quiz_pct=60,
-        challenges_solved=8, hints_used=2, hint_penalty=10,
-        score_challenge=90, flags_verified=1, quiz_submitted=True,
-        journals_written=1, journal_words=80,
-        institution="S",
-    )
+    body = _body("A", "C")
     signed = sign_diploma(body, secret=SECRET, student_token="abc",
-                          cohort_id="C", mention="bien", score_pct=60)
+                          cohort_id="C", mention="bien", progress_pct=60,
+                          final_score=75, issued_at=ISSUED)
     ok, _ = verify(signed, b"y" * 32)
     assert ok is False
 
@@ -115,23 +108,18 @@ def test_sign_diploma_wrong_secret():
 def test_sign_diploma_empty_secret_raises():
     with pytest.raises(RuntimeError, match="DASHBOARD_PROOF_SECRET"):
         sign_diploma("body", secret=b"", student_token="s",
-                     cohort_id="c", mention="bien", score_pct=60)
+                     cohort_id="c", mention="bien", progress_pct=60,
+                     final_score=None, issued_at=ISSUED)
 
 
 def test_diploma_scheme_distinct_from_proof():
-    """A diploma must have SCHEME=diploma.v1, not v1 (proof). Defense
+    """A diploma must have SCHEME=diploma.v2, not v1 (proof). Defense
     against a forged challenge proof being repackaged as a diploma."""
-    body = build_diploma_md(
-        student_token="abc", student_name="A", cohort_id="C",
-        mention="bien", progress_pct=60, quiz_pct=60,
-        challenges_solved=8, hints_used=2, hint_penalty=10,
-        score_challenge=90, flags_verified=1, quiz_submitted=True,
-        journals_written=1, journal_words=80,
-        institution="S",
-    )
+    body = _body("A", "C")
     signed = sign_diploma(body, secret=SECRET, student_token="abc",
-                          cohort_id="C", mention="bien", score_pct=60)
-    assert "SCHEME: diploma.v1" in signed
+                          cohort_id="C", mention="bien", progress_pct=60,
+                          final_score=75, issued_at=ISSUED)
+    assert "SCHEME: diploma.v2" in signed
     assert "DIPLOMA: HMAC-SHA256" in signed
 
 
@@ -219,7 +207,7 @@ def test_diplomas_zip_include_all_returns_zip(isolated_app):
         assert len(names) == 1
         content = zf.read(names[0]).decode("utf-8")
         assert "SIGNATURE: " in content
-        assert "SCHEME: diploma.v1" in content
+        assert "SCHEME: diploma.v2" in content
 
 
 def test_diplomas_zip_requires_auth(isolated_app):
@@ -239,3 +227,114 @@ def test_diplomas_zip_disabled_when_secret_missing(tmp_path, monkeypatch):
     c = app_mod.create_app().test_client()
     r = c.get("/api/diplomas.zip?cohort=X", headers=AUTH)
     assert r.status_code == 503
+
+
+# --- per-challenge scores (regression : global hint sum) ------------------
+
+def _story(key, solved=True, costs=(), quiz=None, flag=False):
+    return {"challenge_key": key, "status": "solved" if solved else "in_progress",
+            "hints": [{"cost_pct": c} for c in costs], "hint_cost_total": sum(costs),
+            "quiz": {"score": quiz} if quiz is not None else None, "flag_verified": flag}
+
+
+def test_hint_penalty_is_per_challenge_not_global():
+    """Old rule : 100 - sum of ALL hint costs -> 0 as soon as 100 % of hints
+    were spent anywhere. Now each challenge is scored on its own hints."""
+    from diploma_scores import diploma_figures
+    f = diploma_figures([_story("a", costs=(5, 10, 20, 35, 50), quiz=80),
+                         _story("b", quiz=90), _story("c", quiz=90)], td_total=3)
+    assert f["score_challenge"] == round((0 + 100 + 100) / 3)
+    assert f["final_score"] == round((40 + 95 + 95) / 3)
+
+
+def test_final_score_matches_proof_formula():
+    from diploma_scores import challenge_score
+    c = challenge_score(_story("a", costs=(5, 10), quiz=70, flag=True))
+    assert c == {"challenge_key": "a", "score_challenge": 85, "score_quiz": 70,
+                 "bonus_flag": 10, "score_final": 88}
+    assert challenge_score(_story("b", quiz=100, flag=True))["score_final"] == 100
+
+
+def test_quiz_of_unsolved_challenge_is_ignored_and_missing_quiz_counts_zero():
+    from diploma_scores import diploma_figures
+    f = diploma_figures([_story("a", quiz=None), _story("b", solved=False, quiz=10)], td_total=2)
+    assert f["quiz_pct"] is None and f["quiz_missing"] == 1
+    assert f["final_score"] == 50 and f["hints_used"] == 0
+
+
+def test_full_marks_without_quiz_no_longer_blocks_progress_mention():
+    """Old rule used quiz avg 0 when no quiz -> at best 'reussite'. Now the
+    final score drives it ; 100 % solved without quiz = final 50 -> reussite,
+    stated on the diploma ; with quizzes the high mention is reachable."""
+    from diploma_scores import diploma_figures
+    no_quiz = diploma_figures([_story(k) for k in "abcde"], td_total=5)
+    quiz = diploma_figures([_story(k, quiz=60) for k in "abcde"], td_total=5)
+    assert (no_quiz["final_score"], no_quiz["mention"]) == (50, "reussite")
+    assert (quiz["final_score"], quiz["mention"]) == (80, "tres_bien")
+
+
+def test_nothing_solved():
+    from diploma_scores import diploma_figures
+    f = diploma_figures([_story("a", solved=False, costs=(5,))], td_total=13)
+    assert f["final_score"] is None and f["mention"] == "participation" and f["hint_penalty"] == 5
+
+
+def test_signed_footer_fields_and_verifier_output():
+    body = _body("Alice", COHORT)
+    signed = sign_diploma(body, secret=SECRET, student_token="abc", cohort_id=COHORT,
+                          mention="tres_bien", progress_pct=92, final_score=83, issued_at=ISSUED)
+    ok, meta = verify(signed, SECRET)
+    assert ok and meta["progress_pct"] == "92" and meta["final_score"] == "83"
+    assert meta["mention"] == "tres_bien" and meta["cohort"] == COHORT and meta["timestamp"] == ISSUED
+    assert "SCORE_PCT" not in signed
+
+
+# --- registry (regression : new date and signature on every view) ---------
+
+def _diploma_page(client, token):
+    r = client.get(f"/admin/diploma/{token}?cohort=" + COHORT, headers=AUTH)
+    assert r.status_code == 200
+    return r.get_data(as_text=True)
+
+
+def _signature(html):
+    import re
+    return re.search(r"SIGNATURE: ([0-9a-f]{64})", html).group(1)
+
+
+def test_reprint_serves_the_same_signed_diploma(isolated_app):
+    _seed_student(isolated_app, token="stud-reg", solve_count=2)
+    first = _diploma_page(isolated_app, "stud-reg")
+    second = _diploma_page(isolated_app, "stud-reg")
+    assert _signature(first) == _signature(second)
+    assert 'class="diploma-stale"' not in second
+
+
+def test_new_results_flag_stale_and_reissue_adds_a_row(isolated_app):
+    _seed_student(isolated_app, token="stud-up", solve_count=1)
+    before = _signature(_diploma_page(isolated_app, "stud-up"))
+    _seed_student(isolated_app, token="stud-up", solve_count=3)
+    stale = _diploma_page(isolated_app, "stud-up")
+    assert _signature(stale) == before and 'class="diploma-stale"' in stale
+    r = isolated_app.post("/api/diplomas/stud-up/reissue?cohort=" + COHORT, headers=AUTH)
+    assert r.status_code == 200 and r.get_json()["ok"] is True
+    after = _diploma_page(isolated_app, "stud-up")
+    assert _signature(after) != before and 'class="diploma-stale"' not in after
+    import db
+    with db.get_connection() as c:
+        assert c.execute("SELECT COUNT(*) FROM diplomas WHERE student_token='stud-up'").fetchone()[0] == 2
+
+
+def test_reissue_requires_teacher_and_known_student(isolated_app):
+    _seed_student(isolated_app, token="stud-x", solve_count=1)
+    assert isolated_app.post("/api/diplomas/stud-x/reissue?cohort=" + COHORT).status_code in (401, 403)
+    assert isolated_app.post("/api/diplomas/nobody/reissue?cohort=" + COHORT, headers=AUTH).status_code == 404
+
+
+def test_zip_reuses_the_stored_diploma(isolated_app):
+    _seed_student(isolated_app, token="stud-zip", solve_count=13)
+    sig = _signature(_diploma_page(isolated_app, "stud-zip"))
+    r = isolated_app.get("/api/diplomas.zip?cohort=" + COHORT, headers=AUTH)
+    with zipfile.ZipFile(io.BytesIO(r.data)) as zf:
+        (name,) = zf.namelist()
+        assert sig in zf.read(name).decode()

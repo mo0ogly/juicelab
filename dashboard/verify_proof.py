@@ -16,6 +16,11 @@ A signed proof has the structure :
 The signature covers everything from the start of the file up to (but not
 including) the line "SIGNATURE: <hex>".
 
+Diplomas (diploma_routes) use the same layout with a "DIPLOMA: HMAC-SHA256"
+footer : SCHEME diploma.v2 carries COHORT, MENTION, PROGRESS_PCT and
+FINAL_SCORE ; diploma.v1 carried SCORE_PCT (the progression). The tool
+prints whichever of these fields the file holds.
+
 Usage :
     python verify_proof.py <path-to.md> [--secret SECRET | --secret-env VAR]
 
@@ -57,7 +62,8 @@ def verify(content: str, secret: bytes) -> tuple[bool, dict[str, str]]:
 
     meta: dict[str, str] = {}
     for line in signed_payload.splitlines():
-        for key in ("PROOF", "SCHEME", "TIMESTAMP", "STUDENT", "CHALLENGE"):
+        for key in ("PROOF", "DIPLOMA", "SCHEME", "TIMESTAMP", "STUDENT", "CHALLENGE", "COHORT",
+                    "MENTION", "PROGRESS_PCT", "FINAL_SCORE", "SCORE_PCT"):
             prefix = key + ": "
             if line.startswith(prefix):
                 meta[key.lower()] = line[len(prefix) :].strip()
@@ -88,7 +94,8 @@ def main(argv: list[str]) -> int:
     ok, meta = verify(content, secret)
     label = "VALID  " if ok else "INVALID"
     print(label + " | " + args.path)
-    for k in ("scheme", "timestamp", "student", "challenge"):
+    for k in ("scheme", "timestamp", "student", "challenge", "cohort", "mention",
+              "progress_pct", "final_score", "score_pct"):
         if k in meta:
             print("  " + k + ": " + meta[k])
     if "error" in meta:

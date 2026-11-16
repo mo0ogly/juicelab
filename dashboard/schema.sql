@@ -99,3 +99,20 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 CREATE INDEX IF NOT EXISTS idx_alerts_cohort_unack ON alerts(cohort_id, ack_at);
 CREATE INDEX IF NOT EXISTS idx_alerts_recent ON alerts(cohort_id, created_at DESC);
+
+-- Issued diplomas (registry). One row per issuance ; the latest row of a
+-- (cohort, student) is the diploma served. Rows are never updated : a
+-- re-issue adds a row, so earlier signed bodies stay on record.
+CREATE TABLE IF NOT EXISTS diplomas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  cohort_id TEXT NOT NULL,
+  student_token TEXT NOT NULL,
+  issued_at TEXT NOT NULL,
+  mention TEXT NOT NULL,
+  progress_pct INTEGER NOT NULL,
+  final_score INTEGER,
+  figures_json TEXT NOT NULL,
+  signed_body TEXT NOT NULL,
+  body_sha256 TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_diplomas_student ON diplomas(cohort_id, student_token, id);

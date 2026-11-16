@@ -252,7 +252,7 @@
   "DIPLOMA_STAT_QUIZ_AVG": "Quiz average",
   "DIPLOMA_STAT_FLAGS": "CTF flags verified",
   "DIPLOMA_STAT_HINTS": "Hints used",
-  "DIPLOMA_STAT_SCORE_CHALLENGE": "Challenge score",
+  "DIPLOMA_STAT_SCORE_CHALLENGE": "Average challenge score",
   "DIPLOMA_STAT_JOURNALS": "Retex journals",
   "DIPLOMA_WORDS": "words",
   "DIPLOMA_ISSUED_AT": "Issued on",
@@ -395,5 +395,12 @@
   "STORY_JOURNAL": "Journal written ({n} words)",
   "STORY_STARTED_AT": "Started {ts}",
   "STORY_SUMMARY_SOLVED": "solved in {d}, {n} hint(s)",
-  "STORY_SUMMARY_OPEN": "in progress for {d}, {n} hint(s)"
+  "STORY_SUMMARY_OPEN": "in progress for {d}, {n} hint(s)",
+  "DIPLOMA_STAT_FINAL": "Final score",
+  "DIPLOMA_QUIZ_MISSING": "{n} solved without quiz, counted 0",
+  "DIPLOMA_ISSUANCE": "Issued {date} (issuance no. {n})",
+  "DIPLOMA_STALE": "The student's results changed since this issuance.",
+  "DIPLOMA_REISSUE": "Re-issue",
+  "DIPLOMA_REISSUE_CONFIRM": "Issue a new diploma from current results? The previous one stays on record.",
+  "DIPLOMA_REISSUE_FAILED": "Re-issue failed."
 }

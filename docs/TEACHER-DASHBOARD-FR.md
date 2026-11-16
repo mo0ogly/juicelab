@@ -470,6 +470,27 @@ serveur.
 Limites : les heures du récit viennent du poste de l'élève ; une séance
 interrompue par une pause plus longue que l'horizon compte pour deux.
 
+### 9.5 Diplômes
+
+Bouton **Diplôme** du roster (`/admin/diploma/<token>?cohort=…`) et export
+**ZIP** (`/api/diplomas.zip?cohort=…`, élèves validés ; mention
+« participation » exclue sauf `include_all=1`).
+
+- **Calcul** : chaque challenge résolu est noté comme sur sa preuve —
+  `min(100, (100 − indices de CE challenge + quiz) / 2 + 10 si flag)` — et le
+  diplôme fait la moyenne. Un challenge résolu sans quiz compte 0 au quiz ;
+  le diplôme dit combien. Mention : progression ≥ 80 % et score final ≥ 70 →
+  très bien ; ≥ 60 % et ≥ 60 → bien ; progression ≥ 40 % → réussite.
+- **Émission** : le premier affichage (ou le ZIP) émet le diplôme et
+  l'enregistre. Ensuite il est resservi à l'identique : même date, même
+  signature. Si les résultats de l'élève ont changé, la page l'indique ;
+  **Réémettre** crée un nouveau diplôme, l'ancien reste enregistré.
+  Ouvrir un diplôme en cours de TD le fige : réémettre en fin de TD.
+- **Vérification** : `python dashboard/verify_proof.py fichier.md` (avec
+  `DASHBOARD_PROOF_SECRET`) affiche cohorte, mention, progression, score
+  final et date d'émission. Format `diploma.v2` ; les diplômes `diploma.v1`
+  antérieurs restent vérifiables (leur `SCORE_PCT` était la progression).
+
 ## 10. Gestion cohorte — workflow type
 
 ### Créer une cohorte

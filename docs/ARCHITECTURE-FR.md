@@ -285,6 +285,8 @@ Cas limites :
 - **Cohorte d'indices** fixée par `HINT_COST_BY_LEVEL` dans `models/juicelab.types.ts` (5/10/20/35/50). Les deux fichiers (les constantes et le `cost_pct` du YAML) doivent changer ensemble.
 - **Le bonus flag** n'est accordé que via `/api/verify-flag` après vérification HMAC côté serveur. L'interface Coach ne peut pas le définir de son propre chef.
 
+Diplôme (`dashboard/diploma_scores.py`) : chaque challenge **résolu** est noté avec la formule ci-dessus, sur ses propres indices, puis le diplôme fait la moyenne. Contrairement à la preuve, qui porte sur un seul challenge, le diplôme ne peut pas laisser un score « partiel » : un challenge résolu sans quiz compte `score_quiz = 0` dans la moyenne, et le diplôme indique combien de challenges résolus n'ont pas de quiz. Les indices pris sur un challenge non résolu ne coûtent rien au diplôme. Mention : progression ≥ 80 % et score final ≥ 70 → très bien ; ≥ 60 % et ≥ 60 → bien ; progression ≥ 40 % → réussite ; sinon participation. Le diplôme est émis une fois, enregistré (table `diplomas`) et resservi à l'identique ; une réémission explicite ajoute une ligne (voir TEACHER-DASHBOARD, 9.5).
+
 ---
 
 ## Chaîne de vérification du flag CTF

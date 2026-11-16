@@ -252,7 +252,7 @@
   "DIPLOMA_STAT_QUIZ_AVG": "Moyenne quiz",
   "DIPLOMA_STAT_FLAGS": "Flags CTF verifies",
   "DIPLOMA_STAT_HINTS": "Indices consommes",
-  "DIPLOMA_STAT_SCORE_CHALLENGE": "Score challenge",
+  "DIPLOMA_STAT_SCORE_CHALLENGE": "Score challenge moyen",
   "DIPLOMA_STAT_JOURNALS": "Journaux retex",
   "DIPLOMA_WORDS": "mots",
   "DIPLOMA_ISSUED_AT": "Date d'emission",
@@ -395,5 +395,12 @@
   "STORY_JOURNAL": "Journal redige ({n} mots)",
   "STORY_STARTED_AT": "Commence le {ts}",
   "STORY_SUMMARY_SOLVED": "resolu en {d}, {n} indice(s)",
-  "STORY_SUMMARY_OPEN": "en cours depuis {d}, {n} indice(s)"
+  "STORY_SUMMARY_OPEN": "en cours depuis {d}, {n} indice(s)",
+  "DIPLOMA_STAT_FINAL": "Score final",
+  "DIPLOMA_QUIZ_MISSING": "{n} resolu(s) sans quiz, compte(s) 0",
+  "DIPLOMA_ISSUANCE": "Emis le {date} (emission n. {n})",
+  "DIPLOMA_STALE": "Les resultats de l'eleve ont change depuis cette emission.",
+  "DIPLOMA_REISSUE": "Reemettre",
+  "DIPLOMA_REISSUE_CONFIRM": "Emettre un nouveau diplome avec les resultats actuels ? L'ancien reste enregistre.",
+  "DIPLOMA_REISSUE_FAILED": "Echec de la reemission."
 }

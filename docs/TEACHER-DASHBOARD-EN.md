@@ -444,6 +444,28 @@ sessions. The cut uses the server clock.
 Limits: story times come from the student's machine; a session interrupted
 by a break longer than the horizon counts as two.
 
+### 9.5 Diplomas
+
+**Diploma** button in the roster (`/admin/diploma/<token>?cohort=…`) and
+**ZIP** export (`/api/diplomas.zip?cohort=…`, validated students;
+"participation" excluded unless `include_all=1`).
+
+- **Scoring**: each solved challenge is scored as on its proof —
+  `min(100, (100 − hints of THAT challenge + quiz) / 2 + 10 if flag)` — and
+  the diploma averages them. A solved challenge without quiz counts 0 for the
+  quiz; the diploma says how many. Mention: progression ≥ 80 % and final
+  score ≥ 70 → très bien; ≥ 60 % and ≥ 60 → bien; progression ≥ 40 % →
+  réussite.
+- **Issuance**: the first view (or the ZIP) issues the diploma and records
+  it. It is then served unchanged: same date, same signature. When the
+  student's results changed, the page says so; **Re-issue** creates a new
+  diploma, the previous one stays on record. Opening a diploma during the
+  lab freezes it: re-issue at the end.
+- **Verification**: `python dashboard/verify_proof.py file.md` (with
+  `DASHBOARD_PROOF_SECRET`) prints cohort, mention, progression, final score
+  and issuance date. Format `diploma.v2`; earlier `diploma.v1` diplomas still
+  verify (their `SCORE_PCT` was the progression).
+
 ## 10. Cohort management — typical workflow
 
 ### Create a cohort

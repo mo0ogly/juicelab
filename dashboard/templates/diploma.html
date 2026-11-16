@@ -132,6 +132,9 @@
       color: var(--text-soft); text-decoration: none;
       border-bottom: 1px dotted var(--text-mute);
     }
+    .diploma-registry { font-family: var(--font-mono); font-size: 11px; color: var(--text-mute); margin-top: -16px; }
+    .diploma-registry .diploma-stale { color: var(--amber); }
+    .diploma-actions button.secondary { background: transparent; color: var(--text-soft); border-color: var(--border-strong); }
     .diploma-actions a:hover { color: var(--accent); border-bottom-color: var(--accent); }
     details summary {
       cursor: pointer;
@@ -171,42 +174,51 @@
     <button id="diploma-print-btn" type="button">{{ t('DIPLOMA_PRINT') }}</button>
     <a href="/admin/students?cohort={{ cohort_id }}">{{ t('DIPLOMA_BACK') }}</a>
   </div>
+  <div class="diploma-actions diploma-registry">
+    <span>{{ t('DIPLOMA_ISSUANCE', date=issued_at, n=issuances) }}</span>
+    {% if stale %}<strong class="diploma-stale">{{ t('DIPLOMA_STALE') }}</strong>{% endif %}
+    <button id="diploma-reissue-btn" type="button" class="secondary">{{ t('DIPLOMA_REISSUE') }}</button>
+  </div>
   <article class="diploma-print" role="document">
     <p class="diploma-institution">{{ institution }}</p>
     <h1 class="diploma-title">{{ t('DIPLOMA_TITLE') }}</h1>
     <p class="diploma-subtitle">{{ t('DIPLOMA_COHORT_LABEL') }} <strong>{{ cohort_id }}</strong></p>
 
     <p class="diploma-recipient">{{ student_name or student_token }}</p>
-    <p class="diploma-mention {{ mention }}">{{ t('DIPLOMA_MENTION_' + mention.upper()) }}</p>
+    <p class="diploma-mention {{ f.mention }}">{{ t('DIPLOMA_MENTION_' + f.mention.upper()) }}</p>
 
     <div class="diploma-stats">
       <div class="diploma-stat">
         <span class="lbl">{{ t('TABLE_PROGRESSION') }}</span>
-        <span class="val">{{ progress_pct }}%</span>
+        <span class="val">{{ f.progress_pct }}%</span>
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_STAT_SOLVED') }}</span>
-        <span class="val">{{ challenges_solved }} / 13</span>
+        <span class="val">{{ f.challenges_solved }} / {{ td_total }}</span>
       </div>
       <div class="diploma-stat">
-        <span class="lbl">{{ t('DIPLOMA_STAT_QUIZ_AVG') }}</span>
-        <span class="val">{% if quiz_submitted %}{{ quiz_pct }}%{% else %}&mdash;{% endif %}</span>
-      </div>
-      <div class="diploma-stat">
-        <span class="lbl">{{ t('DIPLOMA_STAT_FLAGS') }}</span>
-        <span class="val">{{ flags_verified }}</span>
-      </div>
-      <div class="diploma-stat">
-        <span class="lbl">{{ t('DIPLOMA_STAT_HINTS') }}</span>
-        <span class="val">{{ hints_used }} (&minus;{{ hint_penalty }}%)</span>
+        <span class="lbl">{{ t('DIPLOMA_STAT_FINAL') }}</span>
+        <span class="val">{% if f.final_score is not none %}{{ f.final_score }} / 100{% else %}&mdash;{% endif %}</span>
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_STAT_SCORE_CHALLENGE') }}</span>
-        <span class="val">{{ score_challenge }} / 100</span>
+        <span class="val">{% if f.score_challenge is not none %}{{ f.score_challenge }} / 100{% else %}&mdash;{% endif %}</span>
+      </div>
+      <div class="diploma-stat">
+        <span class="lbl">{{ t('DIPLOMA_STAT_QUIZ_AVG') }}</span>
+        <span class="val">{% if f.quiz_pct is not none %}{{ f.quiz_pct }}%{% else %}&mdash;{% endif %}{% if f.quiz_missing %} <small>({{ t('DIPLOMA_QUIZ_MISSING', n=f.quiz_missing) }})</small>{% endif %}</span>
+      </div>
+      <div class="diploma-stat">
+        <span class="lbl">{{ t('DIPLOMA_STAT_FLAGS') }}</span>
+        <span class="val">{{ f.flags_verified }}</span>
+      </div>
+      <div class="diploma-stat">
+        <span class="lbl">{{ t('DIPLOMA_STAT_HINTS') }}</span>
+        <span class="val">{{ f.hints_used }}</span>
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_STAT_JOURNALS') }}</span>
-        <span class="val">{{ journals_written }} ({{ journal_words }} {{ t('DIPLOMA_WORDS') }})</span>
+        <span class="val">{{ f.journals_written }} ({{ f.journal_words }} {{ t('DIPLOMA_WORDS') }})</span>
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_ISSUED_AT') }}</span>
@@ -231,6 +243,23 @@
   </article>
   <script nonce="{{ csp_nonce }}">
     document.getElementById('diploma-print-btn').addEventListener('click', function() { window.print(); });
+    (function () {
+      var btn = document.getElementById('diploma-reissue-btn');
+      var msg = {{ {'confirm': t('DIPLOMA_REISSUE_CONFIRM'), 'failed': t('DIPLOMA_REISSUE_FAILED')} | tojson }};
+      function cookie(n) {
+        var m = document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)'));
+        return m ? decodeURIComponent(m[1]) : '';
+      }
+      btn.addEventListener('click', function () {
+        if (!window.confirm(msg.confirm)) return;
+        btn.disabled = true;
+        fetch('/api/diplomas/' + encodeURIComponent({{ student_token | tojson }}) + '/reissue?cohort='
+              + encodeURIComponent({{ cohort_id | tojson }}),
+              { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': cookie('csrf_token') } })
+          .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); window.location.reload(); })
+          .catch(function () { btn.disabled = false; window.alert(msg.failed); });
+      });
+    })();
   </script>
 </body>
 </html>
