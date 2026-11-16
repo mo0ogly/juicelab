@@ -37,54 +37,64 @@ hints:
   N3:
     cost_pct: 20
     text_fr: |
-      Ouvre plusieurs produits. Pour chacun, regarde la section
-      Reviews dans le dialog de details. Cherche l'auteur "Jim" ou un
-      texte ou il s'attribue lui-meme. Dans Juice Shop, l'auteur du
-      review est affiche avec son email complet (pas un alias) — donc
-      des que tu vois "jim@..." c'est gagne. Source : tutoriel OWASP
-      loginJim.ts ligne 51-54.
+      Ouvre plusieurs produits et lis la section Reviews du dialog de
+      details : l'auteur d'un avis est affiche avec son email complet.
+      Des que tu vois jim@juice-sh.op (par exemple sur l'avis d'un
+      sticker ou d'un patch), tu as sa cible. Le tutoriel natif fait
+      exactement ce parcours (loginJim.ts, etape "user reviews").
     text_en: |
-      Open several products. For each, look at the Reviews section
-      in the details dialog. Look for an author "Jim" or text where
-      he attributes himself. In Juice Shop, the review author is
-      displayed with the full email (not an alias) — so as soon as
-      you see "jim@..." you win. Source: OWASP tutorial loginJim.ts
-      line 51-54.
+      Open several products and read the Reviews section of the
+      details dialog: a review's author is shown with its full email.
+      As soon as you see jim@juice-sh.op (for instance on a sticker or
+      patch review), you have the target. The native tutorial follows
+      exactly this path (loginJim.ts, "user reviews" step).
     pedagogical_intent: |
-      Reduce the search scope and explain the leak mechanic.
+      Point at the real leak (review author email) and the tutorial.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Si l'OSINT t'embete, sache que la convention email business
-      donne presque toujours firstName@domain. Donc jim@juice-sh.op
-      est l'email a tester (hint officiel OWASP : "smart-guess Jim's
-      email"). La SQLi a appliquer ensuite est identique a Bender :
-      apostrophe + double tiret en fin de l'email pour commenter le
-      AND password = ....
+      La convention d'emails donne presque toujours prenom@domaine
+      (hint OWASP : "smart-guess Jim's email"), confirme par les avis :
+      jim@juice-sh.op. La SQLi est identique a Bender : le backend
+      construit SELECT * FROM Users WHERE email = '<input>' AND
+      password = '<hash>' AND deletedAt IS NULL (routes/login.ts).
+      Ferme la chaine de l'email avec une apostrophe puis commente la
+      suite.
     text_en: |
-      If OSINT bothers you, know that the business email convention
-      almost always yields firstName@domain. So jim@juice-sh.op is
-      the email to try (official OWASP hint: "smart-guess Jim's
-      email"). The SQLi to apply next is identical to Bender:
-      single quote + double dash at the end of the email to comment
-      out the AND password = ... clause.
+      The email convention is almost always firstname@domain (OWASP
+      hint: "smart-guess Jim's email"), confirmed by the reviews:
+      jim@juice-sh.op. The SQLi is identical to Bender: the backend
+      builds SELECT * FROM Users WHERE email = '<input>' AND password
+      = '<hash>' AND deletedAt IS NULL (routes/login.ts). Close the
+      email string with a single quote then comment out the rest.
     pedagogical_intent: |
-      Offer a fallback path (guessing) and pre-spell the SQLi shape.
+      Confirm the email and reuse the exact query/bypass.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Sur le formulaire de login, tape email = jim@juice-sh.op'--
-      (sans espace apres l'apostrophe), password = n'importe quoi
-      (commente). Clique Login. Tu es Jim. Source exacte : tutoriel
-      hacking-instructor loginJim.ts ligne 87-90 et 99-101.
-      Defense : (1) prepared statements / binding parametre Sequelize sur toutes les queries de login. (2) MFA TOTP comme second facteur pour bloquer les sessions meme quand le check password est bypasse. (3) Rate-limiter les tentatives de login + blocage du compte apres N echecs.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : champ
+      email = jim@juice-sh.op'-- (apostrophe puis deux tirets, sans
+      espace apres l'apostrophe), mot de passe quelconque, puis Login.
+      La requete devient SELECT * FROM Users WHERE email =
+      'jim@juice-sh.op'-- AND password = '...' AND deletedAt IS NULL ;
+      le -- commente le controle du mot de passe et tu es connecte
+      comme Jim. Payload identique au tutoriel natif (loginJim.ts:90).
+      Defense : (1) requetes parametrees (binding Sequelize) sur les
+      requetes de login. (2) MFA TOTP en second facteur. (3) limiter
+      le debit des tentatives et bloquer le compte apres des echecs
+      repetes.
     text_en: |
-      On the login form, type email = jim@juice-sh.op'-- (no space
-      after the quote), password = anything (commented out). Click
-      Login. You are Jim. Exact source: hacking-instructor tutorial
-      loginJim.ts line 87-90 and 99-101.
-      Defense: (1) prepared statements / Sequelize parameterized binding on all login queries. (2) MFA TOTP as second factor to block sessions even when password check is bypassed. (3) Rate-limit login attempts + account lockout after N failures.
+      Solution (verified during testing on Juice Shop 19.2.1): email
+      field = jim@juice-sh.op'-- (single quote then two dashes, no
+      space after the quote), any password, then Login. The query
+      becomes SELECT * FROM Users WHERE email = 'jim@juice-sh.op'--
+      AND password = '...' AND deletedAt IS NULL; the -- comments out
+      the password check and you are logged in as Jim. Same payload as
+      the native tutorial (loginJim.ts:90).
+      Defense: (1) parameterized queries (Sequelize binding) on login
+      queries. (2) MFA TOTP as a second factor. (3) rate-limit
+      attempts and lock the account after repeated failures.
     pedagogical_intent: |
-      Quasi-solution : exact payload + source citation.
+      Full solution: verified payload, accurate query, defense.

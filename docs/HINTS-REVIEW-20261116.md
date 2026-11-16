@@ -64,6 +64,11 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   mot de passe d'Emma ; videoXss exige la chaîne fileWrite ; web3Wallet exige
   une transaction Sepolia réelle). Vérifications par lecture du code + config
   lab, assets servis confirmés (IMG_4253.jpg, owasp_promo.vtt : 200).
+  Lot 5 (famille Injection SQL) : loginAdmin/Bender/Jim/dbSchema/union
+  tous rejoués live sur 43119 (injections de login + UNION sur /rest/products
+  /search). Premiers packs trouvés déjà corrects : dbSchema et unionSql (non
+  modifiés) ; loginAdmin correct. Corrections mineures loginBender/Jim :
+  requête SQL exacte + citations de lignes du tutoriel natif.
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -95,7 +100,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | securityPolicyChallenge | Miscellaneous | 2 | TODO |  |
 | weakPasswordChallenge | Broken Authentication | 2 | TODO |  |
 | weirdCryptoChallenge | Cryptographic Issues | 2 | TODO |  |
-| loginAdminChallenge | Injection | 2 | TODO |  |
+| loginAdminChallenge | Injection | 2 | DONE (lot 5) | correct ; payload ' OR true-- verifie live (retourne admin), solve = id admin (login.ts:70) ; non modifie |
 | adminSectionChallenge | Broken Access Control | 2 | DONE (lot 2) | N2-N5 : garde AdminGuard cote client (jwtDecode sans signature), validation = image 19px.png (verify.ts:65), 3 familles de contournement ; voie deduite du code, non rejouee (Chrome) |
 | basketAccessChallenge | Broken Access Control | 2 | TODO |  |
 | feedbackChallenge | Broken Access Control | 2 | TODO |  |
@@ -103,14 +108,14 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | captchaBypassChallenge | Broken Anti Automation | 3 | TODO |  |
 | changeProductChallenge | Broken Access Control | 3 | DONE (lot 1) | N4,N5 reecrits : target="_blank" obligatoire (verify.ts), sans jeton ; defense inventee remplacee par codefixes fix 3 ; teste |
 | csafChallenge | Miscellaneous | 3 | DONE (lot 2) | N2-N5 : chemin faux (csaf-aggregator -> /.well-known/csaf/), advisory express-jwt identifie, piege fins de ligne (hash recalcule different si EOL modifiees) ; soumission teste |
-| dbSchemaChallenge | Injection | 3 | TODO |  |
+| dbSchemaChallenge | Injection | 3 | DONE (lot 5) | correct ; payload UNION ... FROM sqlite_master (9 colonnes) verifie live (CREATE TABLE) ; non modifie |
 | forgedFeedbackChallenge | Broken Access Control | 3 | TODO |  |
 | forgedReviewChallenge | Broken Access Control | 3 | TODO |  |
 | freeDeluxeChallenge | Improper Input Validation | 3 | DONE (lot 3) | N2-N5 : UserId du corps ecrase par appendUserId (trompeur), pre-requis role customer ; solve = 3e valeur de paymentMode (deluxe.ts) ; teste (paymentMode:none) |
 | ghostLoginChallenge | Broken Authentication | 3 | TODO |  |
 | loginAmyChallenge | Sensitive Data Exposure | 3 | TODO |  |
-| loginBenderChallenge | Injection | 3 | TODO |  |
-| loginJimChallenge | Injection | 3 | TODO |  |
+| loginBenderChallenge | Injection | 3 | DONE (lot 5) | N4-N5 : requete exacte (table Users + AND deletedAt IS NULL), citation ligne corrigee (loginBender.ts:101) ; payload verifie live |
+| loginJimChallenge | Injection | 3 | DONE (lot 5) | N3-N5 : email jim@juice-sh.op visible dans les avis produit (verifie served), citations fausses corrigees (:90, pas :99-101) ; payload verifie live |
 | negativeOrderChallenge | Improper Input Validation | 3 | TODO |  |
 | nftMintChallenge | Improper Input Validation | 3 | TODO |  |
 | persistedXssUserChallenge | XSS | 3 | TODO |  |
@@ -145,7 +150,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | resetPasswordBenderChallenge | Broken Authentication | 4 | TODO |  |
 | resetPasswordUvoginChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | typosquattingNpmChallenge | Vulnerable Components | 4 | TODO |  |
-| unionSqlInjectionChallenge | Injection | 4 | TODO |  |
+| unionSqlInjectionChallenge | Injection | 4 | DONE (lot 5) | correct ; payload UNION ... FROM Users (9 colonnes) verifie live (emails exfiltres) ; non modifie |
 | usernameXssChallenge | XSS | 4 | TODO |  |
 | localXssChallenge | XSS | 1 | TODO |  |
 | reflectedXssChallenge | XSS | 2 | TODO |  |

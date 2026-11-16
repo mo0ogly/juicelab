@@ -54,40 +54,53 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      L'email est bender@juice-sh.op. Sur le formulaire de login, le
-      backend construit probablement quelque chose comme : SELECT *
-      FROM users WHERE email='<input>' AND password='<hash>'. Comment
-      ferais-tu pour faire disparaitre la clause AND password en
-      injectant dans le champ email ? Pense apostrophe + commentaire
-      SQL.
+      L'email est bender@juice-sh.op. Le backend construit la requete
+      de login en collant ta saisie dans la chaine (routes/login.ts) :
+      SELECT * FROM Users WHERE email = '<input>' AND password =
+      '<hash>' AND deletedAt IS NULL. Comment faire disparaitre tout
+      ce qui suit l'email (le AND password et le AND deletedAt) en
+      injectant dans le champ email ? Pense apostrophe pour fermer la
+      chaine + commentaire SQL pour neutraliser la suite.
     text_en: |
-      The email is bender@juice-sh.op. On the login form, the backend
-      probably builds something like: SELECT * FROM users WHERE
-      email='<input>' AND password='<hash>'. How would you make the
-      AND password clause vanish by injecting in the email field?
-      Think single quote + SQL comment.
+      The email is bender@juice-sh.op. The backend builds the login
+      query by concatenating your input into the string
+      (routes/login.ts): SELECT * FROM Users WHERE email = '<input>'
+      AND password = '<hash>' AND deletedAt IS NULL. How do you make
+      everything after the email vanish (the AND password and the AND
+      deletedAt) by injecting in the email field? Think single quote
+      to close the string + SQL comment to neutralize the rest.
     pedagogical_intent: |
-      Give the SQL skeleton + the syntactic shape of the bypass.
+      Give the exact query and the syntactic shape of the bypass.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Tape dans le champ email : bender@juice-sh.op'-- (avec
-      l'apostrophe puis deux tirets, sans espace apres l'apostrophe).
-      Mets n'importe quoi dans le champ password (il est commente,
-      ignore). Clique Login. Tu es connecte en tant que Bender. Le SQL
-      reconstruit est : SELECT * FROM users WHERE
-      email='bender@juice-sh.op'-- AND password='...'. Source :
-      tutoriel hacking-instructor OWASP loginBender.ts ligne 98-101.
-      Defense : (1) prepared statements / binding parametre Sequelize sur toutes les queries de login. (2) MFA TOTP comme second facteur — meme avec une SQLi qui bypass le check password, le MFA bloque la session. (3) Rate-limiter les tentatives de login + alerte SIEM sur les patterns d'erreur SQL inhabituels.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : champ
+      email = bender@juice-sh.op'-- (apostrophe puis deux tirets, sans
+      espace apres l'apostrophe), mot de passe quelconque, puis Login.
+      La requete devient : SELECT * FROM Users WHERE email =
+      'bender@juice-sh.op'-- AND password = '...' AND deletedAt IS
+      NULL, ou le -- met en commentaire tout le controle du mot de
+      passe ; tu es connecte comme Bender. Payload identique au
+      tutoriel natif (loginBender.ts:101).
+      Defense : (1) requetes parametrees (binding Sequelize) sur
+      toutes les requetes de login. (2) MFA TOTP en second facteur :
+      meme si la SQLi contourne le mot de passe, le MFA bloque la
+      session. (3) limiter le debit des tentatives et alerter sur les
+      motifs d'erreur SQL inhabituels.
     text_en: |
-      Type in the email field: bender@juice-sh.op'-- (single quote
-      then two dashes, no space after the quote). Put anything in the
-      password field (it gets commented out, ignored). Click Login.
-      You are logged in as Bender. The reconstructed SQL is: SELECT
-      * FROM users WHERE email='bender@juice-sh.op'-- AND
-      password='...'. Source: OWASP hacking-instructor tutorial
-      loginBender.ts line 98-101.
-      Defense: (1) prepared statements / Sequelize parameterized binding on all login queries. (2) MFA TOTP as second factor — even with SQLi bypassing the password check, MFA blocks the session. (3) Rate-limit login attempts + SIEM alert on unusual SQL error patterns.
+      Solution (verified during testing on Juice Shop 19.2.1): email
+      field = bender@juice-sh.op'-- (single quote then two dashes, no
+      space after the quote), any password, then Login. The query
+      becomes: SELECT * FROM Users WHERE email =
+      'bender@juice-sh.op'-- AND password = '...' AND deletedAt IS
+      NULL, where -- comments out the entire password check; you are
+      logged in as Bender. Same payload as the native tutorial
+      (loginBender.ts:101).
+      Defense: (1) parameterized queries (Sequelize binding) on all
+      login queries. (2) MFA TOTP as a second factor: even if SQLi
+      bypasses the password, MFA blocks the session. (3) rate-limit
+      attempts and alert on unusual SQL error patterns.
     pedagogical_intent: |
-      Quasi-solution : exact payload + SQL reconstruction explained.
+      Full solution: verified payload, accurate reconstructed query,
+      defense.
