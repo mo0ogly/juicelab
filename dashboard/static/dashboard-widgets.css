@@ -433,3 +433,31 @@ kbd { font-family: var(--font-mono); font-size: 11px; padding: 2px 6px; backgrou
 /* --- Phase 3 drill-down modal --- */
 .drilldown-card { width: min(1100px, 96vw); max-height: 92vh; padding: 16px 18px; }
 .drilldown-iframe { width: 100%; height: 70vh; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); }
+
+/* --- Roster page (templates/students.html) --- */
+/* Heading + help text side by side; the help text is a sibling <p>, not a
+   child of the <h2>, so a screen reader announces the heading alone. */
+.section-head {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  margin: 38px 0 14px;
+}
+.section-head .section-title { margin: 0; }
+.section-head .section-meta {
+  margin: 0;
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-mute);
+}
+/* Row actions stay on one line so a roster row keeps a single-line height. */
+.row-actions.roster-actions { flex-wrap: nowrap; align-items: center; }
+.sort-bar input[type="search"] { min-width: 220px; }
+/* Sortable column header: a real <button> that inherits the <th> look. */
+.th-sort {
+  all: unset; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.th-sort:hover { color: var(--text); }
+.th-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+th[aria-sort] .th-sort { color: var(--accent); }
+th[aria-sort="ascending"] .th-sort::after { content: "\2191"; }
+th[aria-sort="descending"] .th-sort::after { content: "\2193"; }

@@ -388,6 +388,10 @@ appears as their technical UUID. Two ways to fill the name:
    the name is still empty). No more UUIDs once the student passes `-l`.
 2. **Manual** — the `/admin/students?cohort=<COHORT>` screen lets you set / fix a
    name. **A manually set name wins**: a later student label never overwrites it.
+   On this screen: unnamed rows are flagged "Unnamed" and sorted last; the
+   "Search" field filters by name or token; the Name / Progression / Last
+   activity headers sort the table; a rejected or pending student gets an
+   **Approve** button instead of **Diploma**.
 
 ![Student roster — names auto-filled from -l PRENOM](img/prof-students.png)
 

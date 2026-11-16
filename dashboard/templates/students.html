@@ -84,11 +84,13 @@
     </div>
   </section>
 
-  <h2 class="section-title">
-    {{ t('SECTION_ROSTER') }}
-    <span class="section-meta">{{ t('SECTION_ROSTER_META') }}</span>
-  </h2>
+  <div class="section-head">
+    <h2 class="section-title">{{ t('SECTION_ROSTER') }}</h2>
+    <p class="section-meta">{{ t('SECTION_ROSTER_META') }}</p>
+  </div>
   <div class="sort-bar">
+    <label for="roster-search">{{ t('SEARCH_LABEL') }} :</label>
+    <input id="roster-search" type="search" placeholder="{{ t('SEARCH_ROSTER_PLACEHOLDER') }}" autocomplete="off">
     <label for="sort-by">{{ t('SORT_BY_LABEL') }} :</label>
     <select id="sort-by">
       <option value="name">{{ t('SORT_NAME') }}</option>
@@ -103,22 +105,22 @@
     <table>
       <thead>
         <tr>
-          <th class="w-24p">{{ t('TABLE_DISPLAY_NAME') }}</th>
+          <th class="w-24p" data-sort-col="name"><button type="button" class="th-sort" data-sort="name">{{ t('TABLE_DISPLAY_NAME') }}</button></th>
           <th>{{ t('TABLE_TOKEN') }}</th>
           <th class="w-120">{{ t('TABLE_STATUS') }}</th>
-          <th>{{ t('TABLE_PROGRESSION') }}</th>
-          <th>{{ t('TABLE_LAST_ACTIVITY') }}</th>
+          <th data-sort-col="progress"><button type="button" class="th-sort" data-sort="progress">{{ t('TABLE_PROGRESSION') }}</button></th>
+          <th data-sort-col="activity"><button type="button" class="th-sort" data-sort="activity">{{ t('TABLE_LAST_ACTIVITY') }}</button></th>
           <th class="w-90">{{ t('KPI_EVENTS') }}</th>
-          <th class="w-90">{{ t('TABLE_ACTION') }}</th>
+          <th>{{ t('TABLE_ACTION') }}</th>
         </tr>
       </thead>
       <tbody id="rows"></tbody>
       <tfoot>
         <tr class="create-row">
-          <td><input id="add-name" type="text" placeholder="{{ t('TABLE_DISPLAY_NAME') }}" maxlength="100"></td>
-          <td><input id="add-token" type="text" placeholder="UUID"></td>
+          <td><input id="add-name" type="text" placeholder="{{ t('TABLE_DISPLAY_NAME') }}" aria-label="{{ t('ARIA_ADD_NAME') }}" maxlength="100"></td>
+          <td><input id="add-token" type="text" placeholder="{{ t('TABLE_TOKEN') }}" aria-label="{{ t('ARIA_ADD_TOKEN') }}"></td>
           <td colspan="4" class="empty-placeholder">{{ t('ACTION_MANUAL') }}</td>
-          <td><button class="btn primary" id="add-btn">
+          <td><button type="button" class="btn primary" id="add-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -161,6 +163,7 @@
   const KPI_REJECTED = document.getElementById('kpi-rejected');
   const KPI_EVENTS = document.getElementById('kpi-events');
   const SORT_SEL = document.getElementById('sort-by');
+  const SEARCH = document.getElementById('roster-search');
   const CHART_TYPES = document.getElementById('chart-events-by-type');
   const CHART_DAYS = document.getElementById('chart-events-by-day');
   let _students = [];
@@ -199,10 +202,31 @@
       + '<b>' + pct + '%</b></div>';
   }
 
+  const TOAST_MS_INFO = 1800;
+  const TOAST_MS_ERROR = 6000;
+  let _toastTimer = null;
+  /* Show a transient message. Errors stay TOAST_MS_ERROR so they can be read;
+     a new toast cancels the previous timer instead of being cut short by it. */
   function showToast(msg, error) {
     toast.textContent = msg;
     toast.className = 'toast show' + (error ? ' error' : '');
-    setTimeout(() => { toast.className = 'toast'; }, 1800);
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { toast.className = 'toast'; }, error ? TOAST_MS_ERROR : TOAST_MS_INFO);
+  }
+
+  /* fetch wrapper for the JSON API. Always resolves to { ok, data } and never
+     rejects: a network failure or a non-JSON body (proxy error page, 502)
+     becomes { ok: false, data: { error } } so every caller reports it through
+     its existing error branch instead of leaving the page silently frozen. */
+  function api(url, opts) {
+    return fetch(url, Object.assign({ credentials: 'include' }, opts || {}))
+      .then(function(r) {
+        return r.json().then(
+          function(d) { return { ok: r.ok, data: d || {} }; },
+          function() { return { ok: false, data: { error: T('TOAST_ERR_BAD_RESPONSE', { status: r.status }) } }; }
+        );
+      })
+      .catch(function() { return { ok: false, data: { error: T('TOAST_ERR_NETWORK') } }; });
   }
 
   function escapeHtml(s) {
@@ -214,27 +238,31 @@
   function statusBadge(status) {
     const s = (status || 'validated').toLowerCase();
     const safe = (s === 'pending' || s === 'validated' || s === 'rejected') ? s : 'validated';
-    return '<span class="badge ' + safe + '">' + safe + '</span>';
+    return '<span class="badge ' + safe + '">' + escapeHtml(T('STATUS_' + safe.toUpperCase())) + '</span>';
   }
 
   function rowHtml(s) {
     const name = s.display_name || '';
-    const placeholder = name ? '' : 'placeholder="' + T('TABLE_DISPLAY_NAME') + '"';
+    const placeholder = name ? '' : 'placeholder="' + escapeHtml(T('LABEL_UNNAMED')) + '"';
+    const status = (s.status || 'validated').toLowerCase();
+    const validated = status === 'validated';
     const stats = _stats[s.student_token];
     const lastIso = stats ? stats.last_event_ts : null;
     const fresh = activityFreshness(lastIso);
     return '<tr data-token="' + escapeHtml(s.student_token) + '">'
-      + '<td><input class="name-edit" type="text" value="' + escapeHtml(name) + '" ' + placeholder + ' maxlength="100" aria-label="' + T('ARIA_STUDENT_NAME') + '"></td>'
+      + '<td><input class="name-edit' + (name ? '' : ' name-missing') + '" type="text" value="' + escapeHtml(name) + '" ' + placeholder + ' maxlength="100" aria-label="' + T('ARIA_STUDENT_NAME') + '"></td>'
       + '<td class="token">' + escapeHtml(s.student_token) + '</td>'
       + '<td>' + statusBadge(s.status) + '</td>'
       + '<td>' + progressCell(stats) + '</td>'
       + '<td class="activity-cell ' + fresh + '">' + escapeHtml(relativeAgo(lastIso)) + '</td>'
       + '<td>' + s.event_count + '</td>'
-      + '<td>'
+      + '<td><div class="row-actions roster-actions">'
       +   '<a class="btn" href="/admin/student/' + encodeURIComponent(s.student_token) + '?cohort=' + encodeURIComponent(COHORT) + '" target="_blank" rel="noopener">' + T('ACTION_DETAIL') + '</a> '
-      +   '<a class="btn" href="/admin/diploma/' + encodeURIComponent(s.student_token) + '?cohort=' + encodeURIComponent(COHORT) + '" target="_blank" rel="noopener">' + T('ACTION_DIPLOMA') + '</a> '
-      +   '<button class="btn danger" data-action="delete">' + T('ACTION_DELETE_SHORT') + '</button>'
-      + '</td>'
+      +   (validated
+            ? '<a class="btn" href="/admin/diploma/' + encodeURIComponent(s.student_token) + '?cohort=' + encodeURIComponent(COHORT) + '" target="_blank" rel="noopener">' + T('ACTION_DIPLOMA') + '</a> '
+            : '<button type="button" class="btn success" data-action="approve">' + T('ACTION_APPROVE') + '</button> ')
+      +   '<button type="button" class="btn danger" data-action="delete">' + T('ACTION_DELETE_SHORT') + '</button>'
+      + '</div></td>'
       + '</tr>';
   }
 
@@ -256,7 +284,19 @@
 
   function applySort() {
     const mode = SORT_SEL ? SORT_SEL.value : 'name';
-    const arr = _students.slice();
+    const q = SEARCH ? SEARCH.value.trim().toLowerCase() : '';
+    const arr = _students.filter(function(s) {
+      if (!q) return true;
+      return (s.display_name || '').toLowerCase().indexOf(q) !== -1
+          || String(s.student_token).toLowerCase().indexOf(q) !== -1;
+    });
+    document.querySelectorAll('th[data-sort-col]').forEach(function(th) {
+      if (th.getAttribute('data-sort-col') === mode) {
+        th.setAttribute('aria-sort', mode === 'name' ? 'ascending' : 'descending');
+      } else {
+        th.removeAttribute('aria-sort');
+      }
+    });
     if (mode === 'progress') {
       arr.sort(function(a, b) {
         return ((_stats[b.student_token] || {}).progress_pct || 0)
@@ -269,13 +309,16 @@
         return tb - ta;
       });
     } else {
+      // Named students first (A-Z), then unnamed rows ordered by token.
       arr.sort(function(a, b) {
+        if (!a.display_name !== !b.display_name) return a.display_name ? -1 : 1;
         return (a.display_name || a.student_token).localeCompare(b.display_name || b.student_token);
       });
     }
     tbody.innerHTML = arr.map(rowHtml).join('');
     if (arr.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-placeholder">' + T('TABLE_EMPTY_STUDENTS') + '</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-placeholder">'
+        + escapeHtml(T(q ? 'TABLE_EMPTY_SEARCH' : 'TABLE_EMPTY_STUDENTS')) + '</td></tr>';
     }
     bindInputs();
   }
@@ -288,19 +331,23 @@
         + '<span class="label">' + escapeHtml(r.event_type) + '</span>'
         + '<div class="bar"><span style="width:' + w + '%"></span></div>'
         + '<span class="count">' + r.n + '</span></div>';
-    }).join('') || '<div class="empty-placeholder">' + T('TABLE_EMPTY_STUDENTS') + '</div>';
+    }).join('') || '<div class="empty-placeholder">' + escapeHtml(T('LABEL_NO_EVENTS')) + '</div>';
     const maxD = Math.max.apply(null, _eventDays.map(function(r){return r.n;}).concat([1]));
     CHART_DAYS.innerHTML = _eventDays.map(function(r) {
       const h = Math.max(2, Math.round(100 * r.n / maxD));
       return '<div style="height:' + h + '%" title="' + escapeHtml(r.day) + ' : ' + r.n + '"></div>';
-    }).join('') || '';
+    }).join('');
+    // .sparkline styles every child as a bar, so drop it for the empty state.
+    CHART_DAYS.classList.toggle('sparkline', _eventDays.length > 0);
+    if (_eventDays.length === 0) {
+      CHART_DAYS.innerHTML = '<div class="empty-placeholder">' + escapeHtml(T('CHART_EMPTY_7_DAYS')) + '</div>';
+    }
   }
 
   function loadStats() {
-    return fetch('/api/students/stats?cohort=' + encodeURIComponent(COHORT), { credentials: 'include' })
-      .then(function(r) { return r.json().then(function(d){ return { ok: r.ok, data: d }; }); })
+    return api('/api/students/stats?cohort=' + encodeURIComponent(COHORT))
       .then(function(o) {
-        if (!o.ok) return;
+        if (!o.ok) { showToast(o.data.error || T('TOAST_ERR_LOAD_LIST'), true); return; }
         _stats = {};
         (o.data.students || []).forEach(function(s) { _stats[s.student_token] = s; });
         _eventTypes = o.data.events_by_type || [];
@@ -311,8 +358,7 @@
 
   function load() {
     return Promise.all([
-      fetch('/api/students?cohort=' + encodeURIComponent(COHORT), { credentials: 'include' })
-        .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, data: d }; }); }),
+      api('/api/students?cohort=' + encodeURIComponent(COHORT)),
       loadStats(),
     ]).then(function(arr) {
       const o = arr[0];
@@ -323,19 +369,35 @@
     });
   }
   if (SORT_SEL) { SORT_SEL.addEventListener('change', applySort); }
+  if (SEARCH) { SEARCH.addEventListener('input', applySort); }
+  document.querySelectorAll('button.th-sort').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (SORT_SEL) { SORT_SEL.value = btn.getAttribute('data-sort'); }
+      applySort();
+    });
+  });
 
   function saveName(token, name) {
-    return fetch('/api/students', {
-      method: 'POST', credentials: 'include',
+    return api('/api/students', {
+      method: 'POST',
       headers: csrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ student_token: token, cohort_id: COHORT, display_name: name || null }),
-    }).then(r => r.json().then(d => ({ ok: r.ok, data: d })));
+    });
+  }
+
+  /* Grant access to a pending or rejected student (same endpoint and body as
+     the approval queue on /admin/cohorts). Resolves to { ok, data }. */
+  function approveRow(token) {
+    return api('/api/students/' + encodeURIComponent(token) + '/approve', {
+      method: 'POST',
+      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ cohort_id: COHORT, decided_by: 'admin' }),
+    });
   }
 
   function deleteRow(token) {
-    return fetch('/api/students/' + encodeURIComponent(token) + '?cohort=' + encodeURIComponent(COHORT),
-      { method: 'DELETE', credentials: 'include', headers: csrfHeaders() }
-    ).then(r => r.json().then(d => ({ ok: r.ok, data: d })));
+    return api('/api/students/' + encodeURIComponent(token) + '?cohort=' + encodeURIComponent(COHORT),
+      { method: 'DELETE', headers: csrfHeaders() });
   }
 
   function bindInputs() {
@@ -354,7 +416,19 @@
         saveName(token, newVal).then(({ ok, data }) => {
           if (!ok) { showToast(data.error || T('TOAST_ERR_SAVE'), true); inp.value = inp.dataset.orig; return; }
           inp.dataset.orig = newVal;
+          inp.classList.toggle('name-missing', !newVal);
+          if (!newVal) inp.setAttribute('placeholder', T('LABEL_UNNAMED')); else inp.removeAttribute('placeholder');
           showToast(T('TOAST_NAME_UPDATED'));
+        });
+      });
+    });
+    tbody.querySelectorAll('button[data-action="approve"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const token = btn.closest('tr').getAttribute('data-token');
+        approveRow(token).then(({ ok, data }) => {
+          if (!ok) { showToast(data.error || T('TOAST_ERR_APPROVE'), true); return; }
+          showToast(T('TOAST_APPROVED'));
+          load();
         });
       });
     });
@@ -362,7 +436,11 @@
       btn.addEventListener('click', () => {
         const tr = btn.closest('tr');
         const token = tr.getAttribute('data-token');
-        if (!confirm(T('CONFIRM_DELETE_STUDENT', { token: token }))) return;
+        const shown = tr.querySelector('input.name-edit').dataset.orig;
+        const question = shown
+          ? T('CONFIRM_DELETE_STUDENT_NAMED', { name: shown, token: token })
+          : T('CONFIRM_DELETE_STUDENT', { token: token });
+        if (!confirm(question)) return;
         deleteRow(token).then(({ ok, data }) => {
           if (!ok) { showToast(data.error || T('TOAST_ERR_DELETE_GENERIC'), true); return; }
           showToast(T('TOAST_REMOVED'));

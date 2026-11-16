@@ -411,7 +411,11 @@ apparaît avec son UUID technique. Deux façons de remplir le nom :
    nom est vide). Plus jamais d'UUID si l'élève passe `-l`.
 2. **Manuel** — l'écran `/admin/students?cohort=<COHORTE>` permet de poser /
    corriger un nom. **Un nom posé à la main est prioritaire** : il n'est jamais
-   écrasé par un label élève ultérieur.
+   écrasé par un label élève ultérieur. Sur cet écran : les lignes sans nom
+   sont marquées « Sans nom » et triées en fin de liste ; le champ
+   « Rechercher » filtre par nom ou token ; les en-têtes Nom / Progression /
+   Dernière activité trient la table ; un élève refusé ou en attente a un
+   bouton **Approuver** à la place de **Diplôme**.
 
 ![Roster élèves — noms auto-remplis depuis -l PRENOM](img/prof-students.png)
 
