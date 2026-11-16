@@ -21,75 +21,75 @@ hints:
   N2:
     cost_pct: 10
     text_fr: |
-      Une fois que tu as commande un produit (meme un panier vide ne
-      marche pas, il faut au moins un item), Juice Shop te propose de
-      "track" ta commande. La page de suivi de commande prend l'identifiant
-      de commande dans un parametre d'URL, puis affiche ce numero quelque
-      part dans la page. C'est le candidat reflete typique.
+      Le Reflected XSS exploite un parametre d'URL renvoye tel quel
+      dans la page de destination. La page de suivi de commande affiche
+      un identifiant de commande lu dans l'URL. Tu peux l'atteindre
+      depuis l'historique des commandes, mais aussi directement en
+      construisant l'URL : c'est le parametre reflete typique.
     text_en: |
-      Once you placed an order (an empty basket does not work, you need
-      at least one item), Juice Shop offers to "track" your order. The
-      order tracking page takes the order ID via a URL parameter, then
-      displays that number somewhere on the page. That is the typical
-      reflected candidate.
+      Reflected XSS exploits a URL parameter echoed as-is into the
+      destination page. The order-tracking page displays an order id
+      read from the URL. You can reach it from the order history, but
+      also directly by building the URL: that is the typical reflected
+      parameter.
     pedagogical_intent: |
-      Localize the surface: order tracking page + id query parameter.
+      Point at the order-tracking id parameter without over-constraining.
 
   N3:
     cost_pct: 20
     text_fr: |
-      L'URL de cette page est /#/track-result?id=XXXX. Le parametre id
-      est lu par Angular (route.snapshot.queryParams.id) et insere dans
-      la page sans echappement, via la methode bypassSecurityTrustHtml de
-      DomSanitizer qui dit explicitement a Angular de faire confiance au
-      contenu. C'est la promesse cassee : du contenu attaquant traite
-      comme du HTML legitime.
+      L'URL est /#/track-result?id=XXXX. Le parametre id est lu par
+      Angular et insere dans la page via bypassSecurityTrustHtml du
+      DomSanitizer, qui dit explicitement a Angular de faire confiance
+      au contenu : la promesse cassee. Cote serveur, /rest/track-order/
+      :id relaie aussi cet id (c'est la que le challenge est valide).
     text_en: |
-      That page URL is /#/track-result?id=XXXX. The id parameter is read
-      by Angular (route.snapshot.queryParams.id) and inserted into the
-      page without escaping, via DomSanitizer.bypassSecurityTrustHtml,
-      which explicitly tells Angular to trust the content. That is the
-      broken promise: attacker-controlled content treated as legitimate
-      HTML.
+      The URL is /#/track-result?id=XXXX. The id parameter is read by
+      Angular and inserted into the page via the DomSanitizer's
+      bypassSecurityTrustHtml, which explicitly tells Angular to trust
+      the content: the broken promise. Server-side, /rest/track-order/
+      :id also relays this id (that is where the challenge is solved).
     pedagogical_intent: |
-      Localize and explain the unsafe API call.
+      Give the exact route and the sink (bypassSecurityTrustHtml).
 
   N4:
     cost_pct: 35
     text_fr: |
-      Le payload est le meme que pour le DOM XSS dans son intention :
-      executer alert(`xss`) via un iframe javascript:. Mais comme on
-      passe par un parametre d'URL, on doit gerer l'encoding. Soit tu
-      tapes le payload tel quel dans la barre d'adresse (le navigateur
-      l'encode automatiquement), soit tu construis l'URL en remplacant
-      manuellement les caracteres speciaux. La forme du payload est
-      identique au DOM XSS.
+      Le payload est identique a celui du DOM XSS : <iframe
+      src="javascript:alert(`xss`)">. Il se place dans le parametre id.
+      La validation (routes/trackOrder.ts) resout le challenge quand
+      l'id contient cette chaine ; l'id est tronque a 60 caracteres,
+      le payload tient dans cette limite.
     text_en: |
-      The payload is the same as DOM XSS in spirit: trigger alert(`xss`)
-      via an iframe javascript:. But since we go through a URL parameter,
-      we must handle encoding. Either type the payload as-is in the
-      address bar (the browser encodes automatically), or build the URL
-      manually escaping special characters. The payload shape is the
-      same as DOM XSS.
+      The payload is identical to the DOM XSS one: <iframe
+      src="javascript:alert(`xss`)">. It goes in the id parameter.
+      Validation (routes/trackOrder.ts) solves the challenge when the
+      id contains this string; the id is truncated to 60 characters,
+      the payload fits within that limit.
     pedagogical_intent: |
-      Give the syntactic shape and the URL encoding consideration.
+      Give the exact payload, the field and the truncation limit.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Dans la barre d'adresse, tape exactement :
+      Solution : dans la barre d'adresse,
       http://127.0.0.1:3000/#/track-result?id=<iframe src="javascript:alert(`xss`)">
-      Le navigateur va encoder les caracteres < > " automatiquement.
-      Quand la page se charge, l'iframe est inseree dans le DOM via
-      bypassSecurityTrustHtml et alert("xss") s'execute. Juice Shop
-      detecte le payload dans le parametre id et marque le challenge
-      Reflected XSS comme solved.
+      Le navigateur encode les caracteres speciaux ; au chargement,
+      l'iframe est inseree via bypassSecurityTrustHtml et alert(`xss`)
+      s'execute. Attention : ce challenge est desactive en Docker /
+      Heroku / Gitpod (safetyMode) ; sur une instance locale non-Docker
+      il fonctionne.
+      Defense : ne jamais appeler bypassSecurityTrustHtml sur une
+      entree utilisateur ; afficher le parametre par interpolation
+      {{ }} (echappee).
     text_en: |
-      In the address bar, type exactly:
+      Solution: in the address bar,
       http://127.0.0.1:3000/#/track-result?id=<iframe src="javascript:alert(`xss`)">
-      The browser auto-encodes < > " characters. When the page loads,
-      the iframe is inserted into the DOM via bypassSecurityTrustHtml
-      and alert("xss") runs. Juice Shop detects the payload in the id
-      parameter and marks the Reflected XSS challenge solved.
+      The browser encodes the special characters; on load, the iframe
+      is inserted via bypassSecurityTrustHtml and alert(`xss`) runs.
+      Note: this challenge is disabled in Docker / Heroku / Gitpod
+      (safetyMode); on a non-Docker local instance it works.
+      Defense: never call bypassSecurityTrustHtml on user input;
+      display the parameter through {{ }} interpolation (escaped).
     pedagogical_intent: |
-      Quasi-solution: full URL with encoding rationale and detection mechanism.
+      Full solution with the Docker-disabled caveat and defense.

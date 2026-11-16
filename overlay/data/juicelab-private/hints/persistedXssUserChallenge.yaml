@@ -27,98 +27,80 @@ hints:
   N2:
     cost_pct: 10
     text_fr: |
-      Hint OWASP officiel #2 : "Even less of these fields are
-      persisted in a way where their content is shown on another
-      screen". Donc le challenge a deux contraintes : (a)
-      validation client + (b) persisted + (c) reaffiche ailleurs.
-      Quel field combine ces 3 ? Reflechis : Customer Feedback est
-      affiche sur About Us. Saved Addresses est reaffichee a
-      l'admin et au user lui-meme.
+      Hint OWASP #2 : encore moins de ces champs sont persistes puis
+      reaffiches ailleurs. Cherche un champ valide cote client, stocke
+      tel quel, puis reaffiche. L'email de ton compte coche les trois
+      cases : le formulaire valide son format (Validators.email),
+      l'email est stocke, et il reapparait ensuite dans ton compte.
     text_en: |
-      Official OWASP hint #2: "Even less of these fields are
-      persisted in a way where their content is shown on another
-      screen". So the challenge has two constraints: (a) client
-      validation + (b) persisted + (c) re-displayed elsewhere.
-      Which field combines all 3? Reflect: Customer Feedback is
-      shown on About Us. Saved Addresses is shown to admin and
-      to the user themselves.
+      OWASP hint #2: even fewer of these fields are persisted then
+      shown again elsewhere. Look for a field validated client-side,
+      stored as-is, then redisplayed. Your account email ticks all
+      three: the form validates its format (Validators.email), the
+      email is stored, and it later reappears in your account.
     pedagogical_intent: |
-      Narrow the candidate set with display surfaces.
+      Point at the email field as the validated+persisted+redisplayed one.
 
   N3:
     cost_pct: 20
     text_fr: |
-      L'angle est le formulaire de Address Create / Edit. Les
-      champs streetAddress / city / country ont des regex
-      patterns valides cote frontend (genre /^[a-zA-Z0-9 ]+$/) qui
-      bloquent les caracteres < et >. Hint OWASP officiel #3 :
-      deux methodes pour bypass, (1) DOM manipulation (DevTools)
-      ou (2) API direct (POST /api/Addresses sans passer par le
-      form Angular).
+      Hint OWASP #3 : contourner une protection cote client se fait
+      soit en la desactivant dans le navigateur (DOM), soit en
+      ignorant le frontend et en parlant directement au backend. Le
+      validateur d'email d'Angular ne protege pas l'API : un POST
+      /api/Users (inscription) ou une mise a jour peut porter un email
+      qui n'est pas un email du tout.
     text_en: |
-      The angle is the Address Create / Edit form. Fields
-      streetAddress / city / country have frontend-validated
-      regex patterns (like /^[a-zA-Z0-9 ]+$/) blocking < and >.
-      Official OWASP hint #3: two methods to bypass, (1) DOM
-      manipulation (DevTools) or (2) direct API (POST
-      /api/Addresses without going through the Angular form).
+      OWASP hint #3: bypassing a client-side guard is done either by
+      disabling it in the browser (DOM), or by ignoring the frontend
+      and talking to the backend directly. Angular's email validator
+      does not protect the API: a POST /api/Users (registration) or an
+      update can carry an email that is not an email at all.
     pedagogical_intent: |
-      Pin down the form + spell the two bypass paths.
+      Name the client guard and the backend-direct bypass.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Methode API direct (la plus simple) :
-      curl -X POST http://127.0.0.1:3000/api/Addresses
-        -H "Authorization: Bearer <ton_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"streetAddress":"<iframe src=\"javascript:alert(`xss`)\">","city":"X","country":"Y","fullName":"X","mobileNum":"1234567","zipCode":"12345"}'
-      Le serveur cree l'address sans validation supplementaire.
-      Ensuite va dans Account > Saved Addresses, le iframe
-      s'execute parce que le champ est rendu via [innerHTML]
-      avec bypassSecurityTrustHtml.
+      Le payload exact (description) est <iframe
+      src="javascript:alert(`xss`)">, a placer dans le champ email. La
+      validation (models/user.ts, setter de email) resout le challenge
+      des que l'email fourni contient cette chaine. Aucun privilege
+      particulier n'est requis : il suffit de creer un compte avec cet
+      email via l'API.
     text_en: |
-      Direct API method (simplest):
-      curl -X POST http://127.0.0.1:3000/api/Addresses
-        -H "Authorization: Bearer <your_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"streetAddress":"<iframe src=\"javascript:alert(`xss`)\">","city":"X","country":"Y","fullName":"X","mobileNum":"1234567","zipCode":"12345"}'
-      Server creates the address with no extra validation.
-      Then go to Account > Saved Addresses, iframe executes
-      because field is rendered via [innerHTML] with
-      bypassSecurityTrustHtml.
+      The exact payload (description) is <iframe
+      src="javascript:alert(`xss`)">, to place in the email field.
+      Validation (models/user.ts, email setter) solves the challenge
+      as soon as the supplied email contains this string. No special
+      privilege is required: just create an account with that email
+      via the API.
     pedagogical_intent: |
-      Spell the exact API call with payload.
+      Give the exact payload, the field and the validation condition.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Login + obtient un JWT (ou utilise une session active).
-      2. POST /api/Addresses avec le payload xss exact :
-         <iframe src="javascript:alert(`xss`)">
-         dans le champ streetAddress. Curl ci-dessus, ou via Burp
-         Repeater.
-      3. Navigate vers /#/address/saved (Saved Addresses).
-      4. L'iframe execute, alert apparait, challenge se valide.
-      Methode alternative : DOM manipulation (DevTools Console
-      pour modifier les regex pattern Angular avant submit) — plus
-      pedagogique mais plus longue. La methode 2 demontre le
-      pattern le plus important : skip-le-frontend-via-curl.
-      Defense : (1) supprimer bypassSecurityTrustHtml du composant Angular — utiliser innerText ou textContent au lieu de [innerHTML]. (2) Valider streetAddress avec un schema d'input strict cote serveur (longueur max, pas de balises HTML). (3) Ajouter la sanitisation DOMPurify avant tout render [innerHTML] + CSP pour bloquer les scripts inline.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) :
+        curl -s -X POST http://127.0.0.1:3000/api/Users \\
+          -H "Content-Type: application/json" \\
+          -d '{"email":"<iframe src=\\"javascript:alert(`xss`)\\">","password":"Xx123456!","passwordRepeat":"Xx123456!","securityQuestion":{"id":2},"securityAnswer":"x"}'
+      Reponse 201, challenge resolu : le setter d'email du modele User
+      detecte le payload. Dans l'UI, l'email est ensuite reaffiche
+      (compte / commandes) et l'iframe s'execute.
+      Defense : valider ET nettoyer cote serveur (ne pas se fier au
+      validateur Angular) ; echapper l'email a l'affichage plutot que
+      de l'inserer en HTML.
     text_en: |
-      Complete workflow:
-      1. Login + get JWT (or use active session).
-      2. POST /api/Addresses with exact XSS payload:
-         <iframe src="javascript:alert(`xss`)">
-         in streetAddress field. Curl above, or via Burp
-         Repeater.
-      3. Navigate to /#/address/saved (Saved Addresses).
-      4. Iframe executes, alert appears, challenge solves.
-      Alternative: DOM manipulation (DevTools Console to modify
-      Angular regex patterns before submit) — more pedagogical
-      but longer. Method 2 demonstrates the most important
-      pattern: skip-frontend-via-curl.
-      Defense: (1) remove bypassSecurityTrustHtml from the Angular component — use innerText or textContent instead of [innerHTML]. (2) Validate streetAddress with strict input schema on the server (max length, no HTML tags). (3) Add DOMPurify sanitization before any [innerHTML] render + CSP to block inline scripts.
+      Solution (verified during testing on Juice Shop 19.2.1):
+        curl -s -X POST http://127.0.0.1:3000/api/Users \\
+          -H "Content-Type: application/json" \\
+          -d '{"email":"<iframe src=\\"javascript:alert(`xss`)\\">","password":"Xx123456!","passwordRepeat":"Xx123456!","securityQuestion":{"id":2},"securityAnswer":"x"}'
+      Response 201, challenge solved: the User model's email setter
+      detects the payload. In the UI, the email is then redisplayed
+      (account / orders) and the iframe runs.
+      Defense: validate AND sanitize server-side (do not rely on the
+      Angular validator); escape the email at render time instead of
+      inserting it as HTML.
     pedagogical_intent: |
-      Quasi-solution : 4-step workflow + alternative method.
+      Full solution: verified request, email setter, defense.

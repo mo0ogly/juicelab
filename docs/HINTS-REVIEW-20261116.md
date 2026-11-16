@@ -75,6 +75,12 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   pour préserver les mots de passe des comptes seedés. Erreurs majeures :
   questions fausses (Jim, Bjoern interne) et EMAIL faux pour BjoernOwasp
   (gmail au lieu de bjoern@owasp.org).
+  Lot 7 (famille XSS) : localXss et httpHeaderXss deja corrects (non
+  modifies). persistedXssUser (champ email, pas Address) et restfulXss
+  (PUT sans auth) rejoues live. usernameXss corrige sur le mecanisme (CSP
+  via Image URL + sanitizeLegacy), payloads tires du test cypress officiel.
+  reflectedXss/usernameXss : disabledEnv Docker signale. Effets de bord :
+  un compte a email-payload cree, produit 3 modifie puis restaure.
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -124,12 +130,12 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | loginJimChallenge | Injection | 3 | DONE (lot 5) | N3-N5 : email jim@juice-sh.op visible dans les avis produit (verifie served), citations fausses corrigees (:90, pas :99-101) ; payload verifie live |
 | negativeOrderChallenge | Improper Input Validation | 3 | TODO |  |
 | nftMintChallenge | Improper Input Validation | 3 | TODO |  |
-| persistedXssUserChallenge | XSS | 3 | TODO |  |
+| persistedXssUserChallenge | XSS | 3 | DONE (lot 7) | N2-N5 : CHAMP FAUX (Address streetAddress -> EMAIL, models/user.ts) ; POST /api/Users email=payload verifie live (201, solved) |
 | privacyPolicyProofChallenge | Security through Obscurity | 3 | TODO |  |
 | registerAdminChallenge | Improper Input Validation | 3 | TODO |  |
 | resetPasswordBjoernOwaspChallenge | Broken Authentication | 3 | DONE (lot 6) | N1-N5 : EMAIL FAUX (gmail -> bjoern@owasp.org, verifie live : gmail = pas de question), reponse Zaya (resetPassword.ts:62) |
 | resetPasswordJimChallenge | Broken Authentication | 3 | DONE (lot 6) | N1-N5 : question fausse (eldest sibling -> eldest siblings MIDDLE name) ; reponse Samuel (middle name de George Samuel Kirk) ; question verifiee live, reponse source (resetPassword.ts:58) |
-| restfulXssChallenge | XSS | 3 | TODO |  |
+| restfulXssChallenge | XSS | 3 | DONE (lot 7) | N4-N5 : auth JWT inutile (PUT /api/Products/:id sans jeton) verifie live ; description setter (product.ts:47) |
 | uploadSizeChallenge | Improper Input Validation | 3 | TODO |  |
 | uploadTypeChallenge | Improper Input Validation | 3 | TODO |  |
 | xxeFileDisclosureChallenge | XXE | 3 | TODO |  |
@@ -143,7 +149,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | forgottenBackupChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | forgottenDevBackupChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | hiddenImageChallenge | Security through Obscurity | 4 | DONE (lot 2) | N1-N5 : faux hint OWASP cite, reponse donnee des N3, image inventee ; chaine pickle rick verifiee (verify.ts:287) ; image porteuse 5.png deduite, extraction non reussie |
-| httpHeaderXssChallenge | XSS | 4 | TODO |  |
+| httpHeaderXssChallenge | XSS | 4 | DONE (lot 7) | correct (non modifie) ; header True-Client-IP = payload exact (saveLoginIp.ts:23) |
 | knownVulnerableComponentChallenge | Vulnerable Components | 4 | TODO |  |
 | manipulateClockChallenge | Improper Input Validation | 4 | DONE (lot 3) | N4-N5 : endpoint faux (/api/Orders -> /rest/basket/:id/checkout), couponData dans le corps du checkout ; base64 WMNSDY2019 correct ; teste |
 | misplacedSignatureFileChallenge | Observability Failures | 4 | TODO |  |
@@ -157,9 +163,9 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | resetPasswordUvoginChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | typosquattingNpmChallenge | Vulnerable Components | 4 | TODO |  |
 | unionSqlInjectionChallenge | Injection | 4 | DONE (lot 5) | correct ; payload UNION ... FROM Users (9 colonnes) verifie live (emails exfiltres) ; non modifie |
-| usernameXssChallenge | XSS | 4 | TODO |  |
-| localXssChallenge | XSS | 1 | TODO |  |
-| reflectedXssChallenge | XSS | 2 | TODO |  |
+| usernameXssChallenge | XSS | 4 | DONE (lot 7) | N2-N5 : mecanisme FAUX (username=nonce -> CSP injectee via Image URL profileImage + sanitizeLegacy regex) ; payloads du test cypress officiel, bypass regex verifie hors ligne ; disabledEnv Docker |
+| localXssChallenge | XSS | 1 | DONE (lot 7) | correct (non modifie) ; payload iframe dans le champ de recherche, solve websocket (registerWebsocketEvents.ts:42) |
+| reflectedXssChallenge | XSS | 2 | DONE (lot 7) | N2-N5 : route /#/track-result?id=, sink bypassSecurityTrustHtml, solve trackOrder.ts ; ajout note disabledEnv Docker/Heroku/Gitpod |
 | xssBonusChallenge | XSS | 1 | DONE (lot 1) | N5 : mecanisme de validation corrige (websocket verifyLocalXssChallenge) + defense |
 | changePasswordBenderChallenge | Broken Authentication | 5 | TODO |  |
 | dlpPasswordSprayingChallenge | Observability Failures | 5 | TODO |  |
