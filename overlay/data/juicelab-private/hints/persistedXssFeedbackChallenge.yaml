@@ -26,103 +26,96 @@ hints:
   N2:
     cost_pct: 10
     text_fr: |
-      Pre-requis pedagogique critique. Hint OWASP officiel #4 :
-      "Look for possible dependencies related to input processing
-      in the package.json.bak you harvested earlier". Donc tu
-      dois avoir resolu un challenge de file disclosure
-      (forgottenDevBackup ou similar) pour obtenir un fichier
-      package.json.bak qui revele les dependances. Si pas
-      resolu, va le faire en premier.
+      Le mot cle du titre est "server-side" : ce n'est pas un
+      validateur cote navigateur qu'il faut contourner, mais un
+      nettoyage applique par le serveur avant l'enregistrement. Le
+      hint OWASP #4 oriente vers package.json.bak (recupere via un
+      challenge de divulgation de fichier) pour identifier la
+      bibliotheque de nettoyage utilisee. Ce n'est pas un pre-requis
+      technique : c'est la facon realiste de decouvrir la cible.
     text_en: |
-      Critical pedagogical prerequisite. Official OWASP hint #4:
-      "Look for possible dependencies related to input
-      processing in the package.json.bak you harvested earlier".
-      So you must have solved a file disclosure challenge
-      (forgottenDevBackup or similar) to obtain a package.json.
-      bak revealing dependencies. If not solved, do that first.
+      The key word in the title is "server-side": it is not a
+      browser-side validator you must bypass, but a cleanup applied
+      by the server before persisting. OWASP hint #4 points to
+      package.json.bak (recovered through a file-disclosure
+      challenge) to identify the sanitizing library. It is not a
+      technical precondition: it is the realistic way to discover the
+      target.
     pedagogical_intent: |
-      Activate prerequisite reflex on file disclosure.
+      Reframe to the server-side cleanup and the role of package.json.bak.
 
   N3:
     cost_pct: 20
     text_fr: |
-      Dans package.json.bak, cherche les deps liees a "sanitize"
-      ou "html". Tu vas trouver typiquement
-      "sanitize-html": "1.4.2" (ou une version ancienne
-      similaire). Cette version a une CVE connue qui permet de
-      bypass le strip via mutation XSS. Recherche cette version
-      sur snyk.io ou nvd.nist.gov pour trouver le pattern de
-      bypass exact.
+      Dans package.json.bak, la dependance de nettoyage est
+      "sanitize-html": "1.4.2". Cette version ancienne nettoie en un
+      seul passage, sans re-verifier son resultat : une balise
+      imbriquee de maniere a ce que le retrait d'un tag interne
+      reconstitue le tag voulu passe au travers. C'est une mutation
+      XSS. Cherche la forme d'imbrication qui, apres un seul retrait,
+      laisse exactement la balise cible.
     text_en: |
-      In package.json.bak, look for "sanitize" or "html" deps.
-      You'll typically find
-      "sanitize-html": "1.4.2" (or similar old version). This
-      version has a known CVE allowing bypass of strip via
-      mutation XSS. Search this version on snyk.io or
-      nvd.nist.gov for the exact bypass pattern.
+      In package.json.bak, the sanitizing dependency is
+      "sanitize-html": "1.4.2". This old version cleans in a single
+      pass, without re-checking its result: a tag nested so that
+      removing an inner tag reconstitutes the intended tag slips
+      through. This is a mutation XSS. Look for the nesting shape
+      that, after one removal, leaves exactly the target tag.
     pedagogical_intent: |
-      Spell the dep + version + CVE lookup workflow.
+      Name the exact library/version and the single-pass weakness.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Le payload exact a faire passer (description OWASP) :
+      La cible a persister (description du challenge) est exactement :
       <iframe src="javascript:alert(`xss`)">
-      Pour bypass sanitize-html 1.4.x, le pattern classique est
-      d'inserer un nested ou une variation de tags qui confond
-      le parser. Exemple historique connu :
+      Contre sanitize-html 1.4.2, double la balise d'ouverture :
       <<iframe>iframe src="javascript:alert(`xss`)">
-      Le sanitizer voit "<<iframe>" et strip "<iframe>" interne,
-      laissant "<iframe src=...". Adapte-toi a la version
-      exacte trouvee dans package.json.bak.
+      Le nettoyeur retire le <iframe> interne et laisse exactement la
+      chaine cible. La validation (models/feedback.ts) ne verifie pas
+      que l'alerte s'affiche : elle verifie que le commentaire STOCKE
+      (apres nettoyage) contient cette chaine exacte.
     text_en: |
-      Exact payload to get through (OWASP description):
+      The target to persist (challenge description) is exactly:
       <iframe src="javascript:alert(`xss`)">
-      To bypass sanitize-html 1.4.x, classic pattern is
-      inserting nested or tag variation confusing the parser.
-      Known historic example:
+      Against sanitize-html 1.4.2, double the opening tag:
       <<iframe>iframe src="javascript:alert(`xss`)">
-      Sanitizer sees "<<iframe>" and strips inner "<iframe>",
-      leaving "<iframe src=...". Adapt to the exact version
-      found in package.json.bak.
+      The sanitizer removes the inner <iframe> and leaves exactly the
+      target string. Validation (models/feedback.ts) does not check
+      that the alert fires: it checks that the STORED comment (after
+      cleanup) contains this exact string.
     pedagogical_intent: |
-      Spell mutation XSS pattern.
+      Give the exact payload and the real validation condition.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Resoudre forgottenDevBackup (sortir package.json.bak du
-         /ftp/ via null byte bypass, comme pour easterEggLevelOne).
-      2. Lire package.json.bak, trouver "sanitize-html": "1.x.x"
-         et chercher CVE.
-      3. Sur /#/contact (Customer Feedback) : dans le champ
-         Comment, taper :
+      Solution (payload verifie contre sanitize-html 1.4.2 : il
+      produit exactement la chaine cible) :
+      1. Sur /#/contact (Customer Feedback), champ Comment, saisis :
          <<iframe>iframe src="javascript:alert(`xss`)">
-         (ajuste selon version)
-      4. Submit le feedback (rating obligatoire).
-      5. Va sur /#/about (About Us) ou les feedbacks sont
-         affiches. L'iframe execute si bypass reussi.
-      Hint #5 OWASP : si tu as un alert mais pas le challenge
-      qui se valide, c'est que la string EXACTE n'est pas en
-      DB. Iterate jusqu'a obtenir la string exacte.
-      Defense : (1) mettre a jour sanitize-html vers une version corrigee actuelle (SBOM + npm audit en CI). (2) Appliquer un encodage de sortie context-aware via DOMPurify lors du rendu des feedbacks utilisateur. (3) Imposer une CSP stricte (Content-Security-Policy) pour bloquer l'execution de scripts inline.
+      2. Remplis la note et le captcha, puis envoie.
+      3. Ouvre /#/about (About Us) ou les feedbacks sont affiches.
+      Le commentaire stocke vaut desormais la balise iframe exacte ;
+      le challenge est resolu (hint OWASP #5 : si une alerte
+      apparait sans que le challenge se valide, c'est que la chaine
+      stockee n'est pas exactement celle attendue).
+      Defense : mettre a jour sanitize-html, ou nettoyer en plusieurs
+      passes jusqu'a point fixe ; mieux, echapper le contenu a
+      l'affichage plutot que d'autoriser du HTML dans un commentaire.
     text_en: |
-      Complete workflow:
-      1. Solve forgottenDevBackup (extract package.json.bak from
-         /ftp/ via null byte bypass, like easterEggLevelOne).
-      2. Read package.json.bak, find "sanitize-html": "1.x.x"
-         and lookup CVE.
-      3. On /#/contact (Customer Feedback): in the Comment
-         field, type:
+      Solution (payload verified against sanitize-html 1.4.2: it
+      produces exactly the target string):
+      1. On /#/contact (Customer Feedback), Comment field, enter:
          <<iframe>iframe src="javascript:alert(`xss`)">
-         (adjust by version)
-      4. Submit feedback (rating mandatory).
-      5. Go to /#/about (About Us) where feedbacks display.
-         Iframe executes if bypass succeeded.
-      OWASP hint #5: if you have an alert but the challenge
-      doesn't solve, the EXACT string isn't in DB. Iterate
-      until you get the exact string.
-      Defense: (1) update sanitize-html to a current patched version (SBOM + npm audit in CI). (2) Apply context-aware output encoding via DOMPurify when rendering user feedback. (3) Enforce strict CSP (Content-Security-Policy) to block inline script execution.
+      2. Fill in the rating and captcha, then submit.
+      3. Open /#/about (About Us) where feedback is displayed.
+      The stored comment now equals the exact iframe tag; the
+      challenge is solved (OWASP hint #5: if an alert shows but the
+      challenge does not solve, the stored string is not exactly the
+      expected one).
+      Defense: upgrade sanitize-html, or sanitize in multiple passes
+      to a fixed point; better, escape content at render time rather
+      than allowing HTML in a comment.
     pedagogical_intent: |
-      Quasi-solution : full kill chain + warning on exact-string match.
+      Full solution: verified payload, exact-string validation, defense.

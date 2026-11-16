@@ -23,174 +23,91 @@ hints:
   N2:
     cost_pct: 10
     text_fr: |
-      Hint OWASP #3 : "try inspecting the
-      requests that go out using browser's
-      developer tools". Ouvre DevTools Network
-      tab, fais un upgrade attempt avec wallet
-      OU card. Observe la requete : POST /rest/
-      deluxe-membership avec body contenant
-      `paymentMode` et `UserId`. C'est cette
-      requete qu'il faut manipuler.
+      Hint OWASP #3 : "inspect the requests ... using the browser's
+      developer tools". Ouvre l'onglet Network, lance une tentative
+      de paiement (wallet ou carte) : la requete est
+      POST /rest/deluxe-membership. Regarde son corps JSON. Un seul
+      champ y decrit comment tu paies. Note : ton identifiant n'a pas
+      besoin d'etre dans le corps, le serveur le deduit de ton jeton.
     text_en: |
-      OWASP hint #3: "try inspecting the
-      requests that go out using browser's
-      developer tools". Open DevTools Network
-      tab, do upgrade attempt with wallet OR
-      card. Observe request: POST /rest/deluxe-
-      membership with body containing
-      `paymentMode` and `UserId`. This request
-      to manipulate.
+      OWASP hint #3: "inspect the requests ... using the browser's
+      developer tools". Open the Network tab, start a payment attempt
+      (wallet or card): the request is POST /rest/deluxe-membership.
+      Look at its JSON body. A single field describes how you pay.
+      Note: your user id does not need to be in the body, the server
+      derives it from your token.
     pedagogical_intent: |
-      Spell investigation method.
+      Localize the request and the single decisive field.
 
   N3:
     cost_pct: 20
     text_fr: |
-      Hint OWASP #4 : "playing around with the
-      parameters in these requests". Test :
-      modifier `paymentMode` en autre string que
-      'wallet' ou 'card' (par exemple 'free',
-      'test', 'foo'). Submit la requete
-      modifiee. Observer la response.
+      Hint OWASP #4 : "playing around with the parameters". Le champ
+      s'appelle paymentMode et vaut "wallet" ou "card". Que se passe-
+      t-il si tu envoies une troisieme valeur, que le serveur ne
+      reconnait ni comme portefeuille ni comme carte ? Rejoue la
+      requete modifiee et observe le role de ton compte apres coup.
     text_en: |
-      OWASP hint #4: "playing around with the
-      parameters in these requests". Test:
-      modify `paymentMode` to other string than
-      'wallet' or 'card' (e.g., 'free', 'test',
-      'foo'). Submit modified request. Observe
-      response.
+      OWASP hint #4: "playing around with the parameters". The field
+      is paymentMode and holds "wallet" or "card". What happens if
+      you send a third value the server recognizes as neither wallet
+      nor card? Replay the modified request and check your account
+      role afterwards.
     pedagogical_intent: |
-      Spell parameter manipulation.
+      Point at the parameter and the idea of an unhandled value.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Source serveur
-      verifiee (routes/deluxe.ts:24-46) :
-      ```js
-      if (paymentMode === 'wallet') {
-        // check balance, decrement
-      }
-      if (paymentMode === 'card') {
-        // check card validity
-      }
-      const updatedUser = await user.update({
-        role: deluxe });  // TOUJOURS execute
-      solveIf(() => paymentMode !== 'wallet' &&
-        paymentMode !== 'card');
-      ```
-      Donc si paymentMode='free', les ifs sont
-      skip (no payment validation), update
-      execute (user devient deluxe), solveIf
-      match -> challenge solve auto.
+      Code serveur (routes/deluxe.ts, upgradeToDeluxe) : le bloc
+      "wallet" ne s'execute que si paymentMode vaut "wallet", le bloc
+      "card" que si paymentMode vaut "card". Avec toute autre valeur,
+      les deux controles de paiement sont sautes, puis
+      user.update({ role: deluxe }) s'execute, et solveIf exige
+      exactement : jeton valide ET paymentMode different de "wallet"
+      ET different de "card". Pre-requis : etre connecte avec un
+      compte de role "customer" (la requete cible role customer).
     text_en: |
-      Verified server
-      source (routes/deluxe.ts:24-46):
-      ```js
-      if (paymentMode === 'wallet') {
-        // check balance, decrement
-      }
-      if (paymentMode === 'card') {
-        // check card validity
-      }
-      const updatedUser = await user.update({
-        role: deluxe });  // ALWAYS executes
-      solveIf(() => paymentMode !== 'wallet' &&
-        paymentMode !== 'card');
-      ```
-      So if paymentMode='free', ifs skip (no
-      payment validation), update executes
-      (user becomes deluxe), solveIf matches
-      -> challenge auto solves.
+      Server code (routes/deluxe.ts, upgradeToDeluxe): the "wallet"
+      block runs only if paymentMode is "wallet", the "card" block
+      only if paymentMode is "card". With any other value both
+      payment checks are skipped, then user.update({ role: deluxe })
+      runs, and solveIf requires exactly: valid token AND paymentMode
+      other than "wallet" AND other than "card". Precondition: be
+      logged in with a "customer" role account (the query targets
+      role customer).
     pedagogical_intent: |
-      Reveal exact code logic.
+      Give the exact branch logic and the solve condition.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Login Juice Shop comme customer (besoin
-         authenticated user pour upgrade).
-      2. Naviguer /#/deluxe-membership.
-      3. Open DevTools Network tab.
-      4. Cliquer "Pay using your wallet" ou
-         "Pay using your card" pour capture la
-         requete. Annuler avant submit si
-         necessaire (pour voir la requete).
-      5. Le request body capture est : `{
-         paymentMode: "wallet" || "card",
-         UserId: <ton id>, paymentId: ...}`.
-      6. Construire un curl manuel ou Burp
-         Repeater :
-         ```bash
-         curl -X POST
-           http://localhost:3000/rest/deluxe-
-           membership
-           -H "Authorization: Bearer <token>"
-           -H "Content-Type: application/json"
-           -d '{"paymentMode":"free","UserId":1}'
-         ```
-      7. Le serveur :
-         (a) skip wallet check (paymentMode !==
-             'wallet')
-         (b) skip card check (paymentMode !==
-             'card')
-         (c) user.update({role: deluxe}) -> user
-             devient deluxe
-         (d) solveIf check `paymentMode !==
-             'wallet' && paymentMode !== 'card'`
-             = true -> challenge solve auto
-      8. Le user est UPGRADED a deluxe sans
-         payment + challenge solve.
-      Source canonique : routes/deluxe.ts:24-46
-      + analyse order of operations.
-      Defense canonique : (a) Sequelize validate
-      `isIn: [['wallet', 'card']]` sur
-      paymentMode. (b) reject AVANT user.update
-      si autre paymentMode. (c) atomic
-      transaction. (d) audit log + monitoring.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : connecte
+      comme client, rejoue la requete avec une troisieme valeur de
+      paymentMode, par exemple :
+        POST /rest/deluxe-membership
+        Authorization: Bearer <ton jeton>
+        corps : {"paymentMode":"none"}
+      Reponse 200 ; ton compte passe deluxe sans paiement et le
+      challenge est resolu. Inutile de mettre un UserId dans le
+      corps : le middleware appendUserId l'ecrase avec l'id de ton
+      jeton.
+      Defense : ne jamais accorder un acces paye sur la base d'un
+      champ fourni par le client. Valider paymentMode contre une
+      liste fermee de moyens de paiement et refuser toute valeur
+      inconnue avant de modifier le role.
     text_en: |
-      Full workflow:
-      1. Login Juice Shop as customer (need
-         authenticated user for upgrade).
-      2. Navigate /#/deluxe-membership.
-      3. Open DevTools Network tab.
-      4. Click "Pay using your wallet" or "Pay
-         using your card" to capture request.
-         Cancel before submit if necessary (to
-         see request).
-      5. Captured request body: `{paymentMode:
-         "wallet" || "card", UserId: <your id>,
-         paymentId: ...}`.
-      6. Build manual curl or Burp Repeater:
-         ```bash
-         curl -X POST
-           http://localhost:3000/rest/deluxe-
-           membership
-           -H "Authorization: Bearer <token>"
-           -H "Content-Type: application/json"
-           -d '{"paymentMode":"free","UserId":1}'
-         ```
-      7. Server:
-         (a) skip wallet check (paymentMode !==
-             'wallet')
-         (b) skip card check (paymentMode !==
-             'card')
-         (c) user.update({role: deluxe}) ->
-             user becomes deluxe
-         (d) solveIf check `paymentMode !==
-             'wallet' && paymentMode !==
-             'card'` = true -> challenge auto
-             solves
-      8. User UPGRADED to deluxe without
-         payment + challenge solves.
-      Canonical source: routes/deluxe.ts:24-46
-      + order of operations analysis.
-      Canonical defense: (a) Sequelize
-      validate `isIn: [['wallet', 'card']]` on
-      paymentMode. (b) reject BEFORE user.update
-      if other paymentMode. (c) atomic
-      transaction. (d) audit log + monitoring.
+      Solution (verified during testing on Juice Shop 19.2.1): logged
+      in as a customer, replay the request with a third paymentMode
+      value, for example:
+        POST /rest/deluxe-membership
+        Authorization: Bearer <your token>
+        body: {"paymentMode":"none"}
+      Response 200; your account becomes deluxe without paying and the
+      challenge is solved. No need to put a UserId in the body: the
+      appendUserId middleware overwrites it with your token's id.
+      Defense: never grant paid access based on a client-supplied
+      field. Validate paymentMode against a closed list of payment
+      methods and reject any unknown value before changing the role.
     pedagogical_intent: |
-      Solution complete + atomic transaction
-      defense.
+      Full solution: verified request, UserId pitfall, defense.

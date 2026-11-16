@@ -70,116 +70,60 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Construction du
-      couponData :
-      ```js
-      // Pour WMNSDY2019 (Mar 08, 2019 GMT+0100)
-      const validOn = new Date('Mar 08, 2019
-        00:00:00 GMT+0100').getTime();
-      // = 1551999600000
-      const couponData = `WMNSDY2019-${validOn}`;
-      const encoded = Buffer.from(couponData)
-        .toString('base64');
-      // = "V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw"
-      ```
-      Submit POST /api/Orders avec body contenant
-      `couponData: "V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw"`
-      (et un basket valid). Le serveur decode,
-      match WMNSDY2019.validOn -> apply 75%
-      discount + solve manipulateClock.
+      Construis couponData = "<CODE>-<validOn>" puis encode-le en
+      base64. Pour WMNSDY2019, validOn vaut 1551999600000, d'ou
+      couponData = "WMNSDY2019-1551999600000" qui s'encode en
+      V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw. Ce champ ne se soumet pas via
+      /api/Orders : il voyage dans le corps de la requete de
+      validation du panier (routes/order.ts, calculateApplicableDiscount
+      lit req.body.couponData). Le serveur compare couponDate a
+      campaign.validOn et resout le challenge si validOn est dans le
+      passe.
     text_en: |
-      couponData
-      construction:
-      ```js
-      // For WMNSDY2019 (Mar 08, 2019 GMT+0100)
-      const validOn = new Date('Mar 08, 2019
-        00:00:00 GMT+0100').getTime();
-      // = 1551999600000
-      const couponData = `WMNSDY2019-${validOn}`;
-      const encoded = Buffer.from(couponData)
-        .toString('base64');
-      // = "V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw"
-      ```
-      Submit POST /api/Orders with body
-      containing `couponData: "V01OU0RZMjAxOS0
-      xNTUxOTk5NjAwMDAw"` (and valid basket).
-      Server decodes, matches WMNSDY2019.validOn
-      -> applies 75% discount + solves
-      manipulateClock.
+      Build couponData = "<CODE>-<validOn>" then base64-encode it.
+      For WMNSDY2019, validOn is 1551999600000, so couponData =
+      "WMNSDY2019-1551999600000" which encodes to
+      V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw. This field is not submitted via
+      /api/Orders: it travels in the body of the basket checkout
+      request (routes/order.ts, calculateApplicableDiscount reads
+      req.body.couponData). The server compares couponDate to
+      campaign.validOn and solves the challenge if validOn is in the
+      past.
     pedagogical_intent: |
-      Spell exact payload + base64 encoding.
+      Give the exact couponData, its encoding, and the right request.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Login + add product au basket via UI.
-      2. Inspecter le bundle Angular pour trouver
-         WMNSDY2019 (ou WMNSDY2020 / WMNSDY2021,
-         tous expired aujourd'hui).
-      3. Calculer le timestamp validOn (ex. Mar
-         08, 2019 GMT+0100 = 1551999600000).
-      4. Crafter `couponData = "WMNSDY2019-
-         1551999600000"`. Encode en base64 ->
-         `V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw`.
-      5. Apply le coupon : POST /rest/basket/:id/
-         coupon avec body `{coupon: "WMNSDY2019"}`
-         (le frontend rejette si coupon expired,
-         mais le backend le store quand meme).
-         Alternative : passer `couponData`
-         directement au checkout.
-      6. Checkout : POST /api/Orders avec
-         couponData base64-encoded dans body.
-      7. Le serveur :
-         (a) decode couponData base64
-         (b) split('-') -> [code, date]
-         (c) campaign.validOn === couponDate ->
-             apply discount + solveIf
-             (campaign.validOn < now())
-         (d) match -> challenge solve auto.
-      Source canonique : routes/order.ts:182-198 +
-      analyse decodage Buffer.
-      Defense canonique : (a) le coupon code
-      uniquement, validOn FETCHED server-side
-      depuis la DB. (b) verifier `now()` est dans
-      la window (validOn <= now() <= validOn +
-      duration). (c) idempotent redemption (un
-      user ne peut pas redeem 2 fois le meme
-      coupon). (d) coupon revocation API si
-      besoin.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : ajoute un
+      article au panier, puis envoie la validation du panier avec le
+      couponData force :
+        POST /rest/basket/<ton bid>/checkout
+        Authorization: Bearer <ton jeton>
+        corps : {"couponData":"V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw"}
+      Reponse 200, remise de 75% appliquee et challenge resolu. Le
+      champ couponData court-circuite le refus du frontend, qui lui
+      bloque les coupons expires. Les codes WMNSDY2019/2020/2021 sont
+      tous expires ; ajuste validOn au code choisi.
+      Defense : valider la fraicheur d'un coupon cote serveur a partir
+      d'une source de confiance (date serveur), jamais a partir d'une
+      date fournie par le client ; signer les coupons et verifier la
+      signature avant d'appliquer la remise.
     text_en: |
-      Full workflow:
-      1. Login + add product to basket via UI.
-      2. Inspect Angular bundle to find WMNSDY
-         2019 (or WMNSDY2020 / WMNSDY2021, all
-         expired today).
-      3. Calculate validOn timestamp (e.g., Mar
-         08, 2019 GMT+0100 = 1551999600000).
-      4. Craft `couponData = "WMNSDY2019-
-         1551999600000"`. Encode in base64 ->
-         `V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw`.
-      5. Apply coupon: POST /rest/basket/:id/
-         coupon with body `{coupon: "WMNSDY2019"}`
-         (frontend rejects if expired, but
-         backend stores anyway). Alternative:
-         pass `couponData` directly at checkout.
-      6. Checkout: POST /api/Orders with
-         couponData base64-encoded in body.
-      7. Server:
-         (a) decodes couponData base64
-         (b) split('-') -> [code, date]
-         (c) campaign.validOn === couponDate ->
-             applies discount + solveIf
-             (campaign.validOn < now())
-         (d) match -> challenge auto solves.
-      Canonical source: routes/order.ts:182-198
-      + Buffer decoding analysis.
-      Canonical defense: (a) coupon code only,
-      validOn FETCHED server-side from DB. (b)
-      verify `now()` is in window (validOn <=
-      now() <= validOn + duration). (c)
-      idempotent redemption (user can't redeem
-      same coupon twice). (d) coupon revocation
-      API if needed.
+      Solution (verified during testing on Juice Shop 19.2.1): add an
+      item to the basket, then send the basket checkout with the
+      forced couponData:
+        POST /rest/basket/<your bid>/checkout
+        Authorization: Bearer <your token>
+        body: {"couponData":"V01OU0RZMjAxOS0xNTUxOTk5NjAwMDAw"}
+      Response 200, 75% discount applied and challenge solved. The
+      couponData field bypasses the frontend's refusal, which blocks
+      expired coupons. Codes WMNSDY2019/2020/2021 are all expired;
+      adjust validOn to the chosen code.
+      Defense: validate a coupon's freshness server-side from a
+      trusted source (server time), never from a client-supplied date;
+      sign coupons and verify the signature before applying the
+      discount.
     pedagogical_intent: |
-      Solution complete + defense canonique.
+      Full solution: verified checkout request, frontend-bypass note,
+      defense.

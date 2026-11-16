@@ -56,6 +56,10 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   `passwordRepeatChallenge` (corps sans `passwordRepeat`) ; un feedback 0
   étoile et un utilisateur à email vide créés. Lot 2 : `csafChallenge`,
   `continueCodeChallenge` résolus ; un feedback contenant le hash CSAF créé.
+  Lot 3 (compte recette `lot3-recette@local.test`) : `freeDeluxeChallenge`,
+  `manipulateClockChallenge`, `missingEncodingChallenge` résolus ; compte passé
+  deluxe, une commande 75% et un article au panier créés. `persistedXss`
+  non rejoué en base (payload vérifié hors ligne contre sanitize-html 1.4.2).
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -73,7 +77,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | closeNotificationsChallenge | Miscellaneous | 1 | TODO |  |
 | errorHandlingChallenge | Security Misconfiguration | 1 | TODO |  |
 | exposedMetricsChallenge | Observability Failures | 1 | TODO |  |
-| missingEncodingChallenge | Improper Input Validation | 1 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| missingEncodingChallenge | Improper Input Validation | 1 | DONE (lot 3) | N2-N5 : glyphe unicode faux dans N2 (ᔚ -> ᓚ) ; # = separateur de fragment, %23 ; URL encodee verify.ts:71 ; teste |
 | passwordRepeatChallenge | Improper Input Validation | 1 | TODO |  |
 | redirectCryptoCurrencyChallenge | Unvalidated Redirects | 1 | TODO |  |
 | web3SandboxChallenge | Broken Access Control | 1 | TODO |  |
@@ -98,7 +102,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | dbSchemaChallenge | Injection | 3 | TODO |  |
 | forgedFeedbackChallenge | Broken Access Control | 3 | TODO |  |
 | forgedReviewChallenge | Broken Access Control | 3 | TODO |  |
-| freeDeluxeChallenge | Improper Input Validation | 3 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| freeDeluxeChallenge | Improper Input Validation | 3 | DONE (lot 3) | N2-N5 : UserId du corps ecrase par appendUserId (trompeur), pre-requis role customer ; solve = 3e valeur de paymentMode (deluxe.ts) ; teste (paymentMode:none) |
 | ghostLoginChallenge | Broken Authentication | 3 | TODO |  |
 | loginAmyChallenge | Sensitive Data Exposure | 3 | TODO |  |
 | loginBenderChallenge | Injection | 3 | TODO |  |
@@ -126,13 +130,13 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | hiddenImageChallenge | Security through Obscurity | 4 | DONE (lot 2) | N1-N5 : faux hint OWASP cite, reponse donnee des N3, image inventee ; chaine pickle rick verifiee (verify.ts:287) ; image porteuse 5.png deduite, extraction non reussie |
 | httpHeaderXssChallenge | XSS | 4 | TODO |  |
 | knownVulnerableComponentChallenge | Vulnerable Components | 4 | TODO |  |
-| manipulateClockChallenge | Improper Input Validation | 4 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| manipulateClockChallenge | Improper Input Validation | 4 | DONE (lot 3) | N4-N5 : endpoint faux (/api/Orders -> /rest/basket/:id/checkout), couponData dans le corps du checkout ; base64 WMNSDY2019 correct ; teste |
 | misplacedSignatureFileChallenge | Observability Failures | 4 | TODO |  |
 | noSqlCommandChallenge | Injection | 4 | DONE (lot 1) | N2,N4,N5 reecrits : endpoint et mecanisme faux (POST objet -> GET path, plafond 2000 ms, duree > 2000 ms) ; payload sleep(200) teste |
 | noSqlReviewsChallenge | Injection | 4 | TODO |  |
 | nullByteChallenge | Improper Input Validation | 4 | TODO |  |
 | oauthUserPasswordChallenge | Broken Authentication | 4 | TODO |  |
-| persistedXssFeedbackChallenge | XSS | 4 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| persistedXssFeedbackChallenge | XSS | 4 | DONE (lot 3) | N2-N5 : pre-requis file-disclosure recadre (pedagogique, pas technique), sanitize-html 1.4.2, payload <<iframe>... verifie (produit la chaine exacte) ; validation = chaine stockee (feedback.ts) |
 | redirectChallenge | Unvalidated Redirects | 4 | TODO |  |
 | resetPasswordBenderChallenge | Broken Authentication | 4 | TODO |  |
 | resetPasswordUvoginChallenge | Sensitive Data Exposure | 4 | TODO |  |
@@ -154,7 +158,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | rceChallenge | Insecure Deserialization | 5 | TODO |  |
 | resetPasswordBjoernChallenge | Broken Authentication | 5 | TODO |  |
 | resetPasswordMortyChallenge | Broken Anti Automation | 5 | TODO |  |
-| retrieveBlueprintChallenge | Sensitive Data Exposure | 5 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| retrieveBlueprintChallenge | Sensitive Data Exposure | 5 | DONE (lot 3) | N3-N5 : indice EXIF corrige (Make=OpenSCAD, pas Comment/Description ; chemin non dans EXIF), fichier JuiceShop.stl sous /assets/public/images/products/ (verify.ts:69) ; servi teste |
 | supplyChainAttackChallenge | Vulnerable Components | 5 | TODO |  |
 | svgInjectionChallenge | Security Misconfiguration | 5 | TODO |  |
 | tokenSaleChallenge | Security through Obscurity | 5 | TODO |  |
