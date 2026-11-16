@@ -29,7 +29,7 @@
   "KPI_VALIDATED": "Validated",
   "KPI_PENDING": "Requests",
   "KPI_PENDING_REQUESTS": "pending",
-  "KPI_FOOT_ACTIVE_COHORT": "active cohort",
+  "KPI_FOOT_ACTIVE_COHORT": "with activity",
   "KPI_FOOT_TD": "of the lab path",
   "KPI_FOOT_SINCE_INGEST": "since ingestion",
   "KPI_FOOT_LAST_REFRESH_WAIT": "waiting...",
@@ -174,6 +174,9 @@
   "ARIA_ADD_NAME": "New student name",
   "ARIA_ADD_TOKEN": "New student token",
 
+  "ARIA_STUDENT_TAG": "Student follow-up tag",
+  "REFRESH_SSE_DOWN": "live stream down, reconnecting automatically",
+  "FILTER_EMPTY": "No student matches the filters.",
   "FOOTER_DASHBOARD": "JuiceLab dashboard - cohort",
   "FOOTER_ADMIN_COHORTS": "JuiceLab dashboard - cohort admin",
   "FOOTER_ROSTER": "JuiceLab dashboard - cohort roster",
@@ -321,7 +324,7 @@
   "FILTER_SCORE": "Score",
   "FILTER_TAG": "Tag",
   "FILTER_ALL": "(all)",
-  "FILTER_RESET": "Reset",
+  "FILTER_RESET": "Clear filters",
 
   "KEYBOARD_HELP_TITLE": "Keyboard shortcuts",
   "KEYBOARD_HELP_J": "Next / previous row",

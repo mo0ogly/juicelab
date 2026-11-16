@@ -385,6 +385,11 @@ clair/sombre dans la topbar.
 
 ---
 
+> Sur `/dashboard`, l'indicateur **Élèves** compte les élèves **avec activité**
+> (au moins un event), pas les inscrits du roster : `/admin/students` donne le
+> total. Si les filtres masquent tout le monde, la matrice l'indique et
+> « Effacer les filtres » la rétablit.
+
 ### 9.3 Panneau Alertes
 
 Sur `/dashboard`, le panneau **Alertes** liste les alertes non acquittées de la

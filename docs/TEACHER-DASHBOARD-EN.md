@@ -362,6 +362,11 @@ Light/dark toggle in the topbar.
 
 ---
 
+> On `/dashboard`, the **Students** indicator counts students **with activity**
+> (at least one event), not roster enrolments: `/admin/students` gives the
+> total. When the filters hide everyone, the matrix says so and "Clear
+> filters" restores it.
+
 ### 9.3 Alerts panel
 
 On `/dashboard`, the **Alerts** panel lists the cohort's unacknowledged alerts:

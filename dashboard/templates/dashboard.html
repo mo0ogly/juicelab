@@ -160,7 +160,7 @@
           <th class="sticky-col">{{ t('TABLE_STUDENT') }}</th>
           <th class="activity-col">{{ t('KPI_EVENTS') }}</th>
           {% for challenge in summary.challenges %}
-            <th>{{ challenge }}</th>
+            <th class="challenge-col">{{ challenge }}</th>
           {% endfor %}
           <th class="score-col">{{ t('TABLE_SCORE_TOTAL') }}</th>
         </tr>
@@ -175,7 +175,7 @@
             </strong>
             <input class="name-edit{% if not _name %} name-missing{% endif %}" type="text" value="{{ _name }}" placeholder="{{ t('STUDENT_NAME_MISSING_PLACEHOLDER') }}" maxlength="100" aria-label="{{ t('ARIA_STUDENT_NAME') }}">
             {% set _tag = (summary.tags.get(student, 'none') if summary.tags is defined else 'none') %}
-            <select class="tag-select" data-student="{{ student }}" aria-label="{{ t('TAG_NONE') }}">
+            <select class="tag-select" data-student="{{ student }}" aria-label="{{ t('ARIA_STUDENT_TAG') }}">
               <option value="none"{% if _tag == 'none' %} selected{% endif %}>{{ t('TAG_NONE') }}</option>
               <option value="a_voir"{% if _tag == 'a_voir' %} selected{% endif %}>{{ t('TAG_A_VOIR') }}</option>
               <option value="ok"{% if _tag == 'ok' %} selected{% endif %}>{{ t('TAG_OK') }}</option>
@@ -184,8 +184,8 @@
             </select>
             <small class="token-hint">{{ student[:8] }}&hellip;</small>
             <span class="row-actions">
-              <a href="/admin/student/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DETAIL') }}" data-drilldown="1">D</a> <a href="/admin/diploma/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DIPLOMA') }}">{{ t('ROW_ACTION_DIPLOMA_SHORT') }}</a>
-              <button type="button" class="note-btn" data-student="{{ student }}" title="{{ t('ACTION_NOTE') }}">N</button>
+              <a href="/admin/student/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DETAIL') }}" aria-label="{{ t('ACTION_DETAIL') }}" data-drilldown="1">D</a> <a href="/admin/diploma/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DIPLOMA') }}">{{ t('ROW_ACTION_DIPLOMA_SHORT') }}</a>
+              <button type="button" class="note-btn" data-student="{{ student }}" title="{{ t('ACTION_NOTE') }}" aria-label="{{ t('ACTION_NOTE') }}">N</button>
             </span>
           </td>
           <td class="activity-col">
@@ -230,6 +230,7 @@
         {% endfor %}
       </tbody>
     </table>
+    <p class="empty-placeholder filter-empty" id="filter-empty" role="status" hidden>{{ t('FILTER_EMPTY') }}</p>
   </div>
 
   <div class="legend" aria-label="{{ t('ARIA_LEGEND') }}">
@@ -261,8 +262,8 @@
 <div class="modal-backdrop" id="note-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="note-modal-title">
   <div class="modal-card"><div class="modal-head"><h3 id="note-modal-title">{{ t('NOTE_TITLE') }}</h3>
     <button class="modal-close" type="button" id="note-close-btn" aria-label="{{ t('ARIA_CLOSE') }}">&times;</button></div>
-    <div class="modal-body"><textarea id="note-textarea" class="note-textarea" placeholder="{{ t('NOTE_PLACEHOLDER') }}" maxlength="2000" rows="8"></textarea></div>
-    <div class="modal-meta"><button class="btn primary" id="note-save-btn">{{ t('NOTE_SAVE') }}</button></div>
+    <div class="modal-body"><textarea id="note-textarea" class="note-textarea" aria-labelledby="note-modal-title" placeholder="{{ t('NOTE_PLACEHOLDER') }}" maxlength="2000" rows="8"></textarea></div>
+    <div class="modal-meta"><button type="button" class="btn primary" id="note-save-btn">{{ t('NOTE_SAVE') }}</button></div>
   </div>
 </div>
 <div class="modal-backdrop kbd-help" id="kbd-help" role="dialog" aria-modal="true" aria-labelledby="kbd-help-title">
@@ -324,8 +325,8 @@
       parts.push('<span class="pill hints">hints ' + (slot.hints || 0) + '/5</span>');
       if (slot.journal)
         parts.push(
-          '<span class="pill journal" data-key="' + challenge +
-          '" data-student="' + student + '" tabindex="0" role="button">journal</span>'
+          '<span class="pill journal" data-key="' + escapeHtml(challenge) +
+          '" data-student="' + escapeHtml(student) + '" tabindex="0" role="button">journal</span>'
         );
       if (slot.quiz_score !== null && slot.quiz_score !== undefined)
         parts.push('<span class="pill quiz">quiz ' + slot.quiz_score + '/100</span>');
@@ -335,11 +336,18 @@
       return parts.join('');
     }
 
+    /* Score cell. Mirrors the server-rendered <td class="score-col"> : final
+       average, else partial score (flagged with *), else "not available". */
     function totalCellHtml(total) {
-      if (total && total.avg_score !== null && total.avg_score !== undefined) {
+      const has = function (v) { return v !== null && v !== undefined; };
+      if (total && has(total.avg_score)) {
         return '<span class="score-total">' + total.avg_score + '/100</span>';
       }
-      return '<span class="score-na">-</span>';
+      if (total && has(total.partial_score)) {
+        return '<span class="score-total score-partial" title="' + escapeHtml(T('SCORE_PARTIAL_TITLE')) + '">'
+          + total.partial_score + '/100 *</span>';
+      }
+      return '<span class="score-na" title="' + escapeHtml(T('SCORE_NA_TITLE')) + '">&mdash;</span>';
     }
 
     function renderMatrix(summary) {
@@ -357,36 +365,53 @@
       if (empty) empty.style.display = 'none';
       if (wrap) wrap.style.display = '';
 
+      // Client render of the matrix, used on every SSE snapshot. It MUST stay
+      // the mirror of the server-rendered <thead>/<tbody> above (same columns,
+      // links and classes), otherwise the page changes shape after first load.
+      // Tokens, names and challenge keys come from students : always escaped.
       const headRow = document.getElementById('head-row');
-      let headHtml = '<th class="sticky-col">' + T('TABLE_STUDENT') + '</th>';
+      let headHtml = '<th class="sticky-col">' + escapeHtml(T('TABLE_STUDENT')) + '</th>'
+        + '<th class="activity-col">' + escapeHtml(T('KPI_EVENTS')) + '</th>';
       for (const ch of summary.challenges) {
-        headHtml += '<th>' + ch + '</th>';
+        headHtml += '<th class="challenge-col">' + escapeHtml(ch) + '</th>';
       }
-      headHtml += '<th class="score-col">' + T('TABLE_SCORE_TOTAL') + '</th>';
+      headHtml += '<th class="score-col">' + escapeHtml(T('TABLE_SCORE_TOTAL')) + '</th>';
       headRow.innerHTML = headHtml;
 
       const body = document.getElementById('body-rows');
       let bodyHtml = '';
       const nameMap = summary.names || {};
       const tagMap = summary.tags || {};
+      const countMap = summary.event_counts || {};
       const tagValues = ['none', 'a_voir', 'ok', 'absent', 'a_interroger'];
+      const cohortQs = '?cohort=' + encodeURIComponent(COHORT);
       for (const student of summary.students) {
         const name = nameMap[student] || '';
-        const placeholder = name ? '' : 'placeholder="' + (student.substring(0, 8) + '...') + '"';
+        const sEsc = escapeHtml(student);
+        const sUrl = encodeURIComponent(student);
         const tag = tagMap[student] || 'none';
         const tagOpts = tagValues.map(function (v) {
           return '<option value="' + v + '"' + (v === tag ? ' selected' : '') + '>'
             + escapeHtml(T('TAG_' + v.toUpperCase())) + '</option>';
         }).join('');
-        bodyHtml += '<tr data-student="' + student + '">';
-        bodyHtml += '<td class="sticky-col" title="' + student + '">'
-          + '<input class="name-edit" type="text" value="' + name.replace(/"/g, '&quot;') + '" ' + placeholder + ' maxlength="100" aria-label="' + T('ARIA_STUDENT_NAME') + '">'
-          + '<select class="tag-select" data-student="' + student + '" aria-label="' + escapeHtml(T('TAG_NONE')) + '">' + tagOpts + '</select>'
-          + '<span class="row-actions"><button type="button" class="note-btn" data-student="' + student + '" title="' + escapeHtml(T('ACTION_NOTE')) + '">N</button></span>'
-          + '</td>';
+        const evCount = countMap[student] || 0;
+        bodyHtml += '<tr data-student="' + sEsc + '">';
+        bodyHtml += '<td class="sticky-col" title="' + sEsc + '">'
+          + '<strong class="student-display' + (name ? '' : ' student-display-missing') + '">'
+          + escapeHtml(name || (T('STUDENT_UNNAMED_PREFIX') + ' ' + student.substring(0, 6))) + '</strong>'
+          + '<input class="name-edit' + (name ? '' : ' name-missing') + '" type="text" value="' + escapeHtml(name) + '" placeholder="'
+          + escapeHtml(T('STUDENT_NAME_MISSING_PLACEHOLDER')) + '" maxlength="100" aria-label="' + escapeHtml(T('ARIA_STUDENT_NAME')) + '">'
+          + '<select class="tag-select" data-student="' + sEsc + '" aria-label="' + escapeHtml(T('ARIA_STUDENT_TAG')) + '">' + tagOpts + '</select>'
+          + '<small class="token-hint">' + escapeHtml(student.substring(0, 8)) + '&hellip;</small>'
+          + '<span class="row-actions">'
+          + '<a href="/admin/student/' + sUrl + cohortQs + '" target="_blank" rel="noopener" title="' + escapeHtml(T('ACTION_DETAIL')) + '" aria-label="' + escapeHtml(T('ACTION_DETAIL')) + '" data-drilldown="1">D</a> '
+          + '<a href="/admin/diploma/' + sUrl + cohortQs + '" target="_blank" rel="noopener" title="' + escapeHtml(T('ACTION_DIPLOMA')) + '">' + escapeHtml(T('ROW_ACTION_DIPLOMA_SHORT')) + '</a> '
+          + '<button type="button" class="note-btn" data-student="' + sEsc + '" title="' + escapeHtml(T('ACTION_NOTE')) + '" aria-label="' + escapeHtml(T('ACTION_NOTE')) + '">N</button>'
+          + '</span></td>';
+        bodyHtml += '<td class="activity-col"><span class="pill ' + (evCount > 0 ? 'hints' : 'empty') + '">' + evCount + '</span></td>';
         for (const ch of summary.challenges) {
           const slot = (summary.matrix[student] || {})[ch];
-          bodyHtml += '<td data-cell="' + ch + '">' + pillsHtml(slot, ch, student) + '</td>';
+          bodyHtml += '<td data-cell="' + escapeHtml(ch) + '">' + pillsHtml(slot, ch, student) + '</td>';
         }
         bodyHtml += '<td class="score-col">' + totalCellHtml((summary.totals || {})[student]) + '</td>';
         bodyHtml += '</tr>';
@@ -396,6 +421,7 @@
       bindNameEdits();
       bindTagSelects();
       bindNoteButtons();
+      applyFilters();
     }
 
     function bindNameEdits() {
@@ -625,7 +651,7 @@
     }
 
     es.onerror = () => {
-      refreshTag.textContent = T('REFRESH_KO', { msg: 'SSE disconnected, auto-retry' });
+      refreshTag.textContent = T('REFRESH_KO', { msg: T('REFRESH_SSE_DOWN') });
       autoTag.textContent = T('REFRESH_TAG_KO');
       autoTag.classList.add('off');
     };
@@ -721,6 +747,12 @@
         }
         tr.classList.toggle('row-filtered-out', hide);
       });
+      // Say so when the filters hide every student, instead of an empty table.
+      const none = document.getElementById('filter-empty');
+      if (none) {
+        const rows = document.querySelectorAll('#body-rows tr');
+        none.hidden = !(rows.length > 0 && document.querySelectorAll('#body-rows tr:not(.row-filtered-out)').length === 0);
+      }
     }
     ['filter-challenge', 'filter-score', 'filter-tag'].forEach(id => {
       document.getElementById(id)?.addEventListener('change', applyFilters);
