@@ -1,0 +1,80 @@
+{
+  "scoreBoardChallenge": {
+    "title": "Score Board",
+    "before": false,
+    "after": true,
+    "observation": "Ouverture du Score Board"
+  },
+  "privacyPolicyChallenge": {
+    "title": "Privacy Policy",
+    "before": false,
+    "after": true,
+    "observation": "Ouverture de la politique de confidentialité"
+  },
+  "directoryListingChallenge": {
+    "title": "Confidential Document",
+    "before": false,
+    "after": true,
+    "observation": "Fichier acquisitions.md ouvert depuis l’index /ftp"
+  },
+  "exposedCredentialsChallenge": {
+    "title": "Exposed Credentials",
+    "before": false,
+    "after": true,
+    "observation": "Secret retrouvé dans main.js et connexion au compte testing@juice-sh.op"
+  },
+  "passwordHashLeakChallenge": {
+    "title": "Password Hash Leak",
+    "before": false,
+    "after": true,
+    "observation": "Champ password présent uniquement avec fields=id,email,password"
+  },
+  "loginAdminChallenge": {
+    "title": "Login Admin",
+    "before": false,
+    "after": true,
+    "observation": "Connexion admin@juice-sh.op obtenue avec un mot de passe arbitraire"
+  },
+  "adminSectionChallenge": {
+    "title": "Admin Section",
+    "before": false,
+    "after": true,
+    "observation": "Page Administration ouverte avec la session administrateur"
+  },
+  "basketAccessChallenge": {
+    "title": "View Basket",
+    "before": false,
+    "after": true,
+    "observation": "Panier 2 reçu avec la session du panier 1"
+  },
+  "feedbackChallenge": {
+    "title": "Five-Star Feedback",
+    "before": false,
+    "after": true,
+    "observation": "1 avis à cinq étoiles supprimé(s) depuis Administration"
+  },
+  "localXssChallenge": {
+    "title": "DOM XSS",
+    "before": false,
+    "after": true,
+    "observation": "Iframe injectée dans les résultats. Alertes observées [\"xss\"]"
+  },
+  "reflectedXssChallenge": {
+    "title": "Reflected XSS",
+    "before": false,
+    "after": false,
+    "observation": "Requête de suivi HTTP 200. Alertes observées []"
+  },
+  "xssBonusChallenge": {
+    "title": "Bonus Payload",
+    "before": false,
+    "after": true,
+    "observation": "Iframe SoundCloud insérée. La lecture externe est hors recette"
+  },
+  "forgedFeedbackChallenge": {
+    "title": "Forged Feedback",
+    "before": false,
+    "after": true,
+    "observation": "POST /api/Feedbacks HTTP 500"
+  }
+}

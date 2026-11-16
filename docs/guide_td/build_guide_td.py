@@ -45,10 +45,11 @@ def element(tag, **attrs):
     return node
 
 
-def new_document():
+def new_document(title='Travaux dirigés OWASP Juice Shop — guide élève',
+                 audience='Support élève'):
     """A4 document with the JuiceLab styles and a page-number footer."""
     doc = Document()
-    doc.core_properties.title = 'Travaux dirigés OWASP Juice Shop — guide élève'
+    doc.core_properties.title = title
     doc.core_properties.subject = 'Formation OWASP Juice Shop et parcours JuiceLab'
     doc.core_properties.author = 'JuiceLab'
     section = doc.sections[0]
@@ -74,7 +75,7 @@ def new_document():
         bar.getparent().remove(bar)
     footer = section.footer.paragraphs[0]
     footer.alignment = 2
-    run = footer.add_run('JuiceLab  ·  Support élève  ·  ')
+    run = footer.add_run(f'JuiceLab  ·  {audience}  ·  ')
     run.font.size = Pt(9)
     run.font.color.rgb = RGBColor.from_string(GREY)
     footer._p.append(element('fldSimple', instr='PAGE'))
