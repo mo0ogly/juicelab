@@ -449,5 +449,9 @@
   "DIPLOMA_BADGE_WRITER": "Plume retex",
   "DIPLOMA_BADGE_WRITER_HINT": "Au moins un journal retex redige",
   "DIPLOMA_SIGN_TEACHER": "Signature du responsable pedagogique",
-  "DIPLOMA_SIGN_QUALITY": "Controle qualite : presse a la main a JuiceLab"
+  "DIPLOMA_SIGN_QUALITY": "Controle qualite : presse a la main a JuiceLab",
+  "DIPLOMA_MEDAL_PLATINUM": "Medaille de platine",
+  "DIPLOMA_MEDAL_GOLD": "Medaille d'or",
+  "DIPLOMA_MEDAL_SILVER": "Medaille d'argent",
+  "DIPLOMA_MEDAL_BRONZE": "Medaille de bronze"
 }

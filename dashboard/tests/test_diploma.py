@@ -438,10 +438,43 @@ def test_badges_and_tagline_follow_results(isolated_app):
     for badge in ("DIPLOMA_BADGE_FULL", "DIPLOMA_BADGE_NO_HINT"):
         assert badge not in html, "badge labels are translated"
     assert html.count('class="diploma-badge"') == 2, "full parcours + no hint ; no flag, quiz, journal"
-    assert 'class="diploma-badges-none"' not in html and 'class="diploma-seal"' in html
+    assert 'class="diploma-badges-none"' not in html and 'class="diploma-medal medal-bronze"' in html
 
 
 def test_no_badge_message_for_empty_student(isolated_app):
     _seed_student(isolated_app, token="stud-none", solve_count=0)
     html = _diploma_page(isolated_app, "stud-none")
     assert 'class="diploma-badges-none"' in html and 'class="diploma-badge"' not in html
+
+
+# --- medals -----------------------------------------------------------------
+
+def _quiz_all(client, token, n, score):
+    for i in range(n):
+        client.post("/api/sync", json={
+            "student_token": token, "cohort_id": COHORT, "event_type": "quiz_completed",
+            "challenge_key": f"challenge_{i}", "data": {"score": score},
+            "client_timestamp": "2026-05-11T10:05:00Z",
+        })
+
+
+@pytest.mark.parametrize("token,solves,quiz,medal", [
+    ("medal-plat", 13, 90, "platinum"),   # 13/13, final (100+90)/2 = 95
+    ("medal-gold", 13, 80, "gold"),       # final 90 : tres bien, below 95
+    ("medal-silv", 8, 60, "silver"),      # 62 % progression, final 80 : bien
+    ("medal-bron", 13, None, "bronze"),   # no quiz : final 50 -> reussite
+])
+def test_medal_tiers(isolated_app, token, solves, quiz, medal):
+    _seed_student(isolated_app, token=token, solve_count=solves)
+    if quiz is not None:
+        _quiz_all(isolated_app, token, solves, quiz)
+    html = _diploma_page(isolated_app, token)
+    assert f'class="diploma-medal medal-{medal}"' in html
+    assert html.count('class="diploma-medal ') == 1 and '<svg class="diploma-seal"' not in html
+    assert "DIPLOMA_MEDAL_" not in html
+
+
+def test_participation_keeps_the_seal(isolated_app):
+    _seed_student(isolated_app, token="medal-none", solve_count=0)
+    html = _diploma_page(isolated_app, "medal-none")
+    assert '<svg class="diploma-seal"' in html and 'class="diploma-medal ' not in html

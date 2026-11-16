@@ -449,5 +449,9 @@
   "DIPLOMA_BADGE_WRITER": "Retro writer",
   "DIPLOMA_BADGE_WRITER_HINT": "At least one retrospective journal written",
   "DIPLOMA_SIGN_TEACHER": "Signature of the course lead",
-  "DIPLOMA_SIGN_QUALITY": "Quality control: hand-pressed at JuiceLab"
+  "DIPLOMA_SIGN_QUALITY": "Quality control: hand-pressed at JuiceLab",
+  "DIPLOMA_MEDAL_PLATINUM": "Platinum medal",
+  "DIPLOMA_MEDAL_GOLD": "Gold medal",
+  "DIPLOMA_MEDAL_SILVER": "Silver medal",
+  "DIPLOMA_MEDAL_BRONZE": "Bronze medal"
 }

@@ -179,6 +179,15 @@
       color: var(--seal); transform: rotate(-12deg);
     }
     .diploma-seal text { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.22em; fill: currentColor; }
+    .diploma-medal { position: absolute; top: 18px; right: 26px; width: 104px; margin: 0; text-align: center; }
+    .diploma-medal svg { width: 104px; height: 130px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.18)); }
+    .diploma-medal figcaption {
+      font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--text-soft); margin-top: 2px;
+    }
+    .diploma-medal.medal-platinum svg { animation: medal-shine 3.2s ease-in-out infinite; }
+    @keyframes medal-shine { 0%, 100% { filter: drop-shadow(0 4px 8px rgba(0,0,0,0.18)); } 50% { filter: drop-shadow(0 0 14px rgba(160,190,230,0.75)); } }
+    @media (prefers-reduced-motion: reduce) { .diploma-medal.medal-platinum svg { animation: none; } }
     .diploma-fruit {
       position: absolute; top: -46px; left: -46px; width: 150px; height: 150px;
       opacity: 0.16; transform: rotate(18deg); pointer-events: none;
@@ -208,11 +217,15 @@
       .diploma-print.m-reussite { --seal: #8a5a14; }
       .diploma-print.m-participation { --seal: #555; }
       .diploma-fruit { opacity: 0.10; }
+      .diploma-medal svg { filter: none; animation: none; }
+      .diploma-medal figcaption { color: #333; }
       .diploma-tagline, .diploma-badge { color: #333; }
       .diploma-badge { background: #fff; }
     }
     @media (max-width: 640px) {
       .diploma-seal { width: 78px; height: 78px; top: 18px; right: 12px; }
+      .diploma-medal { width: 72px; right: 8px; top: 10px; }
+      .diploma-medal svg { width: 72px; height: 90px; }
       .diploma-print { padding: 36px 20px; }
     }
   </style>
@@ -229,6 +242,50 @@
   </div>
   <article class="diploma-print m-{{ f.mention }}" role="document">
     {# Wax-style seal : scalloped rim, cohort text on a circle, juice glass in the centre. #}
+    {# Medal : platinum = whole parcours solved and final score >= 95 ;
+       otherwise gold / silver / bronze follow the mention ; participation
+       keeps the plain seal. Page dressing only, not in the signed block. #}
+    {% if f.td_total and f.challenges_solved == f.td_total and f.final_score is not none and f.final_score >= 95 %}{% set medal = 'platinum' %}
+    {% elif f.mention == 'tres_bien' %}{% set medal = 'gold' %}
+    {% elif f.mention == 'bien' %}{% set medal = 'silver' %}
+    {% elif f.mention == 'reussite' %}{% set medal = 'bronze' %}
+    {% else %}{% set medal = '' %}{% endif %}
+    {% set metal = {
+      'platinum': ['#ffffff', '#cddbf2', '#6f84ad', '#eef4ff'],
+      'gold':     ['#fff3b0', '#e4b43c', '#a8741a', '#ffe48a'],
+      'silver':   ['#ffffff', '#c9ced4', '#8b939c', '#eef1f4'],
+      'bronze':   ['#f6d2ac', '#c27b43', '#7f4a22', '#eab68a']
+    } %}
+    {% if medal %}
+    <figure class="diploma-medal medal-{{ medal }}" role="img" aria-label="{{ t('DIPLOMA_MEDAL_' + medal.upper()) }}">
+      <svg viewBox="0 0 120 150" aria-hidden="true">
+        <defs>
+          <linearGradient id="medal-face" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="{{ metal[medal][0] }}"/><stop offset="0.45" stop-color="{{ metal[medal][1] }}"/><stop offset="1" stop-color="{{ metal[medal][2] }}"/>
+          </linearGradient>
+          <linearGradient id="medal-rim" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="{{ metal[medal][2] }}"/><stop offset="1" stop-color="{{ metal[medal][3] }}"/>
+          </linearGradient>
+        </defs>
+        <path d="M38 4 L58 58 L46 64 L22 8 Z" fill="var(--rose)"/>
+        <path d="M82 4 L62 58 L74 64 L98 8 Z" fill="var(--cobalt)"/>
+        <path d="M38 4 L44 4 L62 54 L58 58 Z M82 4 L76 4 L58 54 L62 58 Z" fill="#000" opacity="0.12"/>
+        <circle cx="60" cy="96" r="44" fill="url(#medal-rim)"/>
+        <circle cx="60" cy="96" r="37" fill="url(#medal-face)"/>
+        <circle cx="60" cy="96" r="31" fill="none" stroke="{{ metal[medal][2] }}" stroke-width="1" stroke-dasharray="1.5 2.5" opacity="0.7"/>
+        {% if medal == 'platinum' %}
+        <path d="M60 72 l6.5 13.2 14.5 2.1 -10.5 10.2 2.5 14.5 -13 -6.8 -13 6.8 2.5 -14.5 -10.5 -10.2 14.5 -2.1 z" fill="{{ metal[medal][2] }}" opacity="0.85"/>
+        {% else %}
+        <g fill="none" stroke="{{ metal[medal][2] }}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M48 84 h24 l-3.5 25 a3 3 0 0 1 -3 2.6 h-11 a3 3 0 0 1 -3 -2.6 z"/>
+          <path d="M49.5 93 h21"/><path d="M64 84 l6 -12 h5"/>
+        </g>
+        {% endif %}
+        <path d="M30 70 a40 40 0 0 1 22 -17" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.55"/>
+      </svg>
+      <figcaption>{{ t('DIPLOMA_MEDAL_' + medal.upper()) }}</figcaption>
+    </figure>
+    {% else %}
     <svg class="diploma-seal" viewBox="0 0 120 120" aria-hidden="true">
       <defs><path id="seal-ring" d="M60 60 m-38 0 a38 38 0 1 1 76 0 a38 38 0 1 1 -76 0"/></defs>
       <path fill="currentColor" opacity="0.14" d="M118.0 60.0 L110.2 73.5 L110.2 89.0 L96.8 96.8 L89.0 110.2 L73.5 110.2 L60.0 118.0 L46.5 110.2 L31.0 110.2 L23.2 96.8 L9.8 89.0 L9.8 73.5 L2.0 60.0 L9.8 46.5 L9.8 31.0 L23.2 23.2 L31.0 9.8 L46.5 9.8 L60.0 2.0 L73.5 9.8 L89.0 9.8 L96.8 23.2 L110.2 31.0 L110.2 46.5Z"/>
@@ -242,6 +299,7 @@
         <circle cx="50" cy="49" r="6"/>
       </g>
     </svg>
+    {% endif %}
     {# Orange slice watermark, top-left corner. #}
     <svg class="diploma-fruit" viewBox="0 0 100 100" aria-hidden="true">
       <circle cx="50" cy="50" r="46" fill="var(--amber)"/>

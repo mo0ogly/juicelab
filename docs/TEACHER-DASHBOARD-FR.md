@@ -493,6 +493,9 @@ Bouton **Diplôme** du roster (`/admin/diploma/<token>?cohort=…`) et export
   diplômes répondent 503 plutôt que de deviner le total.
 - **Élèves** : seuls les élèves validés ont un diplôme (409 sinon, page
   comme ZIP).
+- **Médaille** : platine si tout le parcours est résolu et score final ≥ 95 ;
+  sinon or (très bien), argent (bien), bronze (réussite) ; participation
+  garde le sceau.
 - **Habillage** : sceau couleur de la mention, phrase d'accroche par mention,
   et badges gagnés d'après les vrais résultats — Parcours complet (tout
   résolu), Sans filet (un challenge résolu sans indice), Chasseur de flags

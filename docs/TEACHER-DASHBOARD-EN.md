@@ -468,6 +468,9 @@ by a break longer than the horizon counts as two.
   list, diplomas answer 503 rather than guess the total.
 - **Students**: only validated students get a diploma (409 otherwise, page
   and ZIP).
+- **Medal**: platinum when the whole parcours is solved and the final score
+  is >= 95; otherwise gold (très bien), silver (bien), bronze (réussite);
+  participation keeps the seal.
 - **Look**: seal in the mention colour, one tagline per mention, and badges
   earned from real results — Full parcours (all solved), No safety net (a
   challenge solved without hint), Flag hunter (a verified flag), Sharp mind
