@@ -59,53 +59,48 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Une fois les coordonnees GPS extraites, fais reverse
-      geocoding (Google Maps : "lat,lng" dans la search bar
-      donne l'adresse + nom du lieu). Le parc qui apparait =
-      reponse a la security question. Va ensuite sur
-      /#/forgot-password, entre l'email de John (typiquement
-      john@juice-sh.op), tape le nom du parc en answer, et
-      definis un nouveau password.
+      Contrairement a geoStalkingVisual (indice dans l'image), ici
+      l'indice est dans les METADONNEES EXIF de la photo de John sur le
+      Photo Wall (caption "I love going hiking here..."). Les
+      coordonnees GPS y sont enregistrees. Un reverse-geocoding donne le
+      nom du lieu, qui est la reponse a la question secrete 14 de John
+      (john@juice-sh.op).
     text_en: |
-      Once GPS coords extracted, reverse geocode (Google
-      Maps: "lat,lng" in search bar gives address + place
-      name). The park name = security question answer. Then
-      go to /#/forgot-password, enter John's email
-      (typically john@juice-sh.op), type park name as
-      answer, and set new password.
+      Unlike geoStalkingVisual (clue in the image), here the clue is in
+      the EXIF METADATA of John's photo on the Photo Wall (caption "I
+      love going hiking here..."). GPS coordinates are stored there. A
+      reverse-geocoding gives the place name, which is the answer to
+      John's security question 14 (john@juice-sh.op).
     pedagogical_intent: |
-      Spell reverse-geocoding step + forgot-password workflow.
+      Correct the vector: EXIF GPS metadata, reverse-geocoded place name.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. /#/photo-wall : trouve la photo de John (hiking, park).
-      2. Right-click la photo -> Save Image As, save localement.
-      3. exiftool john_photo.jpg | grep -i gps
-         -> recupere lat/lng (ex 52.5142N, 13.3502E).
-      4. Google Maps : "52.5142, 13.3502" -> nom du parc (ex
-         "Tiergarten" pour Berlin, varie selon Juice Shop seed).
-      5. /#/forgot-password : email john@juice-sh.op, security
-         question answer = nom du parc, define un nouveau
-         password.
-      6. Login avec john + nouveau password. Challenge se
-         valide automatiquement.
-      Source : OWASP Choosing Security Questions Cheat Sheet
-      (mitigationUrl) + EXIF specification (ISO 12234-2).
+      Solution : telecharge la photo "hiking" de John, lis le GPS
+        exiftool favorite-hiking-place.png | grep -i gps
+      -> 36 deg 57' N, 84 deg 20' W. Reverse-geocode ces coordonnees. Le lieu configure est la
+      foret nationale Daniel Boone (Kentucky, USA), donc la reponse est
+      Daniel Boone National Forest (geoStalkingMetaSecurityAnswer dans
+      config/default.yml). Sur /#/forgot-password : email
+      john@juice-sh.op, question "What's your favorite place to go hiking?" (id 14),
+      reponse Daniel Boone National Forest, puis nouveau mot de passe.
+      Reponse confirmee en source ; reset non rejoue pour preserver le
+      compte seede ; sur une autre config, lis le lieu reel dans l'EXIF.
+      Defense : retirer les metadonnees EXIF (dont le GPS) des images
+      publiees ; ne pas utiliser un lieu OSINTable comme secret.
     text_en: |
-      Complete workflow:
-      1. /#/photo-wall: find John's photo (hiking, park).
-      2. Right-click -> Save Image As, save locally.
-      3. exiftool john_photo.jpg | grep -i gps
-         -> get lat/lng (e.g. 52.5142N, 13.3502E).
-      4. Google Maps: "52.5142, 13.3502" -> park name (e.g.
-         "Tiergarten" for Berlin, varies by Juice Shop seed).
-      5. /#/forgot-password: email john@juice-sh.op, security
-         question answer = park name, set new password.
-      6. Login with john + new password. Challenge
-         auto-solves.
-      Source: OWASP Choosing Security Questions Cheat Sheet
-      (mitigationUrl) + EXIF specification (ISO 12234-2).
+      Solution: download John's "hiking" photo, read the GPS
+        exiftool favorite-hiking-place.png | grep -i gps
+      -> 36 deg 57' N, 84 deg 20' W. Reverse-geocode these coordinates. The configured place is the
+      Daniel Boone National Forest (Kentucky, USA), so the answer is
+      Daniel Boone National Forest (geoStalkingMetaSecurityAnswer in
+      config/default.yml). On /#/forgot-password: email
+      john@juice-sh.op, question "What's your favorite place to go hiking?" (id 14),
+      answer Daniel Boone National Forest, then a new password. Answer
+      confirmed in source; reset not replayed to preserve the seeded
+      account; on another config, read the real place from the EXIF.
+      Defense: strip EXIF metadata (including GPS) from published images;
+      do not use an OSINT-able place as a secret.
     pedagogical_intent: |
-      Quasi-solution : full 6-step workflow with example coords.
+      Full solution: EXIF GPS method, exact answer, defense.

@@ -85,49 +85,37 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow :
-      1. GET /ftp/incident-support.kdbx ->
-         download KeePass file (allowlist
-         exception fileServer.ts:27).
-      2. `keepass2john incident-support.kdbx
-         > hash.txt`.
-      3. `hashcat -m 13400 hash.txt
-         rockyou.txt` -> master password.
-      4. Open keepass2 GUI avec le password
-         -> support entry visible.
-      5. Extract password : `J6aVjTgOpRs@?5l!
-         Zkq2AYnCE@RF$P` (verifie source
-         login.ts:61).
-      6. /#/login avec support@juice-sh.op +
-         le password. Solve auto.
-      Source : routes/login.ts:61 + fileServer.
-      ts:27 + KeePass docs.
-      Defense : (a) password manager
-      INDIVIDUAL per employee (1Password
-      Business), (b) PAM/JIT access pour
-      shared accounts, (c) MFA mandatory, (d)
-      audit log.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) :
+      1. Telecharge le coffre KeePass : GET /ftp/incident-support.kdbx
+         (ce .kdbx est servi par exception dans fileServer.ts, pas
+         besoin de null-byte).
+      2. Extrais puis casse le mot de passe maitre :
+         keepass2john incident-support.kdbx > hash.txt
+         hashcat -m 13400 hash.txt <wordlist>
+      3. Ouvre le coffre, lis l'entree support.
+      4. Sur /#/login : email support@juice-sh.op, mot de passe
+         J6aVjTgOpRs@?5l!Zkq2AYnCE@RF$P -> Login. Reponse 200, challenge
+         resolu (login.ts, verifyPreLoginChallenges). Identifiants
+         exacts verifies en recette ; l'etape de crack du .kdbx n'a pas
+         ete rejouee.
+      Defense : ne pas exposer un coffre de secrets sous un chemin
+      public ; chiffrer avec un mot de passe maitre fort et stocker les
+      secrets dans un gestionnaire protege.
     text_en: |
-      Workflow:
-      1. GET /ftp/incident-support.kdbx ->
-         download KeePass file (allowlist
-         exception fileServer.ts:27).
-      2. `keepass2john incident-support.kdbx
-         > hash.txt`.
-      3. `hashcat -m 13400 hash.txt
-         rockyou.txt` -> master password.
-      4. Open keepass2 GUI with password ->
-         support entry visible.
-      5. Extract password: `J6aVjTgOpRs@?5l!
-         Zkq2AYnCE@RF$P` (verified source
-         login.ts:61).
-      6. /#/login with support@juice-sh.op +
-         password. Auto solves.
-      Source: routes/login.ts:61 + fileServer.
-      ts:27 + KeePass docs.
-      Defense: (a) INDIVIDUAL password manager
-      per employee (1Password Business), (b)
-      PAM/JIT access for shared accounts, (c)
-      MFA mandatory, (d) audit log.
+      Solution (verified during testing on Juice Shop 19.2.1):
+      1. Download the KeePass vault: GET /ftp/incident-support.kdbx
+         (this .kdbx is served by exception in fileServer.ts, no
+         null-byte needed).
+      2. Extract then crack the master password:
+         keepass2john incident-support.kdbx > hash.txt
+         hashcat -m 13400 hash.txt <wordlist>
+      3. Open the vault, read the support entry.
+      4. On /#/login: email support@juice-sh.op, password
+         J6aVjTgOpRs@?5l!Zkq2AYnCE@RF$P -> Login. Response 200, challenge
+         solved (login.ts, verifyPreLoginChallenges). Exact credentials
+         verified during testing; the .kdbx crack step was not replayed.
+      Defense: do not expose a secrets vault under a public path;
+      encrypt with a strong master password and store secrets in a
+      protected manager.
     pedagogical_intent: |
-      Solution complete + defense.
+      Full solution: kdbx source, crack steps, exact verified credentials.

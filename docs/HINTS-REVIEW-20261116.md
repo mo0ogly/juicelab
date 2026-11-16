@@ -135,9 +135,9 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | zeroStarsChallenge | Improper Input Validation | 1 | DONE (lot 1) | N2-N5 reecrits : etoiles inventees -> mat-slider 1-5, bouton disabled par !rating ; API testee, voie UI deduite du code |
 | deprecatedInterfaceChallenge | Security Misconfiguration | 2 | TODO |  |
 | emptyUserRegistration | Improper Input Validation | 2 | DONE (lot 1) | N4,N5 reecrits : securityQuestion non requise (teste) ; N3 conserve (passwordRepeat verifie) |
-| geoStalkingMetaChallenge | Sensitive Data Exposure | 2 | TODO |  |
+| geoStalkingMetaChallenge | Sensitive Data Exposure | 2 | DONE (lot 16) | N4-N5 : vecteur EXIF GPS (36 57N 84 20W), question 14 corrigee, reponse Daniel Boone National Forest ; reset non rejoue |
 | geoStalkingVisualChallenge | Sensitive Data Exposure | 2 | DONE (lot 4) | N1-N5 : cible fausse (ville/monument -> nom d entreprise, question 10 "Company you first work for"), reponse ITsec verifiee en config/lab ; reset non rejoue (ne pas changer le mdp d Emma) |
-| loginRapperChallenge | Sensitive Data Exposure | 2 | TODO |  |
+| loginRapperChallenge | Sensitive Data Exposure | 2 | DONE (lot 16) | N4-N5 : email corrige (mc-safesearch -> mc.safesearch point), Mr. N00dles ; verifie live |
 | nftUnlockChallenge | Sensitive Data Exposure | 2 | DONE (lot 12) | N4-N5 : seed vague -> seed BIP39 dans un avis seede, derivation cle privee + POST /rest/web3/submitKey verifie live |
 | securityPolicyChallenge | Miscellaneous | 2 | TODO |  |
 | weakPasswordChallenge | Broken Authentication | 2 | DONE (lot 13) | correct (non modifie) ; admin@/admin123 verifie live (login.ts:60) |
@@ -155,7 +155,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | forgedReviewChallenge | Broken Access Control | 3 | DONE (lot 9) | correct ; PUT /rest/products/:id/reviews author=autre (createProductReviews.ts:17) verifie live + PATCH edit avis d autrui (updateProductReviews.ts:24) code-confirme |
 | freeDeluxeChallenge | Improper Input Validation | 3 | DONE (lot 3) | N2-N5 : UserId du corps ecrase par appendUserId (trompeur), pre-requis role customer ; solve = 3e valeur de paymentMode (deluxe.ts) ; teste (paymentMode:none) |
 | ghostLoginChallenge | Broken Authentication | 3 | DONE (lot 13) | N4-N5 : hashcat invente -> SQLi sur compte supprime chris (deletedAt contourne par le commentaire) ; chris.pike@juice-sh.op verifie live |
-| loginAmyChallenge | Sensitive Data Exposure | 3 | TODO |  |
+| loginAmyChallenge | Sensitive Data Exposure | 3 | DONE (lot 16) | N4-N5 : mot de passe FAUX (K1f...Bo0m! -> K1f + 21 points, 24 car.) verifie live |
 | loginBenderChallenge | Injection | 3 | DONE (lot 5) | N4-N5 : requete exacte (table Users + AND deletedAt IS NULL), citation ligne corrigee (loginBender.ts:101) ; payload verifie live |
 | loginJimChallenge | Injection | 3 | DONE (lot 5) | N3-N5 : email jim@juice-sh.op visible dans les avis produit (verifie served), citations fausses corrigees (:90, pas :99-101) ; payload verifie live |
 | negativeOrderChallenge | Improper Input Validation | 3 | DONE (lot 10) | N4-N5 : endpoint checkout faux (/api/Orders -> /rest/basket/:id/checkout) ; PUT quantity=-10 + checkout verifie live |
@@ -198,7 +198,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | reflectedXssChallenge | XSS | 2 | DONE (lot 7) | N2-N5 : route /#/track-result?id=, sink bypassSecurityTrustHtml, solve trackOrder.ts ; ajout note disabledEnv Docker/Heroku/Gitpod |
 | xssBonusChallenge | XSS | 1 | DONE (lot 1) | N5 : mecanisme de validation corrige (websocket verifyLocalXssChallenge) + defense |
 | changePasswordBenderChallenge | Broken Authentication | 5 | DONE (lot 13) | correct ; GET change-password?new=slurmCl4ssic&repeat=slurmCl4ssic SANS current (changePassword.ts:53) verifie live |
-| dlpPasswordSprayingChallenge | Observability Failures | 5 | TODO |  |
+| dlpPasswordSprayingChallenge | Observability Failures | 5 | DONE (lot 16) | N5 blinde ; vraie source = fuite access.log (pas spraying), J12934@ / mot de passe exact verifie live |
 | emailLeakChallenge | Sensitive Data Exposure | 5 | TODO |  |
 | extraLanguageChallenge | Broken Anti Automation | 5 | TODO |  |
 | jwtUnsignedChallenge | Vulnerable Components | 5 | DONE (lot 11) | N4-N5 : exp lointain manquant (verif echoue sans), livraison via Authorization/localStorage ; forge alg=none jwtn3d@ verifie live |
@@ -221,7 +221,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | fileWriteChallenge | Vulnerable Components | 6 | TODO |  |
 | forgedCouponChallenge | Cryptographic Issues | 6 | DONE (lot 12) | N4-N5 : XOR invente -> vrai algo z85(MMMYY-80) mois MAJUSCULE ; coupon applique+checkout verifie live |
 | jwtForgedChallenge | Vulnerable Components | 6 | DONE (lot 11) | N4-N5 : cle = jwt.pub servie de CETTE instance (octets exacts, token fige echoue), disabledEnv Windows ; HS256 key-confusion rsa_lord@ forge et verifie live |
-| loginSupportChallenge | Security Misconfiguration | 6 | TODO |  |
+| loginSupportChallenge | Security Misconfiguration | 6 | DONE (lot 16) | N5 blinde ; source kdbx /ftp/incident-support.kdbx + crack, email support@ / mot de passe exact verifie live |
 | premiumPaywallChallenge | Cryptographic Issues | 6 | DONE (lot 12) | N4-N5 : AES invente (hints nient toute crypto) -> securite par obscurite, URL cachee en clair ; GET URL verifie live |
 | rceOccupyChallenge | Insecure Deserialization | 6 | TODO |  |
 | ssrfChallenge | Broken Access Control | 6 | TODO |  |

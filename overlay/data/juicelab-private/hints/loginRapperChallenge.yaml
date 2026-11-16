@@ -68,53 +68,41 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Le mot de passe officiel pour MC SafeSearch dans Juice
-      Shop est "Mr. N00dles". Cet "exemple" est citoye dans la
-      chanson de MC SafeSearch comme demonstration de password
-      ridicule. Email candidates : mc.safesearch@juice-sh.op,
-      mc-safesearch@juice-sh.op. La convention de Juice Shop
-      utilise typiquement le tiret (mc-safesearch).
+      MC SafeSearch est un personnage rappeur de l'univers Juice Shop ;
+      sa chanson cite son propre mot de passe comme exemple de mauvais
+      secret. Le mot de passe est Mr. N00dles (avec l'espace, les deux
+      zeros du leet). L'email est mc.safesearch@juice-sh.op (avec un
+      POINT entre mc et safesearch, pas un tiret).
     text_en: |
-      MC SafeSearch's official password in Juice Shop is
-      "Mr. N00dles". This "example" is cited in the song as
-      a ridiculous password demonstration. Email candidates:
-      mc.safesearch@juice-sh.op, mc-safesearch@juice-sh.op.
-      Juice Shop convention typically uses the hyphen
-      (mc-safesearch).
+      MC SafeSearch is a rapper character in the Juice Shop universe;
+      his song quotes his own password as an example of a bad secret.
+      The password is Mr. N00dles (with the space, the two leet zeroes).
+      The email is mc.safesearch@juice-sh.op (with a DOT between mc and
+      safesearch, not a hyphen).
     pedagogical_intent: |
-      Spell exact password + email convention.
+      Give the exact email (dot) and password, and their OSINT source.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow direct :
-      1. Va sur /#/login
-      2. Email : mc-safesearch@juice-sh.op (ou
-         mc.safesearch@juice-sh.op selon la version Juice
-         Shop installee).
-      3. Password : Mr. N00dles
-      4. Click Login.
-      5. Le challenge se valide automatiquement (login
-         reussi avec credentials originaux, sans SQLi).
-      Si le password ne marche pas, fais un OSINT rapide sur
-      la chanson "Protect Ya' Passwordz" pour confirmer le
-      pattern. Source : Juice Shop seeded accounts (lib/
-      datacreator.ts ou similaire dans le repo officiel).
-      Defense : (1) les mots de passe doivent etre generes aleatoirement et stockes avec bcrypt/argon2 — jamais thematiques ni devinables depuis du contenu public. (2) Imposer MFA TOTP comme second facteur d'authentification. (3) Rate-limiter les tentatives de login et bloquer le compte apres N echecs.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : sur
+      /#/login, email mc.safesearch@juice-sh.op, mot de passe
+      Mr. N00dles, puis Login. Reponse 200, challenge resolu
+      (login.ts, verifyPreLoginChallenges). Aucune SQLi : ce sont les
+      vrais identifiants, trouves par OSINT dans les paroles de la
+      chanson de MC SafeSearch (lien depuis la page About Us). Attention
+      a l'email : c'est bien mc.safesearch (point), pas mc-safesearch.
+      Defense : ne pas divulguer un mot de passe, meme en plaisantant,
+      dans un contenu public ; imposer des secrets non devinables.
     text_en: |
-      Direct workflow:
-      1. Go to /#/login
-      2. Email: mc-safesearch@juice-sh.op (or
-         mc.safesearch@juice-sh.op depending on installed
-         Juice Shop version).
-      3. Password: Mr. N00dles
-      4. Click Login.
-      5. Challenge auto-solves (successful login with
-         original credentials, no SQLi).
-      If password doesn't work, do quick OSINT on "Protect
-      Ya' Passwordz" song to confirm pattern. Source: Juice
-      Shop seeded accounts (lib/datacreator.ts or similar in
-      official repo).
-      Defense: (1) passwords must be randomly generated and stored with bcrypt/argon2 — never themed or guessable from public content. (2) Enforce MFA TOTP to add a second authentication factor. (3) Rate-limit login attempts and implement account lockout after N failures.
+      Solution (verified during testing on Juice Shop 19.2.1): on
+      /#/login, email mc.safesearch@juice-sh.op, password Mr. N00dles,
+      then Login. Response 200, challenge solved (login.ts,
+      verifyPreLoginChallenges). No SQLi: these are the real
+      credentials, found by OSINT in MC SafeSearch's song lyrics (linked
+      from the About Us page). Mind the email: it is mc.safesearch
+      (dot), not mc-safesearch.
+      Defense: never disclose a password, even as a joke, in public
+      content; enforce non-guessable secrets.
     pedagogical_intent: |
-      Quasi-solution : exact email + password + version caveat.
+      Full verified solution: exact email/password, OSINT source, defense.

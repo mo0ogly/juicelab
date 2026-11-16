@@ -70,50 +70,43 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Pattern probable : 4-5 mots concatenes en lien avec Kif
-      Kroker. Quelques pistes :
-      - "iLoveKif" / "kifsLover" / "marryingKif"
-      - "OhDearIThinkILoveYouKif"
-      - "KifKrokerLittleAlien"
-      Le mot de passe officiel Juice Shop pour Amy est typique-
-      ment "K1f.....................Bo0m!" ou similaire (long
-      avec Kif au debut). Verifie le tutorial OWASP officiel
-      ou le source pour le pattern exact.
+      Amy (Futurama) est liee a Kif Kroker. Son mot de passe est bati
+      sur "Kif" en leet (K1f) suivi d'une longue serie de points qui
+      evoque l'attente. La valeur EXACTE est K1f suivi de 21 points
+      (24 caracteres au total), sans aucun suffixe. L'email est
+      amy@juice-sh.op.
     text_en: |
-      Probable pattern: 4-5 words concatenated about Kif
-      Kroker. Some leads:
-      - "iLoveKif" / "kifsLover" / "marryingKif"
-      - "OhDearIThinkILoveYouKif"
-      - "KifKrokerLittleAlien"
-      Juice Shop's official Amy password is typically
-      "K1f.....................Bo0m!" or similar (long with
-      Kif at start). Check the official OWASP tutorial or
-      source for the exact pattern.
+      Amy (Futurama) is linked to Kif Kroker. Her password is built on
+      "Kif" in leet (K1f) followed by a long run of dots evoking the
+      wait. The EXACT value is K1f followed by 21 dots (24 characters
+      total), with no suffix. The email is amy@juice-sh.op.
     pedagogical_intent: |
-      Spell pattern candidates with confidence caveat.
+      Correct the exact password (K1f + 21 dots, no "Bo0m!" suffix).
 
   N5:
     cost_pct: 50
     text_fr: |
-      Le mot de passe officiel d'Amy dans Juice Shop est
-      typiquement "K1f.....................Bo0m!" (avec Kif
-      transforme leetspeak K1f, suivi de plusieurs points,
-      finissant par "Bo0m!"). Reference : la sequence "Bo0m"
-      vient de la passion d'Amy pour les "explosions" dans
-      Futurama (catchphrase "Spleesh" ou similaire). Email :
-      amy@juice-sh.op. Note : si la version Juice Shop a
-      change le password, fais un OSINT pop-culture rapide
-      sur Amy pour trouver le pattern actuel.
-      Defense : (1) le mot de passe doit etre aleatoire, pas thematique — imposer un gestionnaire de mots de passe et MFA TOTP. (2) Bloquer les passphrases predictibles (concatenation de mots style XKCD) via un scoring d'entropie a l'enregistrement. (3) Rate-limiter les tentatives de login + bloquer le compte apres N echecs.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : sur
+      /#/login, email amy@juice-sh.op, mot de passe
+        K1f.....................
+      (c'est-a-dire K1f puis exactement 21 points), puis Login. Reponse
+      200, challenge resolu (login.ts). Le pack precedent proposait a
+      tort un suffixe "Bo0m!" : il n'y en a pas. L'indice OSINT vient de
+      la relation d'Amy avec Kif (les points figurent les annees
+      d'attente de leur histoire).
+      Defense : imposer une politique de mot de passe (entropie
+      suffisante) et ne pas fonder un secret sur une reference publique
+      devinable.
     text_en: |
-      Amy's official Juice Shop password is typically
-      "K1f.....................Bo0m!" (Kif transformed
-      leetspeak K1f, followed by several dots, ending with
-      "Bo0m!"). Reference: "Bo0m" sequence comes from Amy's
-      passion for "explosions" in Futurama (catchphrase
-      "Spleesh" or similar). Email: amy@juice-sh.op. Note:
-      if the Juice Shop version changed the password, do
-      quick pop-culture OSINT on Amy for the current pattern.
-      Defense: (1) password must be random, not themed — enforce a password manager and MFA TOTP. (2) Block predictable passphrase patterns (XKCD-style word concatenations) via entropy scoring at registration. (3) Rate-limit login attempts + lock account after N failures.
+      Solution (verified during testing on Juice Shop 19.2.1): on
+      /#/login, email amy@juice-sh.op, password
+        K1f.....................
+      (that is K1f then exactly 21 dots), then Login. Response 200,
+      challenge solved (login.ts). The previous pack wrongly suggested a
+      "Bo0m!" suffix: there is none. The OSINT clue comes from Amy's
+      relationship with Kif (the dots stand for the years of waiting).
+      Defense: enforce a password policy (sufficient entropy) and do not
+      base a secret on a guessable public reference.
     pedagogical_intent: |
-      Quasi-solution : exact password + version-dependency caveat.
+      Full verified solution: exact password, correction of the suffix,
+      defense.
