@@ -73,9 +73,9 @@ hints:
       Comme pour Admin Section et Privacy Policy, la validation n'est
       pas un appel API dedie : la page affiche tout en bas une image
       technique, assets/public/images/padding/1px.png
-      (score-board.component.html:56), et le serveur resout le
+      (score-board.component.html:41), et le serveur resout le
       challenge sur la requete de cette image
-      (routes/verify.ts:63, url se terminant par /1px.png).
+      (routes/verify.ts:67, url se terminant par /1px.png).
       Defense : ne pas se reposer sur l'obscurite d'une route cliente
       pour cacher une page ; appliquer un controle d'acces reel cote
       serveur sur les ressources sensibles.
@@ -85,8 +85,8 @@ hints:
       with Admin Section and Privacy Policy, validation is not a
       dedicated API call: the page shows a technical image at the very
       bottom, assets/public/images/padding/1px.png
-      (score-board.component.html:56), and the server solves the
-      challenge on that image request (routes/verify.ts:63, url ending
+      (score-board.component.html:41), and the server solves the
+      challenge on that image request (routes/verify.ts:67, url ending
       with /1px.png).
       Defense: do not rely on the obscurity of a client route to hide
       a page; enforce real server-side access control on sensitive

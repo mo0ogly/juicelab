@@ -40,6 +40,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 
 ## Points ouverts
 
+- **Attention version (2026-11-16)** : les eleves executent 20.4.0-SNAPSHOT (image Docker), pas 19.2.1. Les references fichier:ligne verifiees sur 19.2.1 peuvent etre decalees (constate sur scoreBoard, privacyPolicy, adminSection) ; server.ts servi est decale de +1 par l'import du patch JuiceLab. Recaler sur le code servi (docker exec juicelab-demo) avant de citer une ligne.
 - **Version** : les packs sont vérifiés contre Juice Shop 19.2.1 (code du
   dépôt). Le lab TD 20.4.0-SNAPSHOT diffère sur `routes/showProductReviews.ts`,
   `models/feedback.ts`, `routes/verify.ts`, `server.ts` : validité des hints
@@ -119,8 +120,8 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 
 | key | catégorie | diff. | statut | notes |
 |---|---|---|---|---|
-| scoreBoardChallenge | Miscellaneous | 1 | DONE (lot 14) | N4-N5 : mecanisme precise (pixel 1px.png, verify.ts:63) comme adminSection/privacyPolicy ; GET verifie live |
-| privacyPolicyChallenge | Miscellaneous | 1 | DONE (lot 2) | N3-N5 : validation = image 81px.png (verify.ts:67), pas un appel API ; libelles de menu verifies |
+| scoreBoardChallenge | Miscellaneous | 1 | DONE (lot 14) | N4-N5 : mecanisme precise (pixel 1px.png, verify.ts:63) comme adminSection/privacyPolicy ; GET verifie live ; 2026-11-16 lignes recalees sur 20.4 servi (html:41, verify.ts:67) |
+| privacyPolicyChallenge | Miscellaneous | 1 | DONE (lot 2) | N3-N5 : validation = image 81px.png (verify.ts:67), pas un appel API ; libelles de menu verifies ; 2026-11-16 ligne recalee sur 20.4 servi (verify.ts:71) |
 | directoryListingChallenge | Sensitive Data Exposure | 1 | DONE (lot 8) | correct (non modifie) ; /ftp/acquisitions.md verifie live (solve) |
 | exposedCredentialsChallenge | Sensitive Data Exposure | 2 | DONE (lot 8) | correct (non modifie) ; testing@juice-sh.op / IamUsedForTesting (login.ts:66) |
 | passwordHashLeakChallenge | Sensitive Data Exposure | 2 | DONE (lot 8) | correct (non modifie) ; /rest/user/whoami?fields=password via COOKIE verifie live (currentUser.ts:52) |
@@ -142,9 +143,9 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | weakPasswordChallenge | Broken Authentication | 2 | DONE (lot 13) | correct (non modifie) ; admin@/admin123 verifie live (login.ts:60) |
 | weirdCryptoChallenge | Cryptographic Issues | 2 | DONE (lot 12) | correct (non modifie) ; base64 via complaint verifie live (verify.ts:254) |
 | loginAdminChallenge | Injection | 2 | DONE (lot 5) | correct ; payload ' OR true-- verifie live (retourne admin), solve = id admin (login.ts:70) ; N3 precise (2026-11-16) : l'ecran n'affiche que [object Object] (comportement OWASP d'origine, verifie 19.2.1 et 20.4), l'erreur SQL se lit dans Reseau |
-| adminSectionChallenge | Broken Access Control | 2 | DONE (lot 2) | N2-N5 : garde AdminGuard cote client (jwtDecode sans signature), validation = image 19px.png (verify.ts:65), 3 familles de contournement ; voie deduite du code, non rejouee (Chrome) |
+| adminSectionChallenge | Broken Access Control | 2 | DONE (lot 2) | N2-N5 : garde AdminGuard cote client (jwtDecode sans signature), validation = image 19px.png (verify.ts:65), 3 familles de contournement ; voie deduite du code, non rejouee (Chrome) ; 2026-11-16 lignes recalees sur 20.4 servi (html:127, verify.ts:69), voie rejouee en recette 13/13 |
 | basketAccessChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; GET /rest/basket/<autre bid> verifie live (basket.ts:21) |
-| feedbackChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; supprimer tous les avis 5 etoiles (count rating=5 -> 0) ; non rejoue (destructif pour donnees seedees) |
+| feedbackChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; supprimer tous les avis 5 etoiles (count rating=5 -> 0) ; non rejoue (destructif pour donnees seedees) ; 2026-11-16 N4 reecrit : bouton jamais disabled (administration.component.html:78), scenario 'erreurs de permission' invente retire ; DELETE /api/Feedbacks/:id autorise par session seule (server.ts:394 servi), verifie jim 200 / anonyme 401 |
 | basketManipulateChallenge | Broken Access Control | 3 | DONE (lot 9) | N4-N5 : pack faux (BasketId simple -> 401 Invalid BasketId). Vraie voie = double cle BasketId (mienne 1er passe le check, victime en dernier inseree) via parseJsonCustom ; verifie live |
 | captchaBypassChallenge | Broken Anti Automation | 3 | TODO |  |
 | changeProductChallenge | Broken Access Control | 3 | DONE (lot 1) | N4,N5 reecrits : target="_blank" obligatoire (verify.ts), sans jeton ; defense inventee remplacee par codefixes fix 3 ; teste |

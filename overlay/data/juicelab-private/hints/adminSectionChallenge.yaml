@@ -71,7 +71,7 @@ hints:
       verifiee par la garde. Le challenge est valide quand la page
       s'affiche reellement : elle charge l'image
       assets/public/images/padding/19px.png, et le serveur resout le
-      challenge sur cette requete (routes/verify.ts:65).
+      challenge sur cette requete (routes/verify.ts:69).
     text_en: |
       The path is /#/administration. To pass the guard you need a
       token whose role is admin. Most direct way: log in as admin
@@ -81,7 +81,7 @@ hints:
       guard does not verify the signature. The challenge is solved
       when the page actually renders: it loads the image
       assets/public/images/padding/19px.png, and the server solves
-      the challenge on that request (routes/verify.ts:65).
+      the challenge on that request (routes/verify.ts:69).
     pedagogical_intent: |
       Guided steps: exact path, three bypass families matching the
       OWASP hint, exact validation trigger.
@@ -94,10 +94,10 @@ hints:
       2. Barre d'adresse : http://127.0.0.1:3000/#/administration
       3. La page liste utilisateurs et feedbacks ; son image
          19px.png declenche la validation.
-      Cette sequence est deduite du code (app.routing.ts,
-      app.guard.ts, administration.component.html:119,
-      verify.ts:65) ; elle n'a pas ete rejouee en navigateur lors de
-      la revue du 2026-11-16.
+      Sequence tiree du code (app.routing.ts, app.guard.ts,
+      administration.component.html:127, verify.ts:69, version
+      20.4.0-SNAPSHOT) et rejouee en navigateur lors de la recette
+      13/13 du 2026-11-16.
       Defense : la garde Angular n'est qu'un confort d'interface.
       Chaque endpoint d'administration doit verifier cote serveur un
       token signe et le role admin ; ne pas exposer de route
@@ -108,10 +108,10 @@ hints:
       2. Address bar: http://127.0.0.1:3000/#/administration
       3. The page lists users and feedback; its 19px.png image
          triggers validation.
-      This sequence is derived from the code (app.routing.ts,
-      app.guard.ts, administration.component.html:119,
-      verify.ts:65); it was not replayed in a browser during the
-      2026-11-16 review.
+      Sequence taken from the code (app.routing.ts, app.guard.ts,
+      administration.component.html:127, verify.ts:69, version
+      20.4.0-SNAPSHOT) and replayed in a browser during the 13/13
+      recette of 2026-11-16.
       Defense: the Angular guard is only a UI convenience. Every
       administration endpoint must verify a signed token and the
       admin role server-side; do not expose an administration route

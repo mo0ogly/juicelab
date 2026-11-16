@@ -58,7 +58,7 @@ hints:
       de privacy-security dans app.routing.ts). En bas du template,
       <img src="assets/public/images/padding/81px.png"/>
       (privacy-policy.component.html:172). Le middleware
-      routes/verify.ts:67 resout le challenge sur toute URL qui se
+      routes/verify.ts:71 resout le challenge sur toute URL qui se
       termine par /81px.png. Ouvrir la page suffit, puisque le
       navigateur charge l'image.
     text_en: |
@@ -66,7 +66,7 @@ hints:
       privacy-security in app.routing.ts). At the bottom of the
       template, <img src="assets/public/images/padding/81px.png"/>
       (privacy-policy.component.html:172). The middleware
-      routes/verify.ts:67 solves the challenge on any URL ending with
+      routes/verify.ts:71 solves the challenge on any URL ending with
       /81px.png. Opening the page is enough, since the browser loads
       the image.
     pedagogical_intent: |

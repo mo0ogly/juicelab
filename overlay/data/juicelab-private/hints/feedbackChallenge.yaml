@@ -63,17 +63,19 @@ hints:
       Sur la page /#/administration, identifie chaque feedback dont le
       rating est 5 etoiles. Clique sur l'icone poubelle pour le supprimer.
       Repete jusqu'a ce que plus aucun feedback 5 etoiles ne soit affiche.
-      Si la console DevTools montre des erreurs de permission, cela peut
-      signifier que le bouton est disabled mais que l'API DELETE est
-      ouverte : tu peux alors envoyer la requete DELETE directement.
+      Observe l'onglet Reseau : chaque clic envoie DELETE
+      /api/Feedbacks/<id>. Le serveur n'exige qu'une session connectee,
+      pas le role admin (server.ts:394) : un compte client peut supprimer
+      un avis par cette requete.
     text_en: |
       On /#/administration, identify each feedback whose rating is 5
       stars. Click the trash icon to delete it. Repeat until no 5-star
-      feedback remains. If the DevTools console shows permission errors,
-      the button may be disabled while the DELETE API is open: you can
-      then send the DELETE request directly.
+      feedback remains. Watch the Network tab: each click sends DELETE
+      /api/Feedbacks/<id>. The server only requires a logged-in session,
+      not the admin role (server.ts:394): a customer account can delete
+      a feedback through that request.
     pedagogical_intent: |
-      Give the click sequence + the API fallback in case the UI button is disabled.
+      Give the click sequence, then expose the real flaw: the DELETE API is authorized by session, not by role.
 
   N5:
     cost_pct: 50
