@@ -229,6 +229,8 @@ def build_sheet(doc, index, entry):
             step(doc, n, s[0], s[1])
         else:
             step(doc, n, s)
+    if entry.get('figure'):
+        picture(doc, entry['figure'][0], entry['figure'][1], 7.0, 9.0)
 
     doc.add_heading('Comment Juice Shop valide', 2)
     doc.add_paragraph(entry['validation'])

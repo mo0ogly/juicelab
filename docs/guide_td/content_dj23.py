@@ -23,10 +23,13 @@ DJ23.append({
         ('Ouvre F12, onglet Réseau, puis la page de connexion. Saisis une '
          'apostrophe seule comme email, un caractère quelconque comme mot de '
          'passe, puis Log in :', "'"),
-        'L’écran affiche seulement « [object Object] » en rouge : l’interface '
-        'ne sait pas afficher l’erreur reçue. Dans Réseau, ouvre la requête '
-        'login (statut 500), onglet Réponse : SQLITE_ERROR et la requête SQL '
-        'complète, où ton apostrophe est insérée telle quelle.',
+        ('L’écran affiche seulement « [object Object] » en rouge : l’interface '
+         'ne sait pas afficher l’erreur reçue (capture ci-dessous). Dans Réseau, '
+         'clique sur la requête login (statut 500), onglet Réponse ou Aperçu. '
+         'Repère le champ sql : ton apostrophe est collée telle quelle dans la '
+         'requête, ce qui la casse (SQLITE_ERROR) :',
+         "\"sql\": \"SELECT * FROM Users WHERE email = ''' AND password = "
+         "'9dd4e4…' AND deletedAt IS NULL\""),
         ('Saisis maintenant comme email la chaîne donnée par la carte du défi '
          '(condition toujours vraie suivie d’un commentaire SQL) :', "' or 1=1--"),
         'Mets un mot de passe quelconque et valide. Tu es connecté en '
@@ -50,6 +53,10 @@ DJ23.append({
          'renvoie le premier compte de la table.'),
     ],
     'further': 'Comment obtenir le même compte si tu connais seulement son email ?',
+    'figure': ('login-object-object', 'Après une apostrophe dans Email : la page '
+               'n’affiche que « [object Object] ». L’erreur SQL est dans la '
+               'réponse réseau (instance 20.4.0-SNAPSHOT, comportement d’origine '
+               'OWASP, identique en 19.2.1).'),
     'book': 334,
 })
 

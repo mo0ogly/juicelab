@@ -83,6 +83,8 @@ def build_sheet(doc, index, entry):
             step(doc, n, s[0], s[1])
         else:
             step(doc, n, s)
+    if entry.get('figure'):
+        picture(doc, entry['figure'][0], entry['figure'][1], 6.0, 8.0)
     label(doc, 'Validation', entry['validation'])
     label(doc, 'Cause', entry['why'])
     label(doc, 'Correction', entry['fix'])
