@@ -50,8 +50,14 @@ def test_dashboard_has_tag_select(app):
     r = app.get("/dashboard?cohort=demo", headers=AUTH)
     assert r.status_code == 200
     body = r.data.decode()
-    # Server-rendered <select class="tag-select"> must exist for every row.
-    assert 'class="tag-select"' in body
+    # Rows are rendered by static/dashboard-matrix.js (single renderer, no
+    # server-side rows) : the page must load it and embed the student, and
+    # the renderer must build the <select class="tag-select"> of each row.
+    assert "dashboard-matrix.js" in body
+    assert "stud-tag-row-1" in body
+    matrix_js = app.get("/static/dashboard-matrix.js")
+    assert matrix_js.status_code == 200
+    assert 'class="tag-select"' in matrix_js.data.decode()
     # The five option values must be present so the prof can pick any tag.
     for value in ("a_voir", "ok", "absent", "a_interroger", "none"):
         assert 'value="' + value + '"' in body

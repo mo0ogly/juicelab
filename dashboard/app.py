@@ -38,7 +38,6 @@ import hmac
 import json
 import logging
 import os
-from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Iterable
 
@@ -50,8 +49,8 @@ from flask_cors import CORS
 
 from db import (cohort_exists, count_pending_award_events, count_team_mappings,
     ensure_cohort, ensure_student, get_connection, get_team_mapping, init_schema,
-    names_for_cohort, mark_award_pushed, pending_award_events, set_team_mapping,
-    tags_for_cohort)
+    mark_award_pushed, pending_award_events, set_team_mapping)
+from cohort_summary import build_cohort_summary as _cohort_summary
 from cohorts_routes import register_cohorts_routes; from join_routes import register_join_routes; from sync_routes import register_sync_routes; from i18n_helpers import register_i18n; from proof_routes import register_proof_routes; from csrf import check_csrf, clear_csrf_cookie, issue_csrf_token, set_csrf_cookie; from audit_log import log_event; from sse_routes import register_sse_routes; from tags_routes import register_tags_routes; from monitor import start_monitor, persist_alert; from alerts_routes import register_alerts_routes
 from students_routes import register_students_routes
 from diploma_routes import register_diploma_routes; from pdf_routes import register_pdf_routes
@@ -456,118 +455,6 @@ def _insert_event(payload: dict[str, Any], instance_label: str | None) -> int:
     # callsite so any failure here never propagates to the ingest endpoint.
     _maybe_push_award_for_event(new_id, payload)
     return new_id
-
-
-def _cohort_summary(cohort_id: str) -> dict[str, Any]:
-    """Read roster-bound events and return matrix cells and per-student totals.
-
-    Requires an initialised dashboard database and a cohort identifier. Final
-    scores include only challenges with a submitted quiz; round ties to even,
-    matching the per-challenge proof, before the existing verified-flag bonus.
-    Partial scores remain separate. Database errors propagate to the caller.
-    Reads data only; event truth and author identity are not established here.
-    """
-    with get_connection() as conn:
-        # Only surface events that belong to a student still registered in
-        # the roster. Without this, the matrix shows orphan tokens left
-        # behind by /api/students DELETE (which keeps events for audit)
-        # or by test recettes that emit events under throwaway tokens.
-        # The matrix should match /admin/students by definition.
-        rows = conn.execute(
-            """
-            SELECT e.student_token, e.event_type, e.challenge_key, e.data_json, e.client_ts
-              FROM events e
-             WHERE e.cohort_id = ?
-               AND e.student_token IN (
-                   SELECT student_token FROM students WHERE cohort_id = ?
-               )
-             ORDER BY e.id ASC
-            """,
-            (cohort_id, cohort_id),
-        ).fetchall()
-
-    students: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
-    challenge_keys: set[str] = set()
-    # Total events per student, including session_start / connection events
-    # that have no challenge_key. Used to surface activity in the matrix
-    # row even before the student touches a real challenge.
-    event_counts: dict[str, int] = defaultdict(int)
-
-    for row in rows:
-        student = str(row["student_token"])
-        challenge = row["challenge_key"]
-        event_type = str(row["event_type"])
-        # Ensure student appears in roster even if no challenge yet
-        _ = students[student]
-        event_counts[student] += 1
-        if challenge:
-            challenge_keys.add(str(challenge))
-            slot = students[student].setdefault(
-                str(challenge),
-                {
-                    "hints": 0,
-                    "journal": False,
-                    "quiz_score": None,
-                    "solved": False,
-                    "flag_verified": False,
-                    "last_ts": None,
-                },
-            )
-            try:
-                data = json.loads(row["data_json"]) if row["data_json"] else {}
-            except json.JSONDecodeError:
-                data = {}
-            if event_type == "hint_revealed":
-                slot["hints"] = max(int(slot["hints"]), len(data.get("consumed_levels") or []) or int(slot["hints"]) + 1)
-            elif event_type == "journal_filled":
-                slot["journal"] = True
-            elif event_type == "quiz_completed":
-                score = data.get("score")
-                if isinstance(score, int):
-                    slot["quiz_score"] = score
-            elif event_type == "challenge_solved":
-                slot["solved"] = True
-            elif event_type == "flag_verified":
-                slot["flag_verified"] = True
-            slot["last_ts"] = row["client_ts"]
-
-    sorted_students = sorted(students.keys())
-    sorted_challenges = sorted(challenge_keys)
-
-    # Aggregate the per-student final score : average over challenges that
-    # have at least a quiz score, using the same formula as the proof
-    # ((100 - sum_costs + quiz) / 2) per challenge then averaged.
-    totals: dict[str, dict[str, Any]] = {}
-    cost_map = {1: 5, 2: 15, 3: 35, 4: 70, 5: 120}
-    for student in sorted_students:
-        per_chall = students[student]
-        sums: list[int] = []; partials: list[int] = []; chall_done = 0
-        for slot in per_chall.values():
-            score_chall = max(0, 100 - cost_map.get(int(slot.get("hints") or 0), int(slot.get("hints") or 0) * 5))
-            quiz = slot.get("quiz_score")
-            if isinstance(quiz, int):
-                bonus = 10 if slot.get("flag_verified") else 0
-                # Match the proof generator: nearest integer, ties to even (Python round).
-                sums.append(min(100, round((score_chall + quiz) / 2) + bonus)); chall_done += 1
-            else:
-                partials.append(score_chall)
-        avg = round(sum(sums) / len(sums)) if sums else None
-        partial = round(sum(partials) / len(partials)) if partials else None
-        totals[student] = {"avg_score": avg, "partial_score": partial,
-            "challenges_with_quiz": chall_done, "challenges_touched": len(per_chall)}
-
-    with get_connection() as conn:
-        roster = names_for_cohort(conn, cohort_id)
-        tags = tags_for_cohort(conn, cohort_id)
-    return {
-        "cohort_id": cohort_id, "students": sorted_students,
-        "challenges": sorted_challenges,
-        "matrix": {s: students[s] for s in sorted_students},
-        "totals": totals, "events_total": len(rows),
-        "event_counts": {s: event_counts.get(s, 0) for s in sorted_students},
-        "names": {t: roster[t] for t in sorted_students if t in roster},
-        "tags": tags,
-    }
 
 
 def _compute_css_sri(filename: str = "dashboard.css") -> str:

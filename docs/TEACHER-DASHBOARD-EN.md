@@ -367,6 +367,18 @@ Light/dark toggle in the topbar.
 > total. When the filters hide everyone, the matrix says so and "Clear
 > filters" restores it.
 
+**Cohort overview in the matrix** (`/dashboard`):
+
+- **"Cohort" row** under the headers: per challenge, students who solved / are
+  in progress / have not started, average hints and average duration. A
+  challenge where almost everyone stays "in progress" calls for a group
+  explanation.
+- **Time pill** in each cell: span between the student's first and last event on
+  that challenge, from the student machine's clock. It is not attention time.
+- **Enrolled students with no activity**: validated roster students show up in
+  the matrix, dimmed, even without any event. The **Students** indicator reads
+  "N with activity · M enrolled".
+
 ### 9.3 Alerts panel
 
 On `/dashboard`, the **Alerts** panel lists the cohort's unacknowledged alerts:

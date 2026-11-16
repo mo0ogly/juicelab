@@ -506,3 +506,25 @@ tr.row-focus > td.sticky-col { box-shadow: inset 3px 0 0 var(--accent); }
 @media (prefers-reduced-motion: no-preference) {
   #body-rows tr > td { transition: background 300ms ease; }
 }
+
+/* --- Cohort overview in the matrix (static/dashboard-matrix.js) --- */
+/* Stats row : second header row, one cell per challenge. */
+thead tr.stats-row th {
+  position: static; text-transform: none; letter-spacing: 0;
+  font-weight: 400; padding: 8px 14px; background: var(--bg-elev);
+}
+.stats-cell .stat {
+  display: inline-block; min-width: 22px; margin-right: 4px; padding: 1px 6px;
+  border-radius: var(--radius-pill); text-align: center;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+}
+.stat-solved   { background: var(--accent-soft); color: var(--accent); }
+.stat-progress { background: var(--amber-soft);  color: var(--amber); }
+.stat-todo     { background: var(--bg-soft);     color: var(--text-mute); }
+.stats-cell .stat-avg { display: block; margin-top: 4px; font-size: 10.5px; color: var(--text-mute); }
+.pill.time { background: var(--cobalt-soft); color: var(--cobalt); border: 1px solid transparent; }
+/* Enrolled student with no event yet : present in the matrix, visibly quiet. */
+tr.row-inactive > td { opacity: 0.6; }
+tr.row-inactive > td.sticky-col { opacity: 1; }
+tr.row-inactive .student-display { color: var(--text-mute); }
+.legend-note { margin-left: 10px; color: var(--text-mute); font-size: 11.5px; }

@@ -53,8 +53,8 @@
   <section class="kpis" aria-label="{{ t('ARIA_KEY_INDICATORS') }}">
     <div class="kpi">
       <span class="kpi-label">{{ t('KPI_STUDENTS') }}</span>
-      <span class="kpi-value" id="students-count">{{ summary.students | length }}</span>
-      <span class="kpi-foot">{{ t('KPI_FOOT_ACTIVE_COHORT') }}</span>
+      <span class="kpi-value" id="students-count">{{ summary.active_students }}</span>
+      <span class="kpi-foot">{{ t('KPI_FOOT_ACTIVE_COHORT') }} &middot; <span id="students-total">{{ summary.students | length }}</span> {{ t('KPI_FOOT_ENROLLED') }}</span>
     </div>
     <div class="kpi">
       <span class="kpi-label">{{ t('KPI_CHALLENGES') }}</span>
@@ -156,79 +156,13 @@
   <div class="scroll {% if not summary.students %}hidden{% endif %}" id="matrix-wrap">
     <table>
       <thead>
-        <tr id="head-row">
-          <th class="sticky-col">{{ t('TABLE_STUDENT') }}</th>
-          <th class="activity-col">{{ t('KPI_EVENTS') }}</th>
-          {% for challenge in summary.challenges %}
-            <th class="challenge-col">{{ challenge }}</th>
-          {% endfor %}
-          <th class="score-col">{{ t('TABLE_SCORE_TOTAL') }}</th>
-        </tr>
+        {# Rows are rendered client-side only, by static/dashboard-matrix.js,
+           from the summary embedded at the end of this page and from every
+           SSE snapshot. One renderer : the page cannot change shape after load. #}
+        <tr id="head-row"></tr>
+        <tr id="stats-row" class="stats-row"></tr>
       </thead>
-      <tbody id="body-rows">
-        {% for student in summary.students %}
-        <tr data-student="{{ student }}">
-          <td class="sticky-col" title="{{ student }}">
-            {% set _name = summary.names.get(student, '') %}
-            <strong class="student-display{% if not _name %} student-display-missing{% endif %}">
-              {% if _name %}{{ _name }}{% else %}{{ t('STUDENT_UNNAMED_PREFIX') }} {{ student[:6] }}{% endif %}
-            </strong>
-            <input class="name-edit{% if not _name %} name-missing{% endif %}" type="text" value="{{ _name }}" placeholder="{{ t('STUDENT_NAME_MISSING_PLACEHOLDER') }}" maxlength="100" aria-label="{{ t('ARIA_STUDENT_NAME') }}">
-            {% set _tag = (summary.tags.get(student, 'none') if summary.tags is defined else 'none') %}
-            <select class="tag-select" data-student="{{ student }}" aria-label="{{ t('ARIA_STUDENT_TAG') }}">
-              <option value="none"{% if _tag == 'none' %} selected{% endif %}>{{ t('TAG_NONE') }}</option>
-              <option value="a_voir"{% if _tag == 'a_voir' %} selected{% endif %}>{{ t('TAG_A_VOIR') }}</option>
-              <option value="ok"{% if _tag == 'ok' %} selected{% endif %}>{{ t('TAG_OK') }}</option>
-              <option value="absent"{% if _tag == 'absent' %} selected{% endif %}>{{ t('TAG_ABSENT') }}</option>
-              <option value="a_interroger"{% if _tag == 'a_interroger' %} selected{% endif %}>{{ t('TAG_A_INTERROGER') }}</option>
-            </select>
-            <small class="token-hint">{{ student[:8] }}&hellip;</small>
-            <span class="row-actions">
-              <a href="/admin/student/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DETAIL') }}" aria-label="{{ t('ACTION_DETAIL') }}" data-drilldown="1">D</a> <a href="/admin/diploma/{{ student }}?cohort={{ summary.cohort_id }}" target="_blank" rel="noopener" title="{{ t('ACTION_DIPLOMA') }}">{{ t('ROW_ACTION_DIPLOMA_SHORT') }}</a>
-              <button type="button" class="note-btn" data-student="{{ student }}" title="{{ t('ACTION_NOTE') }}" aria-label="{{ t('ACTION_NOTE') }}">N</button>
-            </span>
-          </td>
-          <td class="activity-col">
-            {% set _evcount = summary.event_counts.get(student, 0) %}
-            <span class="pill {% if _evcount > 0 %}hints{% else %}empty{% endif %}">{{ _evcount }}</span>
-          </td>
-          {% for challenge in summary.challenges %}
-            {% set slot = summary.matrix[student].get(challenge) %}
-            <td data-cell="{{ challenge }}">
-              {% if slot %}
-                <div class="cell">
-                  {% if slot.solved %}
-                    <span class="pill solved">solved</span>
-                  {% endif %}
-                  <span class="pill hints">hints {{ slot.hints }}/5</span>
-                  {% if slot.journal %}
-                    <span class="pill journal" data-key="{{ challenge }}" data-student="{{ student }}" tabindex="0" role="button">journal</span>
-                  {% endif %}
-                  {% if slot.quiz_score is not none %}
-                    <span class="pill quiz">quiz {{ slot.quiz_score }}/100</span>
-                  {% endif %}
-                  {% if slot.flag_verified %}
-                    <span class="pill flag">flag +10</span>
-                  {% endif %}
-                </div>
-              {% else %}
-                <span class="pill empty">-</span>
-              {% endif %}
-            </td>
-          {% endfor %}
-          {% set total = summary.totals.get(student, {}) %}
-          <td class="score-col">
-            {% if total.avg_score is not none %}
-              <span class="score-total">{{ total.avg_score }}/100</span>
-            {% elif total.partial_score is not none %}
-              <span class="score-total score-partial" title="{{ t('SCORE_PARTIAL_TITLE') }}">{{ total.partial_score }}/100 *</span>
-            {% else %}
-              <span class="score-na" title="{{ t('SCORE_NA_TITLE') }}">&mdash;</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
+      <tbody id="body-rows"></tbody>
     </table>
     <p class="empty-placeholder filter-empty" id="filter-empty" role="status" hidden>{{ t('FILTER_EMPTY') }}</p>
   </div>
@@ -240,6 +174,8 @@
     <span class="pill journal">journal</span> {{ t('PILL_JOURNAL') }}
     <span class="pill quiz">quiz X/100</span> {{ t('PILL_QUIZ') }}
     <span class="pill flag">flag +10</span> {{ t('PILL_FLAG') }}
+    <span class="pill time">12 min</span> {{ t('PILL_TIME') }}
+    <span class="legend-note">{{ t('LEGEND_STATS') }}</span>
   </div>
 
   <footer class="footer">
@@ -291,6 +227,7 @@
 <script src="{{ url_for('static', filename='dashboard-keyboard.js') }}" nonce="{{ csp_nonce }}"></script>
 <script src="{{ url_for('static', filename='dashboard-drilldown.js') }}" nonce="{{ csp_nonce }}"></script>
 <script src="{{ url_for('static', filename='dashboard-alerts.js') }}" nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', filename='dashboard-matrix.js') }}" nonce="{{ csp_nonce }}"></script>
 <script nonce="{{ csp_nonce }}">
   (function () {
     const COHORT = {{ summary.cohort_id | tojson }};
@@ -317,106 +254,13 @@
         .replace(/'/g, '&#39;');
     }
 
-    function pillsHtml(slot, challenge, student) {
-      if (!slot) return '<span class="pill empty">-</span>';
-      const parts = ['<div class="cell">'];
-      if (slot.solved)
-        parts.push('<span class="pill solved">solved</span>');
-      parts.push('<span class="pill hints">hints ' + (slot.hints || 0) + '/5</span>');
-      if (slot.journal)
-        parts.push(
-          '<span class="pill journal" data-key="' + escapeHtml(challenge) +
-          '" data-student="' + escapeHtml(student) + '" tabindex="0" role="button">journal</span>'
-        );
-      if (slot.quiz_score !== null && slot.quiz_score !== undefined)
-        parts.push('<span class="pill quiz">quiz ' + slot.quiz_score + '/100</span>');
-      if (slot.flag_verified)
-        parts.push('<span class="pill flag">flag +10</span>');
-      parts.push('</div>');
-      return parts.join('');
-    }
-
-    /* Score cell. Mirrors the server-rendered <td class="score-col"> : final
-       average, else partial score (flagged with *), else "not available". */
-    function totalCellHtml(total) {
-      const has = function (v) { return v !== null && v !== undefined; };
-      if (total && has(total.avg_score)) {
-        return '<span class="score-total">' + total.avg_score + '/100</span>';
-      }
-      if (total && has(total.partial_score)) {
-        return '<span class="score-total score-partial" title="' + escapeHtml(T('SCORE_PARTIAL_TITLE')) + '">'
-          + total.partial_score + '/100 *</span>';
-      }
-      return '<span class="score-na" title="' + escapeHtml(T('SCORE_NA_TITLE')) + '">&mdash;</span>';
-    }
-
+    // Matrix rendering lives in static/dashboard-matrix.js (single renderer).
+    const matrix = window.JuicelabMatrix.create({ cohort: COHORT, escapeHtml: escapeHtml });
+    /* Render the matrix for `summary`, then re-attach what depends on the
+       fresh rows : cell and row handlers, the active filters, alert marks. */
     function renderMatrix(summary) {
-      document.getElementById('students-count').textContent = summary.students.length;
-      document.getElementById('challenges-count').textContent = summary.challenges.length;
-      document.getElementById('events-count').textContent = summary.events_total;
-
-      const wrap = document.getElementById('matrix-wrap');
-      const empty = document.getElementById('empty-msg');
-      if (!summary.students.length) {
-        if (wrap) wrap.style.display = 'none';
-        if (empty) empty.style.display = '';
-        return;
-      }
-      if (empty) empty.style.display = 'none';
-      if (wrap) wrap.style.display = '';
-
-      // Client render of the matrix, used on every SSE snapshot. It MUST stay
-      // the mirror of the server-rendered <thead>/<tbody> above (same columns,
-      // links and classes), otherwise the page changes shape after first load.
-      // Tokens, names and challenge keys come from students : always escaped.
-      const headRow = document.getElementById('head-row');
-      let headHtml = '<th class="sticky-col">' + escapeHtml(T('TABLE_STUDENT')) + '</th>'
-        + '<th class="activity-col">' + escapeHtml(T('KPI_EVENTS')) + '</th>';
-      for (const ch of summary.challenges) {
-        headHtml += '<th class="challenge-col">' + escapeHtml(ch) + '</th>';
-      }
-      headHtml += '<th class="score-col">' + escapeHtml(T('TABLE_SCORE_TOTAL')) + '</th>';
-      headRow.innerHTML = headHtml;
-
-      const body = document.getElementById('body-rows');
-      let bodyHtml = '';
-      const nameMap = summary.names || {};
-      const tagMap = summary.tags || {};
-      const countMap = summary.event_counts || {};
-      const tagValues = ['none', 'a_voir', 'ok', 'absent', 'a_interroger'];
-      const cohortQs = '?cohort=' + encodeURIComponent(COHORT);
-      for (const student of summary.students) {
-        const name = nameMap[student] || '';
-        const sEsc = escapeHtml(student);
-        const sUrl = encodeURIComponent(student);
-        const tag = tagMap[student] || 'none';
-        const tagOpts = tagValues.map(function (v) {
-          return '<option value="' + v + '"' + (v === tag ? ' selected' : '') + '>'
-            + escapeHtml(T('TAG_' + v.toUpperCase())) + '</option>';
-        }).join('');
-        const evCount = countMap[student] || 0;
-        bodyHtml += '<tr data-student="' + sEsc + '">';
-        bodyHtml += '<td class="sticky-col" title="' + sEsc + '">'
-          + '<strong class="student-display' + (name ? '' : ' student-display-missing') + '">'
-          + escapeHtml(name || (T('STUDENT_UNNAMED_PREFIX') + ' ' + student.substring(0, 6))) + '</strong>'
-          + '<input class="name-edit' + (name ? '' : ' name-missing') + '" type="text" value="' + escapeHtml(name) + '" placeholder="'
-          + escapeHtml(T('STUDENT_NAME_MISSING_PLACEHOLDER')) + '" maxlength="100" aria-label="' + escapeHtml(T('ARIA_STUDENT_NAME')) + '">'
-          + '<select class="tag-select" data-student="' + sEsc + '" aria-label="' + escapeHtml(T('ARIA_STUDENT_TAG')) + '">' + tagOpts + '</select>'
-          + '<small class="token-hint">' + escapeHtml(student.substring(0, 8)) + '&hellip;</small>'
-          + '<span class="row-actions">'
-          + '<a href="/admin/student/' + sUrl + cohortQs + '" target="_blank" rel="noopener" title="' + escapeHtml(T('ACTION_DETAIL')) + '" aria-label="' + escapeHtml(T('ACTION_DETAIL')) + '" data-drilldown="1">D</a> '
-          + '<a href="/admin/diploma/' + sUrl + cohortQs + '" target="_blank" rel="noopener" title="' + escapeHtml(T('ACTION_DIPLOMA')) + '">' + escapeHtml(T('ROW_ACTION_DIPLOMA_SHORT')) + '</a> '
-          + '<button type="button" class="note-btn" data-student="' + sEsc + '" title="' + escapeHtml(T('ACTION_NOTE')) + '" aria-label="' + escapeHtml(T('ACTION_NOTE')) + '">N</button>'
-          + '</span></td>';
-        bodyHtml += '<td class="activity-col"><span class="pill ' + (evCount > 0 ? 'hints' : 'empty') + '">' + evCount + '</span></td>';
-        for (const ch of summary.challenges) {
-          const slot = (summary.matrix[student] || {})[ch];
-          bodyHtml += '<td data-cell="' + escapeHtml(ch) + '">' + pillsHtml(slot, ch, student) + '</td>';
-        }
-        bodyHtml += '<td class="score-col">' + totalCellHtml((summary.totals || {})[student]) + '</td>';
-        bodyHtml += '</tr>';
-      }
-      body.innerHTML = bodyHtml;
+      if (!matrix) return;
+      matrix.render(summary);
       bindJournalPills();
       bindNameEdits();
       bindTagSelects();
@@ -587,10 +431,6 @@
         });
     }
 
-    bindJournalPills();
-    bindNameEdits();
-    bindTagSelects();
-    bindNoteButtons();
     // --- Live alerts panel : rendering lives in static/dashboard-alerts.js ---
     const alertsPanel = window.JuicelabAlerts.create({ escapeHtml: escapeHtml, csrfHeaders: csrfHeaders, onError: showToast });
     // Boot : unacked alerts of the active cohort, grouped server-side.
@@ -598,6 +438,8 @@
       .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(d => { if (alertsPanel) alertsPanel.render(d.alerts || []); })
       .catch(() => { if (alertsPanel) alertsPanel.loadFailed(); });
+    // First paint : same renderer as live updates, fed with the server summary.
+    renderMatrix({{ summary | tojson }});
 
     // Live updates via Server-Sent Events. The browser handles reconnect
     // automatically; on error we surface a disconnect badge but keep

@@ -390,6 +390,18 @@ clair/sombre dans la topbar.
 > total. Si les filtres masquent tout le monde, la matrice l'indique et
 > « Effacer les filtres » la rétablit.
 
+**Vue d'ensemble dans la matrice** (`/dashboard`) :
+
+- **Ligne « Cohorte »** sous les en-têtes : par challenge, élèves ayant résolu /
+  en cours / pas commencé, indices moyens et durée moyenne. Un challenge où
+  presque tout le monde reste « en cours » appelle une explication collective.
+- **Pastille de temps** dans chaque case : écart entre le premier et le dernier
+  event de l'élève sur ce challenge, d'après l'horloge de son poste. Ce n'est
+  pas un temps d'attention.
+- **Inscrits sans activité** : les élèves validés du roster apparaissent dans la
+  matrice, en grisé, même sans event. L'indicateur **Élèves** affiche « N avec
+  activité · M inscrits ».
+
 ### 9.3 Panneau Alertes
 
 Sur `/dashboard`, le panneau **Alertes** liste les alertes non acquittées de la
