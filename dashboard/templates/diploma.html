@@ -2,7 +2,7 @@
 <html lang="{{ current_lang }}">
 <head>
   <meta charset="utf-8">
-  <title>Diplome {{ cohort_id }} - {{ student_name or student_token }}</title>
+  <title>{{ t('DIPLOMA_TITLE') }} {{ cohort_id }} - {{ student_name or student_token }}</title>
   {% include "_head_assets.html" %}
   <style>
     /* A4 print layout, no nav, single page, centered. Kept here (not in
@@ -194,7 +194,7 @@
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_STAT_SOLVED') }}</span>
-        <span class="val">{{ f.challenges_solved }} / {{ td_total }}</span>
+        <span class="val">{{ f.challenges_solved }} / {{ f.td_total }}</span>
       </div>
       <div class="diploma-stat">
         <span class="lbl">{{ t('DIPLOMA_STAT_FINAL') }}</span>

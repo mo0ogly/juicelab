@@ -486,6 +486,18 @@ Bouton **Diplôme** du roster (`/admin/diploma/<token>?cohort=…`) et export
   signature. Si les résultats de l'élève ont changé, la page l'indique ;
   **Réémettre** crée un nouveau diplôme, l'ancien reste enregistré.
   Ouvrir un diplôme en cours de TD le fige : réémettre en fin de TD.
+- **Parcours** : seuls les challenges du parcours comptent (progression,
+  moyennes, indices). La liste vient de
+  `overlay/frontend/src/assets/juicelab/selected_challenges.yml`, copiée dans
+  l'image Docker ; sinon `DASHBOARD_PARCOURS_YML=<chemin>`. Sans liste, les
+  diplômes répondent 503 plutôt que de deviner le total.
+- **Élèves** : seuls les élèves validés ont un diplôme (409 sinon, page
+  comme ZIP).
+- **Langue** : le diplôme est rédigé et signé dans la langue de l'interface
+  au moment de l'émission. Pour l'autre langue : changer de langue puis
+  **Réémettre**.
+- **ZIP** : un fichier par élève, `<mention>_<nom>_<début du token>.md` ;
+  deux homonymes ne s'écrasent plus.
 - **Vérification** : `python dashboard/verify_proof.py fichier.md` (avec
   `DASHBOARD_PROOF_SECRET`) affiche cohorte, mention, progression, score
   final et date d'émission. Format `diploma.v2` ; les diplômes `diploma.v1`

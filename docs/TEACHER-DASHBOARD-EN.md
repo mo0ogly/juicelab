@@ -461,6 +461,17 @@ by a break longer than the horizon counts as two.
   student's results changed, the page says so; **Re-issue** creates a new
   diploma, the previous one stays on record. Opening a diploma during the
   lab freezes it: re-issue at the end.
+- **Parcours**: only parcours challenges count (progression, averages,
+  hints). The list comes from
+  `overlay/frontend/src/assets/juicelab/selected_challenges.yml`, copied into
+  the Docker image; otherwise `DASHBOARD_PARCOURS_YML=<path>`. Without a
+  list, diplomas answer 503 rather than guess the total.
+- **Students**: only validated students get a diploma (409 otherwise, page
+  and ZIP).
+- **Language**: the diploma is written and signed in the interface language
+  at issuance. For the other language: switch language, then **Re-issue**.
+- **ZIP**: one file per student, `<mention>_<name>_<token start>.md`; two
+  students with the same name no longer overwrite each other.
 - **Verification**: `python dashboard/verify_proof.py file.md` (with
   `DASHBOARD_PROOF_SECRET`) prints cohort, mention, progression, final score
   and issuance date. Format `diploma.v2`; earlier `diploma.v1` diplomas still

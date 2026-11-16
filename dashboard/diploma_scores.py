@@ -61,23 +61,30 @@ def challenge_score(story: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def diploma_figures(stories: Iterable[Mapping[str, Any]], td_total: int) -> dict[str, Any]:
+def diploma_figures(stories: Iterable[Mapping[str, Any]], parcours: list[str]) -> dict[str, Any]:
     """Every figure the diploma prints, from one student's challenge stories.
 
-    Returns : ``challenges_solved``, ``progress_pct`` (solved / td_total,
-    capped at 100), ``score_challenge`` / ``quiz_pct`` / ``final_score``
+    Only challenges of ``parcours`` (parcours.parcours_keys) count : a
+    Juice Shop challenge solved outside the TD neither raises the
+    progression nor enters the averages.
+
+    Returns : ``td_total`` (len(parcours)), ``challenges_solved``,
+    ``progress_pct`` (solved / td_total), ``score_challenge`` / ``quiz_pct`` / ``final_score``
     (averages over solved challenges ; None when no solved challenge, or
     for ``quiz_pct`` when no solved challenge has a quiz), ``quiz_missing``
     (solved challenges without quiz), ``flags_verified``, ``hints_used`` and
     ``hint_penalty`` (all challenges, informative), ``per_challenge`` and
     ``mention``.
     """
-    stories = list(stories)
+    keys = set(parcours)
+    td_total = len(parcours)
+    stories = [s for s in stories if s["challenge_key"] in keys]
     solved = [challenge_score(s) for s in stories if s["status"] == "solved"]
     quizzes = [c["score_quiz"] for c in solved if c["score_quiz"] is not None]
-    progress = min(100, round(100 * len(solved) / td_total)) if td_total > 0 else 0
+    progress = round(100 * len(solved) / td_total) if td_total > 0 else 0
     final = _mean([c["score_final"] for c in solved])
     return {
+        "td_total": td_total,
         "challenges_solved": len(solved),
         "progress_pct": progress,
         "score_challenge": _mean([c["score_challenge"] for c in solved]),

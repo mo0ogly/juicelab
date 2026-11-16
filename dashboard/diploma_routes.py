@@ -7,7 +7,10 @@ HMAC-SHA256 signed under DASHBOARD_PROOF_SECRET with a distinct scheme
 
 Figures : diploma_scores.diploma_figures (per-challenge scores, as on the
 challenge proofs, averaged over solved challenges ; mention from
-progression and final score).
+progression and final score). Only the TD parcours counts
+(parcours.parcours_keys) ; without catalogue the routes answer 503.
+Only validated students get a diploma (409 otherwise). The body is
+written in the language of the issuing request (i18n catalog).
 
 Registry : a diploma is issued on first request (page or ZIP), stored in
 the ``diplomas`` table (db_diplomas) and then served as stored, so a
@@ -37,6 +40,7 @@ import io
 import json
 import logging
 import os
+import re
 import zipfile
 from datetime import datetime, timezone
 from typing import Any, Callable
@@ -47,6 +51,8 @@ from flask import Flask, Response, jsonify, render_template, request
 
 from db import get_connection, list_students, per_student_stats
 from db_diplomas import count_issuances, insert_diploma, latest_diploma
+from i18n_helpers import _translate
+from parcours import ParcoursUnavailable, parcours_keys
 from diploma_scores import diploma_figures
 from learning_story import challenge_stories
 from session_report import cohort_events
@@ -90,63 +96,64 @@ def sign_diploma(body: str, *, secret: bytes, student_token: str, cohort_id: str
     return signed_payload + "SIGNATURE: " + sig + "\n"
 
 
-def _pct(v: int | None) -> str:
-    return "_non calculable_" if v is None else "**" + str(v) + "/100**"
+Translate = Callable[..., str]
+
+
+def _pct(tr: Translate, v: int | None) -> str:
+    return tr("DIPLOMA_MD_NOT_COMPUTABLE") if v is None else "**" + str(v) + "/100**"
 
 
 def build_diploma_md(*, student_token: str, student_name: str, cohort_id: str,
-                     institution: str, figures: dict[str, Any], td_total: int) -> str:
+                     institution: str, figures: dict[str, Any], tr: Translate) -> str:
     """Markdown body up to (but not including) the signed footer.
 
     ``figures`` comes from diploma_scores.diploma_figures plus
-    ``journals_written`` / ``journal_words``. Same content drives the ZIP
-    batch (.md per student) and the HTML page verification block."""
+    ``journals_written`` / ``journal_words``. ``tr(key, **fmt)`` returns the
+    catalog string (i18n_helpers._translate in a request) : the body is
+    written, then signed, in the language of the issuing request. Same
+    content drives the ZIP batch and the page verification block."""
     f = figures
-    quiz = ("| Moyenne quiz (challenges resolus) | " + _pct(f["quiz_pct"])
-            + (" ; " + str(f["quiz_missing"]) + " resolu(s) sans quiz, compte(s) 0" if f["quiz_missing"] else "")
-            + " |")
-    retex = ("| Journaux retex rediges | **" + str(f["journals_written"]) + "** ("
-             + str(f["journal_words"]) + " mots cumules) |"
-             if f["journals_written"] > 0 else "| Journaux retex rediges | _aucun journal redige_ |")
+    quiz = _pct(tr, f["quiz_pct"]) + (tr("DIPLOMA_MD_QUIZ_MISSING", n=f["quiz_missing"]) if f["quiz_missing"] else "")
+    retex = (tr("DIPLOMA_MD_JOURNALS_VALUE", n=f["journals_written"], words=f["journal_words"])
+             if f["journals_written"] > 0 else tr("DIPLOMA_MD_NO_JOURNAL"))
+
+    def row(label: str, value: str) -> str:
+        return "| " + label + " | " + value + " |"
+
     lines = [
-        "# Diplome - " + cohort_id, "",
-        "Decerne par : **" + institution + "**", "",
-        "## Recipiendaire", "",
-        "| Champ | Valeur |", "|---|---|",
-        "| Nom | " + (student_name or "_(non renseigne)_") + " |",
-        "| Token UUID | `" + student_token + "` |",
-        "| Cohorte | " + cohort_id + " |", "",
-        "## Mention obtenue", "",
-        "**" + f["mention"].replace("_", " ").upper() + "**", "",
-        "## Resultats consolides", "",
-        "| Indicateur | Valeur |", "|---|---|",
-        "| Progression challenges | **" + str(f["progress_pct"]) + "%** ("
-        + str(f["challenges_solved"]) + "/" + str(td_total) + " resolus) |",
-        "| Score challenge moyen (apres indices) | " + _pct(f["score_challenge"]) + " |",
-        quiz,
-        "| Flags CTF verifies | " + str(f["flags_verified"]) + " |",
-        "| Indices consommes | " + str(f["hints_used"]) + " (tous challenges) |",
-        retex, "",
-        "## Score final", "",
-        "Par challenge resolu : score_final = min(100, (score_challenge + score_quiz) / 2 + bonus_flag), "
-        "avec score_challenge = 100 - couts des indices de CE challenge, score_quiz = 0 si quiz non soumis, "
-        "bonus_flag = +10 si flag CTF verifie. Le score final du diplome est la moyenne sur les challenges resolus.",
-        "",
-        "Score final : " + _pct(f["final_score"]), "",
-        "Mention : progression >= 80 % et score final >= 70 : tres bien ; >= 60 % et >= 60 : bien ; "
-        "progression >= 40 % : reussite ; sinon participation.", "",
-        "## Verification", "",
-        "Ce diplome est tamper-evident : la signature HMAC-SHA256 ci-dessous "
-        "couvre tout le corps du document. Toute alteration invalide la "
-        "signature (verifier via `python dashboard/verify_proof.py`).", "",
+        "# " + tr("DIPLOMA_MD_TITLE", cohort=cohort_id), "",
+        tr("DIPLOMA_MD_ISSUED_BY", institution=institution), "",
+        "## " + tr("DIPLOMA_MD_RECIPIENT"), "",
+        row(tr("DIPLOMA_MD_FIELD"), tr("DIPLOMA_MD_VALUE")), "|---|---|",
+        row(tr("DIPLOMA_MD_NAME"), student_name or tr("DIPLOMA_MD_NO_NAME")),
+        row(tr("DIPLOMA_MD_TOKEN"), "`" + student_token + "`"),
+        row(tr("DIPLOMA_MD_COHORT"), cohort_id), "",
+        "## " + tr("DIPLOMA_MD_MENTION"), "",
+        "**" + tr("DIPLOMA_MENTION_" + f["mention"].upper()).upper() + "**", "",
+        "## " + tr("DIPLOMA_MD_RESULTS"), "",
+        row(tr("DIPLOMA_MD_INDICATOR"), tr("DIPLOMA_MD_VALUE")), "|---|---|",
+        row(tr("DIPLOMA_MD_PROGRESS"), tr("DIPLOMA_MD_PROGRESS_VALUE", pct=f["progress_pct"],
+                                         solved=f["challenges_solved"], total=f["td_total"])),
+        row(tr("DIPLOMA_MD_SCORE_CHALLENGE"), _pct(tr, f["score_challenge"])),
+        row(tr("DIPLOMA_MD_QUIZ"), quiz),
+        row(tr("DIPLOMA_MD_FLAGS"), str(f["flags_verified"])),
+        row(tr("DIPLOMA_MD_HINTS"), str(f["hints_used"])),
+        row(tr("DIPLOMA_MD_JOURNALS"), retex), "",
+        "## " + tr("DIPLOMA_MD_FINAL_TITLE"), "",
+        tr("DIPLOMA_MD_FORMULA"), "",
+        tr("DIPLOMA_MD_FINAL", score=_pct(tr, f["final_score"])), "",
+        tr("DIPLOMA_MD_MENTION_RULE"), "",
+        "## " + tr("DIPLOMA_MD_VERIFY_TITLE"), "",
+        tr("DIPLOMA_MD_VERIFY"), "",
     ]
     return "\n".join(lines)
 
 
-def _gather_diploma_context(conn: Any, cohort_id: str, td_total: int = 13) -> dict[str, Any]:
+def _gather_diploma_context(conn: Any, cohort_id: str) -> dict[str, Any]:
     """Current figures of every roster student : token -> {display_name,
     status, figures}. Figures are recomputed from the event log on each
-    call (diploma_scores.diploma_figures + journal counters)."""
+    call, over the parcours challenges only. Raises ParcoursUnavailable."""
+    keys = parcours_keys()
     stats = {r["student_token"]: r for r in per_student_stats(conn, cohort_id)}
     by_token: dict[str, list] = {}
     for ev in cohort_events(conn, cohort_id):
@@ -154,7 +161,7 @@ def _gather_diploma_context(conn: Any, cohort_id: str, td_total: int = 13) -> di
     out: dict[str, dict[str, Any]] = {}
     for s in list_students(conn, cohort_id):
         tok = s["student_token"]
-        figures = diploma_figures(challenge_stories(by_token.get(tok, [])), td_total)
+        figures = diploma_figures(challenge_stories(by_token.get(tok, [])), keys)
         stat = stats.get(tok)
         figures["journals_written"] = int(stat["journals_written"] or 0) if stat else 0
         figures["journal_words"] = int(stat["journal_word_total"] or 0) if stat else 0
@@ -167,13 +174,14 @@ def _gather_diploma_context(conn: Any, cohort_id: str, td_total: int = 13) -> di
 
 
 def _issue(conn: Any, cohort_id: str, token: str, ctx: dict[str, Any],
-           secret: bytes, *, td_total: int = 13) -> dict[str, Any]:
-    """Sign the current figures, record them, return the stored diploma."""
+           secret: bytes) -> dict[str, Any]:
+    """Sign the current figures in the request language, record them,
+    return the stored diploma."""
     issued_at = datetime.now(timezone.utc).isoformat()
     f = ctx["figures"]
     body = build_diploma_md(student_token=token, student_name=ctx["display_name"] or "",
                             cohort_id=cohort_id, institution=_institution(),
-                            figures=f, td_total=td_total)
+                            figures=f, tr=_translate)
     signed = sign_diploma(body, secret=secret, student_token=token, cohort_id=cohort_id,
                           mention=f["mention"], progress_pct=f["progress_pct"],
                           final_score=f["final_score"], issued_at=issued_at)
@@ -187,6 +195,32 @@ def _stored_or_issue(conn: Any, cohort_id: str, token: str, ctx: dict[str, Any],
                      secret: bytes) -> dict[str, Any]:
     """Latest stored diploma, issuing the first one when there is none."""
     return latest_diploma(conn, cohort_id, token) or _issue(conn, cohort_id, token, ctx, secret)
+
+
+def _zip_name(mention: str, name: str | None, token: str) -> str:
+    """ZIP entry name : <mention>_<name>_<token prefix>.md, restricted to
+    [A-Za-z0-9._-] ; the token prefix keeps homonyms apart."""
+    safe = re.sub(r"[^A-Za-z0-9._-]+", "_", name or "").strip("._")[:60]
+    return mention + "_" + (safe + "_" if safe else "") + re.sub(r"[^A-Za-z0-9-]", "", token)[:12] + ".md"
+
+
+def _context_or_error(conn: Any, cohort_id: str, token: str,
+                      as_json: bool) -> "tuple[dict[str, Any] | None, Any]":
+    """(ctx, None) for a validated roster student, else (None, response) :
+    404 outside the roster, 409 for a pending or rejected student, 503
+    without parcours catalogue."""
+    def fail(msg: str, code: int) -> Any:
+        return (jsonify({"error": msg}), code) if as_json else Response(msg, status=code)
+    try:
+        ctx = _gather_diploma_context(conn, cohort_id).get(token)
+    except ParcoursUnavailable as exc:
+        LOGGER.error("diploma unavailable : %s", exc)
+        return None, fail("parcours catalogue unavailable (DASHBOARD_PARCOURS_YML)", 503)
+    if not ctx:
+        return None, fail("student not found in cohort", 404)
+    if ctx["status"] != "validated":
+        return None, fail("student not validated (status " + str(ctx["status"]) + ")", 409)
+    return ctx, None
 
 
 def register_diploma_routes(
@@ -211,9 +245,9 @@ def register_diploma_routes(
         if not proof_secret():
             return Response("diploma signing disabled (DASHBOARD_PROOF_SECRET missing)", status=503)
         with get_connection() as conn:
-            ctx = _gather_diploma_context(conn, cohort_id).get(token)
-            if not ctx:
-                return Response("student not found in cohort", status=404)
+            ctx, err = _context_or_error(conn, cohort_id, token, as_json=False)
+            if err is not None:
+                return err
             dip = _stored_or_issue(conn, cohort_id, token, ctx, proof_secret())
             issuances = count_issuances(conn, cohort_id, token)
         return Response(
@@ -221,7 +255,7 @@ def register_diploma_routes(
                 "diploma.html",
                 cohort_id=cohort_id, student_token=token,
                 student_name=ctx["display_name"] or "",
-                f=dip["figures"], td_total=13,
+                f=dip["figures"],
                 institution=_institution(),
                 signed_body=dip["signed_body"],
                 issued_at=dip["issued_at"][:10],
@@ -244,9 +278,9 @@ def register_diploma_routes(
         if not proof_secret():
             return jsonify({"error": "diploma signing disabled"}), 503  # type: ignore[return-value]
         with get_connection() as conn:
-            ctx = _gather_diploma_context(conn, cohort_id).get(token)
-            if not ctx:
-                return jsonify({"error": "student not found in cohort"}), 404  # type: ignore[return-value]
+            ctx, err = _context_or_error(conn, cohort_id, token, as_json=True)
+            if err is not None:
+                return err
             dip = _issue(conn, cohort_id, token, ctx, proof_secret())
         return jsonify({"ok": True, "issued_at": dip["issued_at"], "mention": dip["mention"]})
 
@@ -266,7 +300,11 @@ def register_diploma_routes(
         buf = io.BytesIO()
         written = 0
         with get_connection() as conn:
-            ctx_all = _gather_diploma_context(conn, cohort_id)
+            try:
+                ctx_all = _gather_diploma_context(conn, cohort_id)
+            except ParcoursUnavailable as exc:
+                LOGGER.error("diplomas unavailable : %s", exc)
+                return Response("parcours catalogue unavailable (DASHBOARD_PARCOURS_YML)", status=503)
             if not ctx_all:
                 return Response("no students in cohort", status=404)
             with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -278,8 +316,7 @@ def register_diploma_routes(
                     if not include_all and mention == "participation":
                         continue
                     dip = stored or _issue(conn, cohort_id, token, ctx, proof_secret())
-                    safe = (ctx["display_name"] or token).replace("/", "_").replace(" ", "_")
-                    zf.writestr(f"{dip['mention']}_{safe[:60]}.md", dip["signed_body"])
+                    zf.writestr(_zip_name(dip["mention"], ctx["display_name"], token), dip["signed_body"])
                     written += 1
         if written == 0:
             return Response("no eligible diplomas in cohort (set include_all=1 to force)", status=404)

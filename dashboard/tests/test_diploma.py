@@ -33,16 +33,22 @@ COHORT = "M2-IA-2026"
 
 ISSUED = "2026-11-16T10:00:00+00:00"
 FIGURES = {
-    "mention": "tres_bien", "progress_pct": 92, "challenges_solved": 12,
+    "mention": "tres_bien", "progress_pct": 92, "td_total": 13, "challenges_solved": 12,
     "score_challenge": 85, "quiz_pct": 80, "quiz_missing": 1, "final_score": 83,
     "flags_verified": 3, "hints_used": 5, "hint_penalty": 15,
     "journals_written": 3, "journal_words": 420,
 }
 
 
-def _body(name, cohort):
+def _catalog_tr(lang):
+    import json as _j
+    cat = _j.loads((ROOT / "i18n" / (lang + ".json")).read_text(encoding="utf-8"))
+    return lambda key, **fmt: cat[key].format(**fmt) if fmt else cat[key]
+
+
+def _body(name, cohort, lang="fr"):
     return build_diploma_md(student_token="abc", student_name=name, cohort_id=cohort,
-                            institution="Sorbonne", figures=FIGURES, td_total=13)
+                            institution="Sorbonne", figures=FIGURES, tr=_catalog_tr(lang))
 
 
 # --- mention thresholds --------------------------------------------------
@@ -125,12 +131,23 @@ def test_diploma_scheme_distinct_from_proof():
 
 # --- HTTP endpoints ------------------------------------------------------
 
+PARCOURS = [f"challenge_{i}" for i in range(13)]
+
+
+def _parcours_file(tmp_path):
+    p = tmp_path / "selected_challenges.yml"
+    p.write_text("total_challenges: 13\nselected_challenges:\n"
+                 + "".join(f"  {k}:\n    position: 1\n" for k in PARCOURS), encoding="utf-8")
+    return p
+
+
 @pytest.fixture
 def isolated_app(tmp_path, monkeypatch):
     monkeypatch.setenv("DASHBOARD_DB", str(tmp_path / "d.sqlite"))
     monkeypatch.setenv("DASHBOARD_TEACHER_TOKEN", TOKEN)
     monkeypatch.setenv("DASHBOARD_PROOF_SECRET", PROOF_SECRET)
     monkeypatch.setenv("DASHBOARD_CORS_ORIGINS", "http://127.0.0.1:3000")
+    monkeypatch.setenv("DASHBOARD_PARCOURS_YML", str(_parcours_file(tmp_path)))
     for mod in ("app", "db", "diploma_routes", "students_routes",
                 "cohorts_routes", "join_routes", "rate_limit"):
         if mod in sys.modules:
@@ -242,7 +259,7 @@ def test_hint_penalty_is_per_challenge_not_global():
     were spent anywhere. Now each challenge is scored on its own hints."""
     from diploma_scores import diploma_figures
     f = diploma_figures([_story("a", costs=(5, 10, 20, 35, 50), quiz=80),
-                         _story("b", quiz=90), _story("c", quiz=90)], td_total=3)
+                         _story("b", quiz=90), _story("c", quiz=90)], parcours=["a", "b", "c"])
     assert f["score_challenge"] == round((0 + 100 + 100) / 3)
     assert f["final_score"] == round((40 + 95 + 95) / 3)
 
@@ -257,7 +274,7 @@ def test_final_score_matches_proof_formula():
 
 def test_quiz_of_unsolved_challenge_is_ignored_and_missing_quiz_counts_zero():
     from diploma_scores import diploma_figures
-    f = diploma_figures([_story("a", quiz=None), _story("b", solved=False, quiz=10)], td_total=2)
+    f = diploma_figures([_story("a", quiz=None), _story("b", solved=False, quiz=10)], parcours=["a", "b"])
     assert f["quiz_pct"] is None and f["quiz_missing"] == 1
     assert f["final_score"] == 50 and f["hints_used"] == 0
 
@@ -267,15 +284,15 @@ def test_full_marks_without_quiz_no_longer_blocks_progress_mention():
     final score drives it ; 100 % solved without quiz = final 50 -> reussite,
     stated on the diploma ; with quizzes the high mention is reachable."""
     from diploma_scores import diploma_figures
-    no_quiz = diploma_figures([_story(k) for k in "abcde"], td_total=5)
-    quiz = diploma_figures([_story(k, quiz=60) for k in "abcde"], td_total=5)
+    no_quiz = diploma_figures([_story(k) for k in "abcde"], parcours=list("abcde"))
+    quiz = diploma_figures([_story(k, quiz=60) for k in "abcde"], parcours=list("abcde"))
     assert (no_quiz["final_score"], no_quiz["mention"]) == (50, "reussite")
     assert (quiz["final_score"], quiz["mention"]) == (80, "tres_bien")
 
 
 def test_nothing_solved():
     from diploma_scores import diploma_figures
-    f = diploma_figures([_story("a", solved=False, costs=(5,))], td_total=13)
+    f = diploma_figures([_story("a", solved=False, costs=(5,))], parcours=["a"])
     assert f["final_score"] is None and f["mention"] == "participation" and f["hint_penalty"] == 5
 
 
@@ -338,3 +355,75 @@ def test_zip_reuses_the_stored_diploma(isolated_app):
     with zipfile.ZipFile(io.BytesIO(r.data)) as zf:
         (name,) = zf.namelist()
         assert sig in zf.read(name).decode()
+
+
+# --- parcours catalogue (7) ------------------------------------------------
+
+def test_parcours_parser_reads_only_selected_keys():
+    from parcours import parse_keys
+    text = ("# header\ntotal_challenges: 2\nselected_challenges:\n  # group\n"
+            "  scoreBoardChallenge:\n    name_official: Score Board\n    position: 1\n"
+            "  loginAdminChallenge:  # comment\n    position: 2\nother:\n  notAChallenge:\n")
+    assert parse_keys(text) == ["scoreBoardChallenge", "loginAdminChallenge"]
+
+
+def test_real_overlay_catalogue_is_found():
+    from parcours import parcours_keys
+    keys = parcours_keys()
+    assert len(keys) == 13 and "scoreBoardChallenge" in keys
+
+
+def test_missing_catalogue_raises(tmp_path, monkeypatch):
+    from parcours import ParcoursUnavailable, parcours_keys
+    monkeypatch.setenv("DASHBOARD_PARCOURS_YML", str(tmp_path / "absent.yml"))
+    with pytest.raises(ParcoursUnavailable):
+        parcours_keys()
+
+
+def test_off_parcours_challenges_do_not_count():
+    from diploma_scores import diploma_figures
+    f = diploma_figures([_story("in", quiz=100), _story("off", quiz=100, costs=(50,))],
+                        parcours=["in", "other"])
+    assert (f["td_total"], f["challenges_solved"], f["progress_pct"], f["hints_used"]) == (2, 1, 50, 0)
+
+
+def test_diploma_503_without_catalogue(isolated_app, monkeypatch, tmp_path):
+    _seed_student(isolated_app, token="stud-nocat", solve_count=1)
+    monkeypatch.setenv("DASHBOARD_PARCOURS_YML", str(tmp_path / "absent.yml"))
+    assert isolated_app.get("/admin/diploma/stud-nocat?cohort=" + COHORT, headers=AUTH).status_code == 503
+    assert isolated_app.get("/api/diplomas.zip?cohort=" + COHORT, headers=AUTH).status_code == 503
+
+
+# --- body language (8) -----------------------------------------------------
+
+def test_body_follows_language():
+    fr, en = _body("Alice", COHORT, "fr"), _body("Alice", COHORT, "en")
+    assert "Recipiendaire" in fr and "Recipient" in en and "Recipiendaire" not in en
+    assert "12/13" in fr and "12/13" in en
+
+
+def test_issued_diploma_in_english(isolated_app):
+    _seed_student(isolated_app, token="stud-en", solve_count=1)
+    isolated_app.set_cookie("lang", "en")
+    html = isolated_app.get("/admin/diploma/stud-en?cohort=" + COHORT + "&lang=en", headers=AUTH).get_data(as_text=True)
+    assert "Consolidated results" in html
+
+
+# --- validated students only (9) ------------------------------------------
+
+def test_diploma_refused_for_rejected_student(isolated_app):
+    isolated_app.post("/api/cohorts", headers=AUTH, json={"cohort_id": COHORT, "label": "T"})
+    isolated_app.post("/api/cohort/join", json={"cohort_id": COHORT, "student_token": "stud-rej", "email": "r@e.com"})
+    isolated_app.post("/api/students/stud-rej/reject", headers=AUTH, json={"cohort_id": COHORT, "decided_by": "t"})
+    assert isolated_app.get("/admin/diploma/stud-rej?cohort=" + COHORT, headers=AUTH).status_code == 409
+    assert isolated_app.post("/api/diplomas/stud-rej/reissue?cohort=" + COHORT, headers=AUTH).status_code == 409
+
+
+# --- ZIP names (10) ----------------------------------------------------------
+
+def test_zip_names_are_unique_and_safe():
+    from diploma_routes import _zip_name
+    a = _zip_name("bien", "Jean Dupont", "aaaaaaaa-1111")
+    b = _zip_name("bien", "Jean Dupont", "bbbbbbbb-2222")
+    assert a != b and a.startswith("bien_Jean_Dupont_")
+    assert "/" not in _zip_name("bien", "../../etc/passwd", "t1") and _zip_name("bien", None, "t1") == "bien_t1.md"

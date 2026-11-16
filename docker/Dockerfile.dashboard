@@ -20,6 +20,8 @@ COPY dashboard/requirements.lock.txt /app/requirements.lock.txt
 RUN pip install --no-cache-dir --require-hashes -r requirements.lock.txt
 
 COPY dashboard/ /app/
+# Parcours catalogue : diplomas count only these challenges (dashboard/parcours.py).
+COPY overlay/frontend/src/assets/juicelab/selected_challenges.yml /app/parcours/selected_challenges.yml
 
 # /app/data is the SQLite mount point. docker-compose volumes onto it so
 # the DB survives container restarts.
