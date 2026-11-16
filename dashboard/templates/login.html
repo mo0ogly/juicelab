@@ -3,122 +3,204 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>JuiceLab dashboard - login</title>
+  <title>{{ t('LOGIN_PAGE_TITLE') }}</title>
   {% include "_head_assets.html" %}
+  {# Teacher sign-in page. Split layout: a fixed dark "brand" panel (same ink
+     green in both themes) and a themed form panel driven by dashboard.css
+     tokens. Every visible string comes from the i18n catalog (LOGIN_* keys).
+     The error slot receives an i18n KEY from app.py, never a literal. #}
   <style>
-    body {
-      margin: 0; min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px;
-    }
-    body::after {
-      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background:
-        linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.35) 100%),
-        repeating-linear-gradient(0deg, transparent 0 39px, var(--border) 39px 40px);
-      opacity: 0.18;
-    }
-    .login-card {
-      width: min(440px, 100%); position: relative; z-index: 1;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.02), transparent 40%),
-        var(--bg-elev);
-      color: var(--text);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius);
-      padding: 36px 36px 28px;
-      box-shadow: var(--shadow-pop);
-    }
-    .login-card::before {
-      content: ""; display: block; height: 2px; margin-bottom: 24px;
-      background: linear-gradient(90deg, var(--accent) 0%, var(--rose) 60%, var(--amber) 100%);
-    }
-    .login-mark {
-      font-family: var(--font-mono);
-      font-size: 10.5px; letter-spacing: 0.22em;
-      text-transform: uppercase; color: var(--text-mute);
-      margin: 0 0 14px;
-    }
-    .login-mark::before {
-      content: "//"; color: var(--accent); margin-right: 8px;
-    }
-    .login-card h1 {
-      margin: 0 0 10px;
-      font-family: var(--font-display); font-style: italic;
-      font-weight: 400; font-size: 34px;
-      letter-spacing: -0.02em; color: var(--text); line-height: 1.05;
-    }
-    .login-card p.lead {
-      margin: 0 0 24px; color: var(--text-soft);
-      font-size: 14px; line-height: 1.6;
-    }
-    .login-card label {
-      display: block;
-      font-family: var(--font-mono); font-size: 10.5px;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--text-mute); margin: 18px 0 6px;
-    }
-    .login-card input[type="password"] {
-      width: 100%; box-sizing: border-box;
-      padding: 12px 14px;
-      font-family: var(--font-mono); font-size: 14px;
-      letter-spacing: 0.04em;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-strong);
+    body.login-page {
+      margin: 0; padding: 0; min-height: 100vh;
+      display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
       background: var(--bg); color: var(--text);
+    }
+
+    /* ---- Brand panel (theme-independent) ---- */
+    .login-brand {
+      --ink: #0c1712; --ink-line: rgba(232,240,234,0.07);
+      --ink-text: #eef4ef; --ink-soft: #b3c2b9; --ink-mute: #8a9c91;
+      --ink-accent: #7df9b8;
+      position: relative; overflow: hidden; isolation: isolate;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: clamp(28px, 4.2vw, 64px);
+      background: var(--ink); color: var(--ink-text);
+    }
+    .login-brand::before {
+      content: ""; position: absolute; inset: 0; z-index: -1;
+      background:
+        radial-gradient(60% 50% at 12% 8%, rgba(125,249,184,0.16), transparent 70%),
+        radial-gradient(55% 45% at 95% 100%, rgba(198,61,111,0.14), transparent 70%),
+        repeating-linear-gradient(0deg, transparent 0 47px, var(--ink-line) 47px 48px),
+        repeating-linear-gradient(90deg, transparent 0 47px, var(--ink-line) 47px 48px);
+    }
+    .login-wordmark {
+      display: inline-flex; align-items: baseline; gap: 12px; margin: 0;
+      font-family: var(--font-display); font-style: italic; font-weight: 500;
+      font-size: 24px; letter-spacing: -0.01em;
+    }
+    .login-wordmark span {
+      font-family: var(--font-mono); font-style: normal; font-weight: 400;
+      font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--ink-mute);
+      padding-left: 12px; border-left: 1px solid rgba(232,240,234,0.22);
+    }
+    .login-pitch { max-width: 30rem; }
+    .login-eyebrow {
+      margin: 0 0 20px;
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-accent);
+    }
+    .login-headline {
+      margin: 0 0 40px;
+      font-family: var(--font-display); font-style: italic; font-weight: 300;
+      font-size: clamp(34px, 3.9vw, 58px); line-height: 1.04;
+      letter-spacing: -0.025em; text-wrap: balance;
+    }
+    .login-features { list-style: none; margin: 0; padding: 0; }
+    .login-features li {
+      display: grid; grid-template-columns: 44px 1fr; align-items: baseline;
+      padding: 15px 0; border-top: 1px solid rgba(232,240,234,0.13);
+    }
+    .login-features li:last-child { border-bottom: 1px solid rgba(232,240,234,0.13); }
+    .login-features .num {
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.1em; color: var(--ink-accent);
+    }
+    .login-features strong {
+      display: block; font-weight: 500; font-size: 15px; letter-spacing: -0.005em;
+    }
+    .login-features small {
+      display: block; margin-top: 3px;
+      font-size: 13px; line-height: 1.5; color: var(--ink-soft);
+    }
+    .login-foot {
+      margin: 0; font-family: var(--font-mono); font-size: 10.5px;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute);
+    }
+
+    /* ---- Form panel (themed) ---- */
+    .login-panel {
+      display: flex; flex-direction: column;
+      padding: clamp(24px, 3.4vw, 44px);
+    }
+    .login-tools { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+    .login-form {
+      width: min(400px, 100%); margin: auto;
+      padding: 40px 0;
+    }
+    .login-form h1 {
+      margin: 0 0 12px;
+      font-family: var(--font-display); font-weight: 400;
+      font-size: 38px; line-height: 1.08; letter-spacing: -0.025em;
+    }
+    .login-form .lead {
+      margin: 0 0 32px; color: var(--text-soft);
+      font-size: 15px; line-height: 1.6;
+    }
+    .login-form label {
+      display: block; margin: 0 0 8px;
+      font-size: 13px; font-weight: 500; color: var(--text);
+    }
+    .login-form input[type="password"] {
+      width: 100%; padding: 14px 16px;
+      font-family: var(--font-mono); font-size: 15px; letter-spacing: 0.06em;
+      color: var(--text); background: var(--bg-elev);
+      border: 1px solid var(--border-strong); border-radius: var(--radius);
       transition: border-color 160ms ease, box-shadow 160ms ease;
     }
-    .login-card input[type="password"]:focus-visible {
-      outline: none; border-color: var(--accent);
-      box-shadow: var(--shadow-focus);
+    .login-form input[type="password"]:focus-visible {
+      outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus);
     }
-    .login-card button {
-      width: 100%; margin-top: 24px;
-      padding: 12px 16px;
-      border-radius: var(--radius-sm); border: 1px solid var(--accent);
-      font-family: var(--font-body); font-weight: 600;
-      font-size: 13px; letter-spacing: 0.04em;
-      text-transform: uppercase; cursor: pointer;
-      background: var(--accent); color: var(--bg);
-      transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    .login-form input[aria-invalid="true"] { border-color: var(--danger); }
+    .login-hint {
+      margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text-mute);
     }
-    .login-card button:hover {
-      background: var(--accent-deep); transform: translateY(-1px);
-      box-shadow: 0 6px 16px var(--accent-glow);
-    }
-    .login-card button:focus-visible {
-      outline: none; box-shadow: var(--shadow-focus);
+    .login-hint code {
+      font-family: var(--font-mono); font-size: 11.5px;
+      padding: 1px 5px; border-radius: 3px;
+      background: var(--bg-soft); color: var(--text-soft);
     }
     .login-error {
-      margin-top: 18px; padding: 10px 14px;
-      background: var(--danger-soft); color: var(--danger);
-      border: 1px solid var(--danger); border-radius: var(--radius-sm);
-      font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.02em;
+      display: flex; gap: 10px; align-items: baseline;
+      margin: 0 0 24px; padding: 12px 14px;
+      font-size: 13.5px; line-height: 1.45;
+      color: var(--danger); background: var(--danger-soft);
+      border-left: 3px solid var(--danger);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     }
+    .login-submit {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%; margin-top: 28px; padding: 15px 18px;
+      font-family: var(--font-body); font-size: 15px; font-weight: 500;
+      color: var(--bg); background: var(--accent);
+      border: 1px solid var(--accent); border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+    .login-submit .arrow { font-family: var(--font-mono); transition: transform 180ms ease; }
+    .login-submit:hover {
+      background: var(--accent-deep); border-color: var(--accent-deep);
+      box-shadow: 0 8px 22px var(--accent-glow);
+    }
+    .login-submit:hover .arrow { transform: translateX(4px); }
+    .login-submit:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
     .login-meta {
-      margin-top: 24px; padding-top: 16px;
-      border-top: 1px solid var(--border);
-      font-family: var(--font-mono);
-      font-size: 10.5px; letter-spacing: 0.08em;
-      text-transform: uppercase; color: var(--text-mute);
+      margin: 28px 0 0; padding-top: 18px; border-top: 1px solid var(--border);
+      font-size: 12.5px; line-height: 1.55; color: var(--text-mute);
     }
-    .login-lang { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+
+    /* ---- Entrance (one orchestrated reveal, motion-safe only) ---- */
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal { opacity: 0; transform: translateY(10px); animation: login-in 620ms cubic-bezier(.2,.7,.2,1) forwards; }
+      .reveal.d1 { animation-delay: 70ms; }  .reveal.d2 { animation-delay: 150ms; }
+      .reveal.d3 { animation-delay: 240ms; } .reveal.d4 { animation-delay: 330ms; }
+      @keyframes login-in { to { opacity: 1; transform: none; } }
+    }
+
+    /* ---- Narrow screens: brand panel becomes a compact header ---- */
+    @media (max-width: 880px) {
+      body.login-page { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .login-brand { padding: 24px; gap: 28px; }
+      .login-headline { font-size: 30px; margin-bottom: 0; }
+      .login-features, .login-foot { display: none; }
+      .login-form { padding: 28px 0; }
+    }
   </style>
 </head>
-<body>
-  <form class="login-card" method="post" action="/login">
-    <div class="login-lang">{% include "_lang_switch.html" %}</div>
-    <p class="login-mark">JuiceLab dashboard</p>
-    <h1>{{ t('LOGIN_TITLE') }}</h1>
-    <p class="lead">{{ t('LOGIN_LEAD') }}</p>
-    {% if error %}
-      <div class="login-error">{{ error }}</div>
-    {% endif %}
-    <label for="token">{{ t('LOGIN_TOKEN_LABEL') }}</label>
-    <input id="token" name="token" type="password" autocomplete="off" autofocus required>
-    <input type="hidden" name="next" value="{{ next }}">
-    <button type="submit">{{ t('LOGIN_SUBMIT') }}</button>
-    <div class="login-meta">{{ t('LOGIN_META') }}</div>
-  </form>
+<body class="login-page">
+  <aside class="login-brand">
+    <p class="login-wordmark reveal">{{ t('LOGIN_BRAND') }} <span>{{ t('LOGIN_BRAND_TAG') }}</span></p>
+    <div class="login-pitch">
+      <p class="login-eyebrow reveal d1">{{ t('LOGIN_EYEBROW') }}</p>
+      <p class="login-headline reveal d2">{{ t('LOGIN_HEADLINE') }}</p>
+      <ul class="login-features reveal d3">
+        <li><span class="num" aria-hidden="true">01</span><span><strong>{{ t('LOGIN_FEAT_LIVE_TITLE') }}</strong><small>{{ t('LOGIN_FEAT_LIVE_BODY') }}</small></span></li>
+        <li><span class="num" aria-hidden="true">02</span><span><strong>{{ t('LOGIN_FEAT_PROOF_TITLE') }}</strong><small>{{ t('LOGIN_FEAT_PROOF_BODY') }}</small></span></li>
+        <li><span class="num" aria-hidden="true">03</span><span><strong>{{ t('LOGIN_FEAT_REPORT_TITLE') }}</strong><small>{{ t('LOGIN_FEAT_REPORT_BODY') }}</small></span></li>
+      </ul>
+    </div>
+    <p class="login-foot reveal d4">{{ t('LOGIN_FOOT') }}</p>
+  </aside>
+
+  <main class="login-panel">
+    <div class="login-tools">{% include "_lang_switch.html" %}</div>
+    <form class="login-form" method="post" action="/login">
+      <h1 class="reveal d1">{{ t('LOGIN_TITLE') }}</h1>
+      <p class="lead reveal d2">{{ t('LOGIN_LEAD') }}</p>
+      {% if error %}
+        <p class="login-error" id="login-error" role="alert">{{ t(error) }}</p>
+      {% endif %}
+      <div class="reveal d3">
+        <label for="token">{{ t('LOGIN_TOKEN_LABEL') }}</label>
+        <input id="token" name="token" type="password" autocomplete="off" autofocus required
+               aria-describedby="token-hint{% if error %} login-error{% endif %}"{% if error %} aria-invalid="true"{% endif %}>
+        <p class="login-hint" id="token-hint">{{ t('LOGIN_TOKEN_HINT') }} <code>DASHBOARD_TEACHER_TOKEN</code></p>
+        <input type="hidden" name="next" value="{{ next }}">
+        <button class="login-submit" type="submit"><span>{{ t('LOGIN_SUBMIT') }}</span><span class="arrow" aria-hidden="true">-&gt;</span></button>
+      </div>
+      <p class="login-meta reveal d4">{{ t('LOGIN_META') }}</p>
+    </form>
+  </main>
 </body>
 </html>

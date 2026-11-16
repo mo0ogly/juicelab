@@ -334,7 +334,7 @@ docker compose --env-file .env logs -f dashboard
 ### 9.1 Log in to the dashboard (teacher)
 
 1. Open `http://<YOUR_IP>:<PORT>/login` (locally: `http://127.0.0.1:5050/login`).
-2. Paste the `DASHBOARD_TEACHER_TOKEN` (printed by the installer, or `grep DASHBOARD_TEACHER_TOKEN docker/.env`).
+2. In the "Teacher access token" field, paste the `DASHBOARD_TEACHER_TOKEN` (printed by the installer, or `grep DASHBOARD_TEACHER_TOKEN docker/.env`).
 3. The token is stored in an `HttpOnly` cookie; `/logout` removes it.
 
 ![Teacher login page](img/prof-login.png)

@@ -667,7 +667,7 @@ def create_app() -> Flask:
         if not hmac.compare_digest(provided, expected):
             log_event("login_fail", source="form")
             return Response(
-                render_template("login.html", next=nxt, error="Token incorrect."),
+                render_template("login.html", next=nxt, error="LOGIN_ERROR_BAD_TOKEN"),
                 status=401,
                 content_type="text/html; charset=utf-8",
             )

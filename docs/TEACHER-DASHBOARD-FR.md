@@ -356,7 +356,7 @@ docker compose --env-file .env logs -f dashboard
 ### 9.1 Se connecter au dashboard (prof)
 
 1. Ouvre `http://<TON_IP>:<PORT>/login` (en local : `http://127.0.0.1:5050/login`).
-2. Colle le `DASHBOARD_TEACHER_TOKEN` (affiché par l'installeur, ou `grep DASHBOARD_TEACHER_TOKEN docker/.env`).
+2. Dans le champ « Jeton d'accès enseignant », colle le `DASHBOARD_TEACHER_TOKEN` (affiché par l'installeur, ou `grep DASHBOARD_TEACHER_TOKEN docker/.env`).
 3. Le token est stocké dans un cookie `HttpOnly` ; `/logout` le supprime.
 
 ![Page de login enseignant](img/prof-login.png)
