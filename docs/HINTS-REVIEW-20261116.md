@@ -81,6 +81,11 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   via Image URL + sanitizeLegacy), payloads tires du test cypress officiel.
   reflectedXss/usernameXss : disabledEnv Docker signale. Effets de bord :
   un compte a email-payload cree, produit 3 modifie puis restaure.
+  Lot 8 (Sensitive Data Exposure / fichiers oublies) : les 5 packs deja
+  corrects, 4 rejoues live (directoryListing, forgottenDev/Backup via
+  null-byte, passwordHashLeak via cookie), exposedCredentials code-confirme.
+  Seule correction : renvoi FR faux dans forgottenBackup. Note mecanisme :
+  whoami lit le token dans le COOKIE, pas le header Bearer.
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -92,9 +97,9 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 |---|---|---|---|---|
 | scoreBoardChallenge | Miscellaneous | 1 | TODO |  |
 | privacyPolicyChallenge | Miscellaneous | 1 | DONE (lot 2) | N3-N5 : validation = image 81px.png (verify.ts:67), pas un appel API ; libelles de menu verifies |
-| directoryListingChallenge | Sensitive Data Exposure | 1 | TODO |  |
-| exposedCredentialsChallenge | Sensitive Data Exposure | 2 | TODO |  |
-| passwordHashLeakChallenge | Sensitive Data Exposure | 2 | TODO |  |
+| directoryListingChallenge | Sensitive Data Exposure | 1 | DONE (lot 8) | correct (non modifie) ; /ftp/acquisitions.md verifie live (solve) |
+| exposedCredentialsChallenge | Sensitive Data Exposure | 2 | DONE (lot 8) | correct (non modifie) ; testing@juice-sh.op / IamUsedForTesting (login.ts:66) |
+| passwordHashLeakChallenge | Sensitive Data Exposure | 2 | DONE (lot 8) | correct (non modifie) ; /rest/user/whoami?fields=password via COOKIE verifie live (currentUser.ts:52) |
 | closeNotificationsChallenge | Miscellaneous | 1 | TODO |  |
 | errorHandlingChallenge | Security Misconfiguration | 1 | TODO |  |
 | exposedMetricsChallenge | Observability Failures | 1 | TODO |  |
@@ -146,8 +151,8 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | easterEggLevelOneChallenge | Broken Access Control | 4 | TODO |  |
 | easterEggLevelTwoChallenge | Cryptographic Issues | 4 | TODO |  |
 | ephemeralAccountantChallenge | Injection | 4 | TODO |  |
-| forgottenBackupChallenge | Sensitive Data Exposure | 4 | TODO |  |
-| forgottenDevBackupChallenge | Sensitive Data Exposure | 4 | TODO |  |
+| forgottenBackupChallenge | Sensitive Data Exposure | 4 | DONE (lot 8) | correct ; null-byte coupons_2013.md.bak%2500.md verifie live ; FR corrige (renvoi manipulateClock -> forgedCoupon, EN etait deja bon) |
+| forgottenDevBackupChallenge | Sensitive Data Exposure | 4 | DONE (lot 8) | correct (non modifie) ; null-byte /ftp/package.json.bak%2500.md verifie live |
 | hiddenImageChallenge | Security through Obscurity | 4 | DONE (lot 2) | N1-N5 : faux hint OWASP cite, reponse donnee des N3, image inventee ; chaine pickle rick verifiee (verify.ts:287) ; image porteuse 5.png deduite, extraction non reussie |
 | httpHeaderXssChallenge | XSS | 4 | DONE (lot 7) | correct (non modifie) ; header True-Client-IP = payload exact (saveLoginIp.ts:23) |
 | knownVulnerableComponentChallenge | Vulnerable Components | 4 | TODO |  |

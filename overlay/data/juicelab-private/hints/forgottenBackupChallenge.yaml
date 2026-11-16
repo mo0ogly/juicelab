@@ -69,8 +69,8 @@ hints:
       Tape l'URL dans la barre d'adresse. Le contenu apparait,
       le challenge se valide automatiquement quand le serveur
       detecte le pattern null-byte sur ce fichier specifique.
-      Note : les codes promo trouves peuvent etre utilises dans
-      d'autres challenges (notamment manipulateClockChallenge
+      Note : les codes promo trouves alimentent un autre challenge
+      (forgedCouponChallenge, derivation de coupon)
       / Expired Coupon ou similaires) — c'est un PREREQUIS
       potentiel.
     text_en: |
@@ -78,7 +78,7 @@ hints:
       challenge auto-solves when server detects null-byte
       pattern on this specific file. Note: found promo codes
       can be used in other challenges (notably
-      manipulateClockChallenge / Expired Coupon or similar) —
+      forgedCouponChallenge) —
       potential PREREQUISITE.
     pedagogical_intent: |
       Confirm the workflow + signal downstream usage.
