@@ -385,6 +385,25 @@ clair/sombre dans la topbar.
 
 ---
 
+### 9.3 Panneau Alertes
+
+Sur `/dashboard`, le panneau **Alertes** liste les alertes non acquittées de la
+cohorte : Bloqué, Calé, Script suspect, Inactif.
+
+- **Une ligne par situation** : les alertes identiques (même élève, même type,
+  même challenge) sont regroupées. Le compteur `×N` indique combien d'alertes
+  la ligne regroupe, « depuis le … » la date de la première.
+- **OK** acquitte toute la ligne en une fois (`POST /api/alerts/<id>/ack-group`).
+  En cas d'échec, la ligne reste et un message s'affiche.
+- **Pas de répétition** : tant qu'une alerte n'est pas acquittée, la même
+  situation n'en crée pas de nouvelle. Une fois acquittée, elle peut être
+  relevée à nouveau après 60 minutes si la situation dure encore.
+- L'élève est affiché par son nom du roster, sinon par le début de son token.
+
+> Bases antérieures au 16/11/2026 : le moniteur recréait la même alerte chaque
+> heure. Ces doublons restent en base ; le panneau les regroupe et un clic sur
+> **OK** les acquitte tous.
+
 ## 10. Gestion cohorte — workflow type
 
 ### Créer une cohorte

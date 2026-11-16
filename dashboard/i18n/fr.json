@@ -304,6 +304,11 @@
   "ALERT_KIND_IDLE": "Inactif",
   "ALERT_ACK_BUTTON": "OK",
   "ALERT_EMPTY": "Aucune alerte active",
+  "ALERT_SINCE": "depuis le {date}",
+  "ALERT_REPEAT_TITLE": "{n} alertes identiques regroupees",
+  "ALERT_ACK_ARIA": "Acquitter cette alerte",
+  "ALERT_ACK_FAILED": "Acquittement impossible. Reessaie.",
+  "ALERT_LOAD_FAILED": "Alertes indisponibles : chargement en echec.",
 
   "TAG_NONE": "(aucun)",
   "TAG_A_VOIR": "A voir",

@@ -1,6 +1,7 @@
-{# Loaded by dashboard.html. Shows recent unack alerts; populated via SSE `alert` event. #}
+{# Loaded by dashboard.html. Unacked alerts, one row per group of identical alerts.
+   Filled and updated by static/dashboard-alerts.js (boot fetch + SSE `alert` event). #}
 <aside class="alerts-panel" id="alerts-panel" aria-label="{{ t('ALERT_TITLE') }}">
-  <h3 class="alerts-title">{{ t('ALERT_TITLE') }}</h3>
+  <h3 class="alerts-title">{{ t('ALERT_TITLE') }} <span class="alerts-count" id="alerts-count" aria-live="polite"></span></h3>
   <ul id="alerts-list" class="alerts-list">
     <li class="alerts-empty" id="alerts-empty">{{ t('ALERT_EMPTY') }}</li>
   </ul>

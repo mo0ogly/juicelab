@@ -168,8 +168,19 @@ def _list_cohorts(db_mod) -> list[str]:
 
 
 def _is_duplicate(db_mod, alert: dict, dedupe_minutes: int = 60) -> bool:
-    """True if a matching alert (cohort, token, kind, challenge_key) was
-    inserted within the last `dedupe_minutes`. challenge_key may be None."""
+    """True if `alert` must not be inserted again.
+
+    A matching alert has the same (cohort_id, student_token, kind,
+    challenge_key); challenge_key may be None. It is a duplicate when either:
+    - a matching alert is still unacknowledged, whatever its age: it already
+      stands for the condition, so a persistent state (idle for weeks, blocked
+      for good) yields one alert, not one per window;
+    - a matching alert, acknowledged or not, was inserted within the last
+      `dedupe_minutes`, so an acknowledged alert is not raised again at once.
+
+    Limit: once acknowledged and past the window, a condition that still
+    holds is raised again. Read-only; raises sqlite3.Error on DB failure.
+    """
     now = datetime.now(timezone.utc)
     cutoff = (now - timedelta(minutes=dedupe_minutes)).isoformat()
     challenge = alert.get("challenge_key")
@@ -177,13 +188,13 @@ def _is_duplicate(db_mod, alert: dict, dedupe_minutes: int = 60) -> bool:
         if challenge is None:
             row = conn.execute(
                 "SELECT 1 FROM alerts WHERE cohort_id=? AND student_token=? AND kind=? "
-                "AND challenge_key IS NULL AND created_at > ? LIMIT 1",
+                "AND challenge_key IS NULL AND (ack_at IS NULL OR created_at > ?) LIMIT 1",
                 (alert["cohort_id"], alert["student_token"], alert["kind"], cutoff),
             ).fetchone()
         else:
             row = conn.execute(
                 "SELECT 1 FROM alerts WHERE cohort_id=? AND student_token=? AND kind=? "
-                "AND challenge_key=? AND created_at > ? LIMIT 1",
+                "AND challenge_key=? AND (ack_at IS NULL OR created_at > ?) LIMIT 1",
                 (alert["cohort_id"], alert["student_token"], alert["kind"], challenge, cutoff),
             ).fetchone()
     return row is not None

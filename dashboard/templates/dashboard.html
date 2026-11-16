@@ -289,6 +289,7 @@
 {% include "_drilldown_modal.html" %}
 <script src="{{ url_for('static', filename='dashboard-keyboard.js') }}" nonce="{{ csp_nonce }}"></script>
 <script src="{{ url_for('static', filename='dashboard-drilldown.js') }}" nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', filename='dashboard-alerts.js') }}" nonce="{{ csp_nonce }}"></script>
 <script nonce="{{ csp_nonce }}">
   (function () {
     const COHORT = {{ summary.cohort_id | tojson }};
@@ -563,77 +564,13 @@
     bindNameEdits();
     bindTagSelects();
     bindNoteButtons();
-    // --- Phase 2 Task 4 : live alerts panel ---
-    function alertKindOf(a) {
-      // SSE payload exposes `alert_kind`; REST /api/alerts returns `kind`.
-      return (a.alert_kind || a.kind || '').toString();
-    }
-
-    function alertItemHtml(a) {
-      const kind = alertKindOf(a);
-      const kindKey = 'ALERT_KIND_' + kind.toUpperCase();
-      const labelRaw = T(kindKey);
-      const kindLabel = (labelRaw && labelRaw !== kindKey) ? labelRaw : kind;
-      const token = (a.student_token || '').toString();
-      const tokenShort = token.substring(0, 8);
-      const challenge = a.challenge_key ? ' &middot; ' + escapeHtml(a.challenge_key) : '';
-      return '<li class="alert-item alert-kind-' + escapeHtml(kind) + '" data-alert-id="' + a.id + '">'
-        + '<span class="alert-kind">' + escapeHtml(kindLabel) + '</span>'
-        + '<span class="alert-student">' + escapeHtml(tokenShort) + '&hellip;</span>'
-        + challenge
-        + '<button class="alert-ack-btn" data-alert-id="' + a.id + '" type="button">' + escapeHtml(T('ALERT_ACK_BUTTON')) + '</button>'
-        + '</li>';
-    }
-
-    function renderAlerts(alerts) {
-      const list = document.getElementById('alerts-list');
-      if (!list) return;
-      if (!alerts || alerts.length === 0) {
-        list.innerHTML = '<li class="alerts-empty" id="alerts-empty">' + escapeHtml(T('ALERT_EMPTY')) + '</li>';
-        return;
-      }
-      list.innerHTML = alerts.map(alertItemHtml).join('');
-      bindAckButtons();
-    }
-
-    function prependAlert(a) {
-      const list = document.getElementById('alerts-list');
-      if (!list) return;
-      const empty = document.getElementById('alerts-empty');
-      if (empty) empty.remove();
-      const wrap = document.createElement('div');
-      wrap.innerHTML = alertItemHtml(a);
-      const node = wrap.firstChild;
-      if (node) list.insertBefore(node, list.firstChild);
-      bindAckButtons();
-    }
-
-    function bindAckButtons() {
-      document.querySelectorAll('.alert-ack-btn').forEach(btn => {
-        if (btn.dataset.bound) return;
-        btn.dataset.bound = '1';
-        btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-alert-id');
-          fetch('/api/alerts/' + encodeURIComponent(id) + '/ack', {
-            method: 'POST', credentials: 'include',
-            headers: csrfHeaders(),
-          }).then(r => r.json()).then(() => {
-            const item = btn.closest('.alert-item');
-            if (item) item.remove();
-            const list = document.getElementById('alerts-list');
-            if (list && list.querySelectorAll('.alert-item').length === 0) {
-              list.innerHTML = '<li class="alerts-empty" id="alerts-empty">' + escapeHtml(T('ALERT_EMPTY')) + '</li>';
-            }
-          }).catch(() => {/* network error: leave row in place so teacher can retry */});
-        });
-      });
-    }
-
-    // Boot : fetch existing unack alerts for the active cohort.
-    fetch('/api/alerts?cohort=' + encodeURIComponent(COHORT) + '&unack=true', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : { alerts: [] })
-      .then(d => renderAlerts(d.alerts || []))
-      .catch(() => { /* silent : panel stays empty until next SSE alert event */ });
+    // --- Live alerts panel : rendering lives in static/dashboard-alerts.js ---
+    const alertsPanel = window.JuicelabAlerts.create({ escapeHtml: escapeHtml, csrfHeaders: csrfHeaders, onError: showToast });
+    // Boot : unacked alerts of the active cohort, grouped server-side.
+    fetch('/api/alerts?cohort=' + encodeURIComponent(COHORT) + '&unack=true&group=true', { credentials: 'include' })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(d => { if (alertsPanel) alertsPanel.render(d.alerts || []); })
+      .catch(() => { if (alertsPanel) alertsPanel.loadFailed(); });
 
     // Live updates via Server-Sent Events. The browser handles reconnect
     // automatically; on error we surface a disconnect badge but keep
@@ -650,7 +587,7 @@
     es.addEventListener('alert', (e) => {
       try {
         const a = JSON.parse(e.data);
-        prependAlert(a);
+        if (alertsPanel) alertsPanel.add(a);
       } catch (_) { /* ignore parse */ }
     });
     es.addEventListener('notification', (e) => {

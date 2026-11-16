@@ -362,6 +362,25 @@ Light/dark toggle in the topbar.
 
 ---
 
+### 9.3 Alerts panel
+
+On `/dashboard`, the **Alerts** panel lists the cohort's unacknowledged alerts:
+Blocked, Stuck, Suspected script, Idle.
+
+- **One row per situation**: identical alerts (same student, same kind, same
+  challenge) are grouped. The `×N` counter tells how many alerts the row
+  groups, "since …" the date of the first one.
+- **OK** acknowledges the whole row at once (`POST /api/alerts/<id>/ack-group`).
+  On failure the row stays and a message is shown.
+- **No repetition**: while an alert is unacknowledged, the same situation does
+  not create another one. Once acknowledged, it can be raised again after
+  60 minutes if the situation still holds.
+- The student is shown by roster name, otherwise by the start of the token.
+
+> Databases older than 2026-11-16: the monitor re-created the same alert every
+> hour. Those duplicates remain in the database; the panel groups them and one
+> click on **OK** acknowledges them all.
+
 ## 10. Cohort management — typical workflow
 
 ### Create a cohort

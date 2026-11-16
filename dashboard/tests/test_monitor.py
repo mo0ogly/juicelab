@@ -128,3 +128,49 @@ def test_scheduler_dedupes_within_window(db_mod, monkeypatch):
         ).fetchone()
     # Should be 1 (deduped), not 3+
     assert row[0] == 1
+
+
+# --- Regression : persistent condition must not re-fire every dedupe window ---
+# Observed 2026-11-16 on a real DB : 285 identical unacked alerts per condition,
+# one per hour since May, because dedup only looked at the creation window.
+
+def _insert_alert_aged(db_mod, minutes_ago, ack=False):
+    ts = (datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)).isoformat()
+    with db_mod.get_connection() as conn:
+        new_id = db_mod.insert_alert(conn, "c1", "tok-old", "idle", None, ts)
+        if ack:
+            db_mod.ack_alert(conn, new_id, ts)
+        conn.commit()
+    return new_id
+
+
+ALERT_IDLE = {"cohort_id": "c1", "student_token": "tok-old", "kind": "idle", "challenge_key": None}
+
+
+def test_recent_alert_is_duplicate_control(db_mod):
+    """Control : inside the window the alert is a duplicate (already true before the fix)."""
+    import monitor
+    _insert_alert_aged(db_mod, minutes_ago=5)
+    assert monitor._is_duplicate(db_mod, ALERT_IDLE) is True
+
+
+def test_old_unacked_alert_is_still_duplicate(db_mod):
+    """An unacked alert older than the window still stands for the condition."""
+    import monitor
+    _insert_alert_aged(db_mod, minutes_ago=180)
+    assert monitor._is_duplicate(db_mod, ALERT_IDLE) is True
+
+
+def test_old_acked_alert_allows_new_one(db_mod):
+    """Once acked and out of the window, the condition may be raised again."""
+    import monitor
+    _insert_alert_aged(db_mod, minutes_ago=180, ack=True)
+    assert monitor._is_duplicate(db_mod, ALERT_IDLE) is False
+
+
+def test_old_unacked_alert_other_challenge_is_not_duplicate(db_mod):
+    """The unacked rule is keyed on challenge too : a different key is a new alert."""
+    import monitor
+    _insert_alert_aged(db_mod, minutes_ago=180)
+    other = dict(ALERT_IDLE, kind="stuck", challenge_key="xss")
+    assert monitor._is_duplicate(db_mod, other) is False

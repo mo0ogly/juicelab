@@ -304,6 +304,11 @@
   "ALERT_KIND_IDLE": "Idle",
   "ALERT_ACK_BUTTON": "OK",
   "ALERT_EMPTY": "No active alert",
+  "ALERT_SINCE": "since {date}",
+  "ALERT_REPEAT_TITLE": "{n} identical alerts grouped",
+  "ALERT_ACK_ARIA": "Acknowledge this alert",
+  "ALERT_ACK_FAILED": "Could not acknowledge. Try again.",
+  "ALERT_LOAD_FAILED": "Alerts unavailable: loading failed.",
 
   "TAG_NONE": "(none)",
   "TAG_A_VOIR": "To check",

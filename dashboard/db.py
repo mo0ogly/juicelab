@@ -665,6 +665,21 @@ def recent_alerts(conn: sqlite3.Connection, cohort_id: str, limit: int = 100) ->
     ).fetchall()
 
 
+def unacked_alert_groups(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]:
+    """Unacknowledged alerts of `cohort_id`, one row per (student_token, kind,
+    challenge_key), most recently raised group first. Columns: id (latest
+    alert of the group, usable with ack_alert_group), student_token, kind,
+    challenge_key, n (alerts in the group), first_at, last_at."""
+    conn.row_factory = sqlite3.Row
+    return conn.execute(
+        "SELECT MAX(id) AS id, student_token, kind, challenge_key, COUNT(*) AS n, "
+        "MIN(created_at) AS first_at, MAX(created_at) AS last_at "
+        "FROM alerts WHERE cohort_id=? AND ack_at IS NULL "
+        "GROUP BY student_token, kind, challenge_key ORDER BY MAX(id) DESC",
+        (cohort_id,),
+    ).fetchall()
+
+
 def ack_alert(conn: sqlite3.Connection, alert_id: int, now: str) -> int:
     """Stamp ack_at on a single alert if not already acked. Returns rowcount
     (0 if alert missing or already acked, 1 on success). Caller commits."""
@@ -673,3 +688,35 @@ def ack_alert(conn: sqlite3.Connection, alert_id: int, now: str) -> int:
         (now, alert_id),
     )
     return cur.rowcount
+
+
+def ack_alert_group(conn: sqlite3.Connection, alert_id: int, now: str) -> int | None:
+    """Stamp ack_at on every unacked alert sharing (cohort_id, student_token,
+    kind, challenge_key) with alert `alert_id`, that alert included.
+
+    Returns the number of rows acknowledged (0 when the whole group was
+    already acked), or None when `alert_id` does not exist. `IS` compares
+    challenge_key so a NULL key matches NULL. Caller commits."""
+    ref = conn.execute(
+        "SELECT cohort_id, student_token, kind, challenge_key FROM alerts WHERE id=?",
+        (alert_id,),
+    ).fetchone()
+    if ref is None:
+        return None
+    cur = conn.execute(
+        "UPDATE alerts SET ack_at=? WHERE cohort_id=? AND student_token=? AND kind=? "
+        "AND challenge_key IS ? AND ack_at IS NULL",
+        (now, ref[0], ref[1], ref[2], ref[3]),
+    )
+    return cur.rowcount
+
+
+def student_display_names(conn: sqlite3.Connection, cohort_id: str) -> dict[str, str]:
+    """Map student_token -> display_name for the students of `cohort_id` that
+    have a non-empty name. Tokens without a roster row or a name are absent."""
+    rows = conn.execute(
+        "SELECT student_token, display_name FROM students "
+        "WHERE cohort_id=? AND display_name IS NOT NULL AND display_name != ''",
+        (cohort_id,),
+    ).fetchall()
+    return {r[0]: r[1] for r in rows}
