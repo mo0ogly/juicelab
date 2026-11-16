@@ -56,7 +56,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) DevTools > Network > scroll
+      Workflow : (1) DevTools > Network > scroll
       le shop -> liste des images. (2) Inspect chaque image (Right-click
       > Save) ou direct grep nom dans le HTML/bundle. (3) Trouve une image
       type "/assets/public/images/products/holographic_squiddy.jpg" ou
@@ -67,7 +67,7 @@ hints:
       strip metadata. (c) Steg test reguliere (zsteg). Source :
       verify.ts:284-289 + config challenges.hiddenImageChallengePassword.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) DevTools > Network > scroll
+      Workflow: (1) DevTools > Network > scroll
       shop -> image list. (2) Inspect each image (Right-click > Save) or
       direct grep name in HTML/bundle. (3) Find image like
       "/assets/public/images/products/holographic_squiddy.jpg" or similar.

@@ -69,7 +69,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      Source serveur verifiee
       (routes/dataErasure.ts:68-82) : (a) le
       `layout` parametre body est passe a
       `path.resolve()` puis check `isForbiddenFile`
@@ -84,7 +84,7 @@ hints:
       ABSOLUTE paths comme `/etc/passwd` (Linux) ou
       `C:/Windows/win.ini` (Windows).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Verified server
+      Verified server
       source (routes/dataErasure.ts:68-82): (a)
       `layout` body parameter passed to
       `path.resolve()` then `isForbiddenFile` check
@@ -104,7 +104,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Login Juice Shop (need authenticated user
          pour /dataerasure).
       2. Construire le POST body :
@@ -152,7 +152,7 @@ hints:
       templateInternal }, (d) audit endpoints
       forgotten (less-trafficked = less-tested).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Login Juice Shop (need authenticated user
          for /dataerasure).
       2. Build POST body:

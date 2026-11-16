@@ -105,6 +105,7 @@ hints:
       Source officielle : codefixes/restfulXssChallenge.info.yml
       fix #1 (correct) explique le bug racine : access control
       manquant.
+      Defense : (1) restreindre PUT/PATCH /api/Products au role admin authentifie uniquement (codefixes fix #1 — access control manquant). (2) Sanitiser les descriptions de produits avec DOMPurify avant rendu. (3) Appliquer une CSP stricte bloquant les iframes et les URI javascript:.
     text_en: |
       Complete workflow:
       1. Login to get a JWT (curl POST /rest/user/login).
@@ -118,5 +119,6 @@ hints:
       Official source: codefixes/restfulXssChallenge.info.yml
       fix #1 (correct) explains the root: missing access
       control.
+      Defense: (1) restrict PUT/PATCH /api/Products to admin-authenticated role only (codefixes fix #1 — missing access control). (2) Sanitize product descriptions via DOMPurify before rendering. (3) Apply strict CSP blocking inline iframes and javascript: URIs.
     pedagogical_intent: |
       Quasi-solution : full 4-step workflow with source citation.

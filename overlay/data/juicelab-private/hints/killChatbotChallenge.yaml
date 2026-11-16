@@ -76,7 +76,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Construction du
+      Construction du
       payload : un username qui contient un
       template literal qui throw une exception
       irrecoverable. Examples :
@@ -90,7 +90,7 @@ hints:
       127) : solveIf declenche dans le 2eme catch
       (recovery testCommand failure).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Payload
+      Payload
       construction: a username containing a
       template literal throwing irrecoverable
       exception. Examples:
@@ -109,7 +109,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Login Juice Shop (need authenticated user
          pour /rest/chatbot).
       2. Trigger setUserName via le chatbot
@@ -145,7 +145,7 @@ hints:
       avoir un recovery PATH qui n'utilise PAS le
       same code path (state-independent recovery).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Login Juice Shop (need authenticated user
          for /rest/chatbot).
       2. Trigger setUserName via chatbot interface

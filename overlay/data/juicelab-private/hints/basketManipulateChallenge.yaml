@@ -93,6 +93,7 @@ hints:
       BasketItem. Le challenge se valide automatiquement quand le
       serveur detecte un BasketItem cree avec BasketId different
       du JWT user.
+      Defense : (1) verifier l'ownership serveur-side avant insert (basket.UserId === req.user.id, sinon 403). (2) Deduire le BasketId exclusivement du JWT, ne jamais l'accepter du body.
     text_en: |
       Concrete workflow via curl or fetch console:
       curl -X POST http://127.0.0.1:3000/api/BasketItems/
@@ -103,5 +104,6 @@ hints:
       jim@juice-sh.op). Server returns 200 and stores the
       BasketItem. Challenge auto-solves when server detects a
       BasketItem created with BasketId different from JWT user.
+      Defense: (1) server-side ownership check before insert (basket.UserId === req.user.id, else 403). (2) Derive BasketId exclusively from JWT, never accept it from request body.
     pedagogical_intent: |
       Quasi-solution : full curl command + expected behavior.

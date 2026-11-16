@@ -86,7 +86,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_PROBABLE] Workflow general (cle exacte a
+      Workflow general (cle exacte a
       trouver via OSINT actuel) :
       1. Footer Juice Shop -> link vers Twitter / GitHub.
       2. Twitter Juice Shop -> regarde les tweets reguliers
@@ -102,8 +102,9 @@ hints:
       6. Le challenge se valide automatiquement.
       Cle OWASP officielle change avec le temps — fais OSINT
       actuel sur le repo public.
+      Defense : (1) ne jamais hardcoder les cles API dans le code source — utiliser des variables d'environnement ou un secret manager (HashiCorp Vault, AWS Secrets Manager). (2) Activer les alertes GitHub secret scanning sur le repo. (3) Rotater immediatement toute cle trouvee dans des commits publics, puis auditer l'historique pour d'autres leaks.
     text_en: |
-      [KILL_CHAIN_PROBABLE] General workflow (exact key to
+      General workflow (exact key to
       find via current OSINT):
       1. Juice Shop footer -> link to Twitter / GitHub.
       2. Twitter Juice Shop -> look at regular tweets
@@ -119,5 +120,6 @@ hints:
       6. Challenge auto-solves.
       Official OWASP key changes over time — do current
       OSINT on the public repo.
+      Defense: (1) never hardcode API keys in source code — use environment variables or a secret manager (HashiCorp Vault, AWS Secrets Manager). (2) Enable GitHub secret scanning alerts on the repo. (3) Rotate any key found in public commits immediately, then audit commit history for other leaks.
     pedagogical_intent: |
       Quasi-solution : workflow + acknowledge OSINT decay.

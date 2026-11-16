@@ -56,7 +56,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) DevTools > Sources > main.js,
+      Workflow : (1) DevTools > Sources > main.js,
       Ctrl+F "tokensale" -> trouve `path:'tokensale'`. (2) Naviguer vers
       http://localhost:3000/#/tokensale. (3) La page charge ses assets, le
       browser GET /assets/public/images/products/56px.png. (4) Le serveur
@@ -65,7 +65,7 @@ hints:
       sur les routes sensibles. (b) Audit avec `grep -rn "path:"
       frontend/src/app/` + table de protection. Source : verify.ts:66.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) DevTools > Sources > main.js,
+      Workflow: (1) DevTools > Sources > main.js,
       Ctrl+F "tokensale" -> finds `path:'tokensale'`. (2) Navigate to
       http://localhost:3000/#/tokensale. (3) Page loads its assets,
       browser GETs /assets/public/images/products/56px.png. (4) Server

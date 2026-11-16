@@ -102,6 +102,7 @@ hints:
       + methodes Bellingcat OSINT visuelle (publiques).
       Note : la photo seedee dans Juice Shop varie selon la
       version, l'OSINT visuel reste applicable au pattern.
+      Defense : (1) remplacer les questions de securite basees sur la connaissance par un MFA TOTP — les questions de localisation sont trivialement OSINT-ables. (2) Education des users : eviter de poster des photos avec des landmarks identifiables. (3) Si upload de photo requis, appliquer un flou automatique des plaques et enseignes commerciales cote serveur.
     text_en: |
       Complete workflow:
       1. /#/photo-wall: find Emma's photo.
@@ -118,5 +119,6 @@ hints:
       + Bellingcat visual OSINT methods (public). Note:
       seeded photo varies by Juice Shop version, visual
       OSINT remains applicable to the pattern.
+      Defense: (1) replace knowledge-based security questions with TOTP MFA — location questions are trivially OSINT-able. (2) User education: avoid posting photos with identifiable landmarks. (3) If photo upload is required, apply automatic blurring of license plates and commercial signs server-side.
     pedagogical_intent: |
       Quasi-solution : full workflow + version-dependency note.

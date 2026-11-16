@@ -98,6 +98,7 @@ hints:
       il dump tout. Reference : pattern documente dans
       easterEggLevelOne et forgottenDevBackup, technique
       identique.
+      Defense : (1) /ftp/ ne doit contenir que les assets necessaires en production — audit automatique periodique (cron + alerte SIEM sur les extensions .bak). (2) CI gate : faire echouer le build Docker si des fichiers .bak apparaissent dans des dossiers publics. (3) Invalider les codes promo leakes en DB — rotater tous les secrets trouves dans les fichiers backup.
     text_en: |
       Workflow: exactly identical to forgottenDevBackup, only
       filename changes.
@@ -111,5 +112,6 @@ hints:
       everything. Reference: pattern documented in
       easterEggLevelOne and forgottenDevBackup, identical
       technique.
+      Defense: (1) /ftp/ must contain only production-needed assets — periodic automated audit (cron + SIEM alert on .bak extensions). (2) CI gate: fail Docker build if .bak files appear in public folders. (3) Invalidate leaked promo codes in DB — rotate all secrets found in backup files.
     pedagogical_intent: |
       Quasi-solution : full URL + generalized attack mindset.

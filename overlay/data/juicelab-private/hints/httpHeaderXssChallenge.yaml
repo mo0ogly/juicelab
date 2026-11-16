@@ -110,6 +110,7 @@ hints:
       5. L'iframe execute, alert apparait, challenge se valide
       Source : OWASP XSS Prevention Cheat Sheet, section sur les
       sources d'input non evidentes (headers, cookies).
+      Defense : (1) allowlist des headers au niveau reverse-proxy / middleware Express — rejeter True-Client-IP si pas derriere un CDN de confiance. (2) Validation schema strict sur les headers IP acceptes (regex IPv4/IPv6 + longueur max). (3) Sanitizer TOUT output controle par l'utilisateur via DOMPurify, quelle que soit la source (body, query, header, cookie).
     text_en: |
       Complete workflow:
       1. Logout (disconnect from current session)
@@ -124,5 +125,6 @@ hints:
       5. Iframe executes, alert appears, challenge solves
       Source: OWASP XSS Prevention Cheat Sheet, non-obvious input
       sources section (headers, cookies).
+      Defense: (1) header allowlist at reverse-proxy / Express middleware level — strip or reject True-Client-IP if not behind a trusted CDN. (2) Strict schema validation on accepted IP headers (IPv4/IPv6 regex + max length). (3) Sanitize ALL user-controlled output via DOMPurify regardless of source (body, query, header, cookie).
     pedagogical_intent: |
       Quasi-solution : 5-step workflow with curl one-liner.

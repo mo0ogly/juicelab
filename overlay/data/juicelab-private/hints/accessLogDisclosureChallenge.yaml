@@ -89,7 +89,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow :
+      Workflow :
       1. Naviguer http://localhost:3000/support/
          logs/ - directory listing apparait.
       2. Cliquer sur un fichier access.log* (le
@@ -108,7 +108,7 @@ hints:
       sanitization + centralized logging +
       retention.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow:
+      Workflow:
       1. Navigate http://localhost:3000/
          support/logs/ - directory listing
          appears.

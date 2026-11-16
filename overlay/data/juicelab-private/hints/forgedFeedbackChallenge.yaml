@@ -99,6 +99,7 @@ hints:
       detecte un feedback avec un userId different de l'auth
       JWT. Source : forgedFeedback.ts ligne 76 ("you successfully
       submitted a feedback as another user").
+      Defense : (1) le backend doit ecraser UserId avec req.user.id du JWT verifie, en ignorant tout UserId present dans le body. (2) Ne jamais inclure userId dans les formulaires clients — deduire l'identite exclusivement serveur-side (OWASP Authorization Cheat Sheet).
     text_en: |
       Complete workflow (follows hacking-instructor tutorial
       lines 56-66):
@@ -111,5 +112,6 @@ hints:
       with userId different from the JWT auth. Source:
       forgedFeedback.ts line 76 ("you successfully submitted a
       feedback as another user").
+      Defense: (1) the backend must override UserId with req.user.id from the verified JWT, ignoring any UserId in the request body. (2) Never include userId in client-facing forms — derive identity server-side exclusively (OWASP Authorization Cheat Sheet).
     pedagogical_intent: |
       Quasi-solution : exact 5-step workflow with source citation.

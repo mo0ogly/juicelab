@@ -72,7 +72,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      Source serveur verifiee
       (routes/verify.ts:291-303) : `void
       checkPatternInFeedbackAndComplaints(challenges.
       supplyChainAttackChallenge, { [Op.or]: [
@@ -85,7 +85,7 @@ hints:
       le Snyk ID `npm:eslint-scope:20180712` est
       egalement accepte.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Verified server source
+      Verified server source
       (routes/verify.ts:291-303): `void
       checkPatternInFeedbackAndComplaints(challenges.
       supplyChainAttackChallenge, { [Op.or]: [
@@ -102,7 +102,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Resoudre forgottenDevBackupChallenge
          (recommande hint #3).
       2. Inspecter /ftp/package.json.bak pour
@@ -130,7 +130,7 @@ hints:
       Socket.dev / Snyk monitoring, private mirror
       pre-validation.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Solve forgottenDevBackupChallenge
          (recommended hint #3).
       2. Inspect /ftp/package.json.bak to confirm

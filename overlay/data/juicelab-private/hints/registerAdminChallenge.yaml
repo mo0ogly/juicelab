@@ -65,7 +65,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      Source serveur verifiee
       (routes/verify.ts:50-55) : `challengeUtils.
       solveIf(challenges.registerAdminChallenge, () =>
       { return req.body && req.body.role ===
@@ -75,7 +75,7 @@ hints:
       contenant `"role": "admin"` (en plus des autres
       champs requis email/password/etc).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Verified server source
+      Verified server source
       (routes/verify.ts:50-55): `challengeUtils.
       solveIf(challenges.registerAdminChallenge, ()
       => { return req.body && req.body.role ===
@@ -90,7 +90,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Open Burp Suite (proxy intercepter) ou prepare
          curl direct.
       2. Construire la requete POST /api/Users :
@@ -120,7 +120,7 @@ hints:
       Defense canonique : DTO allowlist explicit.
       Override role default = "customer".
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Open Burp Suite (proxy intercepter) or
          prepare direct curl.
       2. Build POST /api/Users request:

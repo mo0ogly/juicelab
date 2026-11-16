@@ -58,7 +58,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) DevTools > Sources > main.js,
+      Workflow : (1) DevTools > Sources > main.js,
       Ctrl+F "privacy" / "thank" / "private" -> trouve URL ou route. (2)
       OR `grep -rn "privacyPolicyProof\|thank-you" juice-shop/server.ts
       juice-shop/routes/`. (3) URL servie via privacyPolicyProof endpoint
@@ -72,7 +72,7 @@ hints:
       route enumeration, test E2E checks 401. Source :
       privacyPolicyProof.ts:11-13.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) DevTools > Sources > main.js,
+      Workflow: (1) DevTools > Sources > main.js,
       Ctrl+F "privacy" / "thank" / "private" -> find URL or route. (2)
       OR `grep -rn "privacyPolicyProof\|thank-you" juice-shop/server.ts
       juice-shop/routes/`. (3) URL served via privacyPolicyProof endpoint

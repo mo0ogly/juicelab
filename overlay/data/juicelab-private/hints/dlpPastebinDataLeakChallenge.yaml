@@ -103,6 +103,7 @@ hints:
          le serveur detecte les keywords.
       Source : kill chain composite documentee dans les hints
       OWASP officiels (#1-5).
+      Defense : (1) prepared statements pour eliminer le vecteur SQLi de recon. (2) DLP monitoring : surveillance continue de Pastebin/GitHub pour le nom de l'entreprise, les noms de produits, les emails internes. (3) Incident response : notices de takedown + rotation des secrets compromis des detection (NIST SP 800-46).
     text_en: |
       Complete workflow:
       1. Solve christmasSpecialChallenge or run:
@@ -119,5 +120,6 @@ hints:
          keywords.
       Source: composite kill chain documented in official
       OWASP hints (#1-5).
+      Defense: (1) prepared statements to fix the SQLi recon vector. (2) DLP monitoring: continuous surveillance of Pastebin/GitHub for company name, product names, internal emails. (3) Incident response: takedown notices + rotation of compromised secrets once detected (NIST SP 800-46).
     pedagogical_intent: |
       Quasi-solution : full 5-step kill chain.

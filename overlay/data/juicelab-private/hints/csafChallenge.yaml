@@ -57,7 +57,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Apprendre CSAF (OASIS 2.0).
+      Workflow : (1) Apprendre CSAF (OASIS 2.0).
       (2) Naviguer /.well-known/csaf-aggregator/provider-metadata.json. (3)
       Suivre le lien vers le ou les CSAF advisories listes. (4) Telecharger
       l'advisory.json. (5) Calculer
@@ -72,7 +72,7 @@ hints:
       csaf.csaf-tools.org. Source : verify.ts:312-317 +
       config/default.yml:83.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Learn CSAF (OASIS 2.0). (2)
+      Workflow: (1) Learn CSAF (OASIS 2.0). (2)
       Navigate /.well-known/csaf-aggregator/provider-metadata.json. (3)
       Follow link to listed CSAF advisory(ies). (4) Download advisory.json.
       (5) Compute `sha512sum advisory.json` (Linux) or `Get-FileHash

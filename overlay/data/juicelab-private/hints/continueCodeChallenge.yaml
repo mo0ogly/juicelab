@@ -70,7 +70,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Source serveur
+      Source serveur
       verifiee (routes/restoreProgress.ts:18) :
       ```js
       const hashidsAlphabet = 'abcdefghijklmnop
@@ -84,7 +84,7 @@ hints:
       reproduire localement avec hashids npm
       package.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Verified server
+      Verified server
       source (routes/restoreProgress.ts:18):
       ```js
       const hashidsAlphabet = 'abcdefghijklmnop
@@ -102,7 +102,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Install hashids :
          `npm install hashids`
       2. Generer le continueCode pour challenge
@@ -139,7 +139,7 @@ hints:
       uniquement comme cosmetic short-encoding,
       JAMAIS comme security primitive.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Install hashids:
          `npm install hashids`
       2. Generate continueCode for challenge

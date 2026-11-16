@@ -70,7 +70,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Crafter le payload .zip :
+      Crafter le payload .zip :
       (a) Avec Python (ne pas utiliser zipfile native qui
       sanitize automatiquement) :
         ```python
@@ -89,7 +89,7 @@ hints:
       complaints/' + '../../ftp/legal.md')` =
       `path.resolve('ftp/legal.md')` = match solve check.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Craft .zip payload:
+      Craft .zip payload:
       (a) With Python (don't use native zipfile which
       auto-sanitizes):
         ```python
@@ -112,7 +112,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Login Juice Shop comme customer (ou register).
       2. Crafter exploit.zip avec entry `../../ftp/
          legal.md` contenant le content desire (ex.
@@ -136,7 +136,7 @@ hints:
       extractionDir + path.sep), (c) sandbox d'extraction
       (read-only filesystem ailleurs que dans la sandbox).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Login Juice Shop as customer (or register).
       2. Craft exploit.zip with entry `../../ftp/
          legal.md` containing desired content (e.g.,

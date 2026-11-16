@@ -22,146 +22,106 @@ hints:
   N2:
     cost_pct: 10
     text_fr: |
-      Sur /#/contact, le rating component est un
-      Material Design star rating (5 etoiles
-      cliquables). Le default est 1-5. Essai :
-      cliquer sur la 1ere etoile, puis re-cliquer
-      sur la MEME etoile pour toggle off (Material
-      star rating peut autoriser cela). Si la
-      valeur passe a 0, submit le form.
+      Sur la page Customer Feedback, la note se regle avec un curseur
+      (slider) borne de 1 a 5 : impossible d'y choisir 0. Mais
+      observe l'etat initial du formulaire : remplis commentaire et
+      captcha SANS toucher au curseur. Le bouton Submit reste grise.
+      Pourquoi ? Que vaut la note tant que tu n'as pas bouge le
+      curseur ?
     text_en: |
-      On /#/contact, rating component is Material
-      Design star rating (5 clickable stars).
-      Default is 1-5. Try: click 1st star, then
-      re-click SAME star to toggle off (Material
-      star rating may allow this). If value goes
-      to 0, submit form.
+      On the Customer Feedback page, the rating is set with a slider
+      bounded from 1 to 5: you cannot pick 0 there. But observe the
+      initial state of the form: fill in comment and captcha WITHOUT
+      touching the slider. The Submit button stays greyed out. Why?
+      What is the rating worth as long as you have not moved the
+      slider?
     pedagogical_intent: |
-      Spell UI cleverness method.
+      Localize the surface: the client-side guard (disabled button),
+      not the slider bounds.
 
   N3:
     cost_pct: 20
     text_fr: |
-      Si le UI cleverness ne marche pas, bypass via
-      API directe. Inspecter la requete normale
-      (DevTools Network) : POST /api/Feedbacks
-      avec body
-      `{captchaId: ..., captcha: "..." (math),
-      comment: "...", rating: <int>, UserId: ...}`.
-      Le serveur n'a PAS de validator min/max sur
-      rating. Submit avec rating=0.
+      Dans contact.component.ts, la note vaut 0 au chargement
+      (public rating = 0). Le bouton est desactive par la condition
+      [disabled]="... || !rating" : c'est la SEULE barriere, et elle
+      vit dans ton navigateur. Le handler save() envoie ensuite
+      this.rating tel quel. Deux voies : neutraliser la barriere dans
+      le DOM (Inspecter l'element), ou rejouer la requete hors UI.
     text_en: |
-      If UI cleverness doesn't work, bypass via
-      direct API. Inspect normal request (DevTools
-      Network): POST /api/Feedbacks with body
-      `{captchaId: ..., captcha: "..." (math),
-      comment: "...", rating: <int>, UserId: ...}`.
-      Server has NO min/max validator on rating.
-      Submit with rating=0.
+      In contact.component.ts, the rating is 0 on load
+      (public rating = 0). The button is disabled by the condition
+      [disabled]="... || !rating": that is the ONLY barrier, and it
+      lives in your browser. The save() handler then sends
+      this.rating as-is. Two ways: neutralize the barrier in the DOM
+      (Inspect element), or replay the request outside the UI.
     pedagogical_intent: |
-      Spell API bypass alternative.
+      Narrow down by code reading: client-only validation, two
+      bypass paths.
 
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_PROBABLE] Construction du payload
-      via curl :
-      ```bash
-      # 1. Get a captcha
-      curl http://localhost:3000/rest/captcha
-        -H "Authorization: Bearer <token>"
-      # Response : {captchaId: 1, captcha: "5+3=",
-      #             answer: 8}
-      # 2. Submit feedback avec rating=0
-      curl -X POST http://localhost:3000/api/Feedbacks
-        -H "Authorization: Bearer <token>"
-        -H "Content-Type: application/json"
-        -d '{
-          "captchaId": 1,
-          "captcha": "8",
-          "comment": "Worst experience ever",
-          "rating": 0
-        }'
-      ```
-      Le serveur insert dans FeedbackModel sans
-      validation rating - challenge solve auto.
+      Voie UI : remplis commentaire + captcha, ne touche pas au
+      curseur, clic droit sur Submit > Inspecter, supprime l'attribut
+      disabled du <button id="submitButton">, puis clique. save()
+      envoie rating = 0.
+      Voie API : le formulaire fait POST /api/Feedbacks avec
+        { captchaId, captcha, comment, rating }
+      Le captcha s'obtient par GET /rest/captcha, dont la reponse
+      contient deja la solution (champ answer). Cote serveur
+      (models/feedback.ts), le setter de rating n'a aucune borne et
+      resout le challenge si Number(rating) === 0.
     text_en: |
-      [KILL_CHAIN_PROBABLE] Payload construction
-      via curl:
-      ```bash
-      # 1. Get a captcha
-      curl http://localhost:3000/rest/captcha
-        -H "Authorization: Bearer <token>"
-      # Response: {captchaId: 1, captcha: "5+3=",
-      #            answer: 8}
-      # 2. Submit feedback with rating=0
-      curl -X POST http://localhost:3000/api/Feedbacks
-        -H "Authorization: Bearer <token>"
-        -H "Content-Type: application/json"
-        -d '{
-          "captchaId": 1,
-          "captcha": "8",
-          "comment": "Worst experience ever",
-          "rating": 0
-        }'
-      ```
-      Server inserts into FeedbackModel without
-      rating validation - challenge auto solves.
+      UI path: fill in comment + captcha, do not touch the slider,
+      right-click Submit > Inspect, remove the disabled attribute
+      from <button id="submitButton">, then click. save() sends
+      rating = 0.
+      API path: the form sends POST /api/Feedbacks with
+        { captchaId, captcha, comment, rating }
+      The captcha comes from GET /rest/captcha, whose response
+      already contains the solution (answer field). Server-side
+      (models/feedback.ts), the rating setter has no bound and
+      solves the challenge when Number(rating) === 0.
     pedagogical_intent: |
-      Spell exact payload via curl.
+      Guided steps for both paths, with the exact server condition.
 
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_PROBABLE] Workflow complet :
-      1. Approche A (UI cleverness) :
-         - Naviguer /#/contact
-         - Cliquer 1 etoile (rating = 1)
-         - Re-cliquer la meme etoile (rating = 0
-           si toggle Material)
-         - Submit form
-         - Si solve : excellent
-         - Sinon -> approche B
-      2. Approche B (API bypass) :
-         - Get captcha : GET /rest/captcha
-         - Submit feedback : POST /api/Feedbacks
-           avec rating=0 dans le body
-         - Le serveur accepte (no min validator)
-         - Challenge solve auto
-      3. Verification : aller voir les feedback
-         sur la home page Juice Shop ; ton
-         feedback "0 stars" devrait apparaitre.
-      Source : analyse de la frontend Angular +
-      OWASP Input Validation Cheat Sheet.
-      Defense canonique : Sequelize FeedbackModel
-      validator `rating: { type: INTEGER, validate
-      : { min: 1, max: 5 }}`. Ce serait suffisant
-      pour bloquer le challenge.
+      Solution API (verifiee en recette sur Juice Shop 19.2.1, sans
+      authentification) :
+        curl -s http://127.0.0.1:3000/rest/captcha
+        # -> {"captchaId":0,"captcha":"4-7*6","answer":"-38"}
+        curl -s -X POST http://127.0.0.1:3000/api/Feedbacks \
+          -H "Content-Type: application/json" \
+          -d '{"captchaId":0,"captcha":"-38","comment":"zero","rating":0}'
+      Reponse 201, challenge resolu. Reprends captchaId et answer de
+      TA reponse : ils changent a chaque appel.
+      La voie UI (attribut disabled retire) est deduite du code
+      (contact.component.html:68, contact.component.ts:45 et :86) ;
+      elle envoie le meme corps avec rating 0.
+      Defense : valider la note COTE SERVEUR (validator Sequelize
+      min: 1, max: 5 sur rating) ; une borne d'interface n'est
+      jamais un controle de securite. Accessoirement, ne pas renvoyer
+      la solution du captcha au client.
     text_en: |
-      [KILL_CHAIN_PROBABLE] Full workflow:
-      1. Approach A (UI cleverness):
-         - Navigate /#/contact
-         - Click 1 star (rating = 1)
-         - Re-click same star (rating = 0 if
-           Material toggle)
-         - Submit form
-         - If solve: excellent
-         - Otherwise -> approach B
-      2. Approach B (API bypass):
-         - Get captcha: GET /rest/captcha
-         - Submit feedback: POST /api/Feedbacks
-           with rating=0 in body
-         - Server accepts (no min validator)
-         - Challenge auto solves
-      3. Verification: check feedback on Juice
-         Shop home page; your "0 stars"
-         feedback should appear.
-      Source: Angular frontend analysis + OWASP
-      Input Validation Cheat Sheet.
-      Canonical defense: Sequelize FeedbackModel
-      validator `rating: { type: INTEGER,
-      validate: { min: 1, max: 5 }}`. Would be
-      sufficient to block challenge.
+      API solution (verified during testing on Juice Shop 19.2.1, no
+      authentication):
+        curl -s http://127.0.0.1:3000/rest/captcha
+        # -> {"captchaId":0,"captcha":"4-7*6","answer":"-38"}
+        curl -s -X POST http://127.0.0.1:3000/api/Feedbacks \
+          -H "Content-Type: application/json" \
+          -d '{"captchaId":0,"captcha":"-38","comment":"zero","rating":0}'
+      Response 201, challenge solved. Reuse captchaId and answer from
+      YOUR response: they change on every call.
+      The UI path (disabled attribute removed) is derived from the
+      code (contact.component.html:68, contact.component.ts:45 and
+      :86); it sends the same body with rating 0.
+      Defense: validate the rating SERVER-SIDE (Sequelize validator
+      min: 1, max: 5 on rating); a UI bound is never a security
+      control. As a side note, do not send the captcha solution to
+      the client.
     pedagogical_intent: |
-      Solution complete + 2 approaches +
-      defense.
+      Full solution: verified API commands, UI path with code
+      references, canonical server-side defense.

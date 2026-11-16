@@ -68,59 +68,65 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      L'id de O-Saft est typiquement 9 (peut varier selon la
-      seed). Le payload PUT consiste a remplacer le champ
-      description avec un nouveau lien :
-      curl -X PUT http://127.0.0.1:3000/api/Products/9
-        -H "Authorization: Bearer <ton_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"description":"...<a href=\"https://owasp.slack.com\">...</a>..."}'
-      Le serveur accepte le PUT sans verifier l'autorisation
-      admin. Le produit est modifie en DB. Le challenge se valide
-      automatiquement quand le serveur detecte le href cible
-      https://owasp.slack.com sur le produit O-Saft.
+      O-Saft a l'id 9 dans le jeu de donnees par defaut (verifie par
+      GET /api/Products/9). Aucun jeton n'est requis : la ligne
+      app.put('/api/Products/:id', security.isAuthorized()) est
+      commentee dans server.ts. La validation (routes/verify.ts,
+      changeProductChallenge) exige DEUX conditions sur la nouvelle
+      description : l'ancien lien https://www.owasp.org/index.php/O-Saft
+      a disparu, ET elle contient exactement la chaine
+        <a href="https://owasp.slack.com" target="_blank">
+      Un href sans target="_blank" ne valide pas. La verification
+      tourne en middleware a chaque requete : le challenge apparait
+      resolu a la requete suivante.
     text_en: |
-      O-Saft id is typically 9 (may vary by seed). The PUT
-      payload replaces the description field with a new link:
-      curl -X PUT http://127.0.0.1:3000/api/Products/9
-        -H "Authorization: Bearer <your_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"description":"...<a href=\"https://owasp.slack.com\">...</a>..."}'
-      Server accepts the PUT without admin auth check. Product
-      is modified in DB. Challenge auto-solves when server
-      detects target href https://owasp.slack.com on O-Saft.
+      O-Saft has id 9 in the default dataset (checked with
+      GET /api/Products/9). No token is required: the line
+      app.put('/api/Products/:id', security.isAuthorized()) is
+      commented out in server.ts. Validation (routes/verify.ts,
+      changeProductChallenge) requires TWO conditions on the new
+      description: the old link https://www.owasp.org/index.php/O-Saft
+      is gone, AND it contains exactly the string
+        <a href="https://owasp.slack.com" target="_blank">
+      An href without target="_blank" does not validate. The check
+      runs as middleware on every request: the challenge shows as
+      solved on the next request.
     pedagogical_intent: |
-      Spell exact PUT command with target URL.
+      Give the exact validation contract (two conditions, exact
+      anchor string) before the full command.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. GET /api/Products  -> trouve l'id de O-Saft (typiquement 9)
-      2. GET /api/Products/9  -> note la description actuelle
-      3. PUT /api/Products/9 avec description modifiee :
-         curl -X PUT http://127.0.0.1:3000/api/Products/9
-           -H "Authorization: Bearer <ton_jwt>"
-           -H "Content-Type: application/json"
-           -d '{"description":"Free, open-source tool... <a href=\"https://owasp.slack.com\">More...</a>"}'
-      Important : preserve la structure HTML de la description,
-      remplace JUSTE le href du lien O-Saft avec
-      https://owasp.slack.com. Verifie ensuite avec un nouveau
-      GET /api/Products/9. Source de validation : la route
-      backend Juice Shop check le href cible.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) :
+        curl -s -X PUT http://127.0.0.1:3000/api/Products/9 \
+          -H "Content-Type: application/json" \
+          -d '{"description":"O-Saft is an easy to use tool. <a href=\"https://owasp.slack.com\" target=\"_blank\">More...</a>"}'
+      Reponse 200. Envoie ensuite n'importe quelle requete (recharge
+      la page) : le middleware databaseRelatedChallenges relit le
+      produit et resout le challenge.
+      Defense canonique (codefixes, fix 3 correct) : n'autoriser que
+      GET sur l'API produits :
+        app.post('/api/Products', security.denyAll())
+        app.put('/api/Products/:id', security.denyAll())
+        app.delete('/api/Products/:id', security.denyAll())
+      Le fix 4 (isAuthorized sur PUT) est insuffisant : il laisse tout
+      client authentifie modifier le catalogue.
     text_en: |
-      Complete workflow:
-      1. GET /api/Products -> find O-Saft id (typically 9)
-      2. GET /api/Products/9 -> note current description
-      3. PUT /api/Products/9 with modified description:
-         curl -X PUT http://127.0.0.1:3000/api/Products/9
-           -H "Authorization: Bearer <your_jwt>"
-           -H "Content-Type: application/json"
-           -d '{"description":"Free, open-source tool... <a href=\"https://owasp.slack.com\">More...</a>"}'
-      Important: preserve description's HTML structure, ONLY
-      replace the O-Saft link href with
-      https://owasp.slack.com. Verify with a new
-      GET /api/Products/9. Validation source: Juice Shop backend
-      route checks target href.
+      Solution (verified during testing on Juice Shop 19.2.1):
+        curl -s -X PUT http://127.0.0.1:3000/api/Products/9 \
+          -H "Content-Type: application/json" \
+          -d '{"description":"O-Saft is an easy to use tool. <a href=\"https://owasp.slack.com\" target=\"_blank\">More...</a>"}'
+      Response 200. Then send any request (reload the page): the
+      databaseRelatedChallenges middleware reloads the product and
+      solves the challenge.
+      Canonical defense (codefixes, fix 3 correct): allow only GET on
+      the products API:
+        app.post('/api/Products', security.denyAll())
+        app.put('/api/Products/:id', security.denyAll())
+        app.delete('/api/Products/:id', security.denyAll())
+      Fix 4 (isAuthorized on PUT) is insufficient: it still lets any
+      authenticated customer modify the catalogue.
     pedagogical_intent: |
-      Quasi-solution : full workflow + warning on HTML structure.
+      Full solution: verified command, why the solve is deferred,
+      canonical fix from codefixes and why the partial fix fails.

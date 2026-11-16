@@ -74,7 +74,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Solution
+      Solution
       simplest :
       1. `curl http://localhost:3000/api/
          Users/abc`. Le serveur :
@@ -91,7 +91,7 @@ hints:
       detailed logs backend-only + Sentry/
       Bugsnag avec sanitization.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Simplest
+      Simplest
       solution:
       1. `curl http://localhost:3000/api/
          Users/abc`. Server:

@@ -75,7 +75,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Pre-requis materiel :
+      Pre-requis materiel :
       1. Le hash bcrypt de Chris (via SQLi exfil).
       2. Le password en clair via hashcat (-m 3200, rockyou
          dict). Pour difficulty-3, le password est
@@ -87,7 +87,7 @@ hints:
       === users.chris.id`. Donc tout ce qui matche
       l'identite Chris en login = solve auto.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Material prerequisites:
+      Material prerequisites:
       1. Chris's bcrypt hash (via SQLi exfiltration).
       2. Cleartext password via hashcat (-m 3200, rockyou
          dict). For difficulty-3, password is typically
@@ -104,7 +104,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Resoudre exposedCredentialsChallenge ou
          unionSqlInjectionChallenge prealablement.
       2. Sur /#/forgot-password ou via SQLi, trouver
@@ -126,7 +126,7 @@ hints:
       (b) hard-delete + anonymization apres RTBF, (c)
       retention policy + audit log GDPR.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Solve exposedCredentialsChallenge or
          unionSqlInjectionChallenge first.
       2. On /#/forgot-password or via SQLi, find Chris's

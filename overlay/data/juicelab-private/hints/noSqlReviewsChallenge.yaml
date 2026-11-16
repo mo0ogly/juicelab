@@ -105,6 +105,7 @@ hints:
       des fixes : codefixes/noSqlReviewsChallenge.info.yml. Le fix
       correct (#3) est l'utilisation du binding Sequelize equivalent
       a un Prepared Statement.
+      Defense : (1) binding Sequelize / query parametree sur l'endpoint reviews update (codefixes fix #3). (2) Valider le type de l'id : doit etre une string ou ObjectId, pas un objet — rejeter avec Joi/Zod. (3) Utiliser express-mongo-sanitize pour stripper les operateurs $ du body de la requete.
     text_en: |
       curl -X PATCH http://127.0.0.1:3000/rest/products/reviews
         -H "Authorization: Bearer <your_jwt>"
@@ -115,5 +116,6 @@ hints:
       pattern on reviews update endpoint). Fix sources: codefixes/
       noSqlReviewsChallenge.info.yml. The correct fix (#3) is
       using Sequelize binding equivalent to a Prepared Statement.
+      Defense: (1) Sequelize binding / parameterized query on the reviews update endpoint (codefixes fix #3). (2) Validate id input type: must be a string or ObjectId, not an object — reject with Joi/Zod. (3) Use express-mongo-sanitize to strip MongoDB $ operators from request body.
     pedagogical_intent: |
       Quasi-solution : full curl + reference to canonical fix.

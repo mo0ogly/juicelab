@@ -65,7 +65,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Decouvrir les wallets via
+      Workflow : (1) Decouvrir les wallets via
       Wayback Machine OR
       `grep redirectAllowlist juice-shop/lib/insecurity.ts`. (2)
       Identifier les 3 URLs blockchain. (3) Naviguer
@@ -78,7 +78,7 @@ hints:
       8594). (d) Test coverage : URL retournee 404 apres retrait.
       Source : redirect.ts:17 + insecurity.ts:124.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Discover wallets via Wayback
+      Workflow: (1) Discover wallets via Wayback
       Machine OR `grep redirectAllowlist juice-shop/lib/insecurity.ts`.
       (2) Identify 3 blockchain URLs. (3) Navigate
       `http://localhost:3000/redirect?to=https://blockchain.info/address/

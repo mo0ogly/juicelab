@@ -53,7 +53,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Network tab > selectionner
+      Workflow : (1) Network tab > selectionner
       Anglais -> voit GET /assets/i18n/en.json. (2) DevTools > Sources >
       assets > i18n -> liste tous les fichiers. (3) Identifier tlh_AA.json
       qui n'est pas dans le selecteur UI. (4) Navigateur :
@@ -64,7 +64,7 @@ hints:
       manifestes. (c) Backend route /api/languages comme source de verite.
       Source : verify.ts:68.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Network tab > select English
+      Workflow: (1) Network tab > select English
       -> sees GET /assets/i18n/en.json. (2) DevTools > Sources > assets >
       i18n -> lists all files. (3) Identify tlh_AA.json not in UI
       selector. (4) Browser:

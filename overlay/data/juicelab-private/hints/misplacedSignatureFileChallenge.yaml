@@ -77,7 +77,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow :
+      Workflow :
       1. Pre-requis : directoryListing +
          nullByte (Lot 7).
       2. GET /ftp/suspicious_errors.yml%00.md
@@ -96,7 +96,7 @@ hints:
       root + null byte rejection EXPLICITE
       avant allowlist check.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow:
+      Workflow:
       1. Prerequisites: directoryListing +
          nullByte (Lot 7).
       2. GET /ftp/suspicious_errors.yml%00.md

@@ -110,6 +110,7 @@ hints:
       Le challenge se valide automatiquement par l'une ou l'autre
       methode (la description OWASP les liste comme alternatives :
       "post... or edit").
+      Defense : (1) definir l'author serveur-side depuis le JWT, jamais depuis le body (codefixes fix #2). (2) Ajouter un filtre d'ownership sur PATCH : Reviews.updateOne({ _id: id, author: req.user.email }, ...) — empeche la modification du review d'un autre user.
     text_en: |
       Method 1 (post with fake author):
       curl -X PUT http://127.0.0.1:3000/rest/products/1/reviews
@@ -123,5 +124,6 @@ hints:
         -d '{"id":"<reviewId>","message":"H4ck3d"}'
       Challenge auto-solves via either method (OWASP description
       lists them as alternatives: "post... or edit").
+      Defense: (1) set author server-side from the JWT, never from the request body (codefixes fix #2). (2) Add ownership filter on PATCH: Reviews.updateOne({ _id: id, author: req.user.email }, ...) — prevents editing another user's review.
     pedagogical_intent: |
       Quasi-solution : two complete curl commands.

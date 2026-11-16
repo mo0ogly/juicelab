@@ -104,6 +104,7 @@ hints:
       amy@juice-sh.op. Note : si la version Juice Shop a
       change le password, fais un OSINT pop-culture rapide
       sur Amy pour trouver le pattern actuel.
+      Defense : (1) le mot de passe doit etre aleatoire, pas thematique — imposer un gestionnaire de mots de passe et MFA TOTP. (2) Bloquer les passphrases predictibles (concatenation de mots style XKCD) via un scoring d'entropie a l'enregistrement. (3) Rate-limiter les tentatives de login + bloquer le compte apres N echecs.
     text_en: |
       Amy's official Juice Shop password is typically
       "K1f.....................Bo0m!" (Kif transformed
@@ -113,5 +114,6 @@ hints:
       "Spleesh" or similar). Email: amy@juice-sh.op. Note:
       if the Juice Shop version changed the password, do
       quick pop-culture OSINT on Amy for the current pattern.
+      Defense: (1) password must be random, not themed — enforce a password manager and MFA TOTP. (2) Block predictable passphrase patterns (XKCD-style word concatenations) via entropy scoring at registration. (3) Rate-limit login attempts + lock account after N failures.
     pedagogical_intent: |
       Quasi-solution : exact password + version-dependency caveat.

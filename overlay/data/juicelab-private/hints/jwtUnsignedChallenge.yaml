@@ -65,7 +65,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Construction du JWT
+      Construction du JWT
       forge : Python helper :
         ```python
         import base64, json
@@ -84,7 +84,7 @@ hints:
       verifie alg='none' literal + email matches
       /jwtn3d@/.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Forge JWT
+      Forge JWT
       construction: Python helper:
         ```python
         import base64, json
@@ -108,7 +108,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Login Juice Shop (n'importe quel compte ;
          /#/login avec admin/admin123 si solu).
       2. F12 -> Application -> Local Storage -> copy
@@ -140,7 +140,7 @@ hints:
       explicit dans jwt.verify(), update express-jwt
       >= 6.0, eviter alg=none entierement.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Login Juice Shop (any account; /#/login
          with admin/admin123 if solved).
       2. F12 -> Application -> Local Storage ->

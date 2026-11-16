@@ -73,7 +73,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Construction du
+      Construction du
       payload : prepare un fichier .png/.txt/.exe
       (toute extension SAUF pdf/xml/zip/yml/yaml).
       ```bash
@@ -94,7 +94,7 @@ hints:
       (declenche aussi uploadSizeChallenge si >
       100kB - peux les solve ensemble).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Payload construction:
+      Payload construction:
       prepare .png/.txt/.exe file (any extension
       EXCEPT pdf/xml/zip/yml/yaml).
       ```bash
@@ -121,7 +121,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Login Juice Shop pour avoir un JWT.
       2. Generer un fichier avec extension non-
          autorisee : `echo "test" > evil.png`
@@ -153,7 +153,7 @@ hints:
       processing (Docker container). 4-layer
       defense in depth.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Login Juice Shop to get JWT.
       2. Generate file with non-allowed
          extension: `echo "test" > evil.png`

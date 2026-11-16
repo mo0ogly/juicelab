@@ -120,6 +120,7 @@ hints:
       Hint #4 le confirme : "always partially keep you
       blindfolded". Ne sois pas surpris si tu dois iterer
       plusieurs fois.
+      Defense : (1) servir les fichiers de sous-titres WebVTT via un endpoint dedie qui valide le content-type et sanitise le cue text avant de le servir. (2) Corriger la primitive RCE en amont (desactiver vm.runInNewContext dans le traitement B2B). (3) Configurer la librairie video player pour echapper le cue text WebVTT en plain text, pas en innerHTML.
     text_en: |
       This quasi-solution depends on the installed Juice Shop
       version. General form:
@@ -140,5 +141,6 @@ hints:
          in the player's response.
       Hint #4 confirms: "always partially keep you blindfolded".
       Don't be surprised if you must iterate multiple times.
+      Defense: (1) serve WebVTT subtitle files through a dedicated endpoint that validates content-type and sanitizes cue text before serving — never trust file content written via RCE primitives. (2) Fix the upstream RCE primitive first (disable vm.runInNewContext in B2B processing). (3) Configure the video player library to escape WebVTT cue text as plain text, not innerHTML.
     pedagogical_intent: |
       Quasi-solution : full kill chain + intentional uncertainty acknowledgment.

@@ -79,6 +79,7 @@ hints:
       reconstruit est : SELECT * FROM users WHERE
       email='bender@juice-sh.op'-- AND password='...'. Source :
       tutoriel hacking-instructor OWASP loginBender.ts ligne 98-101.
+      Defense : (1) prepared statements / binding parametre Sequelize sur toutes les queries de login. (2) MFA TOTP comme second facteur — meme avec une SQLi qui bypass le check password, le MFA bloque la session. (3) Rate-limiter les tentatives de login + alerte SIEM sur les patterns d'erreur SQL inhabituels.
     text_en: |
       Type in the email field: bender@juice-sh.op'-- (single quote
       then two dashes, no space after the quote). Put anything in the
@@ -87,5 +88,6 @@ hints:
       * FROM users WHERE email='bender@juice-sh.op'-- AND
       password='...'. Source: OWASP hacking-instructor tutorial
       loginBender.ts line 98-101.
+      Defense: (1) prepared statements / Sequelize parameterized binding on all login queries. (2) MFA TOTP as second factor — even with SQLi bypassing the password check, MFA blocks the session. (3) Rate-limit login attempts + SIEM alert on unusual SQL error patterns.
     pedagogical_intent: |
       Quasi-solution : exact payload + SQL reconstruction explained.

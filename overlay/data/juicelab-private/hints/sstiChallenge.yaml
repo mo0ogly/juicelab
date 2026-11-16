@@ -100,6 +100,7 @@ hints:
       automatiquement a la presence du fichier sur le filesystem.
       Vrai test : verifie d'abord la version Juice Shop et
       l'existence de l'endpoint /b2b/v2/orders dans ton instance.
+      Defense : (1) ne jamais passer des donnees utilisateur a vm.runInNewContext ou eval — utiliser un parser JSON strict pour les donnees B2B. (2) Desactiver le module child_process dans tout contexte sandbox. (3) Executer le traitement des commandes B2B dans un conteneur sans acces reseau sortant pour limiter l'impact d'un RCE.
     text_en: |
       This quasi-solution depends on the exact installed Juice
       Shop version. General payload shape:
@@ -112,5 +113,6 @@ hints:
       automatically once the file is on disk. Real test: first
       verify your Juice Shop version and the existence of the
       /b2b/v2/orders endpoint in your instance.
+      Defense: (1) never pass user data to vm.runInNewContext or eval — use a strict JSON parser for B2B order data. (2) Disable the child_process module in any sandbox context. (3) Run B2B order processing in a containerized environment with no outbound network access to limit RCE blast radius.
     pedagogical_intent: |
       Quasi-solution : full payload + version-dependency caveat.

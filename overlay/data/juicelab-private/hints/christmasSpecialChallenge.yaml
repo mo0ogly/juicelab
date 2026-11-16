@@ -96,6 +96,7 @@ hints:
       checkout. Le challenge se valide quand la commande contient
       ce produit. Hint OWASP #4 : "You need to get the deleted
       product into your shopping cart and trigger the Checkout".
+      Defense : (1) prepared statements / binding Sequelize pour prevenir la SQLi. (2) strategie de retention : hard-delete apres periode de grace, pas uniquement soft-delete. (3) ACL object-level : un produit soft-deleted retourne 410 Gone meme par acces direct par id.
     text_en: |
       Once you find the Christmas Special id (typically 10), add
       it to the basket via POST /api/BasketItems/ with body
@@ -105,5 +106,6 @@ hints:
       checkout. The challenge solves when the order contains this
       product. OWASP hint #4: "You need to get the deleted product
       into your shopping cart and trigger the Checkout".
+      Defense: (1) prepared statements / Sequelize binding to prevent SQLi. (2) retention policy: hard-delete obsolete products after grace period, not soft-delete only. (3) object-level ACL: soft-deleted products return 410 Gone even when fetched by id.
     pedagogical_intent: |
       Quasi-solution : full workflow from id discovery to checkout.

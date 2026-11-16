@@ -69,7 +69,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Construction du
+      Construction du
       payload : crafter un fichier > 100kB :
       ```bash
       # Generer un .pdf factice de 200kB
@@ -89,7 +89,7 @@ hints:
       curl. Le backend accepte (no multer limits).
       solveIf trigger -> challenge solve.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Payload construction:
+      Payload construction:
       craft a > 100kB file:
       ```bash
       # Generate fake 200kB .pdf
@@ -114,7 +114,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Login Juice Shop (besoin authenticated
          user pour /file-upload).
       2. Generer un fichier > 100kB :
@@ -142,7 +142,7 @@ hints:
       `limit: '100kb'`. (d) Disk quota
       OS-level. Defense en profondeur 4-layers.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Login Juice Shop (need authenticated
          user for /file-upload).
       2. Generate > 100kB file: `dd

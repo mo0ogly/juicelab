@@ -63,7 +63,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow detaille :
+      Workflow detaille :
       1. Login Juice Shop (need authenticated user
          pour basket).
       2. Adder un produit normal au basket via UI.
@@ -86,7 +86,7 @@ hints:
          `totalPrice < 0)` = true -> challenge
          solve auto.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Detailed workflow:
+      Detailed workflow:
       1. Login Juice Shop (need authenticated user
          for basket).
       2. Add normal product to basket via UI.
@@ -114,7 +114,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Solution canonique
+      Solution canonique
       complete (resume) :
       1. Login + add product au basket via UI.
       2. PUT /api/BasketItems/<id> avec quantity =
@@ -141,7 +141,7 @@ hints:
       `totalPrice < 0 -> 400`, (e) anomaly
       monitoring.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Canonical complete
+      Canonical complete
       solution (summary):
       1. Login + add product to basket via UI.
       2. PUT /api/BasketItems/<id> with quantity =

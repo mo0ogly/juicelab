@@ -110,6 +110,7 @@ hints:
          les orders de Bender en plus des tiens (vides).
       8. Le challenge se valide automatiquement.
       Source : verifie via grep dans routes/dataExport.ts.
+      Defense : (1) query les orders par user.id (cle primaire du JWT), jamais par email transforme. (2) Ne jamais utiliser des transformations lossy comme cle de filtre (CWE-639). (3) Redaction de l'email pour l'affichage uniquement, jamais pour le filtrage.
     text_en: |
       Complete workflow:
       1. Identify an active victim (with orders). Bender,
@@ -126,5 +127,6 @@ hints:
          orders plus yours (empty).
       8. Challenge auto-solves.
       Source: verified via grep in routes/dataExport.ts.
+      Defense: (1) query orders by user.id (primary key from JWT), never by transformed email. (2) Never use lossy transformations as query keys (CWE-639 Authorization Bypass Through User-Controlled Key). (3) Email redaction for display only, never for filtering.
     pedagogical_intent: |
       Quasi-solution : full 8-step workflow.

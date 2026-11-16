@@ -73,7 +73,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Trouver la clef
+      Trouver la clef
       AES dans le bundle Angular : Open
       DevTools Sources tab. Search dans les
       .js bundles : "encryptionKey" /
@@ -84,7 +84,7 @@ hints:
       ymrNS4znW0"` (ou similar 32-char string),
       c'est la clef AES.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Find AES key in
+      Find AES key in
       Angular bundle: Open DevTools Sources
       tab. Search in .js bundles:
       "encryptionKey" / "premiumKey" /
@@ -99,7 +99,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Sur /#/score-board, View Source HTML.
          Trouve le commentaire HTML AES-
          ciphertext `<!--...-->` dans la
@@ -146,7 +146,7 @@ hints:
       presigned) plutot que decrypter client-
       side. (c) audit log + key rotation.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. On /#/score-board, View Source HTML.
          Find AES-ciphertext HTML comment
          `<!--...-->` in Premium Paywall

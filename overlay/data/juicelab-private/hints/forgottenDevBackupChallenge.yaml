@@ -108,6 +108,7 @@ hints:
          specifique.
       Source : structure /ftp/ + null-byte technique documentee
       par easterEggLevelOne et Confidential Document codefixes.
+      Defense : (1) allowlist d'extensions validee au niveau filesystem (pas regex sur la chaine de chemin). (2) CI gate empeche les fichiers .bak/.swp/~ dans les dossiers publics de l'image Docker. (3) Tous les secrets de package.json.bak doivent etre rotates via un secret manager — jamais hardcodes dans le repo (OWASP A05 + A06).
     text_en: |
       Complete workflow:
       1. Type in the address bar:
@@ -122,5 +123,6 @@ hints:
          null-byte access pattern on this specific file.
       Source: /ftp/ structure + null-byte technique documented
       by easterEggLevelOne and Confidential Document codefixes.
+      Defense: (1) extension allowlist validated at filesystem level (not regex on path string). (2) CI gate preventing .bak/.swp/~ files in public Docker image folders. (3) All secrets in package.json.bak must be rotated via a secret manager — never hardcoded in repo (OWASP A05 + A06).
     pedagogical_intent: |
       Quasi-solution : full URL + downstream usage explanation.

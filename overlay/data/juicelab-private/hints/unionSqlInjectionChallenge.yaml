@@ -97,6 +97,7 @@ hints:
       La response affiche tous les users avec email et password
       hash en clair. Le challenge se valide automatiquement quand
       le serveur detecte la requete avec UNION + Users.
+      Defense : (1) binding parametre Sequelize sur le parametre /rest/products/search?q= empeche l'injection UNION. (2) Appliquer le principe du moindre privilege — le compte DB de l'appli ne doit pas avoir SELECT sur Users depuis le contexte de recherche produit. (3) Limiter les colonnes retournees par l'API pour eviter de leaker les hashes de mots de passe meme en cas d'injection.
     text_en: |
       Final payload for the q parameter (URL-encoded in practice):
       qwert')) UNION SELECT 1,email,password,'4','5',6,7,'8','9'
@@ -108,5 +109,6 @@ hints:
       The response shows every user with email and password hash
       in clear. The challenge solves itself when the server
       detects the query with UNION + Users.
+      Defense: (1) Sequelize parameterized binding on the /rest/products/search?q= parameter prevents UNION injection. (2) Enforce least-privilege DB user — the app account must not have SELECT on Users from the product search context. (3) Limit search result columns returned by the API to avoid leaking password hashes even if injection occurs.
     pedagogical_intent: |
       Quasi-solution : full URL-encoded payload + result expectation.

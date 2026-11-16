@@ -72,7 +72,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Source serveur
+      Source serveur
       verifiee (routes/easterEgg.ts:13) : le
       serve route est mappe en server.ts pour
       GET `/the/devs/are/so/funny/they/hid/an/
@@ -83,7 +83,7 @@ hints:
       assets/private/threejs-demo.html). Le
       client voit le 3D easter egg.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Verified server
+      Verified server
       source (routes/easterEgg.ts:13): serve
       route mapped in server.ts for GET
       `/the/devs/are/so/funny/they/hid/an/
@@ -99,7 +99,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Pre-requis : easterEggLevelOne
          Challenge resolu (Lot 2). Le content
          de /ftp/eastere.gg te donne le
@@ -135,7 +135,7 @@ hints:
       ROT13-obscured paths qui font penser a
       hidden malicious functionality).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Prerequisite: easterEggLevelOne
          Challenge solved (Lot 2). /ftp/
          eastere.gg content gives ROT13

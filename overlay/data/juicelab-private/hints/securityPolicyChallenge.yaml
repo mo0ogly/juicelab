@@ -54,7 +54,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Apprendre RFC 9116 (security.
+      Workflow : (1) Apprendre RFC 9116 (security.
       txt) + RFC 8615 (.well-known namespace). (2) Naviguer
       http://localhost:3000/.well-known/security.txt. (3) Lire le contenu
       (Contact, Encryption PGP, Policy URL, Acknowledgments). (4) Le
@@ -64,7 +64,7 @@ hints:
       : Contact, Expires, Canonical. (c) Verification continue
       internet.nl. Source : verify.ts:70.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Learn RFC 9116 (security.txt)
+      Workflow: (1) Learn RFC 9116 (security.txt)
       + RFC 8615 (.well-known namespace). (2) Navigate
       http://localhost:3000/.well-known/security.txt. (3) Read content
       (Contact, Encryption PGP, Policy URL, Acknowledgments). (4) Server

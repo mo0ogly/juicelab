@@ -60,7 +60,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Solver 2+ challenges (ex.
+      Workflow : (1) Solver 2+ challenges (ex.
       scoreBoardChallenge + DOMXssChallenge - faciles). (2) Voir 2+ pop-up
       notifications. (3) Console DevTools Chrome : `window.socket
       = ngScope.socket; socket.emit('notification received', [1, 2])`.
@@ -73,7 +73,7 @@ hints:
       de trust raw data, runtime type check, message envelope avec type
       field. Source : registerWebsocketEvents.ts:51.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Solve 2+ challenges (e.g.
+      Workflow: (1) Solve 2+ challenges (e.g.
       scoreBoardChallenge + DOMXssChallenge - easy ones). (2) See 2+
       notification popups. (3) Chrome DevTools Console: `window.socket
       = ngScope.socket; socket.emit('notification received', [1, 2])`.

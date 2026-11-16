@@ -105,6 +105,7 @@ hints:
       pour modifier les regex pattern Angular avant submit) — plus
       pedagogique mais plus longue. La methode 2 demontre le
       pattern le plus important : skip-le-frontend-via-curl.
+      Defense : (1) supprimer bypassSecurityTrustHtml du composant Angular — utiliser innerText ou textContent au lieu de [innerHTML]. (2) Valider streetAddress avec un schema d'input strict cote serveur (longueur max, pas de balises HTML). (3) Ajouter la sanitisation DOMPurify avant tout render [innerHTML] + CSP pour bloquer les scripts inline.
     text_en: |
       Complete workflow:
       1. Login + get JWT (or use active session).
@@ -118,5 +119,6 @@ hints:
       Angular regex patterns before submit) — more pedagogical
       but longer. Method 2 demonstrates the most important
       pattern: skip-frontend-via-curl.
+      Defense: (1) remove bypassSecurityTrustHtml from the Angular component — use innerText or textContent instead of [innerHTML]. (2) Validate streetAddress with strict input schema on the server (max length, no HTML tags). (3) Add DOMPurify sanitization before any [innerHTML] render + CSP to block inline scripts.
     pedagogical_intent: |
       Quasi-solution : 4-step workflow + alternative method.

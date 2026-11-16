@@ -85,7 +85,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow :
+      Workflow :
       1. GET /ftp/incident-support.kdbx ->
          download KeePass file (allowlist
          exception fileServer.ts:27).
@@ -108,7 +108,7 @@ hints:
       shared accounts, (c) MFA mandatory, (d)
       audit log.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow:
+      Workflow:
       1. GET /ftp/incident-support.kdbx ->
          download KeePass file (allowlist
          exception fileServer.ts:27).

@@ -28,19 +28,20 @@ hints:
     text_fr: |
       Hint OWASP officiel #2 : "OWASP Juice Shop uses a MongoDB
       derivate as its NoSQL database". MongoDB stocke les reviews
-      produit (visibles sous chaque produit). L'endpoint qui les
-      lit/cherche est /rest/products/reviews. Quel operateur MongoDB
-      permet d'executer du JavaScript COTE SERVEUR pour chaque
-      document analyse ?
+      produit (visibles sous chaque produit). Ouvre un produit avec
+      l'onglet Network des DevTools : quelle requete charge ses
+      reviews, et ou l'identifiant du produit apparait-il ? Quel
+      operateur MongoDB permet d'executer du JavaScript COTE SERVEUR
+      pour chaque document analyse ?
     text_en: |
       Official OWASP hint #2: "OWASP Juice Shop uses a MongoDB
       derivate as its NoSQL database". MongoDB stores product
-      reviews (visible under each product). The endpoint reading/
-      searching them is /rest/products/reviews. Which MongoDB
-      operator runs JavaScript SERVER-SIDE for each scanned
-      document?
+      reviews (visible under each product). Open a product with the
+      DevTools Network tab: which request loads its reviews, and
+      where does the product id appear? Which MongoDB operator runs
+      JavaScript SERVER-SIDE for each scanned document?
     pedagogical_intent: |
-      Localize the surface and hint $where.
+      Localize the surface by observation (Network tab) and hint $where.
 
   N3:
     cost_pct: 20
@@ -64,51 +65,61 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      sleep(milliseconds) est exposee dans le runtime MongoDB. Sur
-      l'endpoint /rest/products/reviews, le body attendu est un POST
-      avec { id: "<productId>" }. Si tu remplaces id par un objet
-      avec $where, MongoDB execute la string JavaScript serveur-
-      side. Squelette du body :
-      { "id": { "$where": "sleep(5000)" } }
-      Le serveur dort 5 secondes par document de reviews scanne, ce
-      qui multiplie la duree. Outil : Burp ou curl avec
-      Content-Type: application/json.
+      La requete est GET /rest/products/<id>/reviews. Cote serveur
+      (routes/showProductReviews.ts), l'id du chemin est concatene
+      tel quel dans une string $where :
+        { $where: 'this.product == ' + id }
+      Tu ne remplaces donc pas un champ JSON : tu ecris du JavaScript
+      a la place de l'id dans l'URL. Le runtime expose sleep(ms),
+      plafonne a 2000 ms par appel, et l'id est tronque a 40
+      caracteres. Le $where s'execute une fois PAR review : la duree
+      totale est (nombre de reviews) x (ms). Le challenge se valide
+      si la requete depasse 2000 ms.
     text_en: |
-      sleep(milliseconds) is exposed in the MongoDB runtime. On
-      /rest/products/reviews, the expected body is POST with
-      { id: "<productId>" }. If you replace id with an object
-      bearing $where, MongoDB runs the JavaScript string server-
-      side. Body skeleton:
-      { "id": { "$where": "sleep(5000)" } }
-      The server sleeps 5 seconds per scanned review document,
-      which multiplies the duration. Tool: Burp or curl with
-      Content-Type: application/json.
+      The request is GET /rest/products/<id>/reviews. Server-side
+      (routes/showProductReviews.ts), the path id is concatenated
+      as-is into a $where string:
+        { $where: 'this.product == ' + id }
+      So you do not replace a JSON field: you write JavaScript in
+      place of the id in the URL. The runtime exposes sleep(ms),
+      capped at 2000 ms per call, and the id is truncated to 40
+      characters. $where runs once PER review: total duration is
+      (number of reviews) x (ms). The challenge solves when the
+      request takes longer than 2000 ms.
     pedagogical_intent: |
-      Spell exact body and explain the multiplier effect.
+      Give the syntactic shape: injection point in the URL path, the
+      2000 ms cap and the per-document multiplier.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Payload complet via curl :
-      curl -X POST http://127.0.0.1:3000/rest/products/reviews
-        -H "Authorization: Bearer <ton_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"id":{"$where":"sleep(5000)"}}'
-      La response prend > 5 secondes (visible avec time curl ...).
-      Le challenge se valide automatiquement quand le serveur
-      detecte une requete avec $where + sleep. Important : ne PAS
-      mettre une valeur tres elevee (ex 60000), tu pourrais
-      vraiment tuer ton instance — 5000 suffit a valider.
+      Payload complet (aucune authentification requise) :
+        time curl -s -o /dev/null "http://127.0.0.1:3000/rest/products/sleep(200)/reviews"
+      Le $where devient 'this.product == sleep(200)' et s'execute
+      pour chaque review : avec les 28 reviews du jeu de donnees par
+      defaut, la reponse prend environ 5,6 s (mesure en recette sur
+      Juice Shop 19.2.1) et le challenge est resolu. Inutile de
+      monter la valeur : sleep est plafonne a 2000 ms par appel et
+      une valeur haute bloque ton instance pendant (28 x 2 s).
+      Defense : (1) ne jamais concatener une entree dans $where ;
+      desactiver l'execution JavaScript cote base. (2) Valider l'id
+      (entier attendu : Number(req.params.id), comme le fait le code
+      quand le challenge est desactive). (3) Timeout de requete au
+      niveau du driver pour limiter l'impact DoS.
     text_en: |
-      Full payload via curl:
-      curl -X POST http://127.0.0.1:3000/rest/products/reviews
-        -H "Authorization: Bearer <your_jwt>"
-        -H "Content-Type: application/json"
-        -d '{"id":{"$where":"sleep(5000)"}}'
-      The response takes > 5 seconds (visible with time curl ...).
-      The challenge solves automatically when the server detects a
-      request with $where + sleep. Important: do NOT set a very
-      high value (e.g. 60000), you could actually kill your
-      instance — 5000 is enough to validate.
+      Full payload (no authentication required):
+        time curl -s -o /dev/null "http://127.0.0.1:3000/rest/products/sleep(200)/reviews"
+      $where becomes 'this.product == sleep(200)' and runs for every
+      review: with the 28 reviews of the default dataset, the
+      response takes about 5.6 s (measured during testing on Juice
+      Shop 19.2.1) and the challenge is solved. No need for a higher
+      value: sleep is capped at 2000 ms per call and a high value
+      freezes your instance for (28 x 2 s).
+      Defense: (1) never concatenate input into $where; disable
+      server-side JavaScript execution in the database. (2) Validate
+      the id (integer expected: Number(req.params.id), as the code
+      does when the challenge is disabled). (3) Driver-level query
+      timeout to limit DoS impact.
     pedagogical_intent: |
-      Quasi-solution : full curl command + safety warning.
+      Full solution: exact URL, measured duration, safety reason for a
+      small value, canonical defense from the code itself.

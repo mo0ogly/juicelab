@@ -86,6 +86,7 @@ hints:
       peuvent leak en PROD si pas de feature flag / strip au
       build. Source : codefixes/web3SandboxChallenge.info.yml
       fix #1.
+      Defense : (1) supprimer toutes les routes de developpement du bundle Angular de production via un feature-flag (environment.production = true dans le routing). (2) Ajouter une gate CI qui echoue si une route contenant "sandbox", "debug" ou "admin" est presente dans le build de production sans auth guard. (3) Auditer tous les loadChildren pour le controle d'acces avant chaque release (codefixes/web3SandboxChallenge.info.yml fix #1).
     text_en: |
       Exact URL solving the challenge:
       http://127.0.0.1:3000/#/web3-sandbox
@@ -95,5 +96,6 @@ hints:
       on-the-fly — pedagogical value is showing that DEV features
       can leak into PROD without feature flag / build stripping.
       Source: codefixes/web3SandboxChallenge.info.yml fix #1.
+      Defense: (1) strip all development/internal routes from the production Angular bundle using a feature-flag mechanism (environment.production = true gating in routing). (2) Add a CI gate that fails if any route containing "sandbox", "debug", or "admin" is present in the production build without auth guard. (3) Review all loadChildren routes for access control before each release (codefixes/web3SandboxChallenge.info.yml fix #1).
     pedagogical_intent: |
       Quasi-solution : full URL + pedagogical takeaway.

@@ -26,57 +26,59 @@ hints:
     text_fr: |
       Le directory listing /ftp/ contient plusieurs fichiers,
       certains accessibles librement (.md, .pdf), d'autres bloques
-      par le serveur (.bak typiquement, sauvegardes confidentielles).
-      L'easter egg est probablement dans la categorie BLOQUEE :
-      pourquoi le cacher s'il est accessible directement ? Hint
-      OWASP #2 : "reuse the trick that already worked for the
-      files above" suggere une technique de bypass.
+      par le serveur (extensions non whitelistees). L'easter egg
+      est dans la categorie BLOQUEE : pourquoi le cacher s'il est
+      accessible directement ? Hint OWASP #2 : "reuse the trick
+      that already worked for the files above" suggere une
+      technique de bypass. Cherche un fichier au nom evocateur.
     text_en: |
       The /ftp/ directory listing contains several files, some
       freely accessible (.md, .pdf), others blocked by the server
-      (.bak typically, confidential backups). The easter egg is
-      probably in the BLOCKED category: why hide it if directly
-      accessible? OWASP hint #2: "reuse the trick that already
-      worked for the files above" suggests a bypass technique.
+      (non-whitelisted extensions). The easter egg is in the
+      BLOCKED category: why hide it if directly accessible? OWASP
+      hint #2: "reuse the trick that already worked for the files
+      above" suggests a bypass technique. Look for a file with an
+      evocative name.
     pedagogical_intent: |
       Reframe the question: what extension is blocked, and how to bypass.
 
   N3:
     cost_pct: 20
     text_fr: |
-      Quand un serveur applique un filtre d'extension par regex
-      (bloquer tout ce qui finit par .bak), des bypass classiques
-      existent : poison null byte %00 et query string suffix
-      ?.md. Ces techniques exploitent une difference de parsing
-      entre le filtre (regex sur la chaine recue) et le filesystem
-      (qui ouvre le vrai fichier). L'easter egg est probablement un
-      fichier .bak dans /ftp/ avec un nom evocateur.
+      Quand un serveur applique un filtre d'extension par regex,
+      des bypass classiques existent : poison null byte %00 et
+      query string suffix ?.md. Ces techniques exploitent une
+      difference de parsing entre le filtre (regex sur la chaine
+      recue) et le filesystem (qui ouvre le vrai fichier).
+      L'easter egg dans /ftp/ a une extension inhabituelle (pas
+      .md ni .pdf) — cherche un fichier dont le nom contient
+      "easter" ou "egg".
     text_en: |
-      When a server applies an extension filter via regex (block
-      anything ending in .bak), classic bypasses exist: poison
-      null byte %00 and query string suffix ?.md. These exploit a
-      parsing difference between the filter (regex on the
-      received string) and the filesystem (opening the real
-      file). The easter egg is probably a .bak file in /ftp/
-      with an evocative name.
+      When a server applies an extension filter via regex, classic
+      bypasses exist: poison null byte %00 and query string suffix
+      ?.md. These exploit a parsing difference between the filter
+      (regex on the received string) and the filesystem (opening
+      the real file). The easter egg in /ftp/ has an unusual
+      extension (not .md or .pdf) — look for a file whose name
+      contains "easter" or "egg".
     pedagogical_intent: |
       Spell the bypass techniques.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Sur /ftp/, regarde les fichiers .bak qui sont listes mais
-      retournent 403 quand tu les requetes directement. Le fichier
-      cible s'appelle typiquement eastere.gg ou similaire (extension
-      .gg, jeu de mots avec good game). Tente l'URL :
+      Sur /ftp/, repere les fichiers qui retournent 403 quand tu
+      les requetes directement (extensions bloquees). Le fichier
+      cible s'appelle eastere.gg (extension .gg, jeu de mots avec
+      "good game" — pas une extension .bak). Tente l'URL :
       /ftp/eastere.gg%2500.md (le %2500 est l'URL-encoding double
       du null byte %00).
     text_en: |
-      On /ftp/, look at .bak files that are listed but return 403
-      when requested directly. The target file is typically named
-      eastere.gg or similar (.gg extension, pun on good game).
-      Try the URL: /ftp/eastere.gg%2500.md (the %2500 is the
-      double URL-encoding of the null byte %00).
+      On /ftp/, identify files that return 403 when requested
+      directly (blocked extensions). The target file is named
+      eastere.gg (.gg extension, pun on "good game" — not a .bak
+      extension). Try the URL: /ftp/eastere.gg%2500.md (the
+      %2500 is the double URL-encoding of the null byte %00).
     pedagogical_intent: |
       Give the file naming hint and exact null-byte bypass syntax.
 
@@ -91,6 +93,7 @@ hints:
       truncation C-string sur le first null byte, ouvre
       "eastere.gg". Le contenu apparait dans le navigateur, le
       challenge se valide automatiquement.
+      Defense : (1) allowlist d'extensions (pas blocklist) validee au niveau filesystem, pas uniquement sur la chaine de chemin recue. (2) Audit periodique de /ftp/ — supprimer tous les fichiers non necessaires en production. (3) Alerte SIEM sur les requetes vers des extensions inhabituelles (.bak, .gg, .env).
     text_en: |
       Exact URL solving the challenge (after solving Confidential
       Document):
@@ -100,5 +103,6 @@ hints:
       C-string truncation on the first null byte, opens
       "eastere.gg". Content shows in the browser, challenge
       auto-solves.
+      Defense: (1) extension allowlist (not blocklist) validated at the filesystem level, not just on the request path string. (2) Periodic audit of /ftp/ — remove all non-production files. (3) SIEM alert on requests to unusual extensions (.bak, .gg, .env).
     pedagogical_intent: |
       Quasi-solution : full URL with double-encoding explanation.

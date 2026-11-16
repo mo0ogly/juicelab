@@ -61,7 +61,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Naviguer /#/web3-sandbox
+      Workflow : (1) Naviguer /#/web3-sandbox
       (ou similaire). (2) Connect Metamask (Sepolia testnet, test ETH du
       faucet sepoliafaucet.com). (3) Le shop call POST /web3 avec
       walletAddress -> serveur add to walletsConnected (web3Wallet.ts:14).
@@ -77,7 +77,7 @@ hints:
       multi-sig, time lock, EIP-712 integration. Source : web3Wallet.ts
       :14-26.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Navigate /#/web3-sandbox (or
+      Workflow: (1) Navigate /#/web3-sandbox (or
       similar). (2) Connect Metamask (Sepolia testnet, test ETH from
       sepoliafaucet.com). (3) Shop calls POST /web3 with walletAddress
       -> server adds to walletsConnected (web3Wallet.ts:14). (4) Inspect

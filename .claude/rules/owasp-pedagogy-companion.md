@@ -165,6 +165,13 @@ Aucun lot n'est "DONE" tant que les 7 gates ne sont pas vertes.
 
 ## Tracking — `.claude/output/owasp-pedagogy-companion/TRACKER.md`
 
+> **2026-11-16** : ce chemin est gitignoré ; le tracker et
+> `lint_juicelab_pedagogy.py` ont été perdus. La revue de correction des
+> hints (exactitude vérifiée contre le code + recette sur lab) est suivie dans
+> `docs/HINTS-REVIEW-20261116.md` (versionné). Leçon : 4 packs sur 5 du
+> premier lot donnaient un payload ou une condition de validation fausse ;
+> une source lue ne suffit pas, rejouer le N5 sur un lab de même version.
+
 Le tracker est l'unique source de vérité du progrès. Format imposé :
 
 | key | category | difficulty | sources_read | briefing | hints | quiz | journal | notes |

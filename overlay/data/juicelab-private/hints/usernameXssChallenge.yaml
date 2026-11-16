@@ -108,6 +108,7 @@ hints:
          du double bug : regex bypassed + CSP nonce attacker-
          controlled. Source : OWASP XSS Prevention Cheat Sheet
          linked dans challenges.yml.
+      Defense : (1) generer le nonce CSP cote serveur via crypto.randomBytes — ne jamais le deriver d'une entree utilisateur comme le username. (2) Sanitiser le champ username avec une allowlist stricte (alphanumerique + ponctuation limitee) cote serveur, pas uniquement via regex client. (3) Encoder le username pour le contexte HTML avec un encodeur context-aware avant de l'injecter dans un rendu template.
     text_en: |
       This quasi-solution depends on the exact Juice Shop
       version. General form:
@@ -121,5 +122,6 @@ hints:
          the double bug: regex bypassed + attacker-controlled
          CSP nonce. Source: OWASP XSS Prevention Cheat Sheet
          linked in challenges.yml.
+      Defense: (1) generate the CSP nonce server-side with crypto.randomBytes — never derive it from user-controlled input like the username. (2) Sanitize the username field with a strict allowlist (alphanumeric + limited punctuation) server-side, not just client regex. (3) Encode username for HTML context using a context-aware encoder before injecting it into any template output.
     pedagogical_intent: |
       Quasi-solution : workflow + version-dependency caveat.

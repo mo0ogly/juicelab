@@ -100,6 +100,7 @@ hints:
       la chanson "Protect Ya' Passwordz" pour confirmer le
       pattern. Source : Juice Shop seeded accounts (lib/
       datacreator.ts ou similaire dans le repo officiel).
+      Defense : (1) les mots de passe doivent etre generes aleatoirement et stockes avec bcrypt/argon2 — jamais thematiques ni devinables depuis du contenu public. (2) Imposer MFA TOTP comme second facteur d'authentification. (3) Rate-limiter les tentatives de login et bloquer le compte apres N echecs.
     text_en: |
       Direct workflow:
       1. Go to /#/login
@@ -114,5 +115,6 @@ hints:
       Ya' Passwordz" song to confirm pattern. Source: Juice
       Shop seeded accounts (lib/datacreator.ts or similar in
       official repo).
+      Defense: (1) passwords must be randomly generated and stored with bcrypt/argon2 — never themed or guessable from public content. (2) Enforce MFA TOTP to add a second authentication factor. (3) Rate-limit login attempts and implement account lockout after N failures.
     pedagogical_intent: |
       Quasi-solution : exact email + password + version caveat.

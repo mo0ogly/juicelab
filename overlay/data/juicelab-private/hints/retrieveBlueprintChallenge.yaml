@@ -59,7 +59,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_PROBABLE] Le path exact varie selon la
+      Le path exact varie selon la
       version Juice Shop. Strategie :
       1. Telecharge l'image du produit candidat.
       2. exiftool -a -G1 image.jpg (lit tous les fields).
@@ -69,7 +69,7 @@ hints:
       5. Telecharge l'URL trouvee. Le challenge se valide
          automatiquement quand le serveur detecte le download.
     text_en: |
-      [KILL_CHAIN_PROBABLE] Exact path varies by Juice Shop
+      Exact path varies by Juice Shop
       version. Strategy:
       1. Download candidate product image.
       2. exiftool -a -G1 image.jpg (reads all fields).
@@ -84,7 +84,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_PROBABLE] Workflow general (path exact a
+      Workflow general (path exact a
       verifier avec ton instance Juice Shop) :
       1. /#/search : trouve "OWASP Juice Shop Logo (3D-printed)"
          ou produit similar.
@@ -99,7 +99,7 @@ hints:
       Source : pattern documente dans hints OWASP officiels +
       anti-pattern OWASP A05 Security Misconfiguration.
     text_en: |
-      [KILL_CHAIN_PROBABLE] General workflow (exact path to
+      General workflow (exact path to
       verify on your Juice Shop instance):
       1. /#/search: find "OWASP Juice Shop Logo (3D-printed)"
          or similar product.
@@ -113,5 +113,6 @@ hints:
       5. Download .stl. Challenge solves.
       Source: pattern documented in official OWASP hints +
       OWASP A05 Security Misconfiguration anti-pattern.
+      Defense: (1) strip all EXIF metadata server-side before serving product images — never embed internal file paths in public image metadata. (2) Restrict access to .stl blueprint files to authenticated admin roles only. (3) Audit assets/public/ for any files not intended for public access (OWASP A05 Security Misconfiguration).
     pedagogical_intent: |
       Quasi-solution : workflow + version-dependency note.

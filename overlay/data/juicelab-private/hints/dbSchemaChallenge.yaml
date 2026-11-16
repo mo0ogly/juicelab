@@ -92,6 +92,7 @@ hints:
       TABLE. Tu obtiens le schema complet de toutes les tables
       Juice Shop : Users, Products, Baskets, Feedbacks, etc. Avec
       colonnes et types.
+      Defense : (1) binding parametre Sequelize (equivalent prepared statement) empeche l'injection. (2) Une blocklist regex seule est insuffisante et contournable — seule la parametrisation est le fix canonique (codefixes fix #2).
     text_en: |
       Once aligned (typically 9 columns for Products in Juice
       Shop), exfiltrate the schema with:
@@ -101,5 +102,6 @@ hints:
       TABLE. You get the full schema of every Juice Shop table:
       Users, Products, Baskets, Feedbacks, etc. With columns and
       types.
+      Defense: (1) Sequelize parameterized binding (prepared statement equivalent) prevents the injection. (2) Regex blocklist alone is insufficient and will be bypassed — only parameterization is the canonical fix (codefixes fix #2).
     pedagogical_intent: |
       Quasi-solution : full URL payload with exact column count.

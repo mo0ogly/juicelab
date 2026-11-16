@@ -64,7 +64,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_PROBABLE] La seed exacte depend de la
+      La seed exacte depend de la
       version Juice Shop. Pistes plausibles :
       (1) Cherche dans /ftp/ apres avoir resolu directory
           listing — un fichier .md ou .txt pourrait contenir
@@ -75,7 +75,7 @@ hints:
       (3) Inspecte le bundle JS pour des constantes type
           MNEMONIC ou SEED.
     text_en: |
-      [KILL_CHAIN_PROBABLE] Exact seed depends on Juice Shop
+      Exact seed depends on Juice Shop
       version. Plausible leads:
       (1) Look in /ftp/ after solving directory listing —
           a .md or .txt file may contain the seed.
@@ -89,7 +89,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_PROBABLE] Workflow general (cle exacte a
+      Workflow general (cle exacte a
       OSINTer) :
       1. Resous directoryListingChallenge pour acceder /ftp/.
       2. Inspecte les fichiers : un fichier comme
@@ -106,8 +106,9 @@ hints:
          courant).
       Note : la version du Juice Shop installee determine OU
       exactement la seed est leakee. Fais OSINT cible.
+      Defense : (1) les seed phrases sont des secrets terminaux — ne jamais les coller ou partager (Slack, GitHub, Discord). (2) Utiliser un hardware wallet pour les NFTs de production — la seed ne quitte jamais le dispositif. (3) Activer le GitHub secret scanning et configurer des alertes pour la detection de patterns BIP39 12 mots dans les repos.
     text_en: |
-      [KILL_CHAIN_PROBABLE] General workflow (exact key to
+      General workflow (exact key to
       OSINT):
       1. Solve directoryListingChallenge to access /ftp/.
       2. Inspect files: a file like
@@ -122,5 +123,6 @@ hints:
          checking the current wallet address).
       Note: installed Juice Shop version determines WHERE
       exactly the seed leaks. Do targeted OSINT.
+      Defense: (1) seed phrases are terminal secrets — never paste them anywhere (Slack, GitHub, Discord). (2) Use a hardware wallet for production NFTs — seed never leaves the device. (3) Enable GitHub secret scanning and configure alerts for 12-word BIP39 pattern detection in repos.
     pedagogical_intent: |
       Quasi-solution : workflow + OSINT decay note.

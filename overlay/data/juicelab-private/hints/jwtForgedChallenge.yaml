@@ -81,7 +81,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Outils :
+      Outils :
       (a) Burp JWT Editor extension (interface
       graphique, copier la public key dans "key
       confusion attack" panel).
@@ -102,7 +102,7 @@ hints:
       117 (jwt.verify avec security.publicKey sans
       algorithms restriction).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Tools:
+      Tools:
       (a) Burp JWT Editor extension (graphical UI,
       paste public key in "key confusion attack"
       panel).
@@ -128,7 +128,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Login Juice Shop, recup ton valid JWT.
       2. Recup la public key Juice Shop. Methodes :
          - GET /encryptionkeys (si visible sur le
@@ -164,7 +164,7 @@ hints:
       explicit, library moderne, key type binding
       (HMAC secret != RSA public key).
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Login Juice Shop, retrieve your valid JWT.
       2. Retrieve Juice Shop public key. Methods:
          - GET /encryptionkeys (if visible on

@@ -63,95 +63,51 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Construction du payload :
-      ```bash
-      curl -X POST http://localhost:3000/api/Users
-        -H "Content-Type: application/json"
-        -d '{
-          "email":"",
-          "password":"",
-          "passwordRepeat":"",
-          "securityQuestion":{"id":1},
-          "securityAnswer":"x"
-        }'
-      ```
-      Le securityQuestion + securityAnswer doivent
-      etre fournis (sinon NULL constraint sur la
-      table). Si la DB rejette les empty strings sur
-      email/password, le challenge ne se solve PAS
-      (mais Juice Shop n'a pas ce constraint au
-      niveau ORM, donc ca passe).
+      Le formulaire envoie POST /api/Users. Tu dois reproduire cet
+      appel hors de l'UI (Burp Repeater, onglet Network > "Edit and
+      Resend", ou curl) avec un corps JSON ou email et password sont
+      des chaines vides. Ni question de securite ni jeton ne sont
+      exiges par le serveur : seuls email et password comptent pour
+      la validation. Ajoute passwordRepeat vide lui aussi, pour ne
+      pas resoudre passwordRepeatChallenge au passage.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Payload construction:
-      ```bash
-      curl -X POST http://localhost:3000/api/Users
-        -H "Content-Type: application/json"
-        -d '{
-          "email":"",
-          "password":"",
-          "passwordRepeat":"",
-          "securityQuestion":{"id":1},
-          "securityAnswer":"x"
-        }'
-      ```
-      securityQuestion + securityAnswer must be
-      provided (otherwise NULL constraint on table).
-      If DB rejects empty strings on email/password,
-      challenge does NOT solve (but Juice Shop
-      doesn't have this constraint at ORM level, so
-      it passes).
+      The form sends POST /api/Users. Replay that call outside the
+      UI (Burp Repeater, Network tab > "Edit and Resend", or curl)
+      with a JSON body where email and password are empty strings.
+      Neither a security question nor a token is required by the
+      server: only email and password matter for validation. Add an
+      empty passwordRepeat too, so you do not solve
+      passwordRepeatChallenge along the way.
     pedagogical_intent: |
-      Spell exact payload + edge constraints.
+      Guided steps: replay tool, minimal body, side effect to avoid.
 
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
-      1. Open Burp Suite OR ouvrir un terminal pour
-         curl.
-      2. Construire la requete POST /api/Users avec
-         body :
-         `{"email":"","password":"","passwordRepeat"
-         :"","securityQuestion":{"id":1},
-         "securityAnswer":"anything"}`.
-      3. Envoyer la requete. Le serveur :
-         (a) Sequelize User.create avec email="" et
-             password="" sans validation.
-         (b) Le middleware verify.emptyUser
-             Registration (server.ts:422) check
-             req.body.email==='' && password==='' ->
-             match -> challenge solve auto.
-      4. Note : un user avec email vide est
-         essentiellement broken (impossible de login)
-         mais le challenge est solve.
-      Source canonique : routes/verify.ts:21-26 +
-      server.ts:422 + OWASP Input Validation Cheat
-      Sheet.
-      Defense canonique : Sequelize model validators
-      (allowNull: false + validate.notEmpty +
-      validate.isEmail) + middleware joi/zod schema.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) :
+        curl -s -X POST http://127.0.0.1:3000/api/Users \
+          -H "Content-Type: application/json" \
+          -d '{"email":"","password":"","passwordRepeat":""}'
+      Reponse "status":"success" avec un utilisateur dont l'email est
+      vide : le middleware verify.emptyUserRegistration (server.ts:422,
+      routes/verify.ts:21-26) resout le challenge.
+      Defense : valider cote serveur ce que le formulaire valide cote
+      client (email non vide et bien forme, mot de passe non vide et
+      conforme a la politique), par validators du modele User ou
+      schema de requete. Une validation Angular ne protege que
+      l'utilisateur honnete.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
-      1. Open Burp Suite OR terminal for curl.
-      2. Build POST /api/Users request with body:
-         `{"email":"","password":"","passwordRepeat"
-         :"","securityQuestion":{"id":1},
-         "securityAnswer":"anything"}`.
-      3. Send request. Server:
-         (a) Sequelize User.create with email="" and
-             password="" without validation.
-         (b) verify.emptyUserRegistration middleware
-             (server.ts:422) checks req.body.email
-             ==='' && password==='' -> match ->
-             challenge auto solves.
-      4. Note: user with empty email is essentially
-         broken (impossible to login) but challenge
-         solves.
-      Canonical source: routes/verify.ts:21-26 +
-      server.ts:422 + OWASP Input Validation Cheat
-      Sheet.
-      Canonical defense: Sequelize model validators
-      (allowNull: false + validate.notEmpty +
-      validate.isEmail) + middleware joi/zod schema.
+      Solution (verified during testing on Juice Shop 19.2.1):
+        curl -s -X POST http://127.0.0.1:3000/api/Users \
+          -H "Content-Type: application/json" \
+          -d '{"email":"","password":"","passwordRepeat":""}'
+      Response "status":"success" with a user whose email is empty:
+      the verify.emptyUserRegistration middleware (server.ts:422,
+      routes/verify.ts:21-26) solves the challenge.
+      Defense: validate server-side what the form validates
+      client-side (non-empty, well-formed email; non-empty password
+      matching the policy), with User model validators or a request
+      schema. Angular validation only protects the honest user.
     pedagogical_intent: |
-      Solution complete + defense canonique.
+      Full solution: verified minimal command, solving middleware,
+      canonical server-side defense.

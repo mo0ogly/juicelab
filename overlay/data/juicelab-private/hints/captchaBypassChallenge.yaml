@@ -61,7 +61,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) DevTools Network sur
+      Workflow : (1) DevTools Network sur
       /#/contact > submit manuel > inspect POST /api/Feedbacks. (2) Notes
       shape body : { comment, rating, captcha, captchaId }. (3) Notes que
       GET /api/captcha retourne { captcha: "3+5", captchaId: 42 }. (4)
@@ -75,7 +75,7 @@ hints:
       rate-limit (max=5/min) + express-slow-down + reCAPTCHA v3 + honeypot
       + behavioral analysis. Source : verify.ts:37-41.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) DevTools Network on /#/contact
+      Workflow: (1) DevTools Network on /#/contact
       > manual submit > inspect POST /api/Feedbacks. (2) Note body shape:
       { comment, rating, captcha, captchaId }. (3) Note GET /api/captcha
       returns { captcha: "3+5", captchaId: 42 }. (4) Bash script:

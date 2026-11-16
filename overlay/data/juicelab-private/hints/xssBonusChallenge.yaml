@@ -77,17 +77,27 @@ hints:
          iframe Soundcloud avec autoplay).
       2. Colle ce payload dans le champ de recherche en haut de page.
       3. Appuie sur Entree. Une lecture audio commence dans la page.
-         Juice Shop valide automatiquement le challenge Bonus Payload
-         des qu'il detecte ce payload specifique en argument de
-         recherche traite par bypassSecurityTrustHtml.
+         Mecanisme de validation (verifie dans le code) : la page de
+         resultats envoie le parametre q au serveur par websocket
+         (evenement verifyLocalXssChallenge, search-result.component.ts),
+         et le serveur resout le challenge si q contient exactement le
+         payload configure (lib/startup/registerWebsocketEvents.ts).
+         L'injection elle-meme vient de bypassSecurityTrustHtml(q).
+         Defense : ne pas desactiver le sanitizer Angular ; afficher q
+         par interpolation {{ }} (echappee) plutot qu'en [innerHTML].
     text_en: |
       1. Go to the score-board, expand the "Bonus Payload" challenge,
          copy the exact payload shown in the description (a Soundcloud
          iframe with autoplay).
       2. Paste that payload into the top search bar.
       3. Press Enter. An audio playback starts on the page. Juice Shop
-         auto-validates the Bonus Payload challenge as soon as it
-         detects this specific payload in the search argument processed
-         by bypassSecurityTrustHtml.
+         Validation mechanism (checked in the code): the results page
+         sends the q parameter to the server over websocket
+         (verifyLocalXssChallenge event, search-result.component.ts),
+         and the server solves the challenge if q contains exactly the
+         configured payload (lib/startup/registerWebsocketEvents.ts).
+         The injection itself comes from bypassSecurityTrustHtml(q).
+         Defense: do not bypass the Angular sanitizer; render q through
+         {{ }} interpolation (escaped) rather than [innerHTML].
     pedagogical_intent: |
       Quasi-solution: explicit copy-paste workflow + scoring mechanism.

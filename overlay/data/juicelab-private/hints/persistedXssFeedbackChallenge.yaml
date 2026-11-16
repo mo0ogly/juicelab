@@ -106,6 +106,7 @@ hints:
       Hint #5 OWASP : si tu as un alert mais pas le challenge
       qui se valide, c'est que la string EXACTE n'est pas en
       DB. Iterate jusqu'a obtenir la string exacte.
+      Defense : (1) mettre a jour sanitize-html vers une version corrigee actuelle (SBOM + npm audit en CI). (2) Appliquer un encodage de sortie context-aware via DOMPurify lors du rendu des feedbacks utilisateur. (3) Imposer une CSP stricte (Content-Security-Policy) pour bloquer l'execution de scripts inline.
     text_en: |
       Complete workflow:
       1. Solve forgottenDevBackup (extract package.json.bak from
@@ -122,5 +123,6 @@ hints:
       OWASP hint #5: if you have an alert but the challenge
       doesn't solve, the EXACT string isn't in DB. Iterate
       until you get the exact string.
+      Defense: (1) update sanitize-html to a current patched version (SBOM + npm audit in CI). (2) Apply context-aware output encoding via DOMPurify when rendering user feedback. (3) Enforce strict CSP (Content-Security-Policy) to block inline script execution.
     pedagogical_intent: |
       Quasi-solution : full kill chain + warning on exact-string match.

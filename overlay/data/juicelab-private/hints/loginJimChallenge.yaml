@@ -79,10 +79,12 @@ hints:
       (sans espace apres l'apostrophe), password = n'importe quoi
       (commente). Clique Login. Tu es Jim. Source exacte : tutoriel
       hacking-instructor loginJim.ts ligne 87-90 et 99-101.
+      Defense : (1) prepared statements / binding parametre Sequelize sur toutes les queries de login. (2) MFA TOTP comme second facteur pour bloquer les sessions meme quand le check password est bypasse. (3) Rate-limiter les tentatives de login + blocage du compte apres N echecs.
     text_en: |
       On the login form, type email = jim@juice-sh.op'-- (no space
       after the quote), password = anything (commented out). Click
       Login. You are Jim. Exact source: hacking-instructor tutorial
       loginJim.ts line 87-90 and 99-101.
+      Defense: (1) prepared statements / Sequelize parameterized binding on all login queries. (2) MFA TOTP as second factor to block sessions even when password check is bypassed. (3) Rate-limit login attempts + account lockout after N failures.
     pedagogical_intent: |
       Quasi-solution : exact payload + source citation.

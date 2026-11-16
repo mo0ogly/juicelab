@@ -92,6 +92,7 @@ hints:
       un row accountant ephemere, le AND password est commente, le
       JWT est signe pour ce row fictif. Tu es connecte sous une
       identite qui n'a jamais existe en DB.
+      Defense : (1) prepared statements / binding parametre Sequelize pour empecher l'injection UNION. (2) Ne pas utiliser le resultat brut du SELECT pour signer le JWT — re-fetcher les claims via une seconde query parametree par user_id (defense secondaire).
     text_en: |
       Sample payload for the email field:
       ' UNION SELECT 0,null,'acc0unt4nt@juice-sh.op',null,'accountant',
@@ -102,5 +103,6 @@ hints:
       accountant row, the AND password gets commented, the JWT is
       signed for that fake row. You are logged in under an identity
       that never existed in DB.
+      Defense: (1) prepared statements / Sequelize parameterized binding to prevent UNION injection. (2) Do not use the raw SELECT result to sign the JWT — re-fetch claims via a second parameterized query keyed on user_id (secondary defense).
     pedagogical_intent: |
       Quasi-solution : full payload + reconstructed SQL + behavior explained.

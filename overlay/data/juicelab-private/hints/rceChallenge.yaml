@@ -63,7 +63,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow : (1) Login (Bearer token via
+      Workflow : (1) Login (Bearer token via
       DevTools Network). (2) Inspect /#/order pour identifier B2B
       endpoint. (3) Build curl POST avec orderLinesData = "while(true){}".
       (4) Le serveur b2bOrder.ts:23
@@ -75,7 +75,7 @@ hints:
       Defense : remplacer eval par JSON Schema (Ajv) qui valide shape
       declaratif. JAMAIS eval sur user input. Source : b2bOrder.ts:23-31.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Workflow: (1) Login (Bearer token via
+      Workflow: (1) Login (Bearer token via
       DevTools Network). (2) Inspect /#/order to identify B2B endpoint.
       (3) Build curl POST with orderLinesData = "while(true){}". (4)
       Server b2bOrder.ts:23 `vm.runInContext('safeEval(orderLinesData)',

@@ -70,7 +70,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Construction du
+      Construction du
       couponData :
       ```js
       // Pour WMNSDY2019 (Mar 08, 2019 GMT+0100)
@@ -88,7 +88,7 @@ hints:
       match WMNSDY2019.validOn -> apply 75%
       discount + solve manipulateClock.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] couponData
+      couponData
       construction:
       ```js
       // For WMNSDY2019 (Mar 08, 2019 GMT+0100)
@@ -112,7 +112,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Login + add product au basket via UI.
       2. Inspecter le bundle Angular pour trouver
          WMNSDY2019 (ou WMNSDY2020 / WMNSDY2021,
@@ -148,7 +148,7 @@ hints:
       coupon). (d) coupon revocation API si
       besoin.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Login + add product to basket via UI.
       2. Inspect Angular bundle to find WMNSDY
          2019 (or WMNSDY2020 / WMNSDY2021, all

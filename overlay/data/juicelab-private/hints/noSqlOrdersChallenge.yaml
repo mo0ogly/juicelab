@@ -103,6 +103,7 @@ hints:
       serveur detecte la requete avec un objet operateur sur
       track-order. Source de validation : la route route.ts du
       track-order verifie le pattern de l'attaque cote backend.
+      Defense : (1) valider le type de l'input : orderId doit etre une string, rejeter les objets operateurs MongoDB avec un schema Joi/Zod. (2) Filtrer les resultats par l'id de l'utilisateur authentifie cote serveur. (3) Utiliser express-mongo-sanitize pour stripper les operateurs $ des inputs utilisateur.
     text_en: |
       curl 'http://127.0.0.1:3000/rest/track-order/%7B%22%24ne%22%3A-1%7D'
       -H 'Authorization: Bearer <your_jwt>'
@@ -111,5 +112,6 @@ hints:
       the request with an operator object on track-order.
       Validation source: the track-order route.ts checks the
       attack pattern server-side.
+      Defense: (1) validate input type: orderId must be a string, reject MongoDB operator objects with Joi/Zod schema. (2) Filter query results by authenticated user's id server-side, even if the orderId matches. (3) Use mongoose sanitize plugins (express-mongo-sanitize) to strip $ operators from user inputs.
     pedagogical_intent: |
       Quasi-solution : full curl + result expectation.

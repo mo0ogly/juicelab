@@ -61,7 +61,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_PROBABLE] Le challenge OWASP est documente
+      Le challenge OWASP est documente
       vague — la technique exacte depend de la version Juice
       Shop. Methode generale : (1) grep le bundle JS pour
       "callback=" ou "jsonp", (2) tester chaque endpoint
@@ -71,7 +71,7 @@ hints:
       callback=stealEmails"> et stealEmails extrait les
       donnees.
     text_en: |
-      [KILL_CHAIN_PROBABLE] OWASP challenge is documented
+      OWASP challenge is documented
       vaguely — exact technique depends on Juice Shop
       version. General method: (1) grep JS bundle for
       "callback=" or "jsonp", (2) test each candidate
@@ -85,7 +85,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_PROBABLE] Je ne peux pas garantir le
+      Je ne peux pas garantir le
       payload exact sans tester sur ton instance Juice Shop.
       Workflow general :
       1. Inspecte le bundle JS et les responses des
@@ -101,8 +101,9 @@ hints:
          qui les log.
       Si bloque, fais OSINT sur "Juice Shop emailLeak
       challenge JSONP" pour le payload version-specific.
+      Defense : (1) supprimer tous les endpoints JSONP (grep callback= dans les handlers). (2) Migrer vers CORS avec Access-Control-Allow-Origin en allowlist explicite (jamais "*" pour les endpoints avec donnees user). (3) Ajouter les headers COOP + COEP + CORP contre les XS-Leaks (OWASP XS-Leaks Cheat Sheet).
     text_en: |
-      [KILL_CHAIN_PROBABLE] I can't guarantee exact payload
+      I can't guarantee exact payload
       without testing on your Juice Shop instance. General
       workflow:
       1. Inspect JS bundle and /rest/user/* endpoint
@@ -117,5 +118,6 @@ hints:
       5. Server returns emails in callback, logging them.
       If stuck, do OSINT on "Juice Shop emailLeak challenge
       JSONP" for version-specific payload.
+      Defense: (1) decommission all JSONP endpoints (grep callback= in handlers). (2) Migrate to CORS with explicit Access-Control-Allow-Origin allowlist (never "*" for user-data endpoints). (3) Add COOP + COEP + CORP headers for defense in depth against XS-Leaks (OWASP XS-Leaks Cheat Sheet).
     pedagogical_intent: |
       Quasi-solution : workflow + version-dependency caveat.

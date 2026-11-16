@@ -62,7 +62,7 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Source serveur verifiee
+      Source serveur verifiee
       (routes/verify.ts:270-274) :
       `void checkPatternInFeedbackAndComplaints(
       challenges.typosquattingNpmChallenge,
@@ -72,7 +72,7 @@ hints:
       submit un feedback (ou complaint B2B) avec un
       commentaire qui contient ce nom exact.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Verified server source
+      Verified server source
       (routes/verify.ts:270-274):
       `void checkPatternInFeedbackAndComplaints(
       challenges.typosquattingNpmChallenge,
@@ -87,7 +87,7 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      [KILL_CHAIN_DOCUMENTED] Workflow complet :
+      Workflow complet :
       1. Resoudre forgottenDevBackupChallenge
          (pre-requis OWASP hint #1).
       2. Telecharger /ftp/package.json.bak via le
@@ -111,7 +111,7 @@ hints:
       (Socket.dev), package signing (npm provenance
       v9+), private mirror, developer awareness.
     text_en: |
-      [KILL_CHAIN_DOCUMENTED] Full workflow:
+      Full workflow:
       1. Solve forgottenDevBackupChallenge (OWASP hint
          #1 prerequisite).
       2. Download /ftp/package.json.bak via null byte
