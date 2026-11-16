@@ -108,91 +108,36 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Setup Web3 :
-         - Install MetaMask
-         - Add Sepolia network
-         - Get Sepolia ETH via faucet
-         - Connect to Juice Shop /#/wallet
-      2. Discover the Honey Pot contract
-         address :
+      Deroule (flux on-chain, non rejoue : exige une transaction reelle
+      sur Sepolia) :
+      1. Prepare MetaMask sur le testnet Sepolia, approvisionne en ETH
+         de test (faucet).
+      2. Sur la page wallet du shop (/#/wallet), connecte le
+         portefeuille.
+      3. Appelle la fonction de mint du contrat NFT deploye a
          0x41427790c94E7a592B17ad694eD9c06A02bb9C39
-         (visible dans routes/nftMint.ts ou via
-         le bundle Angular).
-      3. Inspect le contract sur Sepolia
-         Etherscan : sepolia.etherscan.io/
-         address/0x4142...9C39. Tu vois la
-         function `mint()` exposee.
-      4. Acquire les BEEs : selon hint OWASP
-         "captivating visual memories", elles
-         sont gathered via Photo Wall ou
-         adjacent challenges. Sources possibles
-         : EXIF data hidden, image pixel
-         steganography, separate Web3
-         transactions.
-      5. Call `mint()` de la Honey Pot contract
-         via MetaMask (avec les BEEs comme
-         input). Confirm la transaction +
-         pay gas en Sepolia ETH.
-      6. La transaction emit l'event
-         `NFTMinted(minterAddress)`. Le
-         WebSocket Juice Shop detecte
-         l'event, ajoute ton address dans
-         addressesMinted.
-      7. POST /api/walletNFTVerify avec ton
-         MetaMask address dans body :
-         `{walletAddress: "0xYourAddress"}`.
-      8. Le serveur check Set -> match ->
-         challenge solve auto + reset Set
-         (delete address).
-      Source canonique : routes/nftMint.ts +
-      codefixes/nftMintChallenge.info.yml +
-      Sepolia testnet docs.
-      Defense canonique : SafeMath sub() dans
-      Solidity contract pour eviter underflow
-      attacks (codefixes fix #4).
+         (routes/nftMint.ts) depuis ton portefeuille.
+      4. Fais verifier ton mint par le shop :
+         POST /rest/web3/walletNFTVerify avec {walletAddress: <ton adresse>}.
+         Le serveur, qui a vu l'evenement de mint on-chain (addressesMinted),
+         resout le challenge (nftMint.ts:39).
+      Defense : auditer le contrat et ses conditions de mint ; ne pas
+      faire confiance a une adresse fournie sans preuve on-chain verifiee.
     text_en: |
-      Full workflow:
-      1. Web3 setup:
-         - Install MetaMask
-         - Add Sepolia network
-         - Get Sepolia ETH via faucet
-         - Connect to Juice Shop /#/wallet
-      2. Discover Honey Pot contract address:
-         0x41427790c94E7a592B17ad694eD9c06A02bb9C39
-         (visible in routes/nftMint.ts or
-         Angular bundle).
-      3. Inspect contract on Sepolia
-         Etherscan: sepolia.etherscan.io/
-         address/0x4142...9C39. You see
-         exposed `mint()` function.
-      4. Acquire BEEs: per OWASP hint
-         "captivating visual memories", they
-         are gathered via Photo Wall or
-         adjacent challenges. Possible
-         sources: hidden EXIF data, image
-         pixel steganography, separate Web3
-         transactions.
-      5. Call Honey Pot contract's `mint()`
-         via MetaMask (with BEEs as input).
-         Confirm transaction + pay gas in
-         Sepolia ETH.
-      6. Transaction emits `NFTMinted(
-         minterAddress)` event. Juice Shop
-         WebSocket detects event, adds your
-         address to addressesMinted.
-      7. POST /api/walletNFTVerify with
-         MetaMask address in body:
-         `{walletAddress: "0xYourAddress"}`.
-      8. Server checks Set -> match ->
-         challenge auto solves + resets Set
-         (deletes address).
-      Canonical source: routes/nftMint.ts +
-      codefixes/nftMintChallenge.info.yml +
-      Sepolia testnet docs.
-      Canonical defense: SafeMath sub() in
-      Solidity contract to avoid underflow
-      attacks (codefixes fix #4).
+      Walkthrough (on-chain flow, not replayed: requires a real Sepolia
+      transaction):
+      1. Prepare MetaMask on the Sepolia testnet, funded with test ETH
+         (faucet).
+      2. On the shop wallet page (/#/wallet), connect the wallet.
+      3. Call the mint function of the NFT contract deployed at
+         0x41427790c94E7a592B17ad694eD9c06A02bb9C39 (routes/nftMint.ts)
+         from your wallet.
+      4. Have the shop verify your mint:
+         POST /rest/web3/walletNFTVerify with {walletAddress: <your address>}.
+         The server, having seen the on-chain mint event (addressesMinted),
+         solves the challenge (nftMint.ts:39).
+      Defense: audit the contract and its mint conditions; do not trust a
+      supplied address without verified on-chain proof.
     pedagogical_intent: |
-      Solution complete + Web3 setup +
-      Solidity defense.
+      Full solution: on-chain mint flow, exact contract/endpoint, testnet
+      caveat.

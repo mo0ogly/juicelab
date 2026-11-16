@@ -58,32 +58,26 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow : (1) DevTools > Sources > main.js,
-      Ctrl+F "privacy" / "thank" / "private" -> trouve URL ou route. (2)
-      OR `grep -rn "privacyPolicyProof\|thank-you" juice-shop/server.ts
-      juice-shop/routes/`. (3) URL servie via privacyPolicyProof endpoint
-      (cf. routes/privacyPolicyProof.ts:11 `res.sendFile(path.resolve(
-      'frontend/dist/frontend/assets/private/thank-you.jpg'))`). (4)
-      Naviguer l'URL exacte (defined dans server.ts). (5) Le serveur
-      privacyPolicyProof.ts:13
-      `solveIf(privacyPolicyProofChallenge, () => true)` declenche AU
-      SIMPLE GET. (6) Notification "Solved Privacy Policy Inspection".
-      Defense : auth middleware obligatoire sur /private/*, audit reguliere
-      route enumeration, test E2E checks 401. Source :
-      privacyPolicyProof.ts:11-13.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : comme pour
+      Premium Paywall, c'est de la securite par l'obscurite. La preuve
+      de lecture de la politique est servie a une URL longue et
+      explicite, cachee du menu. L'ouvrir suffit a resoudre le challenge
+      (routes/privacyPolicyProof.ts) :
+        GET /we/may/also/instruct/you/to/refuse/all/reasonably/necessary/responsibility
+      On la trouve en fouillant le code client ou les chemins devinables
+      ; aucune crypto a casser.
+      Defense : ne pas proteger une ressource par le seul secret de son
+      URL ; appliquer un controle d'acces reel cote serveur.
     text_en: |
-      Workflow: (1) DevTools > Sources > main.js,
-      Ctrl+F "privacy" / "thank" / "private" -> find URL or route. (2)
-      OR `grep -rn "privacyPolicyProof\|thank-you" juice-shop/server.ts
-      juice-shop/routes/`. (3) URL served via privacyPolicyProof endpoint
-      (cf. routes/privacyPolicyProof.ts:11 `res.sendFile(path.resolve(
-      'frontend/dist/frontend/assets/private/thank-you.jpg'))`). (4)
-      Navigate exact URL (defined in server.ts). (5) Server
-      privacyPolicyProof.ts:13
-      `solveIf(privacyPolicyProofChallenge, () => true)` triggers ON
-      SIMPLE GET. (6) "Solved Privacy Policy Inspection" notification.
-      Defense: mandatory auth middleware on /private/*, regular route
-      enumeration audit, E2E test checks 401. Source:
-      privacyPolicyProof.ts:11-13.
+      Solution (verified during testing on Juice Shop 19.2.1): like
+      Premium Paywall, this is security through obscurity. The
+      policy-reading proof is served at a long, explicit URL hidden from
+      the menu. Opening it is enough to solve the challenge
+      (routes/privacyPolicyProof.ts):
+        GET /we/may/also/instruct/you/to/refuse/all/reasonably/necessary/responsibility
+      You find it by searching the client code or guessable paths; no
+      crypto to break.
+      Defense: do not protect a resource by the secrecy of its URL
+      alone; enforce real server-side access control.
     pedagogical_intent: |
-      Solution + canonical fix.
+      Full verified solution: exact hidden URL, obscurity framing, defense.
