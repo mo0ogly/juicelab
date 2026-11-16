@@ -21,7 +21,7 @@
 #                      (default : 443e5f2041af8e9a1943e1079d245b2f4c983f12, OWASP Juice Shop 20.4.0-SNAPSHOT). Bump together with
 #                      a regenerated patches/juicelab-core.patch when rebasing.
 
-FROM node:24-bullseye AS builder
+FROM node:26-bullseye AS builder
 WORKDIR /build
 
 # git is required for the clone + apply --3way step. ca-certificates is
@@ -70,7 +70,7 @@ RUN rm -rf frontend/.angular frontend/node_modules .git tests cypress \
            frontend/cypress
 
 # ---------- Runtime stage ----------
-FROM node:24-bullseye-slim AS runtime
+FROM node:26-bullseye-slim AS runtime
 ENV NODE_ENV=production \
     PORT=3000
 
