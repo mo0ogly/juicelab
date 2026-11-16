@@ -6,12 +6,34 @@ score-board card (patches/juicelab-core.patch).
 """
 
 INTRO = (
-    'Treize défis en trois demi-journées pour apprendre à observer une '
-    'application web, reproduire un comportement et expliquer la mesure de '
-    'protection adaptée. Ce guide donne, pour chaque défi : le but, la notion '
-    'à retenir, les étapes exactes, la façon dont Juice Shop valide, la '
-    'correction, et un dépannage. Le coach JuiceLab (bouton TD) accompagne '
-    'chaque défi dans le navigateur.'
+    'Treize défis en trois demi-journées, pensés pour la cyberdéfense : '
+    'comprendre une faille en la reproduisant dans un laboratoire autorisé, '
+    'puis raisonner en défenseur — comment la corriger, comment la détecter, '
+    'comment prouver que le correctif tient. Le coach JuiceLab (bouton TD) '
+    'accompagne chaque défi dans le navigateur.'
+)
+
+# "Comment lire une fiche": (section label, what it gives the student).
+READING = [
+    ('But et À retenir', 'l’objectif du défi et la notion de sécurité en une phrase.'),
+    ('Étapes', 'la marche à suivre ; essaie d’abord seul avec le coach, lis '
+     'les étapes si tu bloques.'),
+    ('Comment Juice Shop valide', 'le critère exact du serveur, avec le '
+     'fichier et la ligne du code source.'),
+    ('Pourquoi c’est une faille et La correction', 'la cause et la mesure '
+     'canonique, tirées des correctifs officiels quand ils existent.'),
+    ('Côté défense', 'le signal à surveiller et le test qui prouve que le '
+     'correctif tient : le cœur de ton métier.'),
+    ('Si ça bloque et Pour aller plus loin', 'le dépannage et une question '
+     'pour ton journal.'),
+]
+
+# Lab rules shown on the first page.
+RULES = (
+    'Règle du laboratoire : ces techniques ne s’emploient que sur ton instance '
+    'JuiceLab ou une cible explicitement autorisée. Hors de ce cadre, accéder '
+    'ou se maintenir dans un système sans droit est une infraction (Code pénal, '
+    'art. 323-1).'
 )
 
 # "Préparer ta séance" bullets.

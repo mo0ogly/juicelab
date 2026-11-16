@@ -14,7 +14,9 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 from PIL import Image
 
-from content_intro import INTRO, PREP, SCORE_BOARD
+import content_outro as OUTRO
+from content_defense import DEFENSE
+from content_intro import INTRO, PREP, READING, RULES, SCORE_BOARD
 from content_dj1 import DJ1
 from content_dj23 import DJ23
 
@@ -168,10 +170,18 @@ def build_front_matter(doc):
     tag_line(doc, 'FORMATION OWASP  /  SUPPORT ÉLÈVE')
     doc.add_paragraph('Travaux dirigés OWASP Juice Shop', 'Title')
     doc.add_paragraph(INTRO)
+    label(doc, 'Cadre', RULES, AMBER)
 
     doc.add_heading('Préparer ta séance', 1)
     for line in PREP:
         bullet(doc, line)
+
+    doc.add_heading('Comment lire une fiche', 2)
+    for name, body in READING:
+        p = doc.add_paragraph(style='List Bullet')
+        run = p.add_run(name + ' : ')
+        run.bold = True
+        p.add_run(body)
 
     doc.add_heading(SCORE_BOARD['title'], 1)
     doc.add_paragraph(SCORE_BOARD['intro'])
@@ -209,6 +219,8 @@ def build_sheet(doc, index, entry):
 
     label(doc, 'But', entry['goal'])
     label(doc, 'À retenir', entry['notion'], TEAL)
+    label(doc, 'Ta mission', entry['task'])
+    label(doc, 'Question du journal', entry['question'], AMBER)
 
     doc.add_heading('Étapes', 2)
     for n, s in enumerate(entry['steps'], 1):
@@ -226,6 +238,11 @@ def build_sheet(doc, index, entry):
     doc.add_heading('La correction', 2)
     doc.add_paragraph(entry['fix'])
 
+    defense = DEFENSE[entry['key']]
+    doc.add_heading('Côté défense', 2)
+    label(doc, 'Détecter', defense['detect'], TEAL)
+    label(doc, 'Vérifier le correctif', defense['verify'], TEAL)
+
     if entry.get('trouble'):
         doc.add_heading('Si ça bloque', 2)
         for symptom, remedy in entry['trouble']:
@@ -234,7 +251,7 @@ def build_sheet(doc, index, entry):
             run.bold = True
             p.add_run(remedy)
 
-    label(doc, 'Pour aller plus loin', entry['question'], AMBER)
+    label(doc, 'Pour aller plus loin', entry['further'], AMBER)
 
     picture(doc, f'p{i:02d}',
             f'Carte {entry["title"]} résolue : liseré et point verts.', 11.0, 6.0)
@@ -243,6 +260,70 @@ def build_sheet(doc, index, entry):
             f'Solution de référence : « Pwning OWASP Juice Shop », annexe '
             f'Challenge solutions, p. {entry["book"]}.', 'Caption')
         cap.paragraph_format.space_before = Pt(2)
+
+
+def shade(cell, fill):
+    cell._tc.get_or_add_tcPr().append(element('shd', val='clear', fill=fill))
+
+
+def table(doc, header, rows, widths_cm):
+    """Compact table with a navy header row and alternating row shading."""
+    tab = doc.add_table(rows=1, cols=len(header))
+    tab.style = 'Table Grid'
+    tab.autofit = False
+    for col, width in zip(tab.columns, widths_cm):
+        col.width = Cm(width)
+    for cell, text in zip(tab.rows[0].cells, header):
+        shade(cell, NAVY)
+        run = cell.paragraphs[0].add_run(text)
+        run.bold = True
+        run.font.size = Pt(10)
+        run.font.color.rgb = RGBColor.from_string('FFFFFF')
+    tab.rows[0]._tr.get_or_add_trPr().append(element('tblHeader'))
+    for n, row in enumerate(rows):
+        cells = tab.add_row().cells
+        for cell, text, width in zip(cells, row, widths_cm):
+            cell.width = Cm(width)
+            if n % 2 == 0:
+                shade(cell, LIGHT)
+            run = cell.paragraphs[0].add_run(text)
+            run.font.size = Pt(10)
+    return tab
+
+
+def build_outro(doc):
+    page_break_heading(doc, OUTRO.REFLEXES_TITLE, 1)
+    doc.add_paragraph(OUTRO.REFLEXES_INTRO)
+    for n, (head, body) in enumerate(OUTRO.REFLEXES, 1):
+        p = doc.add_paragraph()
+        p.paragraph_format.left_indent = Cm(0.75)
+        p.paragraph_format.first_line_indent = Cm(-0.75)
+        run = p.add_run(f'{n}.  {head}  ')
+        run.bold = True
+        run.font.color.rgb = RGBColor.from_string(NAVY)
+        p.add_run(body)
+
+    doc.add_heading('Récapitulatif des treize défis', 2)
+    table(doc, ('N°', 'Défi', 'Famille', 'Contrôle clé'), OUTRO.RECAP,
+          (1.1, 4.2, 5.0, 6.6))
+
+    doc.add_heading(OUTRO.DELIVERABLE_TITLE, 2)
+    for line in OUTRO.DELIVERABLE:
+        bullet(doc, line)
+
+    page_break_heading(doc, OUTRO.ASSESS_TITLE, 1)
+    doc.add_paragraph(OUTRO.ASSESS_INTRO)
+    doc.add_heading('Cinq questions, à chaque passage', 3)
+    for n, q in enumerate(OUTRO.QUESTIONS, 1):
+        step(doc, n, q)
+    for title, body in (OUTRO.BEFORE, OUTRO.AFTER):
+        doc.add_heading(title, 2)
+        doc.add_paragraph(body)
+
+    doc.add_heading(OUTRO.GRID_TITLE, 2)
+    table(doc, ('Dimension', '0 point', '1 point', '2 points'), OUTRO.GRID,
+          (3.6, 3.9, 4.4, 5.0))
+    doc.add_paragraph(OUTRO.GRID_NOTE, 'Caption')
 
 
 def main():
@@ -258,7 +339,13 @@ def main():
                 'Ouvre chaque défi depuis le Score Board, travaille avec le '
                 'coach, puis consigne ton journal et réponds au quiz.')
         build_sheet(doc, index, entry)
+    build_outro(doc)
     assert len(EXERCISES) == 13, len(EXERCISES)
+    assert set(DEFENSE) == {e['key'] for e in EXERCISES}
+    # python-docx writes <w:zoom> without the schema-required percent.
+    zoom = doc.settings.element.find(qn('w:zoom'))
+    if zoom is not None:
+        zoom.set(qn('w:percent'), '100')
     doc.save(str(OUT))
     print(f'written {OUT} ({OUT.stat().st_size} bytes, {len(EXERCISES)} sheets)')
 
