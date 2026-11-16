@@ -91,6 +91,11 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   erreur : basketManipulate (BasketId simple -> 401 ; vraie voie = double
   cle BasketId / parseJsonCustom, verifiee live). Effets de bord : items
   ajoutes au panier 2, un avis produit 1 au nom d'admin, un feedback UserId=1.
+  Lot 10 (Improper Input Validation) : registerAdmin/uploadType/nullByte
+  deja corrects. Corrections : negativeOrder (endpoint checkout) et
+  uploadSize (fenetre de taille 100-200KB, multer plafonne a 200000).
+  Rejoues live. Effets de bord : compte role=admin cree, commande a total
+  negatif, 2 uploads.
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -138,16 +143,16 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | loginAmyChallenge | Sensitive Data Exposure | 3 | TODO |  |
 | loginBenderChallenge | Injection | 3 | DONE (lot 5) | N4-N5 : requete exacte (table Users + AND deletedAt IS NULL), citation ligne corrigee (loginBender.ts:101) ; payload verifie live |
 | loginJimChallenge | Injection | 3 | DONE (lot 5) | N3-N5 : email jim@juice-sh.op visible dans les avis produit (verifie served), citations fausses corrigees (:90, pas :99-101) ; payload verifie live |
-| negativeOrderChallenge | Improper Input Validation | 3 | TODO |  |
+| negativeOrderChallenge | Improper Input Validation | 3 | DONE (lot 10) | N4-N5 : endpoint checkout faux (/api/Orders -> /rest/basket/:id/checkout) ; PUT quantity=-10 + checkout verifie live |
 | nftMintChallenge | Improper Input Validation | 3 | TODO |  |
 | persistedXssUserChallenge | XSS | 3 | DONE (lot 7) | N2-N5 : CHAMP FAUX (Address streetAddress -> EMAIL, models/user.ts) ; POST /api/Users email=payload verifie live (201, solved) |
 | privacyPolicyProofChallenge | Security through Obscurity | 3 | TODO |  |
-| registerAdminChallenge | Improper Input Validation | 3 | TODO |  |
+| registerAdminChallenge | Improper Input Validation | 3 | DONE (lot 10) | correct (non modifie) ; POST /api/Users role=admin verifie live (verify.ts:51) |
 | resetPasswordBjoernOwaspChallenge | Broken Authentication | 3 | DONE (lot 6) | N1-N5 : EMAIL FAUX (gmail -> bjoern@owasp.org, verifie live : gmail = pas de question), reponse Zaya (resetPassword.ts:62) |
 | resetPasswordJimChallenge | Broken Authentication | 3 | DONE (lot 6) | N1-N5 : question fausse (eldest sibling -> eldest siblings MIDDLE name) ; reponse Samuel (middle name de George Samuel Kirk) ; question verifiee live, reponse source (resetPassword.ts:58) |
 | restfulXssChallenge | XSS | 3 | DONE (lot 7) | N4-N5 : auth JWT inutile (PUT /api/Products/:id sans jeton) verifie live ; description setter (product.ts:47) |
-| uploadSizeChallenge | Improper Input Validation | 3 | TODO |  |
-| uploadTypeChallenge | Improper Input Validation | 3 | TODO |  |
+| uploadSizeChallenge | Improper Input Validation | 3 | DONE (lot 10) | N4-N5 : taille fausse (200KB rejete, multer plafonne a 200000) ; cible 100-200KB, 150KB verifie live (204, sans auth) |
+| uploadTypeChallenge | Improper Input Validation | 3 | DONE (lot 10) | correct (non modifie) ; POST /file-upload .png verifie live, sans auth (fileUpload.ts:69) |
 | xxeFileDisclosureChallenge | XXE | 3 | TODO |  |
 | accessLogDisclosureChallenge | Observability Failures | 4 | TODO |  |
 | christmasSpecialChallenge | Injection | 4 | TODO |  |
@@ -165,7 +170,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | misplacedSignatureFileChallenge | Observability Failures | 4 | TODO |  |
 | noSqlCommandChallenge | Injection | 4 | DONE (lot 1) | N2,N4,N5 reecrits : endpoint et mecanisme faux (POST objet -> GET path, plafond 2000 ms, duree > 2000 ms) ; payload sleep(200) teste |
 | noSqlReviewsChallenge | Injection | 4 | TODO |  |
-| nullByteChallenge | Improper Input Validation | 4 | TODO |  |
+| nullByteChallenge | Improper Input Validation | 4 | DONE (lot 10) | correct (non modifie) ; null-byte sur encrypt.pyc / auto-solve via les autres defis /ftp (fileServer.ts:46) |
 | oauthUserPasswordChallenge | Broken Authentication | 4 | TODO |  |
 | persistedXssFeedbackChallenge | XSS | 4 | DONE (lot 3) | N2-N5 : pre-requis file-disclosure recadre (pedagogique, pas technique), sanitize-html 1.4.2, payload <<iframe>... verifie (produit la chaine exacte) ; validation = chaine stockee (feedback.ts) |
 | redirectChallenge | Unvalidated Redirects | 4 | TODO |  |

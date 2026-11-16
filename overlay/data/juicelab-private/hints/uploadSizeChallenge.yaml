@@ -69,105 +69,48 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Construction du
-      payload : crafter un fichier > 100kB :
-      ```bash
-      # Generer un .pdf factice de 200kB
-      dd if=/dev/urandom of=large.pdf bs=1k
-        count=200
-      # Ou un .zip de 200kB
-      dd if=/dev/urandom of=large.zip bs=1k
-        count=200
-      ```
-      Submit via curl bypassing frontend :
-      ```bash
-      curl -X POST http://localhost:3000/file-upload
-        -H "Authorization: Bearer <token>"
-        -F "file=@large.pdf"
-      ```
-      Le frontend ne peut pas filtrer les requests
-      curl. Le backend accepte (no multer limits).
-      solveIf trigger -> challenge solve.
+      Le frontend limite la taille, mais l'endpoint /file-upload ne la
+      verifie pas de la meme facon. Attention : multer plafonne la
+      requete a 200000 octets (server.ts), et le challenge exige un
+      fichier de PLUS de 100000 octets (fileUpload.ts:62). La cible est
+      donc une taille STRICTEMENT comprise entre 100 Ko et 200 Ko (par
+      exemple 150 Ko) : plus gros est rejete par multer ("File too
+      large").
     text_en: |
-      Payload construction:
-      craft a > 100kB file:
-      ```bash
-      # Generate fake 200kB .pdf
-      dd if=/dev/urandom of=large.pdf bs=1k
-        count=200
-      # Or 200kB .zip
-      dd if=/dev/urandom of=large.zip bs=1k
-        count=200
-      ```
-      Submit via curl bypassing frontend:
-      ```bash
-      curl -X POST http://localhost:3000/file-upload
-        -H "Authorization: Bearer <token>"
-        -F "file=@large.pdf"
-      ```
-      Frontend can't filter curl requests.
-      Backend accepts (no multer limits). solveIf
-      triggers -> challenge solves.
+      The frontend limits the size, but the /file-upload endpoint does
+      not check it the same way. Caution: multer caps the request at
+      200000 bytes (server.ts), and the challenge requires a file
+      LARGER than 100000 bytes (fileUpload.ts:62). The target is
+      therefore a size STRICTLY between 100 KB and 200 KB (e.g. 150
+      KB): larger is rejected by multer ("File too large").
     pedagogical_intent: |
-      Spell payload + curl + bypass.
+      Give the exact size window (multer cap vs challenge threshold).
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Login Juice Shop (besoin authenticated
-         user pour /file-upload).
-      2. Generer un fichier > 100kB :
-         `dd if=/dev/urandom of=large.pdf bs=1k
-         count=200`.
-      3. Recup ton JWT depuis localStorage ou
-         DevTools.
-      4. Submit via curl :
-         ```bash
-         curl -X POST
-           http://localhost:3000/file-upload
-           -H "Authorization: Bearer <token>"
-           -F "file=@large.pdf"
-         ```
-      5. Le serveur :
-         (a) multer accept (no size limit)
-         (b) checkUploadSize verifie file.size >
-             100000 -> match -> solveIf trigger
-         (c) challenge solve auto.
-      Source canonique : routes/fileUpload.ts:60-65
-      + OWASP File Upload Cheat Sheet.
-      Defense canonique : (a) multer `limits:
-      { fileSize: 100 * 1024 }`. (b) reverse proxy
-      `client_max_body_size 100k`. (c) body-parser
-      `limit: '100kb'`. (d) Disk quota
-      OS-level. Defense en profondeur 4-layers.
+      Solution (verifiee en recette sur Juice Shop 19.2.1, sans
+      authentification) :
+        head -c 150000 /dev/urandom > mid.pdf
+        curl -s -X POST http://127.0.0.1:3000/file-upload -F "file=@mid.pdf"
+      Reponse 204, challenge resolu : checkUploadSize voit file.size >
+      100000. Un fichier de 200 Ko echoue (multer limite a 200000).
+      L'extension doit rester autorisee (.pdf/.zip/.xml/.yml/.yaml)
+      pour ne pas declencher a la place uploadTypeChallenge.
+      Defense : appliquer la limite de taille cote serveur (et non
+      seulement dans le navigateur), coherente avec la politique
+      metier, et rejeter proprement les fichiers trop volumineux.
     text_en: |
-      Full workflow:
-      1. Login Juice Shop (need authenticated
-         user for /file-upload).
-      2. Generate > 100kB file: `dd
-         if=/dev/urandom of=large.pdf bs=1k
-         count=200`.
-      3. Retrieve JWT from localStorage or
-         DevTools.
-      4. Submit via curl:
-         ```bash
-         curl -X POST
-           http://localhost:3000/file-upload
-           -H "Authorization: Bearer <token>"
-           -F "file=@large.pdf"
-         ```
-      5. Server:
-         (a) multer accepts (no size limit)
-         (b) checkUploadSize verifies file.size >
-             100000 -> match -> solveIf triggers
-         (c) challenge auto solves.
-      Canonical source: routes/fileUpload.ts:60-65
-      + OWASP File Upload Cheat Sheet.
-      Canonical defense: (a) multer `limits:
-      { fileSize: 100 * 1024 }`. (b) reverse
-      proxy `client_max_body_size 100k`. (c)
-      body-parser `limit: '100kb'`. (d) OS-level
-      disk quota. 4-layer defense in depth.
+      Solution (verified during testing on Juice Shop 19.2.1, no
+      authentication):
+        head -c 150000 /dev/urandom > mid.pdf
+        curl -s -X POST http://127.0.0.1:3000/file-upload -F "file=@mid.pdf"
+      Response 204, challenge solved: checkUploadSize sees file.size >
+      100000. A 200 KB file fails (multer caps at 200000). The
+      extension must stay allowed (.pdf/.zip/.xml/.yml/.yaml) so as not
+      to trigger uploadTypeChallenge instead.
+      Defense: enforce the size limit server-side (not only in the
+      browser), consistent with the business policy, and reject
+      oversized files cleanly.
     pedagogical_intent: |
-      Solution complete + 4-layer defense.
+      Full solution: verified command, size window, defense.

@@ -63,108 +63,50 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Workflow detaille :
-      1. Login Juice Shop (need authenticated user
-         pour basket).
-      2. Adder un produit normal au basket via UI.
-      3. Inspecter Network tab : GET /api/Basket/:id
-         te donne le BasketItem id (ex. {id: 5,
-         quantity: 1, ProductId: 1, BasketId: 6}).
-      4. PUT /api/BasketItems/5 avec body
-         `{"quantity": -10}` :
-         ```bash
-         curl -X PUT http://localhost:3000/api/BasketItems/5
-           -H "Authorization: Bearer <token>"
-           -H "Content-Type: application/json"
-           -d '{"quantity": -10}'
-         ```
-      5. Le backend accepte (pas de validation).
-      6. Checkout : POST /api/Orders avec le basket
-         id. Le serveur calcule totalPrice =
-         (-10 * price) = negatif.
-      7. routes/order.ts:138 : `solveIf(()` =>
-         `totalPrice < 0)` = true -> challenge
-         solve auto.
+      Le serveur ne borne pas la quantite d'un article de panier a une
+      valeur positive. Ajoute un produit au panier, note l'id de
+      l'article (GET du panier ou onglet Network), puis force une
+      quantite negative :
+        PUT /api/BasketItems/<id> {"quantity": -10}
+      (le controle de mise a jour laisse passer les quantites
+      negatives). Au paiement, le total devient negatif.
     text_en: |
-      Detailed workflow:
-      1. Login Juice Shop (need authenticated user
-         for basket).
-      2. Add normal product to basket via UI.
-      3. Inspect Network tab: GET /api/Basket/:id
-         gives BasketItem id (e.g., {id: 5,
-         quantity: 1, ProductId: 1, BasketId: 6}).
-      4. PUT /api/BasketItems/5 with body
-         `{"quantity": -10}`:
-         ```bash
-         curl -X PUT http://localhost:3000/api/BasketItems/5
-           -H "Authorization: Bearer <token>"
-           -H "Content-Type: application/json"
-           -d '{"quantity": -10}'
-         ```
-      5. Backend accepts (no validation).
-      6. Checkout: POST /api/Orders with basket
-         id. Server calculates totalPrice =
-         (-10 * price) = negative.
-      7. routes/order.ts:138: `solveIf(() =>
-         totalPrice < 0)` = true -> challenge auto
-         solves.
+      The server does not bound a basket item's quantity to a positive
+      value. Add a product to the basket, note the item id (GET the
+      basket or the Network tab), then force a negative quantity:
+        PUT /api/BasketItems/<id> {"quantity": -10}
+      (the update check lets negative quantities through). At checkout
+      the total becomes negative.
     pedagogical_intent: |
-      Spell complete kill chain.
+      Give the negative-quantity update and its effect on the total.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Solution canonique
-      complete (resume) :
-      1. Login + add product au basket via UI.
-      2. PUT /api/BasketItems/<id> avec quantity =
-         -10 (via curl/Burp).
-      3. Checkout via UI ou POST /api/Orders.
-      4. Le serveur calcul totalPrice = qty *
-         price + delivery, qui devient negatif.
-      5. solveIf check ligne 138 -> challenge solve
-         auto.
-      Note : le user obtient un order avec
-      totalPrice negatif (ironie : la wallet est
-      DEBITEE de cette valeur negative, donc
-      potentiellement INCREASE la balance si
-      WalletModel.decrement(negativeAmount) =
-      effectivement increment). Cf. order.ts:144 :
-      `WalletModel.decrement({ balance: totalPrice
-      }, ...)`.
-      Source canonique : routes/order.ts:138 +
-      OWASP Input Validation Cheat Sheet.
-      Defense canonique : (a) joi/zod schema
-      `quantity: positive integer`, (b) Sequelize
-      validators `min: 1`, (c) DB CHECK
-      constraint, (d) business logic check
-      `totalPrice < 0 -> 400`, (e) anomaly
-      monitoring.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) :
+      1. Ajoute un article : POST /api/BasketItems
+         {"ProductId":1,"BasketId":<ton_bid>,"quantity":1} -> note l'id.
+      2. PUT /api/BasketItems/<id> {"quantity":-10}.
+      3. Valide le panier : POST /rest/basket/<ton_bid>/checkout
+         (c'est cet endpoint qui place la commande, pas /api/Orders).
+      Le total calcule (quantite x prix + livraison) devient negatif
+      et le challenge est resolu (order.ts:138). Ironie : le solde du
+      portefeuille est CREDITE du montant negatif.
+      Defense : valider cote serveur que chaque quantite est un entier
+      strictement positif, et refuser tout total de commande negatif
+      avant paiement.
     text_en: |
-      Canonical complete
-      solution (summary):
-      1. Login + add product to basket via UI.
-      2. PUT /api/BasketItems/<id> with quantity =
-         -10 (via curl/Burp).
-      3. Checkout via UI or POST /api/Orders.
-      4. Server calculates totalPrice = qty *
-         price + delivery, becoming negative.
-      5. solveIf check line 138 -> challenge auto
-         solves.
-      Note: user gets order with negative
-      totalPrice (irony: wallet is DEBITED of
-      this negative value, so potentially
-      INCREASES balance if WalletModel.decrement(
-      negativeAmount) = effectively increment).
-      Cf. order.ts:144: `WalletModel.decrement({
-      balance: totalPrice }, ...)`.
-      Canonical source: routes/order.ts:138 +
-      OWASP Input Validation Cheat Sheet.
-      Canonical defense: (a) joi/zod schema
-      `quantity: positive integer`, (b) Sequelize
-      validators `min: 1`, (c) DB CHECK
-      constraint, (d) business logic check
-      `totalPrice < 0 -> 400`, (e) anomaly
-      monitoring.
+      Solution (verified during testing on Juice Shop 19.2.1):
+      1. Add an item: POST /api/BasketItems
+         {"ProductId":1,"BasketId":<your_bid>,"quantity":1} -> note the id.
+      2. PUT /api/BasketItems/<id> {"quantity":-10}.
+      3. Check out: POST /rest/basket/<your_bid>/checkout (this is the
+         endpoint that places the order, not /api/Orders).
+      The computed total (quantity x price + delivery) becomes negative
+      and the challenge is solved (order.ts:138). Irony: the wallet
+      balance is CREDITED with the negative amount.
+      Defense: validate server-side that each quantity is a strictly
+      positive integer, and reject any negative order total before
+      payment.
     pedagogical_intent: |
-      Solution complete + economic side-effect.
+      Full solution: verified steps, correct checkout endpoint, defense.
