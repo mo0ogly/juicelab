@@ -100,8 +100,10 @@ TEACHER = {
     'loginAdminChallenge': {
         'expected': 'Le compte obtenu, le rôle de la condition toujours vraie '
                     'et du commentaire, la requête paramétrée comme correction.',
-        'pitfalls': 'Espace parasite dans la saisie ; proposer une liste noire '
-                    'de caractères comme correctif.',
+        'pitfalls': 'Attendre l’erreur SQL à l’écran : la page n’affiche que '
+                    '« [object Object] » (objet JSON rendu tel quel), l’erreur '
+                    'se lit dans F12, Réseau. Espace parasite dans la saisie ; '
+                    'liste noire de caractères proposée comme correctif.',
         'relance': 'Pourquoi un filtre de caractères n’est-il pas une correction ?',
     },
     'adminSectionChallenge': {

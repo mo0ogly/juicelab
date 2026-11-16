@@ -20,10 +20,13 @@ DJ23.append({
             'Consigne le compte obtenu et l’effet sur la vérification du mot de passe.',
     'question': 'À quel endroit faut-il séparer les données utilisateur de la requête ?',
     'steps': [
-        ('Ouvre la page de connexion. Saisis une apostrophe seule comme email, '
-         'un caractère quelconque comme mot de passe, puis Log in :', "'"),
-        'Une erreur de base de données apparaît : la saisie modifie la requête, '
-        'elle est donc insérée telle quelle.',
+        ('Ouvre F12, onglet Réseau, puis la page de connexion. Saisis une '
+         'apostrophe seule comme email, un caractère quelconque comme mot de '
+         'passe, puis Log in :', "'"),
+        'L’écran affiche seulement « [object Object] » en rouge : l’interface '
+        'ne sait pas afficher l’erreur reçue. Dans Réseau, ouvre la requête '
+        'login (statut 500), onglet Réponse : SQLITE_ERROR et la requête SQL '
+        'complète, où ton apostrophe est insérée telle quelle.',
         ('Saisis maintenant comme email la chaîne donnée par la carte du défi '
          '(condition toujours vraie suivie d’un commentaire SQL) :', "' or 1=1--"),
         'Mets un mot de passe quelconque et valide. Tu es connecté en '
@@ -39,6 +42,8 @@ DJ23.append({
            'requête (remplacements Sequelize, correctif officiel 4). Une liste '
            'noire de caractères est contournable (correctif officiel 1).',
     'trouble': [
+        ('Seulement « [object Object] » à l’écran', 'c’est normal : l’erreur '
+         'SQLite se lit dans F12, Réseau, réponse de la requête login.'),
         ('Message « Invalid email or password »', 'recopie exactement la chaîne '
          'de la carte, sans espace parasite.'),
         ('Connecté mais pas en admin', 'déconnecte-toi et recommence : la voie '
