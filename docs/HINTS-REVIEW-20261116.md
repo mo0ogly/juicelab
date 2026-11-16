@@ -119,7 +119,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 
 | key | catégorie | diff. | statut | notes |
 |---|---|---|---|---|
-| scoreBoardChallenge | Miscellaneous | 1 | TODO |  |
+| scoreBoardChallenge | Miscellaneous | 1 | DONE (lot 14) | N4-N5 : mecanisme precise (pixel 1px.png, verify.ts:63) comme adminSection/privacyPolicy ; GET verifie live |
 | privacyPolicyChallenge | Miscellaneous | 1 | DONE (lot 2) | N3-N5 : validation = image 81px.png (verify.ts:67), pas un appel API ; libelles de menu verifies |
 | directoryListingChallenge | Sensitive Data Exposure | 1 | DONE (lot 8) | correct (non modifie) ; /ftp/acquisitions.md verifie live (solve) |
 | exposedCredentialsChallenge | Sensitive Data Exposure | 2 | DONE (lot 8) | correct (non modifie) ; testing@juice-sh.op / IamUsedForTesting (login.ts:66) |

@@ -51,35 +51,45 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Les routes Angular se trouvent dans une structure du genre
-      RouterModule.forRoot([{ path: '...', component: ... }, ...]). Cherche
-      l'entree dont le path ressemble a la concatenation de "score" et
-      "board". Une fois identifie, tu n'as pas besoin de cliquer : tu peux
-      taper directement le chemin dans la barre d'adresse, prefixe du dieze
-      qui marque les routes Angular.
+      Les routes Angular sont declarees dans le bundle sous une forme
+      du type { path: 'score-board', component: ... }. Le chemin est
+      donc la concatenation de "score" et "board". Pas besoin de lien :
+      tu peux taper directement le chemin dans la barre d'adresse,
+      prefixe du diese qui marque les routes Angular (/#/).
     text_en: |
-      Angular routes sit in a structure shaped like RouterModule.forRoot([{
-      path: '...', component: ... }, ...]). Find the entry whose path looks
-      like the concatenation of "score" and "board". Once identified, you do
-      not need to click: type the path directly in the address bar,
-      prefixed with the hash that marks Angular routes.
+      Angular routes are declared in the bundle as { path:
+      'score-board', component: ... }. The path is the concatenation
+      of "score" and "board". No link needed: type the path directly
+      in the address bar, prefixed by the hash that marks Angular
+      routes (/#/).
     pedagogical_intent: |
-      Give the syntactic shape: hash-based routing path.
+      Give the exact route path and the direct-navigation method.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Tape dans la barre d'adresse l'URL http://127.0.0.1:3000/#/score-board
-      et appuie sur Entree. La page Score Board s'affiche, le challenge est
-      automatiquement valide par Juice Shop (le frontend declenche la
-      validation cote backend a l'ouverture de cette page). Si tu prefere la
-      methode "code analysis", l'entree dans main.js est { path:
-      'score-board', loadChildren: ... }.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : ouvre
+      http://127.0.0.1:3000/#/score-board et laisse la page se charger.
+      Comme pour Admin Section et Privacy Policy, la validation n'est
+      pas un appel API dedie : la page affiche tout en bas une image
+      technique, assets/public/images/padding/1px.png
+      (score-board.component.html:56), et le serveur resout le
+      challenge sur la requete de cette image
+      (routes/verify.ts:63, url se terminant par /1px.png).
+      Defense : ne pas se reposer sur l'obscurite d'une route cliente
+      pour cacher une page ; appliquer un controle d'acces reel cote
+      serveur sur les ressources sensibles.
     text_en: |
-      Type the URL http://127.0.0.1:3000/#/score-board in the address bar and
-      press Enter. The Score Board page renders, and Juice Shop automatically
-      marks the challenge solved (the frontend triggers backend validation on
-      opening that page). If you prefer the "code analysis" route, the entry
-      in main.js is { path: 'score-board', loadChildren: ... }.
+      Solution (verified during testing on Juice Shop 19.2.1): open
+      http://127.0.0.1:3000/#/score-board and let the page load. As
+      with Admin Section and Privacy Policy, validation is not a
+      dedicated API call: the page shows a technical image at the very
+      bottom, assets/public/images/padding/1px.png
+      (score-board.component.html:56), and the server solves the
+      challenge on that image request (routes/verify.ts:63, url ending
+      with /1px.png).
+      Defense: do not rely on the obscurity of a client route to hide
+      a page; enforce real server-side access control on sensitive
+      resources.
     pedagogical_intent: |
-      Quasi-solution: full URL or full code-analysis path, but the student still types it.
+      Full solution with the exact tracking-pixel mechanism and defense.
