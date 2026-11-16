@@ -20,6 +20,10 @@ PREP = [
     'l’adresse est http://localhost:3000. Adapte le port si besoin.',
     'Crée un compte de labo depuis Account → Login → Not yet a customer?, puis '
     'connecte-toi. Certains défis exigent une session.',
+    'Ouvre ton tableau de bord JuiceLab : http://localhost:3000/#/juicelab '
+    '(remplace le port si le tien diffère). C’est là que tu suis ta '
+    'progression, tes indices, ton journal et tes badges. Garde cet onglet '
+    'ouvert pendant toute la séance.',
     'Le titre anglais de la carte (ex. Score Board) sert d’identifiant : c’est '
     'celui utilisé dans ce guide et dans le coach.',
 ]
@@ -52,10 +56,11 @@ SCORE_BOARD = {
          'After - logbook (journal) et Quiz. Travaille un défi avec le coach '
          'ouvert à côté de la boutique.'),
         ('Suivre tes badges',
-         'Sous le panneau JuiceLab, la section Badges résume ton parcours : '
-         'défis résolus, indices utilisés, journaux de plus de 50 mots. Compare '
-         'le critère affiché sur chaque carte à ton compteur pour savoir ce '
-         'qu’il te reste à faire.'),
+         'Ton tableau de bord JuiceLab s’ouvre à l’adresse '
+         'http://localhost:3000/#/juicelab. Sa section Badges résume ton '
+         'parcours : défis résolus, indices utilisés, journaux de plus de 50 '
+         'mots. Compare le critère affiché sur chaque carte à ton compteur pour '
+         'savoir ce qu’il te reste à faire.'),
     ],
     # Columns/landmarks of a Score Board card, shown as a bullet list.
     'landmarks': [
