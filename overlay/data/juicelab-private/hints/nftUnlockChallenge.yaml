@@ -64,65 +64,51 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      La seed exacte depend de la
-      version Juice Shop. Pistes plausibles :
-      (1) Cherche dans /ftp/ apres avoir resolu directory
-          listing — un fichier .md ou .txt pourrait contenir
-          la seed.
-      (2) Cherche dans le repo GitHub Juice Shop officiel un
-          commit avec un message qui mentionne "wallet" ou
-          "seed".
-      (3) Inspecte le bundle JS pour des constantes type
-          MNEMONIC ou SEED.
+      Le hint OWASP est direct : "find the seed phrase posted
+      accidentally". La phrase de recuperation (12 mots BIP39) a ete
+      laissee dans un AVIS client visible sur le site (un utilisateur
+      demande son NFT en donnant l'adresse de son wallet ET sa seed).
+      Cherche dans les feedbacks (carrousel About Us) le commentaire qui
+      mentionne un wallet et une suite de 12 mots. Avec une seed BIP39,
+      on derive la cle privee du wallet.
     text_en: |
-      Exact seed depends on Juice Shop
-      version. Plausible leads:
-      (1) Look in /ftp/ after solving directory listing —
-          a .md or .txt file may contain the seed.
-      (2) Look in official GitHub Juice Shop repo for a
-          commit message mentioning "wallet" or "seed".
-      (3) Inspect JS bundle for constants like MNEMONIC or
-          SEED.
+      The OWASP hint is blunt: "find the seed phrase posted
+      accidentally". The 12-word BIP39 recovery phrase was left in a
+      customer REVIEW visible on the site (a user asks for their NFT
+      giving their wallet address AND their seed). Look in the feedback
+      (About Us carousel) for the comment mentioning a wallet and a
+      12-word list. From a BIP39 seed you derive the wallet's private
+      key.
     pedagogical_intent: |
-      Spell investigation paths with version-dependency.
+      Point at the leaked seed (a feedback comment) and the derivation.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow general (cle exacte a
-      OSINTer) :
-      1. Resous directoryListingChallenge pour acceder /ftp/.
-      2. Inspecte les fichiers : un fichier comme
-         announcement_encrypted.md ou similar pourrait
-         contenir la seed.
-      3. Si pas la : cherche dans le source GitHub officiel
-         du repo Juice Shop (commits, issues).
-      4. Une fois la seed trouvee : import dans MetaMask
-         (Chrome extension) -> "Import wallet" -> coller la
-         seed.
-      5. Le wallet apparait, contenant le SBT NFT officiel.
-      6. Le challenge se valide automatiquement (probablement
-         via un endpoint qui verifie l'adresse du wallet
-         courant).
-      Note : la version du Juice Shop installee determine OU
-      exactement la seed est leakee. Fais OSINT cible.
-      Defense : (1) les seed phrases sont des secrets terminaux — ne jamais les coller ou partager (Slack, GitHub, Discord). (2) Utiliser un hardware wallet pour les NFTs de production — la seed ne quitte jamais le dispositif. (3) Activer le GitHub secret scanning et configurer des alertes pour la detection de patterns BIP39 12 mots dans les repos.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : a partir
+      de la seed de 12 mots trouvee dans l'avis, derive la cle privee
+      (chemin Ethereum par defaut) puis soumets-la :
+        node -e "const {HDNodeWallet}=require('ethers');console.log(HDNodeWallet.fromPhrase('<les 12 mots>').privateKey)"
+        POST /rest/web3/submitKey  body {"privateKey":"0x..."}
+      Le serveur (routes/checkKeys.ts) compare ta cle a celle derivee
+      de la seed ; si elle correspond, le challenge est resolu. Si tu
+      envoies l'adresse publique ou la cle publique, le serveur te le
+      signale (messages distincts). Un portefeuille type MetaMask
+      permet aussi d'importer la seed et de lire la cle privee.
+      Defense : ne jamais publier une seed/clef privee ; une seed
+      divulguee = controle total du wallet, irreversible.
     text_en: |
-      General workflow (exact key to
-      OSINT):
-      1. Solve directoryListingChallenge to access /ftp/.
-      2. Inspect files: a file like
-         announcement_encrypted.md or similar may hold the
-         seed.
-      3. If not there: search official GitHub Juice Shop
-         repo source (commits, issues).
-      4. Once seed found: import into MetaMask (Chrome
-         extension) -> "Import wallet" -> paste seed.
-      5. Wallet shows up, containing the official SBT NFT.
-      6. Challenge auto-solves (likely via an endpoint
-         checking the current wallet address).
-      Note: installed Juice Shop version determines WHERE
-      exactly the seed leaks. Do targeted OSINT.
-      Defense: (1) seed phrases are terminal secrets — never paste them anywhere (Slack, GitHub, Discord). (2) Use a hardware wallet for production NFTs — seed never leaves the device. (3) Enable GitHub secret scanning and configure alerts for 12-word BIP39 pattern detection in repos.
+      Solution (verified during testing on Juice Shop 19.2.1): from the
+      12-word seed found in the review, derive the private key (default
+      Ethereum path) and submit it:
+        node -e "const {HDNodeWallet}=require('ethers');console.log(HDNodeWallet.fromPhrase('<the 12 words>').privateKey)"
+        POST /rest/web3/submitKey  body {"privateKey":"0x..."}
+      The server (routes/checkKeys.ts) compares your key to the one
+      derived from the seed; on a match the challenge is solved. If you
+      send the public address or public key, the server tells you so
+      (distinct messages). A wallet like MetaMask can also import the
+      seed and reveal the private key.
+      Defense: never publish a seed/private key; a leaked seed means
+      total, irreversible control of the wallet.
     pedagogical_intent: |
-      Quasi-solution : workflow + OSINT decay note.
+      Full solution: verified derivation + submitKey, defense.

@@ -72,105 +72,47 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Source serveur
-      verifiee (routes/easterEgg.ts:13) : le
-      serve route est mappe en server.ts pour
-      GET `/the/devs/are/so/funny/they/hid/an/
-      easter/egg/within/the/easter/egg`. Quand
-      tu access cette URL, le solveIf trigger
-      (return true) + sendFile sur le 3D
-      threejs demo (frontend/dist/frontend/
-      assets/private/threejs-demo.html). Le
-      client voit le 3D easter egg.
+      Le fichier /ftp/eastere.gg (obtenu via easterEggLevelOne) se
+      moque de toi puis donne la vraie piste sous forme d'une chaine.
+      Cette chaine est encodee en Base64 ; une fois decodee, tu obtiens
+      un chemin, mais chiffre par substitution ROT13. "Advanced
+      cryptanalysis" est ironique : c'est du Base64 puis du ROT13,
+      rien de plus. Decode dans cet ordre pour obtenir l'URL reelle.
     text_en: |
-      Verified server
-      source (routes/easterEgg.ts:13): serve
-      route mapped in server.ts for GET
-      `/the/devs/are/so/funny/they/hid/an/
-      easter/egg/within/the/easter/egg`. When
-      you access this URL, solveIf triggers
-      (return true) + sendFile on 3D threejs
-      demo (frontend/dist/frontend/assets/
-      private/threejs-demo.html). Client sees
-      3D easter egg.
+      The file /ftp/eastere.gg (obtained via easterEggLevelOne) mocks
+      you then gives the real lead as a string. That string is Base64-
+      encoded; once decoded, you get a path, but ciphered with the
+      ROT13 substitution. "Advanced cryptanalysis" is ironic: it is
+      Base64 then ROT13, nothing more. Decode in that order to get the
+      real URL.
     pedagogical_intent: |
-      Reveal exact server route.
+      Give the exact two-step decode (Base64 then ROT13).
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Pre-requis : easterEggLevelOne
-         Challenge resolu (Lot 2). Le content
-         de /ftp/eastere.gg te donne le
-         message ROT13.
-      2. ROT13 decode du URL :
-         - Original : `/gur/qrif/ner/fb/
-           shaal/gurl/uvq/na/rnfgre/rtt/
-           jvguva/gur/rnfgre/rtt`
-         - Tools : `echo "<original>" | tr
-           'A-Za-z' 'N-ZA-Mn-za-m'` (Unix)
-         - OR Python : `codecs.decode("...",
-           "rot13")`
-         - Resultat : `/the/devs/are/so/funny
-           /they/hid/an/easter/egg/within/the/
-           easter/egg`
-      3. GET cette URL via le browser :
-         `http://localhost:3000/the/devs/are/
-         so/funny/they/hid/an/easter/egg/
-         within/the/easter/egg`.
-      4. Le serveur :
-         (a) route serveEasterEgg() execute
-         (b) solveIf return true ->
-             challenge solve auto
-         (c) sendFile threejs-demo.html ->
-             3D easter egg s'affiche
-      5. Felicitations - tu vois le real
-         easter egg.
-      Source canonique : routes/easterEgg.ts:
-      13 + lib/antiCheat.ts:34 + ROT13 cipher.
-      Defense canonique : pour les easter eggs
-      legitimes, documenter explicitement et
-      utiliser des paths bien named (pas des
-      ROT13-obscured paths qui font penser a
-      hidden malicious functionality).
+      Solution (verifiee en recette sur Juice Shop 19.2.1) :
+      1. Decode Base64 de la chaine de eastere.gg ->
+         /gur/qrif/ner/fb/shaal/gurl/uvq/na/rnfgre/rtt/jvguva/gur/rnfgre/rtt
+      2. ROT13 de ce chemin :
+         echo "/gur/qrif/..." | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+         -> /the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg
+      3. Ouvre cette URL : GET http://127.0.0.1:3000/the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg
+      Le serveur (routes/easterEgg.ts:13) resout le challenge et sert la
+      demo 3D (threejs).
+      Defense : cacher une ressource derriere un encodage/ROT13 n'est
+      pas une protection ; appliquer un controle d'acces reel.
     text_en: |
-      Full workflow:
-      1. Prerequisite: easterEggLevelOne
-         Challenge solved (Lot 2). /ftp/
-         eastere.gg content gives ROT13
-         message.
-      2. ROT13 decode URL:
-         - Original: `/gur/qrif/ner/fb/
-           shaal/gurl/uvq/na/rnfgre/rtt/
-           jvguva/gur/rnfgre/rtt`
-         - Tools: `echo "<original>" | tr
-           'A-Za-z' 'N-ZA-Mn-za-m'` (Unix)
-         - OR Python: `codecs.decode("...",
-           "rot13")`
-         - Result: `/the/devs/are/so/funny/
-           they/hid/an/easter/egg/within/
-           the/easter/egg`
-      3. GET this URL via browser:
-         `http://localhost:3000/the/devs/are/
-         so/funny/they/hid/an/easter/egg/
-         within/the/easter/egg`.
-      4. Server:
-         (a) serveEasterEgg() route executes
-         (b) solveIf return true -> challenge
-             auto solves
-         (c) sendFile threejs-demo.html ->
-             3D easter egg displays
-      5. Congratulations - you see real
-         easter egg.
-      Canonical source: routes/easterEgg.ts:
-      13 + lib/antiCheat.ts:34 + ROT13
-      cipher.
-      Canonical defense: for legitimate
-      easter eggs, document explicitly and
-      use well-named paths (not ROT13-
-      obscured paths suggesting hidden
-      malicious functionality).
+      Solution (verified during testing on Juice Shop 19.2.1):
+      1. Base64-decode the string from eastere.gg ->
+         /gur/qrif/ner/fb/shaal/gurl/uvq/na/rnfgre/rtt/jvguva/gur/rnfgre/rtt
+      2. ROT13 that path:
+         echo "/gur/qrif/..." | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+         -> /the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg
+      3. Open the URL: GET http://127.0.0.1:3000/the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg
+      The server (routes/easterEgg.ts:13) solves the challenge and
+      serves the 3D demo (threejs).
+      Defense: hiding a resource behind an encoding/ROT13 is not
+      protection; enforce real access control.
     pedagogical_intent: |
-      Solution complete + decoding tools +
-      defense.
+      Full solution: Base64+ROT13 steps and the final URL.

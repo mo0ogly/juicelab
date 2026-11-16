@@ -70,117 +70,56 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Approche reverse :
-      ```js
-      // Pseudo-code basé sur Juice Shop pattern
-      const z85 = require('z85');
-      const today = new Date();
-      const month = today.getMonth(); // 0-indexed
-      const year = today.getFullYear() % 100;
-      const couponString = `${monthName}-
-        ${year}80%`;
-      const xored = couponString.split('').map(
-        (c, i) => String.fromCharCode(c.charCodeAt
-        (0) ^ year));
-      const coupon = z85.encode(Buffer.from(
-        xored.join('')));
-      ```
-      Submit le coupon via /#/basket coupon
-      input. Le serveur decrypte via z85 +
-      reverse XOR -> discount = 80 -> solve.
+      Le code du coupon (lib/insecurity.ts) est volontairement faible :
+        generateCoupon(discount, date) = z85.encode(MMMYY + '-' + discount)
+      ou MMMYY est le mois en 3 lettres MAJUSCULES + l'annee sur 2
+      chiffres (ex. NOV26). Il n'y a NI XOR NI chiffrement : juste un
+      encodage z85 reversible. A la validation (discountFromCoupon), le
+      serveur z85-decode, verifie que le mois/annee est le mois COURANT,
+      et lit la remise. Le challenge est resolu si la remise est >= 80.
     text_en: |
-      Reverse approach:
-      ```js
-      // Pseudo-code based on Juice Shop pattern
-      const z85 = require('z85');
-      const today = new Date();
-      const month = today.getMonth(); // 0-indexed
-      const year = today.getFullYear() % 100;
-      const couponString = `${monthName}-
-        ${year}80%`;
-      const xored = couponString.split('').map(
-        (c, i) => String.fromCharCode(c.charCodeAt
-        (0) ^ year));
-      const coupon = z85.encode(Buffer.from(
-        xored.join('')));
-      ```
-      Submit coupon via /#/basket coupon input.
-      Server decrypts via z85 + reverse XOR ->
-      discount = 80 -> solve.
+      The coupon code (lib/insecurity.ts) is deliberately weak:
+        generateCoupon(discount, date) = z85.encode(MMMYY + '-' + discount)
+      where MMMYY is the 3-letter UPPERCASE month + 2-digit year (e.g.
+      NOV26). There is NO XOR and NO encryption: just a reversible z85
+      encoding. On validation (discountFromCoupon), the server z85-
+      decodes, checks the month/year is the CURRENT month, and reads
+      the discount. The challenge solves if the discount is >= 80.
     pedagogical_intent: |
-      Spell reverse engineering pattern.
+      Correct the algorithm: z85 encoding only, uppercase MMMYY, >=80.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet
-      (3 approches) :
-      1. Approche reverse engineering :
-         (a) Lire lib/insecurity.ts (Juice Shop
-             source) - fonction generateCoupon.
-         (b) Reproduire la fonction localement
-             en Node.js (z85 + XOR pattern).
-         (c) Generer un coupon : `node -e "...
-             generateCoupon(today, 80) ..."`.
-         (d) Apply le coupon via UI checkout :
-             POST /rest/basket/:id/coupon avec
-             {coupon: "<generated>"}.
-         (e) Le serveur decrypte ->
-             discount=80 -> solveIf trigger.
-      2. Approche brute force :
-         (a) Burp Intruder POST /rest/basket/:
-             id/coupon avec wordlist coupon
-             patterns.
-         (b) Liste : 5-10 chars combinations
-             alphanumeric. ~10s avec 1000
-             requests.
-      3. Approche cloud research :
-         (a) Google "juice shop generateCoupon
-             github".
-         (b) Trouver le source officiel +
-             reproduire localement.
-      Source canonique : routes/order.ts:185 +
-      lib/insecurity.ts + OWASP Cryptographic
-      Storage Cheat Sheet.
-      Defense canonique : remplacer crypto
-      maison par JWT signed RS256 + DB
-      tracking + idempotent redemption +
-      audit log.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : encode
+      "<MOIS COURANT en 3 lettres MAJUSCULES><AA>-80" en z85, par
+      exemple pour novembre 2026 :
+        node -e "console.log(require('z85').encode('NOV26-80'))"
+        # -> pes[Chz3)x
+      Applique-le au panier :
+        PUT /rest/basket/<ton_bid>/coupon/<coupon URL-encode>
+      (reponse {"discount":80}), puis valide le panier
+      (POST /rest/basket/<bid>/checkout). Le challenge se resout
+      (order.ts:185). Attention : le mois doit etre le mois courant et
+      en MAJUSCULES (le tableau months est ['JAN'...'DEC']) ; les
+      caracteres z85 doivent etre URL-encodes dans le chemin.
+      Defense : signer les coupons (HMAC avec un secret serveur) et
+      verifier la signature ; un encodage reversible n'est pas une
+      protection.
     text_en: |
-      Full workflow (3
-      approaches):
-      1. Reverse engineering approach:
-         (a) Read lib/insecurity.ts (Juice
-             Shop source) - generateCoupon
-             function.
-         (b) Reproduce function locally in
-             Node.js (z85 + XOR pattern).
-         (c) Generate coupon: `node -e "...
-             generateCoupon(today, 80) ..."`.
-         (d) Apply coupon via UI checkout:
-             POST /rest/basket/:id/coupon with
-             {coupon: "<generated>"}.
-         (e) Server decrypts -> discount=80
-             -> solveIf triggers.
-      2. Brute force approach:
-         (a) Burp Intruder POST /rest/basket/
-             :id/coupon with coupon patterns
-             wordlist.
-         (b) List: 5-10 chars alphanumeric
-             combinations. ~10s with 1000
-             requests.
-      3. Cloud research approach:
-         (a) Google "juice shop
-             generateCoupon github".
-         (b) Find official source + reproduce
-             locally.
-      Canonical source: routes/order.ts:185 +
-      lib/insecurity.ts + OWASP Cryptographic
-      Storage Cheat Sheet.
-      Canonical defense: replace homemade
-      crypto with RS256-signed JWT + DB
-      tracking + idempotent redemption + audit
-      log.
+      Solution (verified during testing on Juice Shop 19.2.1): z85-
+      encode "<CURRENT MONTH 3-letter UPPERCASE><YY>-80", e.g. for
+      November 2026:
+        node -e "console.log(require('z85').encode('NOV26-80'))"
+        # -> pes[Chz3)x
+      Apply it to the basket:
+        PUT /rest/basket/<your_bid>/coupon/<URL-encoded coupon>
+      (response {"discount":80}), then check out
+      (POST /rest/basket/<bid>/checkout). The challenge solves
+      (order.ts:185). Note: the month must be the current month and
+      UPPERCASE (the months array is ['JAN'...'DEC']); z85 characters
+      must be URL-encoded in the path.
+      Defense: sign coupons (HMAC with a server secret) and verify the
+      signature; a reversible encoding is not protection.
     pedagogical_intent: |
-      Solution complete + 3 approaches +
-      defense canonique.
+      Full solution: verified z85 forge, apply+checkout, defense.

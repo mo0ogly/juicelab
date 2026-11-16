@@ -100,6 +100,11 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   rejouees live (jwtUnsigned alg=none, jwtForged HS256 key-confusion avec
   jwt.pub servie, 3 composants via complaint). jwtUnsigned/jwtForged
   affines (exp, source de cle, Windows). Effets de bord : 3 complaints.
+  Lot 12 (Cryptographic Issues) : weirdCrypto correct. 4 corrections,
+  toutes rejouees live : forgedCoupon (XOR invente -> z85 MMMYY-80),
+  premiumPaywall (AES invente -> obscurite), nftUnlock (seed dans un avis
+  seede -> derivation cle), easterEgg2 (base64 avant rot13). Effets de
+  bord : 1 complaint, 1 commande a -80%, submitKey.
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -127,10 +132,10 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | geoStalkingMetaChallenge | Sensitive Data Exposure | 2 | TODO |  |
 | geoStalkingVisualChallenge | Sensitive Data Exposure | 2 | DONE (lot 4) | N1-N5 : cible fausse (ville/monument -> nom d entreprise, question 10 "Company you first work for"), reponse ITsec verifiee en config/lab ; reset non rejoue (ne pas changer le mdp d Emma) |
 | loginRapperChallenge | Sensitive Data Exposure | 2 | TODO |  |
-| nftUnlockChallenge | Sensitive Data Exposure | 2 | TODO |  |
+| nftUnlockChallenge | Sensitive Data Exposure | 2 | DONE (lot 12) | N4-N5 : seed vague -> seed BIP39 dans un avis seede, derivation cle privee + POST /rest/web3/submitKey verifie live |
 | securityPolicyChallenge | Miscellaneous | 2 | TODO |  |
 | weakPasswordChallenge | Broken Authentication | 2 | TODO |  |
-| weirdCryptoChallenge | Cryptographic Issues | 2 | TODO |  |
+| weirdCryptoChallenge | Cryptographic Issues | 2 | DONE (lot 12) | correct (non modifie) ; base64 via complaint verifie live (verify.ts:254) |
 | loginAdminChallenge | Injection | 2 | DONE (lot 5) | correct ; payload ' OR true-- verifie live (retourne admin), solve = id admin (login.ts:70) ; non modifie |
 | adminSectionChallenge | Broken Access Control | 2 | DONE (lot 2) | N2-N5 : garde AdminGuard cote client (jwtDecode sans signature), validation = image 19px.png (verify.ts:65), 3 familles de contournement ; voie deduite du code, non rejouee (Chrome) |
 | basketAccessChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; GET /rest/basket/<autre bid> verifie live (basket.ts:21) |
@@ -163,7 +168,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | dataExportChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | dlpPastebinDataLeakChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | easterEggLevelOneChallenge | Broken Access Control | 4 | TODO |  |
-| easterEggLevelTwoChallenge | Cryptographic Issues | 4 | TODO |  |
+| easterEggLevelTwoChallenge | Cryptographic Issues | 4 | DONE (lot 12) | N4-N5 : etape Base64 manquante avant ROT13 (eastere.gg est base64 puis rot13) ; URL GET verifiee live |
 | ephemeralAccountantChallenge | Injection | 4 | TODO |  |
 | forgottenBackupChallenge | Sensitive Data Exposure | 4 | DONE (lot 8) | correct ; null-byte coupons_2013.md.bak%2500.md verifie live ; FR corrige (renvoi manipulateClock -> forgedCoupon, EN etait deja bon) |
 | forgottenDevBackupChallenge | Sensitive Data Exposure | 4 | DONE (lot 8) | correct (non modifie) ; null-byte /ftp/package.json.bak%2500.md verifie live |
@@ -208,10 +213,10 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | yamlBombChallenge | Insecure Deserialization | 5 | TODO |  |
 | continueCodeChallenge | Cryptographic Issues | 6 | DONE (lot 2) | N1 sans endpoint ; N4-N5 : PUT (GET = 500, teste), alphabet sans espaces parasites ; encode(999) + PUT teste |
 | fileWriteChallenge | Vulnerable Components | 6 | TODO |  |
-| forgedCouponChallenge | Cryptographic Issues | 6 | TODO |  |
+| forgedCouponChallenge | Cryptographic Issues | 6 | DONE (lot 12) | N4-N5 : XOR invente -> vrai algo z85(MMMYY-80) mois MAJUSCULE ; coupon applique+checkout verifie live |
 | jwtForgedChallenge | Vulnerable Components | 6 | DONE (lot 11) | N4-N5 : cle = jwt.pub servie de CETTE instance (octets exacts, token fige echoue), disabledEnv Windows ; HS256 key-confusion rsa_lord@ forge et verifie live |
 | loginSupportChallenge | Security Misconfiguration | 6 | TODO |  |
-| premiumPaywallChallenge | Cryptographic Issues | 6 | TODO |  |
+| premiumPaywallChallenge | Cryptographic Issues | 6 | DONE (lot 12) | N4-N5 : AES invente (hints nient toute crypto) -> securite par obscurite, URL cachee en clair ; GET URL verifie live |
 | rceOccupyChallenge | Insecure Deserialization | 6 | TODO |  |
 | ssrfChallenge | Broken Access Control | 6 | TODO |  |
 | sstiChallenge | Injection | 6 | TODO |  |

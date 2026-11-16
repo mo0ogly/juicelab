@@ -73,123 +73,47 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Trouver la clef
-      AES dans le bundle Angular : Open
-      DevTools Sources tab. Search dans les
-      .js bundles : "encryptionKey" /
-      "premiumKey" / "CryptoJS" / "decrypt".
-      La clef est typiquement hardcoded dans
-      ScoreBoardComponent ou similar. Si tu
-      trouves : `key = "lt2mNQ8mNL81QrKiFwGFjU
-      ymrNS4znW0"` (ou similar 32-char string),
-      c'est la clef AES.
+      Les hints OWASP sont explicites : "no inappropriate, self-written
+      or misconfigured cryptographic library to be exploited here", et
+      l'image de la "cle sous le paillasson". Ce n'est donc PAS une
+      attaque crypto (pas d'AES a casser) : c'est de la securite par
+      l'obscurite. L'URL secrete de la page premium est cachee en clair
+      dans le code/les ressources livres au client ; il faut la trouver,
+      pas la dechiffrer.
     text_en: |
-      Find AES key in
-      Angular bundle: Open DevTools Sources
-      tab. Search in .js bundles:
-      "encryptionKey" / "premiumKey" /
-      "CryptoJS" / "decrypt". Key typically
-      hardcoded in ScoreBoardComponent or
-      similar. If you find: `key =
-      "lt2mNQ8mNL81QrKiFwGFjUymrNS4znW0"` (or
-      similar 32-char string), that's AES key.
+      The OWASP hints are explicit: "no inappropriate, self-written or
+      misconfigured cryptographic library to be exploited here", plus
+      the "key under the doormat" image. So it is NOT a crypto attack
+      (no AES to break): it is security through obscurity. The premium
+      page's secret URL is hidden in plaintext in the code/assets
+      delivered to the client; you must find it, not decrypt it.
     pedagogical_intent: |
-      Spell key search method.
+      Correct the mechanism: obscurity, not cryptography.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Sur /#/score-board, View Source HTML.
-         Trouve le commentaire HTML AES-
-         ciphertext `<!--...-->` dans la
-         description Premium Paywall.
-      2. Inspecter le bundle Angular pour la
-         clef AES :
-         - DevTools Sources tab
-         - Ctrl+Shift+F sur tous les bundles
-         - Search "decrypt" / "CryptoJS.AES"
-         - Identifier la fonction +
-           hardcoded key
-      3. Decrypter le ciphertext en local :
-         ```js
-         const CryptoJS = require('crypto-js');
-         const ciphertext = "IvLuRfBJYlm...";
-         const key = "<key found in bundle>";
-         const plaintext = CryptoJS.AES.decrypt
-           (ciphertext, key).toString(
-           CryptoJS.enc.Utf8);
-         console.log(plaintext);
-         // -> "/this/page/is/hidden/behind/
-         //     an/incredibly/high/paywall/that/
-         //     could/only/be/unlocked/by/a/
-         //     unique/coin"
-         ```
-      4. GET cette URL :
-         `http://localhost:3000/this/page/is/
-         hidden/behind/an/incredibly/high/
-         paywall/that/could/only/be/unlocked/
-         by/a/unique/coin`.
-      5. Le serveur :
-         (a) servePremiumContent route execute
-         (b) solveIf return true ->
-             challenge solve auto
-         (c) sendFile JuiceShop_Wallpaper_
-             1920x1080_VR.jpg -> tu vois le
-             premium reward (un wallpaper).
-      Source canonique : routes/premiumReward.
-      ts:13 + bundle Angular AES key + OWASP
-      Key Management Cheat Sheet.
-      Defense canonique : (a) clef AES via
-      env var / KMS / Vault, JAMAIS hardcoded.
-      (b) signed URLs time-limited (S3
-      presigned) plutot que decrypter client-
-      side. (c) audit log + key rotation.
+      Solution (URL verifiee en recette sur Juice Shop 19.2.1) :
+      fouille les ressources cote client (bundles JS, fichiers servis
+      sous des chemins devinables) pour reperer un chemin anormalement
+      long et explicite. Il se termine par la plaisanterie sur le
+      paiement d'1 BTC. L'ouvrir suffit a resoudre le challenge
+      (routes/premiumReward.ts) :
+        GET /this/page/is/hidden/behind/an/incredibly/high/paywall/that/could/only/be/unlocked/by/sending/1btc/to/us
+      La page renvoie un fond d'ecran "premium" ; aucun paiement n'est
+      requis (hint OWASP #1).
+      Defense : ne pas proteger une ressource par le simple secret de
+      son URL ; appliquer un vrai controle d'acces cote serveur.
     text_en: |
-      Full workflow:
-      1. On /#/score-board, View Source HTML.
-         Find AES-ciphertext HTML comment
-         `<!--...-->` in Premium Paywall
-         description.
-      2. Inspect Angular bundle for AES key:
-         - DevTools Sources tab
-         - Ctrl+Shift+F on all bundles
-         - Search "decrypt" / "CryptoJS.AES"
-         - Identify function + hardcoded key
-      3. Decrypt ciphertext locally:
-         ```js
-         const CryptoJS = require('crypto-js');
-         const ciphertext = "IvLuRfBJYlm...";
-         const key = "<key found in bundle>";
-         const plaintext = CryptoJS.AES.
-           decrypt(ciphertext, key).toString(
-           CryptoJS.enc.Utf8);
-         console.log(plaintext);
-         // -> "/this/page/is/hidden/behind/
-         //     an/incredibly/high/paywall/
-         //     that/could/only/be/unlocked/
-         //     by/a/unique/coin"
-         ```
-      4. GET this URL: `http://localhost:3000/
-         this/page/is/hidden/behind/an/
-         incredibly/high/paywall/that/could/
-         only/be/unlocked/by/a/unique/coin`.
-      5. Server:
-         (a) servePremiumContent route
-             executes
-         (b) solveIf return true -> challenge
-             auto solves
-         (c) sendFile JuiceShop_Wallpaper_
-             1920x1080_VR.jpg -> you see
-             premium reward (a wallpaper).
-      Canonical source: routes/premiumReward.
-      ts:13 + Angular bundle AES key + OWASP
-      Key Management Cheat Sheet.
-      Canonical defense: (a) AES key via env
-      var / KMS / Vault, NEVER hardcoded. (b)
-      time-limited signed URLs (S3 presigned)
-      rather than client-side decrypt. (c)
-      audit log + key rotation.
+      Solution (URL verified during testing on Juice Shop 19.2.1):
+      search the client-side resources (JS bundles, files served under
+      guessable paths) for an abnormally long, explicit path. It ends
+      with the joke about paying 1 BTC. Opening it is enough to solve
+      the challenge (routes/premiumReward.ts):
+        GET /this/page/is/hidden/behind/an/incredibly/high/paywall/that/could/only/be/unlocked/by/sending/1btc/to/us
+      The page returns a "premium" wallpaper; no payment is required
+      (OWASP hint #1).
+      Defense: do not protect a resource by the secrecy of its URL
+      alone; enforce real server-side access control.
     pedagogical_intent: |
-      Solution complete + decryption +
-      defense.
+      Full solution: the hidden URL, no-crypto framing, defense.
