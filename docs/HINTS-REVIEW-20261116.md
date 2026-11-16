@@ -60,6 +60,10 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   `manipulateClockChallenge`, `missingEncodingChallenge` résolus ; compte passé
   deluxe, une commande 75% et un article au panier créés. `persistedXss`
   non rejoué en base (payload vérifié hors ligne contre sanitize-html 1.4.2).
+  Lot 4 : aucun effet de bord (geoStalkingVisual non rejoué pour préserver le
+  mot de passe d'Emma ; videoXss exige la chaîne fileWrite ; web3Wallet exige
+  une transaction Sepolia réelle). Vérifications par lecture du code + config
+  lab, assets servis confirmés (IMG_4253.jpg, owasp_promo.vtt : 200).
 - **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
   fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
   observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
@@ -85,7 +89,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | deprecatedInterfaceChallenge | Security Misconfiguration | 2 | TODO |  |
 | emptyUserRegistration | Improper Input Validation | 2 | DONE (lot 1) | N4,N5 reecrits : securityQuestion non requise (teste) ; N3 conserve (passwordRepeat verifie) |
 | geoStalkingMetaChallenge | Sensitive Data Exposure | 2 | TODO |  |
-| geoStalkingVisualChallenge | Sensitive Data Exposure | 2 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| geoStalkingVisualChallenge | Sensitive Data Exposure | 2 | DONE (lot 4) | N1-N5 : cible fausse (ville/monument -> nom d entreprise, question 10 "Company you first work for"), reponse ITsec verifiee en config/lab ; reset non rejoue (ne pas changer le mdp d Emma) |
 | loginRapperChallenge | Sensitive Data Exposure | 2 | TODO |  |
 | nftUnlockChallenge | Sensitive Data Exposure | 2 | TODO |  |
 | securityPolicyChallenge | Miscellaneous | 2 | TODO |  |
@@ -176,5 +180,5 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | ssrfChallenge | Broken Access Control | 6 | TODO |  |
 | sstiChallenge | Injection | 6 | TODO |  |
 | timingAttackChallenge | Broken Anti Automation | 6 | TODO |  |
-| videoXssChallenge | XSS | 6 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
-| web3WalletChallenge | Miscellaneous | 6 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| videoXssChallenge | XSS | 6 | DONE (lot 4) | N2-N5 : enabler faux (rceOccupy -> fileWriteChallenge/Arbitrary File Write), cible = sous-titres owasp_promo.vtt (pas la video), sink = bloc <script id=subtitle> (videoHandler.ts:58) ; chaine non rejouee |
+| web3WalletChallenge | Miscellaneous | 6 | DONE (lot 4) | N1-N5 : quote OWASP inventee corrigee, endpoint /rest/web3/walletExploitAddress, event on-chain ContractExploited (Sepolia, contrat 0x4137..7b0) ; source Solidity hors depot = vuln non verifiable ici ; non rejoue (testnet) |

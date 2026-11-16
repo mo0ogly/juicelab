@@ -29,118 +29,106 @@ hints:
   N2:
     cost_pct: 10
     text_fr: |
-      Le candidat principal est rceOccupyChallenge (Successful
-      RCE DoS) qui donne primitive RCE pour ecrire des fichiers
-      sur le serveur. Avec cette primitive, tu peux overwrite la
-      file servant de promo video. Hint OWASP officiel #2 : "The
-      mentioned marketing collateral might have been publicly
-      advertised by the Juice Shop but is not necessarily part
-      of its sitemap yet". Donc la video promo n'est pas dans
-      le menu — il faut la decouvrir.
+      Le challenge 6 etoiles prerequis est l'ecriture de fichier
+      arbitraire (Arbitrary File Write, fileWriteChallenge) : son
+      primitive, un chemin de sortie non controle a l'upload, te
+      permet d'ecrire ailleurs que prevu sur le serveur. Ce n'est PAS
+      rceOccupy (un deni de service, sans primitive d'ecriture
+      fiable). Ce que tu vas ecraser n'est pas la video : ce sont ses
+      SOUS-TITRES.
     text_en: |
-      Main candidate is rceOccupyChallenge (Successful RCE DoS)
-      giving RCE primitive for writing server files. With this,
-      you can overwrite the promo-video file. Official OWASP
-      hint #2: "The mentioned marketing collateral might have
-      been publicly advertised by the Juice Shop but is not
-      necessarily part of its sitemap yet". So the promo video
-      isn't in the menu — must be discovered.
+      The required 6-star challenge is Arbitrary File Write
+      (fileWriteChallenge): its primitive, an uncontrolled output
+      path at upload time, lets you write outside the intended place
+      on the server. It is NOT rceOccupy (a denial of service, with
+      no reliable write primitive). What you overwrite is not the
+      video: it is its SUBTITLES.
     pedagogical_intent: |
-      Pin the prerequisite + signal hidden video.
+      Correct the enabler (Arbitrary File Write) and the real target
+      (subtitles).
 
   N3:
     cost_pct: 20
     text_fr: |
-      Hint OWASP officiel #3 : "online searches for structurally
-      similar web projects". Le source de Juice Shop est public
-      (github.com/juice-shop/juice-shop). Le folder
-      frontend/src/assets/public/videos/ contient typiquement
-      la video promo (often juice-shop_video.mp4 ou
-      similar). L'URL servie est /assets/public/videos/<file>.
-      Note ce path — c'est l'asset que tu vas overwrite.
+      La page promo injecte le contenu des sous-titres dans le HTML
+      (routes/videoHandler.ts, views/promotionVideo.pug) a l'interieur
+      d'un bloc <script id="subtitle" type="text/vtt">...</script>. Le
+      fichier lu est owasp_promo.vtt, dans
+      frontend/dist/frontend/assets/public/videos/. Comme le contenu
+      est insere sans echappement, une sequence qui ferme le script et
+      en ouvre un autre s'execute : c'est l'angle d'attaque.
     text_en: |
-      Official OWASP hint #3: "online searches for structurally
-      similar web projects". Juice Shop source is public
-      (github.com/juice-shop/juice-shop). The folder
-      frontend/src/assets/public/videos/ typically contains the
-      promo video (often juice-shop_video.mp4 or similar). The
-      served URL is /assets/public/videos/<file>. Note that
-      path — it's the asset you'll overwrite.
+      The promo page injects the subtitle content into the HTML
+      (routes/videoHandler.ts, views/promotionVideo.pug) inside a
+      <script id="subtitle" type="text/vtt">...</script> block. The
+      file read is owasp_promo.vtt, in
+      frontend/dist/frontend/assets/public/videos/. Since the content
+      is inserted without escaping, a sequence that closes the script
+      and opens another one executes: that is the attack angle.
     pedagogical_intent: |
-      Spell the asset path via source-code research.
+      Localize the sink (script block) and the exact file.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Le payload exact specifie par la description :
+      Le payload exact (description du challenge) est :
       </script><script>alert(`xss`)</script>
-      Strategy : utiliser ta primitive RCE (depuis
-      rceOccupyChallenge) pour ECRIRE un fichier sous
-      /assets/public/videos/ qui n'est pas un .mp4 mais un .vtt
-      (subtitles WebVTT) avec le payload, OU pour modifier le
-      file path resolution pour servir une page HTML au lieu
-      d'une video. Hint OWASP officiel #4 : "this challenge will
-      always partially keep you blindfolded" — accept que tu vas
-      tatonner, c'est intentionnel par design.
+      Il doit se retrouver dans owasp_promo.vtt : le </script> ferme
+      le bloc des sous-titres, le <script> suivant s'execute. La
+      validation (videoHandler.ts, videoXssChallenge) ne regarde pas
+      l'affichage : elle verifie que le contenu des sous-titres servis
+      contient cette chaine exacte. Il te faut donc ecraser le .vtt
+      via la primitive d'ecriture arbitraire.
     text_en: |
-      Exact payload specified by description:
+      The exact payload (challenge description) is:
       </script><script>alert(`xss`)</script>
-      Strategy: use your RCE primitive (from
-      rceOccupyChallenge) to WRITE a file under
-      /assets/public/videos/ that's not an .mp4 but a .vtt
-      (WebVTT subtitles) with the payload, OR to modify file
-      path resolution to serve an HTML page instead of a
-      video. Official OWASP hint #4: "this challenge will
-      always partially keep you blindfolded" — accept you'll
-      grope, it's intentional by design.
+      It must land inside owasp_promo.vtt: the </script> closes the
+      subtitle block, the following <script> executes. Validation
+      (videoHandler.ts, videoXssChallenge) does not look at rendering:
+      it checks that the served subtitle content contains this exact
+      string. So you must overwrite the .vtt via the arbitrary-write
+      primitive.
     pedagogical_intent: |
-      Spell the file-write target + acknowledge intentional vagueness.
+      Give the exact payload, the sink and the real validation.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Cette quasi-solution depend de la version Juice Shop
-      installee. Forme generale :
-      1. Resoudre rceOccupyChallenge ou fileWriteChallenge pour
-         obtenir une primitive d'ecriture serveur-side (typique-
-         ment via /api/Complaint upload avec un name fichier
-         malicieux).
-      2. Ecrire un fichier .vtt sous /assets/public/videos/
-         contenant le payload :
-         WEBVTT
-
-         00:00.000 --> 00:05.000
-         </script><script>alert(`xss`)</script>
-      3. Le frontend Juice Shop charge la video promo avec une
-         <track> qui pointe vers ce .vtt. Le navigateur parse le
-         WebVTT et execute le HTML/JS si la lib video player
-         est mal configure (cue text injecte sans escape).
-      4. Le challenge se valide automatiquement quand le serveur
-         detecte le pattern dans la response du player.
-      Hint #4 le confirme : "always partially keep you
-      blindfolded". Ne sois pas surpris si tu dois iterer
-      plusieurs fois.
-      Defense : (1) servir les fichiers de sous-titres WebVTT via un endpoint dedie qui valide le content-type et sanitise le cue text avant de le servir. (2) Corriger la primitive RCE en amont (desactiver vm.runInNewContext dans le traitement B2B). (3) Configurer la librairie video player pour echapper le cue text WebVTT en plain text, pas en innerHTML.
+      Marche a suivre (deduite du code ; chaine complete non rejouee
+      pendant la revue du 2026-11-16) :
+      1. Obtenir la primitive d'ecriture arbitraire via
+         fileWriteChallenge (archive piegee dont une entree pointe hors
+         du dossier d'extraction).
+      2. S'en servir pour ecraser owasp_promo.vtt par un contenu VTT
+         valide contenant le payload, par exemple :
+           WEBVTT
+           1
+           00:00.000 --> 00:05.000
+           </script><script>alert(`xss`)</script>
+      3. Recharger la page promo : le bloc <script id="subtitle">
+         contient desormais la chaine ; le challenge se valide.
+      Hint OWASP #4 : une partie reste volontairement a tatons, c'est
+      voulu. Defense : echapper le contenu des sous-titres a
+      l'insertion (ne jamais injecter un texte brut dans un <script>),
+      et empecher l'ecriture de fichiers hors d'un repertoire dedie
+      (chemins d'extraction normalises et verifies).
     text_en: |
-      This quasi-solution depends on the installed Juice Shop
-      version. General form:
-      1. Solve rceOccupyChallenge or fileWriteChallenge for a
-         server-side write primitive (typically via
-         /api/Complaint upload with a malicious filename).
-      2. Write a .vtt file under /assets/public/videos/
-         containing the payload:
-         WEBVTT
-
-         00:00.000 --> 00:05.000
-         </script><script>alert(`xss`)</script>
-      3. Juice Shop frontend loads the promo video with a
-         <track> pointing to this .vtt. Browser parses WebVTT
-         and runs HTML/JS if the video player lib is
-         misconfigured (cue text injected without escape).
-      4. Challenge auto-solves when server detects the pattern
-         in the player's response.
-      Hint #4 confirms: "always partially keep you blindfolded".
-      Don't be surprised if you must iterate multiple times.
-      Defense: (1) serve WebVTT subtitle files through a dedicated endpoint that validates content-type and sanitizes cue text before serving — never trust file content written via RCE primitives. (2) Fix the upstream RCE primitive first (disable vm.runInNewContext in B2B processing). (3) Configure the video player library to escape WebVTT cue text as plain text, not innerHTML.
+      Procedure (derived from code; the full chain was not replayed
+      during the 2026-11-16 review):
+      1. Obtain the arbitrary-write primitive via fileWriteChallenge
+         (a crafted archive whose entry points outside the extraction
+         folder).
+      2. Use it to overwrite owasp_promo.vtt with valid VTT content
+         containing the payload, for example:
+           WEBVTT
+           1
+           00:00.000 --> 00:05.000
+           </script><script>alert(`xss`)</script>
+      3. Reload the promo page: the <script id="subtitle"> block now
+         holds the string; the challenge is solved.
+      OWASP hint #4: part of it stays intentionally blind. Defense:
+      escape subtitle content on insertion (never inject raw text into
+      a <script>), and prevent writing files outside a dedicated
+      directory (normalized, verified extraction paths).
     pedagogical_intent: |
-      Quasi-solution : full kill chain + intentional uncertainty acknowledgment.
+      Full chain with honest replay status and defense.

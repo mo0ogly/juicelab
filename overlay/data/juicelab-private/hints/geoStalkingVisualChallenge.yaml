@@ -5,120 +5,105 @@ hints:
   N1:
     cost_pct: 5
     text_fr: |
-      Hint OWASP officiel unique : "Take a look at the details
-      in the photo to determine the location of where it was
-      taken". Donc pas de metadata EXIF (vs geoStalkingMeta),
-      mais analyse VISUELLE de la photo. Quelle est la
-      photo cible ? Va sur /#/photo-wall et cherche celle
-      d'Emma.
+      Le mecanisme attaque est la reinitialisation de mot de passe par
+      question secrete : si tu devines la reponse d'Emma, tu reprends
+      son compte. Hint OWASP : "look at the details in the photo". La
+      reponse n'est donc pas dans des metadonnees (c'est le cas du
+      challenge jumeau geoStalkingMeta) mais visible DANS l'image.
+      Va sur /#/photo-wall reperer la photo d'Emma.
     text_en: |
-      Single official OWASP hint: "Take a look at the details
-      in the photo to determine the location of where it was
-      taken". So no EXIF metadata (vs geoStalkingMeta), but
-      VISUAL analysis. Which is the target photo? Go to
-      /#/photo-wall and find Emma's.
+      The attacked mechanism is password reset via security question:
+      if you guess Emma's answer, you take over her account. OWASP
+      hint: "look at the details in the photo". So the answer is not
+      in metadata (that is the twin challenge geoStalkingMeta) but
+      visible IN the image. Go to /#/photo-wall and find Emma's
+      photo.
     pedagogical_intent: |
-      Localize the photo + signal visual OSINT.
+      Frame the goal (security-question reset) and the visual nature.
 
   N2:
     cost_pct: 10
     text_fr: |
-      Une fois la photo d'Emma reperee, telecharge-la et
-      analyse les details visibles. Cherche : (1) langue des
-      panneaux/textes, (2) architecture (style des batiments),
-      (3) plaques d'immatriculation, (4) monuments visibles,
-      (5) vegetation specifique a une region. Methode
-      Bellingcat : croque mentalement les 9 zones du cadre,
-      note tout detail identifiable.
+      D'abord, quelle question ? Lance /#/forgot-password avec
+      emma@juice-sh.op : le formulaire affiche sa question secrete,
+      "Company you first work for as an adult?" (question 10). La
+      reponse est donc un NOM D'ENTREPRISE, pas une ville ni un
+      monument. Sa photo est legendee "My old workplace..." : cherche
+      une enseigne, un logo ou un badge d'entreprise dans l'image.
     text_en: |
-      Once Emma's photo found, download and analyze visible
-      details. Look for: (1) sign/text language, (2)
-      architecture (building style), (3) license plates, (4)
-      visible monuments, (5) region-specific vegetation.
-      Bellingcat method: mentally sketch the 9 frame zones,
-      note every identifiable detail.
+      First, which question? Start /#/forgot-password with
+      emma@juice-sh.op: the form shows her security question,
+      "Company you first work for as an adult?" (question 10). So the
+      answer is a COMPANY NAME, not a city or a monument. Her photo is
+      captioned "My old workplace...": look for a sign, a logo or a
+      company badge in the image.
     pedagogical_intent: |
-      Spell visual analysis approach.
+      Correct the target: a company name, cued by the question and
+      caption.
 
   N3:
     cost_pct: 20
     text_fr: |
-      Si l'analyse manuelle est lente, utilise reverse image
-      search : Google Lens (lens.google.com), Yandex Images
-      (yandex.com/images), TinEye (tineye.com). Ces outils
-      cherchent dans leur index si la photo (ou des photos
-      similaires) a ete postee ailleurs. Si Emma a uploade
-      une photo unique, le reverse search peut donner peu
-      de resultats — bascule vers analyse manuelle des
-      details.
+      Telecharge la photo d'Emma (IMG_4253.jpg) et agrandis-la pour
+      lire les textes : enseigne sur la facade, plaque, logo sur un
+      mur ou un vetement. Au besoin, une recherche d'image inversee
+      (Google Lens, Yandex) peut aider a reconnaitre un logo
+      d'entreprise, mais ici l'analyse visuelle directe du nom affiche
+      suffit.
     text_en: |
-      If manual analysis is slow, use reverse image search:
-      Google Lens (lens.google.com), Yandex Images
-      (yandex.com/images), TinEye (tineye.com). These search
-      their index for if the photo (or similar) was posted
-      elsewhere. If Emma uploaded a unique photo, reverse
-      search may give few results — fall back to manual
-      detail analysis.
+      Download Emma's photo (IMG_4253.jpg) and zoom in to read the
+      text: a sign on the facade, a plaque, a logo on a wall or on
+      clothing. If needed, reverse image search (Google Lens, Yandex)
+      can help recognize a company logo, but here reading the
+      displayed name directly is enough.
     pedagogical_intent: |
-      Spell reverse-search tools.
+      Direct the visual search at readable company signage.
 
   N4:
     cost_pct: 35
     text_fr: |
-      L'objectif est d'identifier le lieu de la photo (souvent
-      une ville ou un monument iconique) et utiliser ce nom
-      comme reponse a la security question d'Emma. Question
-      typique : "What is your favorite place to vacation?" ou
-      "Where did you grow up?". La reponse est le nom du lieu
-      visible dans sa photo. Va sur /#/forgot-password, email
-      emma@juice-sh.op, answer = nom du lieu.
+      Le nom lu sur la photo est la reponse a la question. La
+      validation (routes/resetPassword.ts, geoStalkingVisualChallenge)
+      compare ta reponse a la valeur configuree pour la memoire
+      d'Emma. Sur /#/forgot-password : email emma@juice-sh.op,
+      reponse = le nom de l'entreprise, puis choisis un nouveau mot
+      de passe. Resoudre le reset resout le challenge.
     text_en: |
-      Goal is identifying photo location (often a city or
-      iconic monument) and using its name as Emma's security
-      question answer. Typical question: "What is your
-      favorite place to vacation?" or "Where did you grow
-      up?". Answer is the place name visible in her photo. Go
-      to /#/forgot-password, email emma@juice-sh.op, answer =
-      place name.
+      The name read on the photo is the answer to the question.
+      Validation (routes/resetPassword.ts, geoStalkingVisualChallenge)
+      compares your answer to the value configured for Emma's memory.
+      On /#/forgot-password: email emma@juice-sh.op, answer = the
+      company name, then set a new password. Completing the reset
+      solves the challenge.
     pedagogical_intent: |
-      Spell forgot-password workflow.
+      Tie the read name to the exact validation path.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. /#/photo-wall : trouve la photo d'Emma.
-      2. Right-click + Save As, telecharge.
-      3. Analyse visuelle : identifie un detail
-         identifiable (panneau, monument, architecture).
-      4. Si necessaire : reverse image search via Google Lens
-         pour valider.
-      5. Le lieu identifie (ville/monument typique) =
-         reponse a la security question.
-      6. /#/forgot-password : email emma@juice-sh.op, answer
-         = nom du lieu, set un nouveau password.
-      7. Login. Challenge se valide automatiquement.
-      Source : OWASP Choosing Security Questions Cheat Sheet
-      + methodes Bellingcat OSINT visuelle (publiques).
-      Note : la photo seedee dans Juice Shop varie selon la
-      version, l'OSINT visuel reste applicable au pattern.
-      Defense : (1) remplacer les questions de securite basees sur la connaissance par un MFA TOTP — les questions de localisation sont trivialement OSINT-ables. (2) Education des users : eviter de poster des photos avec des landmarks identifiables. (3) Si upload de photo requis, appliquer un flou automatique des plaques et enseignes commerciales cote serveur.
+      Solution : sur /#/forgot-password, email emma@juice-sh.op,
+      reponse a "Company you first work for as an adult?" = ITsec
+      (valeur par defaut, geoStalkingVisualSecurityAnswer dans
+      config/default.yml, verifiee sur le lab 19.2.1), puis definis un
+      nouveau mot de passe. Note : cette valeur depend de la config de
+      l'instance ; sur une autre config, lis le nom reellement visible
+      sur la photo d'Emma. Non rejoue pendant la revue pour ne pas
+      modifier le mot de passe d'Emma sur le lab.
+      Defense : les questions secretes dont la reponse est trouvable
+      par OSINT ne protegent rien ; preferer un reset par e-mail a
+      jeton a usage unique, et ne pas publier de donnees personnelles
+      exploitables.
     text_en: |
-      Complete workflow:
-      1. /#/photo-wall: find Emma's photo.
-      2. Right-click + Save As, download.
-      3. Visual analysis: identify an identifiable detail
-         (sign, monument, architecture).
-      4. If needed: Google Lens reverse search to validate.
-      5. Identified location (city/iconic monument) =
-         security question answer.
-      6. /#/forgot-password: email emma@juice-sh.op, answer
-         = place name, set new password.
-      7. Login. Challenge auto-solves.
-      Source: OWASP Choosing Security Questions Cheat Sheet
-      + Bellingcat visual OSINT methods (public). Note:
-      seeded photo varies by Juice Shop version, visual
-      OSINT remains applicable to the pattern.
-      Defense: (1) replace knowledge-based security questions with TOTP MFA — location questions are trivially OSINT-able. (2) User education: avoid posting photos with identifiable landmarks. (3) If photo upload is required, apply automatic blurring of license plates and commercial signs server-side.
+      Solution: on /#/forgot-password, email emma@juice-sh.op, answer
+      to "Company you first work for as an adult?" = ITsec (default
+      value, geoStalkingVisualSecurityAnswer in config/default.yml,
+      verified on lab 19.2.1), then set a new password. Note: this
+      value depends on the instance config; on another config, read
+      the name actually visible in Emma's photo. Not replayed during
+      the review to avoid changing Emma's password on the lab.
+      Defense: security questions whose answer is findable via OSINT
+      protect nothing; prefer an email reset with a single-use token,
+      and do not publish exploitable personal data.
     pedagogical_intent: |
-      Quasi-solution : full workflow + version-dependency note.
+      Full solution, config-dependency caveat, honest replay status,
+      defense.

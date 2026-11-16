@@ -5,91 +5,121 @@ hints:
   N1:
     cost_pct: 5
     text_fr: |
-      Hint OWASP : "drain the smart contract". Le shop a un Web3 wallet
-      page (/#/web3-sandbox or similaire). Connecter Metamask + exploit
-      le contract pour drain les funds.
+      Hint OWASP unique : "Try to exploit the contract of the wallet".
+      L'objectif (description) est de retirer plus d'ETH que tu n'en
+      as depose : c'est donc un defaut de logique dans le contrat
+      intelligent du portefeuille, pas une faille de l'application web
+      classique. Le shop expose une page Web3 pour connecter un
+      portefeuille et interagir avec ce contrat.
     text_en: |
-      OWASP hint: "drain the smart contract". Shop has Web3 wallet page
-      (/#/web3-sandbox or similar). Connect Metamask + exploit contract
-      to drain funds.
+      Single OWASP hint: "Try to exploit the contract of the wallet".
+      The goal (description) is to withdraw more ETH than you
+      deposited: so it is a logic flaw in the wallet's smart contract,
+      not a classic web-app bug. The shop exposes a Web3 page to
+      connect a wallet and interact with that contract.
     pedagogical_intent: |
-      Activate Web3 + Metamask reflex.
+      Set the goal (withdraw > deposit) and the smart-contract surface.
 
   N2:
     cost_pct: 10
     text_fr: |
-      Le contract est sur Ethereum Sepolia testnet, address
-      0x413744D59d31AFDC2889aeE602636177805Bd7b0. Voir le contract sur
-      sepolia.etherscan.io. Le bundle Angular contient l'ABI
-      (web3WalletABI).
+      Cote serveur (routes/web3Wallet.ts) : quand tu connectes ton
+      portefeuille, le shop POST /rest/web3/walletExploitAddress avec
+      ton adresse, l'ajoute a walletsConnected, et ecoute en direct
+      l'evenement on-chain ContractExploited du contrat. La validation
+      est donc declenchee par une TRANSACTION reelle sur la
+      blockchain, pas par un appel a l'API du shop.
     text_en: |
-      Contract is on Ethereum Sepolia testnet, address
-      0x413744D59d31AFDC2889aeE602636177805Bd7b0. View contract on
-      sepolia.etherscan.io. Angular bundle contains ABI (web3WalletABI).
+      Server-side (routes/web3Wallet.ts): when you connect your
+      wallet, the shop POSTs /rest/web3/walletExploitAddress with your
+      address, adds it to walletsConnected, and listens live for the
+      contract's on-chain ContractExploited event. So validation is
+      triggered by a real blockchain TRANSACTION, not by a call to the
+      shop's API.
     pedagogical_intent: |
-      Spell exact address.
+      Reveal the real validation path: on-chain event, not an HTTP call.
 
   N3:
     cost_pct: 20
     text_fr: |
-      Lire le contract Solidity (decompiled si pas open-source) sur
-      Etherscan. Identifier la vulnerabilite : reentrancy, missing access
-      control, integer overflow, ou logic bug specifique au contract du
-      shop.
+      Le contrat est deploye sur le testnet Ethereum Sepolia a
+      l'adresse 0x413744D59d31AFDC2889aeE602636177805Bd7b0 ; son ABI
+      est dans data/static/contractABIs (web3WalletABI). Le serveur s'y
+      connecte via un fournisseur Sepolia (WebSocket Alchemy). Le code
+      source Solidity du contrat n'est PAS dans ce depot : lis-le sur
+      sepolia.etherscan.io (ou decompile) pour trouver le defaut
+      (deposit/withdraw). La nature exacte de la faille n'est donc pas
+      verifiable depuis le code du shop.
     text_en: |
-      Read Solidity contract (decompiled if not open-source) on
-      Etherscan. Identify vulnerability: reentrancy, missing access
-      control, integer overflow, or shop-specific logic bug.
+      The contract is deployed on the Ethereum Sepolia testnet at
+      0x413744D59d31AFDC2889aeE602636177805Bd7b0; its ABI is in
+      data/static/contractABIs (web3WalletABI). The server connects to
+      it via a Sepolia provider (Alchemy WebSocket). The contract's
+      Solidity source is NOT in this repo: read it on
+      sepolia.etherscan.io (or decompile) to find the flaw
+      (deposit/withdraw). The exact nature of the flaw is therefore
+      not verifiable from the shop's code.
     pedagogical_intent: |
-      Reveal contract analysis.
+      Point at the on-chain source and state what is not verifiable here.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Connect Metamask au Sepolia testnet, get test ETH du faucet
-      (sepoliafaucet.com). Crafter transaction exploit (Remix IDE ou
-      Foundry/Hardhat). Le contract emit `ContractExploited` (exploiter
-      address) -> Juice Shop event listener trigger solve.
+      Prepare un portefeuille (MetaMask) sur Sepolia, approvisionne en
+      ETH de test via un faucet. Dans la page Web3 du shop, connecte ce
+      portefeuille : ton adresse est enregistree cote serveur. Ensuite,
+      depuis un environnement de developpement (Remix, Foundry ou
+      Hardhat), appelle la fonction vulnerable du contrat pour retirer
+      plus que ton depot, jusqu'a ce que le contrat emette
+      ContractExploited avec ton adresse.
     text_en: |
-      Connect Metamask to Sepolia testnet, get test ETH from faucet
-      (sepoliafaucet.com). Craft exploit transaction (Remix IDE or
-      Foundry/Hardhat). Contract emits `ContractExploited` (exploiter
-      address) -> Juice Shop event listener triggers solve.
+      Prepare a wallet (MetaMask) on Sepolia, funded with test ETH
+      from a faucet. On the shop's Web3 page, connect that wallet:
+      your address is registered server-side. Then, from a development
+      environment (Remix, Foundry or Hardhat), call the contract's
+      vulnerable function to withdraw more than your deposit, until the
+      contract emits ContractExploited with your address.
     pedagogical_intent: |
-      Spell technical workflow.
+      Guided steps: fund, connect, call the vulnerable function on-chain.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow : (1) Naviguer /#/web3-sandbox
-      (ou similaire). (2) Connect Metamask (Sepolia testnet, test ETH du
-      faucet sepoliafaucet.com). (3) Le shop call POST /web3 avec
-      walletAddress -> serveur add to walletsConnected (web3Wallet.ts:14).
-      (4) Inspect le contract sur sepolia.etherscan.io address
-      0x413744D59d31AFDC2889aeE602636177805Bd7b0 - decompile or read
-      Solidity source. (5) Identify la vuln (probablement reentrancy ou
-      logic bug specifique). (6) Crafter exploit avec Remix IDE / Foundry
-      / call direct via `contract.exploitFunction()`. (7) Contract emit
-      `ContractExploited(exploiter=msg.sender)`. (8) Juice Shop event
-      listener (web3Wallet.ts:24)
-      `if (walletsConnected.has(exploiter)) solveIf(() => true)`
-      declenche. Defense : audit Slither/Mythril, OpenZeppelin libs,
-      multi-sig, time lock, EIP-712 integration. Source : web3Wallet.ts
-      :14-26.
+      Deroule complet (deduit du code ; non rejoue : exige une vraie
+      transaction sur Sepolia) :
+      1. MetaMask sur Sepolia + ETH de test (faucet).
+      2. Page Web3 du shop > connecter le portefeuille ->
+         POST /rest/web3/walletExploitAddress enregistre ton adresse et
+         arme l'ecouteur d'evenement.
+      3. Lire le contrat sur sepolia.etherscan.io
+         (0x413744D59d31AFDC2889aeE602636177805Bd7b0), identifier le
+         defaut deposit/withdraw et l'exploiter (retirer > depot) via
+         Remix/Foundry.
+      4. Le contrat emet ContractExploited(ton adresse) ; le serveur,
+         qui te sait dans walletsConnected, resout le challenge
+         (routes/web3Wallet.ts).
+      Defense : auditer le contrat (patron checks-effects-interactions,
+      controle d'acces, protection contre la reentrance), couvrir les
+      invariants comptables par des tests, et faire auditer avant
+      deploiement. Un bug de contrat deploye est, par nature, difficile
+      a corriger a chaud.
     text_en: |
-      Workflow: (1) Navigate /#/web3-sandbox (or
-      similar). (2) Connect Metamask (Sepolia testnet, test ETH from
-      sepoliafaucet.com). (3) Shop calls POST /web3 with walletAddress
-      -> server adds to walletsConnected (web3Wallet.ts:14). (4) Inspect
-      contract on sepolia.etherscan.io address
-      0x413744D59d31AFDC2889aeE602636177805Bd7b0 - decompile or read
-      Solidity source. (5) Identify vuln (likely reentrancy or specific
-      logic bug). (6) Craft exploit with Remix IDE / Foundry / direct
-      call via `contract.exploitFunction()`. (7) Contract emits
-      `ContractExploited(exploiter=msg.sender)`. (8) Juice Shop event
-      listener (web3Wallet.ts:24)
-      `if (walletsConnected.has(exploiter)) solveIf(() => true)`
-      triggers. Defense: Slither/Mythril audit, OpenZeppelin libs, multi-
-      sig, time lock, EIP-712 integration. Source: web3Wallet.ts:14-26.
+      Full walkthrough (derived from code; not replayed: requires a
+      real Sepolia transaction):
+      1. MetaMask on Sepolia + test ETH (faucet).
+      2. Shop Web3 page > connect the wallet ->
+         POST /rest/web3/walletExploitAddress registers your address
+         and arms the event listener.
+      3. Read the contract on sepolia.etherscan.io
+         (0x413744D59d31AFDC2889aeE602636177805Bd7b0), identify the
+         deposit/withdraw flaw and exploit it (withdraw > deposit) via
+         Remix/Foundry.
+      4. The contract emits ContractExploited(your address); the
+         server, which has you in walletsConnected, solves the
+         challenge (routes/web3Wallet.ts).
+      Defense: audit the contract (checks-effects-interactions pattern,
+      access control, reentrancy protection), cover accounting
+      invariants with tests, and get an audit before deployment. A
+      deployed contract bug is inherently hard to hotfix.
     pedagogical_intent: |
-      Solution + Web3 mastery.
+      Full chain, honest replay status, smart-contract defense.
