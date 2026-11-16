@@ -76,108 +76,54 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Construction du
-      payload : un username qui contient un
-      template literal qui throw une exception
-      irrecoverable. Examples :
-      - `${(()=>{throw 'killed'})()}` - fonction
-        IIFE qui throw
-      - `${process.exit()}` - kill le process (peut
-        aussi crash le serveur)
-      - `${(_=>(_=>_)())()}` - parse error pour
-        crasher le template engine
-      Source serveur verifiee (routes/chatbot.ts:
-      127) : solveIf declenche dans le 2eme catch
-      (recovery testCommand failure).
+      Le chatbot construit sa logique en interpolant TON nom
+      d'utilisateur (champ username du profil) dans du code
+      (routes/chatbot.ts). Un username bien forme s'echappe de la chaine
+      et redefinit le traitement des messages, par exemple en annulant
+      la fonction qui repond (processQuery). Ensuite, des que tu discutes
+      avec le bot, bot.respond leve une exception : le serveur resout
+      killChatbot (chatbot.ts:127).
     text_en: |
-      Payload
-      construction: a username containing a
-      template literal throwing irrecoverable
-      exception. Examples:
-      - `${(()=>{throw 'killed'})()}` - IIFE
-        function that throws
-      - `${process.exit()}` - kills process (may
-        also crash server)
-      - `${(_=>(_=>_)())()}` - parse error
-        crashing template engine
-      Verified server source (routes/chatbot.ts:
-      127): solveIf triggers in 2nd catch
-      (recovery testCommand failure).
+      The chatbot builds its logic by interpolating YOUR username
+      (profile username field) into code (routes/chatbot.ts). A
+      well-crafted username breaks out of the string and redefines the
+      message handling, for instance by nulling the responding function
+      (processQuery). Then, as soon as you chat with the bot,
+      bot.respond throws: the server solves killChatbot (chatbot.ts:127).
     pedagogical_intent: |
-      Spell payload + server check.
+      Reveal the real vector: code injection via the profile username.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Login Juice Shop (need authenticated user
-         pour /rest/chatbot).
-      2. Trigger setUserName via le chatbot
-         interface (cliquer sur le bot icon en bas
-         a droite, taper "set name" dans le chat,
-         ou directement via API).
-      3. Lorsque le chatbot demande ton nom, taper
-         le payload : `${(_=>(_=>_)())()}` (un
-         payload qui throw une exception au
-         template eval).
-      4. Pour declencher : envoyer une nouvelle
-         query au chatbot (ex. "hello"). Le serveur :
-         (a) bot.respond("hello", userId) appelle
-             bot.greet() avec le username
-             malicious -> exception persistante.
-         (b) catch (err) -> bot.respond(test
-             Command) -> meme exception (greet
-             interne).
-         (c) catch (err) interne -> challengeUtils.
-             solveIf(killChatbot) avec () => true
-             -> match -> challenge solve auto.
-      5. Le bot est definitivement KO : "Remember
-         to stay hydrated while I try to recover
-         from <error>...".
-      Source canonique : routes/chatbot.ts:127 +
-      juicy-chat-bot library source GitHub +
-      JavaScript template literal eval mecanique.
-      Defense canonique : (a) ne PAS evaluer les
-      template literals sur user input, (b)
-      sanitize username (whitelist alphanumeric +
-      espace), (c) isoler le template eval dans une
-      sandbox (vm with no globals, timeouts), (d)
-      avoir un recovery PATH qui n'utilise PAS le
-      same code path (state-independent recovery).
+      Solution (payload du test natif) :
+      1. Sur /#/profile, mets ton username a (exactement) :
+         admin"); processQuery=null; users.addUser("1337", "test
+         puis valide. Ce nom s'injecte dans le code du bot et met
+         processQuery a null.
+      2. Ouvre /#/chatbot et envoie quelques messages (par ex. "hi",
+         "...", "bye").
+      3. bot.respond echoue, le serveur repond "Remember to stay
+         hydrated..." et resout le challenge (chatbot.ts:127).
+      Vecteur confirme dans le code et le test cypress
+      (test/cypress/e2e/chatbot.spec.ts) ; non rejoue de bout en bout
+      pendant la revue (etat d'entrainement du bot).
+      Defense : ne jamais interpoler une entree utilisateur dans du code
+      execute ; isoler la configuration du bot des donnees utilisateur.
     text_en: |
-      Full workflow:
-      1. Login Juice Shop (need authenticated user
-         for /rest/chatbot).
-      2. Trigger setUserName via chatbot interface
-         (click bot icon bottom right, type "set
-         name" in chat, or directly via API).
-      3. When chatbot asks your name, type
-         payload: `${(_=>(_=>_)())()}` (payload
-         throwing exception at template eval).
-      4. To trigger: send new query to chatbot
-         (e.g., "hello"). Server:
-         (a) bot.respond("hello", userId) calls
-             bot.greet() with malicious username
-             -> persistent exception.
-         (b) catch (err) -> bot.respond(test
-             Command) -> same exception
-             (internal greet).
-         (c) internal catch (err) ->
-             challengeUtils.solveIf(killChatbot)
-             with () => true -> match ->
-             challenge auto solves.
-      5. Bot is definitively KO: "Remember to
-         stay hydrated while I try to recover
-         from <error>...".
-      Canonical source: routes/chatbot.ts:127 +
-      juicy-chat-bot library source GitHub +
-      JavaScript template literal eval mechanic.
-      Canonical defense: (a) DON'T evaluate
-      template literals on user input, (b)
-      sanitize username (whitelist alphanumeric +
-      space), (c) isolate template eval in
-      sandbox (vm with no globals, timeouts), (d)
-      have recovery PATH NOT using same code path
-      (state-independent recovery).
+      Solution (native test payload):
+      1. On /#/profile, set your username to (exactly):
+         admin"); processQuery=null; users.addUser("1337", "test
+         then submit. This name injects into the bot code and sets
+         processQuery to null.
+      2. Open /#/chatbot and send a few messages (e.g. "hi", "...",
+         "bye").
+      3. bot.respond fails, the server replies "Remember to stay
+         hydrated..." and solves the challenge (chatbot.ts:127).
+      Vector confirmed in the code and the cypress test
+      (test/cypress/e2e/chatbot.spec.ts); not replayed end-to-end during
+      the review (bot training state).
+      Defense: never interpolate user input into executed code; isolate
+      the bot configuration from user data.
     pedagogical_intent: |
-      Quasi-solution : workflow + payload + defense.
+      Full solution: real username-injection payload, defense.

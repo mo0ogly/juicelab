@@ -44,47 +44,53 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      curl avec auth :
-      `curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type:
-      application/json" -d '{"orderLinesData":"while(true){}"}'
-      http://localhost:3000/api/b2b/v2/orders`. Le serveur b2bOrder.ts:31
-      `solveIf(rceChallenge, () => getErrorMessage(err) === 'Infinite loop
-      detected - reached max iterations')` declenche.
+      L'API B2B evalue le champ orderLinesData dans un bac a sable
+      (vm + safeEval, routes/b2bOrder.ts) avec un timeout de 2000 ms.
+      Deux issues : une boucle infinie detectee leve "Infinite loop
+      detected - reached max iterations" (c'est rceChallenge), tandis
+      qu'un calcul lent qui depasse 2000 ms leve un timeout (c'est
+      rceOccupyChallenge). Pour rceChallenge, il faut donc une boucle
+      infinie franche, pas un calcul lourd.
     text_en: |
-      curl with auth:
-      `curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type:
-      application/json" -d '{"orderLinesData":"while(true){}"}'
-      http://localhost:3000/api/b2b/v2/orders`. Server b2bOrder.ts:31
-      `solveIf(rceChallenge, () => getErrorMessage(err) === 'Infinite loop
-      detected - reached max iterations')` triggers.
+      The B2B API evaluates the orderLinesData field in a sandbox
+      (vm + safeEval, routes/b2bOrder.ts) with a 2000 ms timeout. Two
+      outcomes: a detected infinite loop raises "Infinite loop detected
+      - reached max iterations" (that is rceChallenge), while a slow
+      computation exceeding 2000 ms raises a timeout (that is
+      rceOccupyChallenge). For rceChallenge you need a clear infinite
+      loop, not a heavy computation.
     pedagogical_intent: |
-      Spell exact request.
+      Distinguish rce (infinite-loop detected) from rceOccupy (timeout).
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow : (1) Login (Bearer token via
-      DevTools Network). (2) Inspect /#/order pour identifier B2B
-      endpoint. (3) Build curl POST avec orderLinesData = "while(true){}".
-      (4) Le serveur b2bOrder.ts:23
-      `vm.runInContext('safeEval(orderLinesData)', sandbox, { timeout:
-      2000 })` execute. (5) notevil detecte boucle apres max iterations,
-      throw `Error: Infinite loop detected - reached max iterations`. (6)
-      b2bOrder.ts:31 `solveIf(rceChallenge, () => getErrorMessage(err)
-      === 'Infinite loop detected - reached max iterations')` declenche.
-      Defense : remplacer eval par JSON Schema (Ajv) qui valide shape
-      declaratif. JAMAIS eval sur user input. Source : b2bOrder.ts:23-31.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : connecte,
+      envoie une boucle infinie a l'API B2B :
+        curl -s -X POST http://127.0.0.1:3000/b2b/v2/orders \\
+          -H "Authorization: Bearer <ton_jwt>" \\
+          -H "Content-Type: application/json" \\
+          -d '{"orderLinesData":"while(true){}"}'
+      Le bac a sable detecte la boucle et leve "Infinite loop detected
+      - reached max iterations" ; le challenge est resolu
+      (b2bOrder.ts:31). Endpoint exact : /b2b/v2/orders (pas
+      /api/b2b/v2/orders).
+      Defense : ne jamais evaluer une entree utilisateur ; si une
+      expression est indispensable, utiliser un interpreteur restreint
+      sans acces au runtime et avec des limites strictes.
     text_en: |
-      Workflow: (1) Login (Bearer token via
-      DevTools Network). (2) Inspect /#/order to identify B2B endpoint.
-      (3) Build curl POST with orderLinesData = "while(true){}". (4)
-      Server b2bOrder.ts:23 `vm.runInContext('safeEval(orderLinesData)',
-      sandbox, { timeout: 2000 })` executes. (5) notevil detects loop
-      after max iterations, throws `Error: Infinite loop detected -
-      reached max iterations`. (6) b2bOrder.ts:31
-      `solveIf(rceChallenge, () => getErrorMessage(err) === 'Infinite loop
-      detected - reached max iterations')` triggers. Defense: replace
-      eval with JSON Schema (Ajv) validating declarative shape. NEVER
-      eval on user input. Source: b2bOrder.ts:23-31.
+      Solution (verified during testing on Juice Shop 19.2.1): logged
+      in, send an infinite loop to the B2B API:
+        curl -s -X POST http://127.0.0.1:3000/b2b/v2/orders \\
+          -H "Authorization: Bearer <your_jwt>" \\
+          -H "Content-Type: application/json" \\
+          -d '{"orderLinesData":"while(true){}"}'
+      The sandbox detects the loop and raises "Infinite loop detected -
+      reached max iterations"; the challenge solves (b2bOrder.ts:31).
+      Exact endpoint: /b2b/v2/orders (not /api/b2b/v2/orders).
+      Defense: never evaluate user input; if an expression is
+      unavoidable, use a restricted interpreter with no runtime access
+      and strict limits.
     pedagogical_intent: |
-      Solution + canonical fix.
+      Full verified solution: exact endpoint, infinite-loop payload,
+      defense.

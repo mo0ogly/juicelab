@@ -202,15 +202,15 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | emailLeakChallenge | Sensitive Data Exposure | 5 | TODO |  |
 | extraLanguageChallenge | Broken Anti Automation | 5 | TODO |  |
 | jwtUnsignedChallenge | Vulnerable Components | 5 | DONE (lot 11) | N4-N5 : exp lointain manquant (verif echoue sans), livraison via Authorization/localStorage ; forge alg=none jwtn3d@ verifie live |
-| killChatbotChallenge | Vulnerable Components | 5 | TODO |  |
+| killChatbotChallenge | Vulnerable Components | 5 | DONE (lot 17) | N4-N5 : vecteur FAUX (template throw -> injection code dans username du profil, payload test cypress) ; code-confirme |
 | leakedApiKeyChallenge | Sensitive Data Exposure | 5 | TODO |  |
-| lfrChallenge | Vulnerable Components | 5 | TODO |  |
+| lfrChallenge | Vulnerable Components | 5 | DONE (lot 17) | N4-N5 : moteur hbs, payload reel layout=../package.json + cookie (pas header), package.json faux ; verifie live (dataErasure.ts) |
 | noSqlOrdersChallenge | Injection | 5 | DONE (lot 14) | N4-N5 : objet $ne FAUX -> injection JS dans la chaine $where ; verifie live (trackOrder.ts:20) |
-| rceChallenge | Insecure Deserialization | 5 | TODO |  |
+| rceChallenge | Insecure Deserialization | 5 | DONE (lot 17) | N4-N5 : endpoint corrige (/api/b2b -> /b2b/v2/orders), while(true){} -> Infinite loop detected ; verifie live (b2bOrder.ts:31) |
 | resetPasswordBjoernChallenge | Broken Authentication | 5 | DONE (lot 6) | N1-N5 : question fausse (lieu/ecole -> code postal ado), OSINT recadre (twist historique = format PLZ pre-1993), reponse West-2082 (resetPassword.ts:60) ; question verifiee live |
 | resetPasswordMortyChallenge | Broken Anti Automation | 5 | DONE (lot 6) | N1-N5 : scripts bash bruteforce retires, faille rate-limit X-Forwarded-For exacte (server.ts:344-347 max 100/5min), reponse 5N0wb41L (resetPassword.ts:61) ; question verifiee live |
 | retrieveBlueprintChallenge | Sensitive Data Exposure | 5 | DONE (lot 3) | N3-N5 : indice EXIF corrige (Make=OpenSCAD, pas Comment/Description ; chemin non dans EXIF), fichier JuiceShop.stl sous /assets/public/images/products/ (verify.ts:69) ; servi teste |
-| supplyChainAttackChallenge | Vulnerable Components | 5 | TODO |  |
+| supplyChainAttackChallenge | Vulnerable Components | 5 | DONE (lot 17) | correct (non modifie) ; eslint-scope/issues/39 via complaint verifie live (verify.ts:291) |
 | svgInjectionChallenge | Security Misconfiguration | 5 | TODO |  |
 | tokenSaleChallenge | Security through Obscurity | 5 | TODO |  |
 | twoFactorAuthUnsafeSecretStorageChallenge | Broken Authentication | 5 | DONE (lot 13) | N4-N5 : hashcat sur mdp fort retire -> vrai defaut = totpSecret en clair (users.yml), exfil SQLi + TOTP + /rest/2fa/verify verifie live (2fa.ts:44) |
@@ -218,7 +218,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | xxeDosChallenge | XXE | 5 | DONE (lot 15) | correct (non modifie) ; XML /dev/random ou blowup -> timeout ; code-confirme (DoS non rejoue), disabledEnv Docker |
 | yamlBombChallenge | Insecure Deserialization | 5 | TODO |  |
 | continueCodeChallenge | Cryptographic Issues | 6 | DONE (lot 2) | N1 sans endpoint ; N4-N5 : PUT (GET = 500, teste), alphabet sans espaces parasites ; encode(999) + PUT teste |
-| fileWriteChallenge | Vulnerable Components | 6 | TODO |  |
+| fileWriteChallenge | Vulnerable Components | 6 | DONE (lot 17) | correct (non modifie) ; zip slip ../../ftp/legal.md (fileUpload.ts:43) ; code-confirme (non rejoue, ecraserait legal.md) |
 | forgedCouponChallenge | Cryptographic Issues | 6 | DONE (lot 12) | N4-N5 : XOR invente -> vrai algo z85(MMMYY-80) mois MAJUSCULE ; coupon applique+checkout verifie live |
 | jwtForgedChallenge | Vulnerable Components | 6 | DONE (lot 11) | N4-N5 : cle = jwt.pub servie de CETTE instance (octets exacts, token fige echoue), disabledEnv Windows ; HS256 key-confusion rsa_lord@ forge et verifie live |
 | loginSupportChallenge | Security Misconfiguration | 6 | DONE (lot 16) | N5 blinde ; source kdbx /ftp/incident-support.kdbx + crack, email support@ / mot de passe exact verifie live |
