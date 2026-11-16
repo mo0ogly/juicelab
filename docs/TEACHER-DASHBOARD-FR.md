@@ -373,6 +373,7 @@ UI :
 - `/admin/cohorts` — liste / crée / purge cohortes
 - `/admin/students?cohort=ANSSI` — matrice avec ligne par élève
 - `/dashboard?cohort=ANSSI` — vue agrégée
+- `/admin/session-report?cohort=ANSSI` — rapport de fin de séance (voir 9.4)
 - `/api/cohorts/ANSSI/csv` — export CSV (auth via header `X-Teacher-Token: <token>`)
 
 La vue agrégée donne une ligne par élève, une colonne par challenge, avec les
@@ -435,6 +436,39 @@ cohorte : Bloqué, Calé, Script suspect, Inactif, Absent.
 > Bases antérieures au 16/11/2026 : le moniteur recréait la même alerte chaque
 > heure. Ces doublons restent en base ; le panneau les regroupe et un clic sur
 > **OK** les acquitte tous.
+
+### 9.4 Fiche élève, rapport de séance, historique
+
+**Séance** : le dashboard découpe le journal de la cohorte en séances. Une
+séance se termine quand aucun élève de la cohorte n'a envoyé d'event pendant
+plus que l'horizon de séance des alertes (240 minutes par défaut,
+`DASHBOARD_MONITOR_SESSION_MIN` ou `monitor.session_min`). Deux TD à une
+semaine d'écart font donc deux séances. Le découpage utilise l'horloge du
+serveur.
+
+- **Fiche élève** (`/admin/student/<token>?cohort=…`, lien « Détail » de la
+  matrice) : un récit par challenge, dans l'ordre où l'élève les a ouverts —
+  ouverture, indices (niveau, coût), résolution, flag, quiz, journal — avec
+  l'heure et l'écart depuis l'ouverture. Le résumé donne la durée (ouverture →
+  résolution, ou ouverture → dernier event si non résolu) et le nombre
+  d'indices. Les challenges non résolus sont dépliés. Le journal brut des
+  events reste disponible, replié, en bas de page.
+- **Progression entre séances** (même page) : une ligne par séance de la
+  cohorte, y compris celles manquées (« Absent ») — nouveaux challenges
+  résolus, total cumulé, indices, quiz moyen, lien vers le rapport.
+- **Rapport de séance** (`/admin/session-report?cohort=…&session=N`, bouton
+  « Rapport de séance » du dashboard ; sans `session`, la dernière) :
+  - **Qui revoir** : élèves sans aucune résolution, élèves « bloqués » (un
+    challenge non résolu après `monitor.stuck_hints` indices ou plus, 5 par
+    défaut, même seuil que l'alerte Calé), élèves validés absents.
+  - **Qui a fini quoi** : résolus et commencés non résolus par élève.
+  - **Challenges à retravailler** : marqués quand moins de la moitié des
+    élèves qui les ont tentés dans la séance les ont résolus ; tri du plus
+    raté au plus réussi.
+  - Bouton **Imprimer** (mise en page adaptée, navigation masquée).
+
+Limites : les heures du récit viennent du poste de l'élève ; une séance
+interrompue par une pause plus longue que l'horizon compte pour deux.
 
 ## 10. Gestion cohorte — workflow type
 

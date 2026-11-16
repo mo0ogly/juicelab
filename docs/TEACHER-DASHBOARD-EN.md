@@ -350,6 +350,7 @@ UI :
 - `/admin/cohorts` — list / create / purge cohorts
 - `/admin/students?cohort=ANSSI` — matrix with one row per student
 - `/dashboard?cohort=ANSSI` — aggregate view
+- `/admin/session-report?cohort=ANSSI` — end-of-session report (see 9.4)
 - `/api/cohorts/ANSSI/csv` — CSV export (auth via `X-Teacher-Token: <token>` header)
 
 The aggregate view gives one row per student, one column per challenge, with the
@@ -411,6 +412,37 @@ Blocked, Stuck, Suspected script, Idle, Absent.
 > Databases older than 2026-11-16: the monitor re-created the same alert every
 > hour. Those duplicates remain in the database; the panel groups them and one
 > click on **OK** acknowledges them all.
+
+### 9.4 Student page, session report, history
+
+**Session**: the dashboard cuts the cohort log into sessions. A session ends
+when no student of the cohort sent an event for longer than the alerts
+session horizon (240 minutes by default, `DASHBOARD_MONITOR_SESSION_MIN` or
+`monitor.session_min`). Two lab sessions a week apart are therefore two
+sessions. The cut uses the server clock.
+
+- **Student page** (`/admin/student/<token>?cohort=…`, "Detail" link in the
+  matrix): one story per challenge, in the order the student opened them —
+  opening, hints (level, cost), solve, flag, quiz, journal — with the time and
+  the offset since opening. The summary gives the duration (opening → solve,
+  or opening → last event when unsolved) and the hint count. Unsolved
+  challenges are expanded. The raw event log is still there, collapsed, at
+  the bottom.
+- **Progress across sessions** (same page): one row per cohort session,
+  missed ones included ("Absent") — newly solved challenges, running total,
+  hints, average quiz, link to the report.
+- **Session report** (`/admin/session-report?cohort=…&session=N`, "Session
+  report" button on the dashboard; without `session`, the latest):
+  - **Who to see again**: students with no solve, "stuck" students (a
+    challenge left unsolved after `monitor.stuck_hints` hints or more, 5 by
+    default, same threshold as the Stuck alert), validated students absent.
+  - **Who finished what**: solved and started-unsolved per student.
+  - **Challenges to rework**: flagged when fewer than half of the students
+    who tried them in the session solved them; least solved first.
+  - **Print** button (print layout, navigation hidden).
+
+Limits: story times come from the student's machine; a session interrupted
+by a break longer than the horizon counts as two.
 
 ## 10. Cohort management — typical workflow
 

@@ -27,6 +27,8 @@ from flask import Flask, Response, jsonify, render_template, request
 
 from audit_log import log_event
 import json as _json
+from learning_story import challenge_stories, student_sessions
+from session_report import cohort_sessions
 
 from db import (
     delete_student,
@@ -254,6 +256,9 @@ def register_students_routes(
             if identity is None:
                 return jsonify({"error": "student not found in cohort"}), 404  # type: ignore[return-value]
             events = events_for_student(conn, token, cohort)
+            sessions = cohort_sessions(conn, cohort)
+        stories = challenge_stories(events)
+        history = student_sessions(events, sessions)
 
         # Per-challenge aggregation : walk the ordered events.
         per_challenge: dict[str, dict[str, Any]] = {}
@@ -324,6 +329,8 @@ def register_students_routes(
                 "decided_by": identity["decided_by"] if "decided_by" in identity.keys() else None,
             },
             "per_challenge": list(per_challenge.values()),
+            "stories": stories,
+            "history": history,
             "timeline": timeline,
             "total_events": len(timeline),
         })

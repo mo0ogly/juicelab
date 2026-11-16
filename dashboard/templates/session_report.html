@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="{{ current_lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ t('REPORT_TITLE') }} - {{ cohort_id }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "_head_assets.html" %}
+</head>
+{% macro who(s) %}{% if s.name %}{{ s.name }}{% else %}<code>{{ s.token[:8] }}&hellip;</code>{% endif %}{% endmacro %}
+{% macro when(iso) %}{{ iso[:16] | replace('T', ' ') }}{% endmacro %}
+<body>
+<div class="shell report-page">
+  <header class="topbar">
+    <div class="brand">
+      <div>
+        <h1>{{ t('REPORT_TITLE') }}</h1>
+        <p class="subtitle">{{ t('KPI_FOOT_COHORT_LABEL') }} <strong>{{ cohort_id }}</strong>
+          {% if report %}&middot; {{ t('REPORT_SESSION_N', n=report.session.index) }}
+          &middot; {{ when(report.session.start) }} &rarr; {{ when(report.session.end)[11:] }} {{ t('REPORT_UTC') }}{% endif %}</p>
+      </div>
+    </div>
+    <nav class="nav-actions no-print" aria-label="{{ t('ARIA_MAIN_NAV') }}">
+      {% include "_lang_switch.html" %}
+      <button type="button" class="logout" id="print-btn">{{ t('REPORT_PRINT') }}</button>
+      <a class="logout" href="/dashboard?cohort={{ cohort_id }}">{{ t('NAV_DASHBOARD') }}</a>
+      <a class="logout" href="/logout">{{ t('NAV_LOGOUT') }}</a>
+    </nav>
+  </header>
+
+{% if not report %}
+  <div class="empty-placeholder">{{ t('REPORT_EMPTY') }}</div>
+{% else %}
+  {% if report.sessions | length > 1 %}
+  <nav class="report-sessions no-print" aria-label="{{ t('REPORT_SESSIONS') }}">
+    <span>{{ t('REPORT_SESSIONS') }}</span>
+    {% for s in report.sessions | reverse %}
+      <a href="?cohort={{ cohort_id }}&amp;session={{ s.index }}"{% if s.index == report.session.index %} aria-current="page"{% endif %}>{{ t('REPORT_SESSION_N', n=s.index) }} &middot; {{ s.start[:10] }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  <section class="kpis" aria-label="{{ t('ARIA_KEY_INDICATORS') }}">
+    <div class="kpi"><span class="kpi-label">{{ t('REPORT_KPI_PRESENT') }}</span><span class="kpi-value">{{ report.students | length }}</span><span class="kpi-foot">{{ t('REPORT_KPI_ABSENT', n=report.absent | length) }}</span></div>
+    <div class="kpi"><span class="kpi-label">{{ t('REPORT_KPI_SOLVES') }}</span><span class="kpi-value">{{ report.students | sum(attribute='solved', start=[]) | length }}</span><span class="kpi-foot">{{ t('REPORT_KPI_EVENTS', n=report.session.events) }}</span></div>
+    <div class="kpi"><span class="kpi-label">{{ t('REPORT_KPI_REVIEW') }}</span><span class="kpi-value">{{ report.to_review }}</span><span class="kpi-foot">{{ t('REPORT_KPI_REVIEW_FOOT') }}</span></div>
+    <div class="kpi"><span class="kpi-label">{{ t('REPORT_KPI_REWORK') }}</span><span class="kpi-value">{{ report.challenges | selectattr('rework') | list | length }}</span><span class="kpi-foot">{{ t('REPORT_KPI_REWORK_FOOT') }}</span></div>
+  </section>
+
+  <h2 class="section-title">{{ t('REPORT_TO_REVIEW') }}</h2>
+  {% set flagged = report.students | selectattr('reasons') | list %}
+  {% if flagged or report.absent %}
+  <ul class="report-review">
+    {% for s in flagged %}
+      <li><a href="/admin/student/{{ s.token }}?cohort={{ cohort_id }}">{{ who(s) }}</a> &mdash;
+        {% for r in s.reasons %}<span class="badge pending">{{ t('REPORT_REASON_' + r.upper()) }}</span> {% endfor %}
+        {% if s.stuck_on %}<small>{{ t('REPORT_STUCK_ON', keys=s.stuck_on | join(', '), n=report.stuck_hints) }}</small>{% endif %}
+      </li>
+    {% endfor %}
+    {% for s in report.absent %}
+      <li><a href="/admin/student/{{ s.token }}?cohort={{ cohort_id }}">{{ who(s) }}</a> &mdash; <span class="badge rejected">{{ t('REPORT_REASON_ABSENT') }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty-placeholder">{{ t('REPORT_NOBODY_TO_REVIEW') }}</p>
+  {% endif %}
+
+  <h2 class="section-title">{{ t('REPORT_WHO_DID_WHAT') }}</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr>
+        <th>{{ t('TABLE_DISPLAY_NAME') }}</th>
+        <th>{{ t('REPORT_COL_SOLVED') }}</th>
+        <th>{{ t('REPORT_COL_IN_PROGRESS') }}</th>
+        <th class="num">{{ t('REPORT_COL_HINTS') }}</th>
+      </tr></thead>
+      <tbody>
+      {% for s in report.students %}
+        <tr>
+          <td><a href="/admin/student/{{ s.token }}?cohort={{ cohort_id }}">{{ who(s) }}</a></td>
+          <td>{{ s.solved | join(', ') or '-' }}</td>
+          <td>{{ s.in_progress | join(', ') or '-' }}</td>
+          <td class="num">{{ s.hints }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section-title">{{ t('REPORT_CHALLENGES') }}</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr>
+        <th>{{ t('STUDENT_DETAIL_CHALLENGE') }}</th>
+        <th class="num">{{ t('REPORT_COL_SOLVED_RATIO') }}</th>
+        <th class="num">{{ t('REPORT_COL_AVG_HINTS') }}</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+      {% for c in report.challenges %}
+        <tr>
+          <td>{{ c.key }}</td>
+          <td class="num">{{ c.solved }}/{{ c.attempted }}</td>
+          <td class="num">{{ c.avg_hints }}</td>
+          <td>{% if c.rework %}<span class="badge pending">{{ t('REPORT_REWORK') }}</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="report-note">{{ t('REPORT_RULES', n=report.stuck_hints) }}</p>
+{% endif %}
+</div>
+<script nonce="{{ csp_nonce }}">
+  (function () {
+    var b = document.getElementById('print-btn');
+    if (b) b.addEventListener('click', function () { window.print(); });
+  })();
+</script>
+</body>
+</html>

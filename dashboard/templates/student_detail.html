@@ -38,7 +38,23 @@
   <h2 class="section-title">{{ t('STUDENT_DETAIL_PER_CHALLENGE') }}</h2>
   <div id="per-challenge"></div>
 
-  <h2 class="section-title">{{ t('STUDENT_DETAIL_TIMELINE') }}</h2>
+  <h2 class="section-title">{{ t('HISTORY_TITLE') }}</h2>
+  <div class="scroll">
+    <table id="history-table">
+      <thead><tr>
+        <th>{{ t('HISTORY_COL_SESSION') }}</th>
+        <th>{{ t('HISTORY_COL_PRESENT') }}</th>
+        <th>{{ t('HISTORY_COL_NEW_SOLVES') }}</th>
+        <th class="num">{{ t('HISTORY_COL_TOTAL') }}</th>
+        <th class="num">{{ t('REPORT_COL_HINTS') }}</th>
+        <th class="num">{{ t('HISTORY_COL_QUIZ') }}</th>
+      </tr></thead>
+      <tbody id="history-rows"></tbody>
+    </table>
+  </div>
+
+  <details class="raw-timeline">
+  <summary class="section-title">{{ t('STUDENT_DETAIL_TIMELINE') }}</summary>
   <div class="scroll">
     <table id="timeline-table">
       <thead><tr>
@@ -50,6 +66,7 @@
       <tbody id="timeline-rows"></tbody>
     </table>
   </div>
+  </details>
 
   <footer class="footer">
     <span>{{ t('FOOTER_ROSTER') }} <strong>{{ cohort_id }}</strong></span>
@@ -84,35 +101,75 @@
     return '<span class="badge ' + safe + '">' + safe + '</span>';
   }
 
-  function challengeCard(pc) {
-    const hints = pc.hints.map(function(h) {
-      return '<li>N' + escapeHtml(h.level || '?') + ' &mdash; cost ' + h.cost_pct + '% &mdash; ' + escapeHtml(fmtTs(h.ts)) + '</li>';
-    }).join('') || '<li class="empty-placeholder">' + T('LABEL_NO_EVENTS') + '</li>';
-    const quizBody = pc.quiz_score !== null
-      ? '<strong>' + pc.quiz_score + '/100</strong> &middot; ' + escapeHtml(fmtTs(pc.quiz_ts))
-        + '<pre class="diploma-verif" style="max-height:120px">' + escapeHtml(JSON.stringify(pc.quiz_answers, null, 2)) + '</pre>'
-      : '<em>' + T('STUDENT_DETAIL_NO_QUIZ') + '</em>';
-    const journalBody = pc.journal_after_text
-      ? '<small>' + pc.journal_after_words + ' ' + T('DIPLOMA_WORDS') + ' &middot; ' + escapeHtml(fmtTs(pc.journal_after_ts)) + '</small>'
-        + '<blockquote style="margin:8px 0;padding:8px 12px;border-left:3px solid var(--accent);background:var(--bg-soft);white-space:pre-wrap">' + escapeHtml(pc.journal_after_text) + '</blockquote>'
-      : '<em>' + T('STUDENT_DETAIL_NO_JOURNAL') + '</em>';
-    const proofLink = '/api/proof?student_token=' + encodeURIComponent(TOKEN)
-      + '&cohort=' + encodeURIComponent(COHORT) + '&key=' + encodeURIComponent(pc.challenge_key);
-    return '<details class="stats-card" style="margin:8px 0">'
-      + '<summary style="cursor:pointer;font-weight:600">'
-      +   escapeHtml(pc.challenge_key) + ' '
-      +   (pc.solved ? '<span class="badge validated">' + T('STUDENT_DETAIL_SOLVED') + '</span>' : '<span class="badge pending">' + T('STUDENT_DETAIL_UNSOLVED') + '</span>') + ' '
-      +   (pc.flag_verified ? '<span class="badge validated">FLAG</span>' : '')
-      + ' &middot; ' + pc.events + ' ' + T('STUDENT_DETAIL_EVENTS_SHORT')
-      + '</summary>'
-      + '<div style="margin-top:8px">'
-      + '<h3>' + T('DIPLOMA_STAT_HINTS') + ' (' + pc.hints.length + ', cost ' + pc.hint_cost_total + '%)</h3>'
-      + '<ul>' + hints + '</ul>'
-      + '<h3>' + T('DIPLOMA_STAT_QUIZ_AVG') + '</h3>' + quizBody
-      + '<h3>' + T('STUDENT_DETAIL_JOURNAL_AFTER') + '</h3>' + journalBody
-      + '<p style="margin-top:12px"><a class="btn" href="' + proofLink + '" target="_blank" rel="noopener">' + T('STUDENT_DETAIL_DOWNLOAD_PROOF') + '</a></p>'
-      + '</div>'
+  function fmtDuration(sec) {
+    if (typeof sec !== 'number' || !isFinite(sec)) return '';
+    if (sec < 60) return T('DURATION_LT_MIN');
+    if (sec < 3600) return T('DURATION_MIN', { n: Math.max(1, Math.round(sec / 60)) });
+    var m = Math.floor((sec % 3600) / 60);
+    return T('DURATION_H', { h: Math.floor(sec / 3600), m: (m < 10 ? '0' : '') + m });
+  }
+  function offset(start, ts) {
+    var a = Date.parse(start || ''), b = Date.parse(ts || '');
+    if (isNaN(a) || isNaN(b) || b - a < 60000) return '';
+    return ' <small class="story-offset">+' + escapeHtml(fmtDuration((b - a) / 1000)) + '</small>';
+  }
+  /* Hint level as sent by the overlay ("N2") or a bare number (2) -> "N2". */
+  function hintLevel(level) {
+    if (level == null || level === '') return '?';
+    var v = String(level);
+    return /^N/i.test(v) ? v.toUpperCase() : 'N' + v;
+  }
+  function stepText(s) {
+    switch (s.kind) {
+      case 'start':   return T('STORY_START');
+      case 'hint':    return T('STORY_HINT', { level: hintLevel(s.level), cost: s.cost_pct });
+      case 'solved':  return T('STORY_SOLVED');
+      case 'flag':    return T('STORY_FLAG');
+      case 'quiz':    return s.score == null ? T('STORY_QUIZ_NO_SCORE') : T('STORY_QUIZ', { score: s.score });
+      case 'journal': return T('STORY_JOURNAL', { n: s.words });
+      default:        return s.kind;
+    }
+  }
+
+  /* One story card. `pc` is the matching per_challenge entry (journal
+     text, quiz answers, proof link) or undefined. */
+  function storyCard(st, pc) {
+    var steps = st.steps.map(function(s) {
+      return '<li class="story-step story-' + escapeHtml(s.kind) + '"><time>' + escapeHtml(fmtTs(s.ts).substring(11, 16)) + '</time>'
+        + offset(st.started_at, s.ts) + ' ' + escapeHtml(stepText(s)) + '</li>';
+    }).join('');
+    var dur = fmtDuration(st.duration_sec);
+    var summary = st.status === 'solved'
+      ? T('STORY_SUMMARY_SOLVED', { d: dur || '-', n: st.hints.length })
+      : T('STORY_SUMMARY_OPEN', { d: dur || '-', n: st.hints.length });
+    var extra = '';
+    if (pc && pc.journal_after_text) {
+      extra += '<blockquote class="story-journal">' + escapeHtml(pc.journal_after_text) + '</blockquote>';
+    }
+    var proofLink = '/api/proof?student_token=' + encodeURIComponent(TOKEN)
+      + '&cohort=' + encodeURIComponent(COHORT) + '&key=' + encodeURIComponent(st.challenge_key);
+    return '<details class="stats-card story-card"' + (st.status === 'solved' ? '' : ' open') + '>'
+      + '<summary><strong>' + escapeHtml(st.challenge_key) + '</strong> '
+      + (st.status === 'solved' ? '<span class="badge validated">' + T('STUDENT_DETAIL_SOLVED') + '</span>'
+                                : '<span class="badge pending">' + T('STUDENT_DETAIL_UNSOLVED') + '</span>')
+      + (st.flag_verified ? ' <span class="badge validated">' + T('STORY_FLAG_BADGE') + '</span>' : '')
+      + ' <span class="story-summary">' + escapeHtml(summary) + '</span></summary>'
+      + '<p class="story-when">' + escapeHtml(T('STORY_STARTED_AT', { ts: fmtTs(st.started_at) })) + '</p>'
+      + '<ol class="story-steps">' + steps + '</ol>' + extra
+      + '<p><a class="btn" href="' + proofLink + '" target="_blank" rel="noopener">' + T('STUDENT_DETAIL_DOWNLOAD_PROOF') + '</a></p>'
       + '</details>';
+  }
+
+  function historyRow(h) {
+    return '<tr' + (h.attended ? '' : ' class="row-inactive"') + '>'
+      + '<td>' + escapeHtml(T('REPORT_SESSION_N', { n: h.index })) + ' &middot; ' + escapeHtml(String(h.start).substring(0, 10))
+      + ' <a href="/admin/session-report?cohort=' + encodeURIComponent(COHORT) + '&session=' + h.index + '">' + T('HISTORY_REPORT_LINK') + '</a></td>'
+      + '<td>' + (h.attended ? T('HISTORY_YES') : '<span class="badge rejected">' + T('REPORT_REASON_ABSENT') + '</span>') + '</td>'
+      + '<td>' + escapeHtml(h.solved_new.join(', ') || '-') + '</td>'
+      + '<td class="num">' + h.solved_total + '</td>'
+      + '<td class="num">' + h.hints + '</td>'
+      + '<td class="num">' + (h.quiz_avg == null ? '-' : h.quiz_avg) + '</td>'
+      + '</tr>';
   }
 
   function timelineRow(ev) {
@@ -136,10 +193,14 @@
     document.getElementById('k-events').textContent = d.total_events;
     document.getElementById('k-challenges').textContent = d.per_challenge.length;
 
-    const pcArr = d.per_challenge.slice().sort(function(a, b) { return a.challenge_key.localeCompare(b.challenge_key); });
+    var byKey = {};
+    d.per_challenge.forEach(function(pc) { byKey[pc.challenge_key] = pc; });
     document.getElementById('per-challenge').innerHTML =
-      pcArr.length ? pcArr.map(challengeCard).join('')
-                    : '<div class="empty-placeholder">' + T('LABEL_NO_EVENTS') + '</div>';
+      d.stories.length ? d.stories.map(function(st) { return storyCard(st, byKey[st.challenge_key]); }).join('')
+                       : '<div class="empty-placeholder">' + T('LABEL_NO_EVENTS') + '</div>';
+    document.getElementById('history-rows').innerHTML =
+      d.history.length ? d.history.slice().reverse().map(historyRow).join('')
+                       : '<tr><td colspan="6" class="empty-placeholder">' + T('LABEL_NO_EVENTS') + '</td></tr>';
     document.getElementById('timeline-rows').innerHTML =
       d.timeline.length ? d.timeline.slice().reverse().map(timelineRow).join('')
                          : '<tr><td colspan="4" class="empty-placeholder">' + T('LABEL_NO_EVENTS') + '</td></tr>';
