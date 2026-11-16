@@ -5,77 +5,101 @@ hints:
   N1:
     cost_pct: 5
     text_fr: |
-      Hint OWASP : "find the easter egg image". Une image specifique du
-      shop cache un nom (steganographie ou nom evident). Le solve passe
-      par feedback /#/contact.
+      Les hints OWASP sont nets : impossible de reperer le personnage
+      a l'oeil nu, et il faut "very specialized tool assistance". Le
+      personnage n'est donc pas visible dans une image : il est cache
+      DANS les donnees d'une image. Quelle discipline consiste a
+      dissimuler une information dans un fichier anodin ?
     text_en: |
-      OWASP hint: "find the easter egg image". A specific shop image hides
-      a name (steganography or obvious name). Solve goes through feedback
-      /#/contact.
+      The OWASP hints are clear: you cannot spot the character with
+      the naked eye, and you need "very specialized tool assistance".
+      So the character is not visible in an image: it is hidden
+      INSIDE an image's data. Which discipline hides information in
+      an innocuous file?
     pedagogical_intent: |
-      Activate steg + easter egg reflex.
+      Activate the steganography reflex from the official hints.
 
   N2:
     cost_pct: 10
     text_fr: |
-      Inspecter les products du shop : certains ont des nom de personnages
-      (Bender, Bjoern, Morty). Une image planque le nom d'un personnage
-      culte d'animation.
+      Steganographie. Les techniques les plus courantes modifient les
+      bits de poids faible (LSB) des pixels ; elles exigent un format
+      sans perte, car une compression JPEG detruirait le message.
+      Parcours les pages du shop qui affichent des images "en
+      evidence" et repere les fichiers PNG parmi des JPEG.
     text_en: |
-      Inspect shop products: some have character names (Bender, Bjoern,
-      Morty). An image hides the name of an animation cult character.
+      Steganography. The most common techniques alter the pixels'
+      least significant bits (LSB); they require a lossless format,
+      since JPEG compression would destroy the message. Browse the
+      shop pages that display images "in plain sight" and spot PNG
+      files among JPEGs.
     pedagogical_intent: |
-      Spell pop culture clue.
+      Research direction: LSB steganography needs lossless images.
 
   N3:
     cost_pct: 20
     text_fr: |
-      Une image contient le nom "Pickle Rick" (Rick & Morty episode S03E03
-      cult). Cherche dans les images de products + cast / banners. Tu
-      peux aussi grep le bundle pour "rick" / "pickle".
+      La page About Us affiche un carrousel de sept images : six JPEG
+      (carousel/1.jpg a 4.jpg, 6.jpg, 7.jpg) et un seul PNG,
+      assets/public/images/carousel/5.png. C'est le candidat logique.
+      Outils d'extraction a essayer : OpenStego (interface
+      graphique, Java), zsteg (PNG/BMP), ou un script qui lit les
+      LSB. La reponse est un nom de personnage.
     text_en: |
-      An image contains "Pickle Rick" name (Rick & Morty S03E03 cult
-      episode). Look in product images + cast / banners. You can also
-      grep bundle for "rick" / "pickle".
+      The About Us page shows a carousel of seven images: six JPEGs
+      (carousel/1.jpg to 4.jpg, 6.jpg, 7.jpg) and a single PNG,
+      assets/public/images/carousel/5.png. It is the logical
+      candidate. Extraction tools to try: OpenStego (GUI, Java),
+      zsteg (PNG/BMP), or a script reading the LSBs. The answer is a
+      character name.
     pedagogical_intent: |
-      Reveal target name.
+      Narrow down by file format to one candidate and name the tools.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Une fois identifie : (1) Naviguer /#/contact (Customer Feedback).
-      (2) Submit feedback avec "pickle rick" dans le comment. Le serveur
-      verify.ts:284-289 detecte le pattern et solve.
+      Le personnage vient d'une serie d'animation americaine ou un
+      scientifique se transforme lui-meme en cornichon. La
+      validation (routes/verify.ts, hiddenImageChallenge) cherche son
+      nom (deux mots) avec un LIKE SQLite, donc sans
+      tenir compte de la casse, dans un feedback OU une reclamation.
     text_en: |
-      Once identified: (1) Navigate /#/contact (Customer Feedback). (2)
-      Submit feedback with "pickle rick" in comment. Server
-      verify.ts:284-289 detects pattern and solves.
+      The character comes from an American animated series in which
+      a scientist turns himself into a pickle. Validation
+      (routes/verify.ts, hiddenImageChallenge) looks for the name
+      (two words) with a SQLite LIKE, hence case-insensitively, in a
+      feedback OR a complaint.
     pedagogical_intent: |
-      Spell exact action.
+      Lexical clue toward the name plus the validation channel.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow : (1) DevTools > Network > scroll
-      le shop -> liste des images. (2) Inspect chaque image (Right-click
-      > Save) ou direct grep nom dans le HTML/bundle. (3) Trouve une image
-      type "/assets/public/images/products/holographic_squiddy.jpg" ou
-      similaire. (4) Le pattern recherche est "pickle rick" (Rick & Morty
-      S03E03). (5) /#/contact > comment "pickle rick" + 5 etoiles >
-      Submit. (6) verify.ts:284-289 declenche solve. Defense : (a)
-      ASSETS_MANIFEST.md de tous les fichiers legitimes. (b) Build CI
-      strip metadata. (c) Steg test reguliere (zsteg). Source :
-      verify.ts:284-289 + config challenges.hiddenImageChallengePassword.
+      Le nom attendu est "pickle rick" : routes/verify.ts:287 cherche
+      le motif '%pickle rick%' dans les feedbacks et reclamations.
+      Ecris un feedback sur /#/contact contenant pickle rick (note et
+      captcha obligatoires) ou une reclamation sur /#/complain.
+      Limite de cette revue : la chaine attendue est verifiee dans le
+      code ; l'image porteuse (5.png) est deduite du format et n'a
+      pas ete extraite le 2026-11-16 (en-tete OpenStego non retrouve
+      par lecture LSB simple). Fais l'extraction toi-meme : c'est
+      l'objectif d'apprentissage.
+      Defense : controler l'integrite des ressources publiees
+      (empreintes en CI) et retirer les donnees cachees ou
+      metadonnees des images avant publication.
     text_en: |
-      Workflow: (1) DevTools > Network > scroll
-      shop -> image list. (2) Inspect each image (Right-click > Save) or
-      direct grep name in HTML/bundle. (3) Find image like
-      "/assets/public/images/products/holographic_squiddy.jpg" or similar.
-      (4) Pattern searched is "pickle rick" (Rick & Morty S03E03). (5)
-      /#/contact > comment "pickle rick" + 5 stars > Submit. (6)
-      verify.ts:284-289 triggers solve. Defense: (a) ASSETS_MANIFEST.md of
-      all legitimate files. (b) Build CI strip metadata. (c) Regular steg
-      test (zsteg). Source: verify.ts:284-289 + config
-      challenges.hiddenImageChallengePassword.
+      The expected name is "pickle rick": routes/verify.ts:287 looks
+      for the pattern '%pickle rick%' in feedback and complaints.
+      Write a feedback on /#/contact containing pickle rick (rating
+      and captcha required) or a complaint at /#/complain.
+      Limit of this review: the expected string is verified in the
+      code; the carrier image (5.png) is inferred from its format and
+      was not extracted on 2026-11-16 (OpenStego header not found by
+      plain LSB reading). Do the extraction yourself: it is the
+      learning goal.
+      Defense: check the integrity of published assets (checksums in
+      CI) and strip hidden data or metadata from images before
+      publishing.
     pedagogical_intent: |
-      Solution + steg defense.
+      Full answer from code, explicit statement of what was not
+      verified.

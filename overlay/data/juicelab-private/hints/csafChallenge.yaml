@@ -17,72 +17,96 @@ hints:
   N2:
     cost_pct: 10
     text_fr: |
-      L'emplacement canonique CSAF est /.well-known/csaf-aggregator/
-      provider-metadata.json. Ou /assets/csaf/. Le hash attendu est
-      SHA-512 (long hex 128 chars).
+      Le hint OWASP dit : "Security Advisories are often listed in the
+      security.txt". security.txt (RFC 9116) est publie a un
+      emplacement standard defini par la RFC 8615. Ouvre-le : un de
+      ses champs pointe vers les advisories du shop, au format CSAF
+      (standard OASIS).
     text_en: |
-      CSAF canonical location is /.well-known/csaf-aggregator/
-      provider-metadata.json. Or /assets/csaf/. Expected hash is SHA-512
-      (long hex 128 chars).
+      The OWASP hint says: "Security Advisories are often listed in
+      the security.txt". security.txt (RFC 9116) is published at a
+      standard location defined by RFC 8615. Open it: one of its
+      fields points to the shop's advisories, in CSAF format (OASIS
+      standard).
     pedagogical_intent: |
-      Spell location + algo.
+      Research direction: security.txt and its standard location.
 
   N3:
     cost_pct: 20
     text_fr: |
-      Naviguer /.well-known/csaf-aggregator/provider-metadata.json (RFC
-      8615 + CSAF 2.0). Identifier le ou les advisories listes. Calculer
-      sha512sum sur le fichier advisory.
+      /.well-known/security.txt contient un champ Csaf: qui pointe
+      vers /.well-known/csaf/provider-metadata.json. Le dossier
+      /.well-known/csaf/ est listable : il contient des advisories
+      ranges par annee, chacun accompagne d'un .asc (signature) et
+      d'un .sha512 (empreinte). Lis les advisories : lequel concerne
+      une bibliotheque, marque known_affected, avec seulement un
+      contournement en attendant le correctif ?
     text_en: |
-      Navigate /.well-known/csaf-aggregator/provider-metadata.json (RFC
-      8615 + CSAF 2.0). Identify listed advisory(ies). Compute sha512sum
-      on advisory file.
+      /.well-known/security.txt has a Csaf: field pointing to
+      /.well-known/csaf/provider-metadata.json. The
+      /.well-known/csaf/ folder is browsable: it holds advisories
+      sorted by year, each with a .asc (signature) and a .sha512
+      (checksum). Read the advisories: which one concerns a library,
+      is marked known_affected, and offers only a workaround while
+      the fix is pending?
     pedagogical_intent: |
-      Spell exact step.
+      Localize the artefacts and narrow down to the right advisory by
+      its CSAF fields.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Une fois le hash SHA-512 calcule (ex.
-      `sha512sum advisory.json` Linux ou
-      `Get-FileHash -Algorithm SHA512` PowerShell), le coller dans le
-      Customer Feedback (/#/contact) en commentaire.
+      C'est l'advisory 2017/juice-shop-sa-20200513-express-jwt.json
+      (CVE-2020-15084, remediation "workaround" uniquement). La
+      somme de controle attendue est son SHA-512. Prends la valeur
+      publiee dans le .sha512 voisin et, par diligence, compare-la a
+      ton propre calcul (sha512sum sous Linux, Get-FileHash
+      -Algorithm SHA512 sous PowerShell). Attention : si ton
+      installation a modifie les fins de ligne du fichier, ton calcul
+      differera ; seule la valeur du .sha512 est acceptee. Le serveur
+      cherche cette valeur dans les feedbacks ET les reclamations
+      (routes/verify.ts, checkPatternInFeedbackAndComplaints).
     text_en: |
-      Once SHA-512 hash computed (e.g. `sha512sum advisory.json` Linux or
-      `Get-FileHash -Algorithm SHA512` PowerShell), paste it in Customer
-      Feedback (/#/contact) comment.
+      It is advisory 2017/juice-shop-sa-20200513-express-jwt.json
+      (CVE-2020-15084, "workaround" remediation only). The expected
+      checksum is its SHA-512. Take the value published in the
+      neighbouring .sha512 and, for due diligence, compare it with
+      your own computation (sha512sum on Linux, Get-FileHash
+      -Algorithm SHA512 on PowerShell). Beware: if your installation
+      changed the file's line endings, your computation will differ;
+      only the .sha512 value is accepted. The server looks for that
+      value in feedback AND complaints (routes/verify.ts,
+      checkPatternInFeedbackAndComplaints).
     pedagogical_intent: |
-      Spell exact action.
+      Guided steps: identify the advisory, obtain and cross-check the
+      checksum, know where it is matched.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow : (1) Apprendre CSAF (OASIS 2.0).
-      (2) Naviguer /.well-known/csaf-aggregator/provider-metadata.json. (3)
-      Suivre le lien vers le ou les CSAF advisories listes. (4) Telecharger
-      l'advisory.json. (5) Calculer
-      `sha512sum advisory.json` (Linux) ou
-      `Get-FileHash -Algorithm SHA512 advisory.json` (PowerShell). (6)
-      Hash attendu (ref config/default.yml:83) commence par
-      "7e7ce7c65db3bf...e843". (7) /#/contact > comment = ce hash > Submit
-      avec etoiles. (8) verify.ts:312-317
-      `checkPatternInFeedbackAndComplaints` declenche.
-      Defense : (a) Adopter CSAF + signer advisories PGP. (b) Provider-
-      metadata.json a /.well-known/csaf-aggregator/. (c) Listing
-      csaf.csaf-tools.org. Source : verify.ts:312-317 +
-      config/default.yml:83.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) :
+        curl -s http://127.0.0.1:3000/.well-known/csaf/2017/juice-shop-sa-20200513-express-jwt.json.sha512
+      La valeur commence par 7e7ce7c65db3bf06 et finit par 0242e843
+      (config/default.yml, challenges.csafHashValue). Colle-la comme
+      commentaire sur /#/contact (note et captcha obligatoires), ou
+      dans une reclamation /#/complain. Le challenge est resolu a la
+      requete suivante.
+      Defense : publier un correctif ou une mesure compensatoire
+      (ici, verifier l'algorithme JWT attendu), tenir l'advisory CSAF
+      a jour et signe (.asc), et suivre les dependances vulnerables
+      (npm audit, SCA) pour ne pas rester "known affected".
     text_en: |
-      Workflow: (1) Learn CSAF (OASIS 2.0). (2)
-      Navigate /.well-known/csaf-aggregator/provider-metadata.json. (3)
-      Follow link to listed CSAF advisory(ies). (4) Download advisory.json.
-      (5) Compute `sha512sum advisory.json` (Linux) or `Get-FileHash
-      -Algorithm SHA512 advisory.json` (PowerShell). (6) Expected hash
-      (ref config/default.yml:83) starts with "7e7ce7c65db3bf...e843". (7)
-      /#/contact > comment = this hash > Submit with stars. (8)
-      verify.ts:312-317 `checkPatternInFeedbackAndComplaints` triggers.
-      Defense: (a) Adopt CSAF + sign advisories PGP. (b) Provider-
-      metadata.json at /.well-known/csaf-aggregator/. (c) Listing
-      csaf.csaf-tools.org. Source: verify.ts:312-317 +
-      config/default.yml:83.
+      Solution (verified during testing on Juice Shop 19.2.1):
+        curl -s http://127.0.0.1:3000/.well-known/csaf/2017/juice-shop-sa-20200513-express-jwt.json.sha512
+      The value starts with 7e7ce7c65db3bf06 and ends with 0242e843
+      (config/default.yml, challenges.csafHashValue). Paste it as a
+      comment on /#/contact (rating and captcha required), or in a
+      complaint at /#/complain. The challenge is solved on the next
+      request.
+      Defense: ship a fix or compensating control (here, enforce the
+      expected JWT algorithm), keep the CSAF advisory current and
+      signed (.asc), and track vulnerable dependencies (npm audit,
+      SCA) so as not to remain "known affected".
     pedagogical_intent: |
-      Solution + standards mastery.
+      Full solution: verified command, expected value bounds, both
+      submission channels, defense.

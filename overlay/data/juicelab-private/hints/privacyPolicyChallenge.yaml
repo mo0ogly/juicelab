@@ -36,46 +36,65 @@ hints:
   N3:
     cost_pct: 20
     text_fr: |
-      Le menu hamburger en haut a gauche de Juice Shop ouvre un panneau
-      lateral avec des entrees comme About Us, Customer Feedback, et
-      Privacy Policy. Cherche l'entree Privacy Policy. La validation du
-      challenge se declenche automatiquement quand la page se charge,
-      grace au routage Angular qui notifie le backend.
+      Le menu hamburger en haut a gauche ouvre un panneau lateral ;
+      l'entree Privacy & Security regroupe la politique de
+      confidentialite. La validation n'est pas un appel API : la page
+      affiche, tout en bas, une petite image technique, et c'est la
+      requete du navigateur vers cette image que le serveur
+      reconnait.
     text_en: |
-      The hamburger menu at the top-left of Juice Shop opens a side panel
-      with entries like About Us, Customer Feedback, and Privacy Policy.
-      Look for the Privacy Policy entry. The challenge is validated
-      automatically when the page loads, because Angular routing notifies
-      the backend.
+      The hamburger menu at the top left opens a side panel; the
+      Privacy & Security entry groups the privacy policy. Validation
+      is not an API call: the page displays a small technical image
+      at the very bottom, and the server recognizes the browser's
+      request for that image.
     pedagogical_intent: |
-      Localize the exact UI element: the hamburger sidebar with Privacy entry.
+      Localize the page and reveal the real validation mechanism.
 
   N4:
     cost_pct: 35
     text_fr: |
-      Le route path complet est /#/privacy-security/privacy-policy. Si tu
-      l'ouvres directement dans l'URL plutot que par le menu, le challenge
-      se valide quand meme. Le mecanisme cote frontend declenche un appel
-      API qui marque le challenge comme resolu.
+      Le chemin est /#/privacy-security/privacy-policy (route enfant
+      de privacy-security dans app.routing.ts). En bas du template,
+      <img src="assets/public/images/padding/81px.png"/>
+      (privacy-policy.component.html:172). Le middleware
+      routes/verify.ts:67 resout le challenge sur toute URL qui se
+      termine par /81px.png. Ouvrir la page suffit, puisque le
+      navigateur charge l'image.
     text_en: |
-      The full route path is /#/privacy-security/privacy-policy. If you open
-      it directly via the URL rather than through the menu, the challenge
-      is validated all the same. The frontend mechanism triggers an API
-      call that marks the challenge solved.
+      The path is /#/privacy-security/privacy-policy (child route of
+      privacy-security in app.routing.ts). At the bottom of the
+      template, <img src="assets/public/images/padding/81px.png"/>
+      (privacy-policy.component.html:172). The middleware
+      routes/verify.ts:67 solves the challenge on any URL ending with
+      /81px.png. Opening the page is enough, since the browser loads
+      the image.
     pedagogical_intent: |
-      Give the canonical path so the student can choose menu or direct URL.
+      Guided steps: exact route and exact server condition.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Clique sur l'icone hamburger en haut a gauche, puis sur l'entree
-      Privacy Policy dans le panneau lateral. Tu vois le texte juridique
-      du shop. Le score-board indique automatiquement Privacy Policy
-      solved. Equivalent en URL directe : http://127.0.0.1:3000/#/privacy-security/privacy-policy
+      Ouvre http://127.0.0.1:3000/#/privacy-security/privacy-policy
+      (ou menu hamburger > Privacy & Security > Privacy Policy) et
+      laisse la page se charger jusqu'en bas. La requete vers
+      81px.png resout le challenge. Il n'y a rien a pirater ici
+      (hint OWASP : "There is no real hacking involved here") :
+      l'interet pedagogique est de remarquer qu'un serveur peut
+      tracer la lecture d'une page par une simple image, technique
+      appelee pixel de suivi.
+      Defense / bonne pratique : declarer et minimiser ce type de
+      suivi dans la politique de confidentialite elle-meme.
     text_en: |
-      Click the hamburger icon at the top-left, then the Privacy Policy
-      entry in the sidebar. You see the shop's legal text. The score board
-      automatically marks Privacy Policy solved. Direct URL equivalent:
-      http://127.0.0.1:3000/#/privacy-security/privacy-policy
+      Open http://127.0.0.1:3000/#/privacy-security/privacy-policy
+      (or hamburger menu > Privacy & Security > Privacy Policy) and
+      let the page load to the bottom. The request for 81px.png
+      solves the challenge. There is nothing to hack here (OWASP
+      hint: "There is no real hacking involved here"): the
+      pedagogical point is to notice that a server can track the
+      reading of a page through a simple image, a technique called a
+      tracking pixel.
+      Defense / good practice: disclose and minimize this kind of
+      tracking in the privacy policy itself.
     pedagogical_intent: |
-      Quasi-solution: explicit clicks or URL, scoring trigger explained.
+      Full solution plus the transferable lesson (tracking pixel).

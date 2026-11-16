@@ -54,14 +54,19 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
   `noSqlCommandChallenge`, `zeroStarsChallenge`, `changeProductChallenge`
   (description O-Saft restaurée), `emptyUserRegistration`,
   `passwordRepeatChallenge` (corps sans `passwordRepeat`) ; un feedback 0
-  étoile et un utilisateur à email vide créés.
+  étoile et un utilisateur à email vide créés. Lot 2 : `csafChallenge`,
+  `continueCodeChallenge` résolus ; un feedback contenant le hash CSAF créé.
+- **Arbre `juice-shop` modifié** : ~1068 fichiers ne diffèrent que par les
+  fins de ligne (antérieur à la revue, propriétaire non identifié). Effet
+  observé : le JSON CSAF de l'arbre (et celui du lab 43119) n'a plus le
+  SHA-512 attendu ; `HEAD` et le lab 43120 l'ont.
 
 ## Suivi par challenge (109 du parcours)
 
 | key | catégorie | diff. | statut | notes |
 |---|---|---|---|---|
 | scoreBoardChallenge | Miscellaneous | 1 | TODO |  |
-| privacyPolicyChallenge | Miscellaneous | 1 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| privacyPolicyChallenge | Miscellaneous | 1 | DONE (lot 2) | N3-N5 : validation = image 81px.png (verify.ts:67), pas un appel API ; libelles de menu verifies |
 | directoryListingChallenge | Sensitive Data Exposure | 1 | TODO |  |
 | exposedCredentialsChallenge | Sensitive Data Exposure | 2 | TODO |  |
 | passwordHashLeakChallenge | Sensitive Data Exposure | 2 | TODO |  |
@@ -83,13 +88,13 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | weakPasswordChallenge | Broken Authentication | 2 | TODO |  |
 | weirdCryptoChallenge | Cryptographic Issues | 2 | TODO |  |
 | loginAdminChallenge | Injection | 2 | TODO |  |
-| adminSectionChallenge | Broken Access Control | 2 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| adminSectionChallenge | Broken Access Control | 2 | DONE (lot 2) | N2-N5 : garde AdminGuard cote client (jwtDecode sans signature), validation = image 19px.png (verify.ts:65), 3 familles de contournement ; voie deduite du code, non rejouee (Chrome) |
 | basketAccessChallenge | Broken Access Control | 2 | TODO |  |
 | feedbackChallenge | Broken Access Control | 2 | TODO |  |
 | basketManipulateChallenge | Broken Access Control | 3 | TODO |  |
 | captchaBypassChallenge | Broken Anti Automation | 3 | TODO |  |
 | changeProductChallenge | Broken Access Control | 3 | DONE (lot 1) | N4,N5 reecrits : target="_blank" obligatoire (verify.ts), sans jeton ; defense inventee remplacee par codefixes fix 3 ; teste |
-| csafChallenge | Miscellaneous | 3 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| csafChallenge | Miscellaneous | 3 | DONE (lot 2) | N2-N5 : chemin faux (csaf-aggregator -> /.well-known/csaf/), advisory express-jwt identifie, piege fins de ligne (hash recalcule different si EOL modifiees) ; soumission teste |
 | dbSchemaChallenge | Injection | 3 | TODO |  |
 | forgedFeedbackChallenge | Broken Access Control | 3 | TODO |  |
 | forgedReviewChallenge | Broken Access Control | 3 | TODO |  |
@@ -118,7 +123,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | ephemeralAccountantChallenge | Injection | 4 | TODO |  |
 | forgottenBackupChallenge | Sensitive Data Exposure | 4 | TODO |  |
 | forgottenDevBackupChallenge | Sensitive Data Exposure | 4 | TODO |  |
-| hiddenImageChallenge | Security through Obscurity | 4 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| hiddenImageChallenge | Security through Obscurity | 4 | DONE (lot 2) | N1-N5 : faux hint OWASP cite, reponse donnee des N3, image inventee ; chaine pickle rick verifiee (verify.ts:287) ; image porteuse 5.png deduite, extraction non reussie |
 | httpHeaderXssChallenge | XSS | 4 | TODO |  |
 | knownVulnerableComponentChallenge | Vulnerable Components | 4 | TODO |  |
 | manipulateClockChallenge | Improper Input Validation | 4 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
@@ -157,7 +162,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | typosquattingAngularChallenge | Vulnerable Components | 5 | TODO |  |
 | xxeDosChallenge | XXE | 5 | TODO |  |
 | yamlBombChallenge | Insecure Deserialization | 5 | TODO |  |
-| continueCodeChallenge | Cryptographic Issues | 6 | TODO prioritaire | candidat pre-tri (route/payload en N1 ou N5<N3) |
+| continueCodeChallenge | Cryptographic Issues | 6 | DONE (lot 2) | N1 sans endpoint ; N4-N5 : PUT (GET = 500, teste), alphabet sans espaces parasites ; encode(999) + PUT teste |
 | fileWriteChallenge | Vulnerable Components | 6 | TODO |  |
 | forgedCouponChallenge | Cryptographic Issues | 6 | TODO |  |
 | jwtForgedChallenge | Vulnerable Components | 6 | TODO |  |
