@@ -71,7 +71,12 @@ RUN rm -rf frontend/.angular frontend/node_modules .git tests cypress \
 
 # ---------- Runtime stage ----------
 FROM node:24-bullseye-slim AS runtime
+# NODE_CONFIG_ENV selects config/juicelab.yml (node-config reads it before
+# NODE_ENV) while Express keeps NODE_ENV=production. juicelab.yml sets
+# challenges.safetyMode=disabled so the TD challenge Reflected XSS stays
+# solvable in Docker; LAN-shared instances override it (docker/provision.py).
 ENV NODE_ENV=production \
+    NODE_CONFIG_ENV=juicelab \
     PORT=3000
 
 # tini reaps zombie children when running under docker / docker-compose

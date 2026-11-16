@@ -6,6 +6,10 @@ The structure is :
 
 ```
 overlay/
+├── config/
+│   └── juicelab.yml                  node-config overlay (NODE_CONFIG_ENV=juicelab):
+│                                     no Google OAuth, safetyMode disabled so the
+│                                     TD challenge Reflected XSS works in Docker
 ├── data/
 │   └── juicelab-private/             111 YAML packs (hints, quiz, walkthroughs)
 ├── frontend/

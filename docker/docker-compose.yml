@@ -75,8 +75,11 @@ services:
       JUICELAB_COHORT_ID: "${JUICELAB_COHORT_ID:?must be set in .env (no default — pick a cohort id like M2-IA-2026)}"
       JUICELAB_INSTANCE_LABEL: "${JUICELAB_INSTANCE_LABEL:-demo}"
       JUICELAB_DEFAULT_LANGUAGE: "${JUICELAB_DEFAULT_LANGUAGE:-fr}"
+    # Loopback only by default: the image enables every challenge
+    # (safetyMode disabled, see juice-shop/config/juicelab.yml), including
+    # RCE ones, so the shop must not be reachable from the classroom LAN.
     ports:
-      - "${JUICELAB_DEMO_PORT:-3000}:3000"
+      - "${JUICELAB_DEMO_BIND:-127.0.0.1}:${JUICELAB_DEMO_PORT:-3000}:3000"
     networks: [juicelab_net]
     depends_on:
       dashboard:

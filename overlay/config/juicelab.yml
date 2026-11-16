@@ -1,0 +1,40 @@
+# JuiceLab overlay config (NODE_ENV=juicelab).
+#
+# This overlay is loaded by node-config on top of config/default.yml when
+# the Juice Shop process is started with NODE_ENV=juicelab. Its only
+# purpose right now is to disable Google OAuth on local-loopback hosts :
+# upstream default.yml lists http://127.0.0.1:3000 and http://localhost:3000
+# in authorizedRedirects, but the upstream demo Google clientId does not
+# trust those origins, so clicking "Login with Google" always fails. The
+# JuiceLab pedagogical lab does not need Google OAuth (students log in
+# with admin@juice-sh.op / admin123 or self-register), so we hide the
+# button entirely by clearing the redirects list. The login component
+# (frontend/src/app/login/login.component.ts) sets oauthUnavailable=true
+# when no authorized redirect matches the current host, which keeps the
+# button hidden via the @if (!oauthUnavailable) guard in the template.
+#
+# To re-enable Google OAuth in a class that has actual credentials,
+# override this overlay with another (eg config/juicelab-prod.yml) that
+# restores valid clientId + authorizedRedirects entries.
+
+#
+# Safety mode: upstream default.yml sets challenges.safetyMode=auto, which
+# disables every challenge listed with disabledEnv (Docker, Heroku, Windows)
+# when Juice Shop detects that environment (lib/utils.ts
+# getChallengeEnablementStatus). The JuiceLab image runs in Docker, so the
+# TD challenge "Reflected XSS" (disabledEnv: [Docker, Heroku]) was silently
+# disabled: routes/trackOrder.ts strips the payload and the challenge can
+# never be solved. The TD parcours requires it, hence safetyMode=disabled.
+# This also re-enables the other "Danger Zone" challenges (RCE, XXE, ...):
+# only acceptable when the instance listens on the student's loopback
+# (docker-compose.yml binds JUICELAB_DEMO_BIND=127.0.0.1 by default).
+# Instances shared on a classroom LAN (docker/provision.py) start with
+# NODE_ENV=production instead and keep the upstream protection.
+
+application:
+  googleOauth:
+    clientId: ''
+    authorizedRedirects: []
+
+challenges:
+  safetyMode: disabled

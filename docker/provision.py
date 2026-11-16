@@ -55,6 +55,9 @@ JUICELAB_TEMPLATE = """\
       JUICELAB_COHORT_ID: "${{JUICELAB_COHORT_ID:?must be set in .env}}"
       JUICELAB_INSTANCE_LABEL: "{handle}"
       JUICELAB_DEFAULT_LANGUAGE: "${{JUICELAB_DEFAULT_LANGUAGE:-fr}}"
+      # Shared on the LAN: keep upstream safetyMode=auto (no juicelab.yml),
+      # Danger Zone challenges such as Reflected XSS stay disabled here.
+      NODE_CONFIG_ENV: "production"
     ports:
       - "{port}:3000"
     networks: [juicelab_net]
