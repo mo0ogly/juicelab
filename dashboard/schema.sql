@@ -94,7 +94,8 @@ CREATE TABLE IF NOT EXISTS alerts (
     kind          TEXT NOT NULL,
     challenge_key TEXT,
     created_at    TEXT NOT NULL,
-    ack_at        TEXT
+    ack_at        TEXT,
+    resolved_at   TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_alerts_cohort_unack ON alerts(cohort_id, ack_at);
 CREATE INDEX IF NOT EXISTS idx_alerts_recent ON alerts(cohort_id, created_at DESC);

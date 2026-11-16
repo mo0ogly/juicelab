@@ -2,6 +2,9 @@
 
 Exposes :
 - GET  /api/alerts?cohort=<id>[&unack=true][&group=true]
+      without group=true: latest alerts, each carrying `ack_at` and
+      `resolved_at`; `unack=true` keeps only ACTIVE alerts (not acked AND
+      not auto-resolved).
       group=true returns unacked alerts only, one entry per (student,
       kind, challenge) with `count` and `first_at`; `id` is the latest.
 - POST /api/alerts/<id>/ack    (idempotent)
@@ -31,6 +34,14 @@ def register_alerts_routes(app: Flask, check_teacher_auth: Callable) -> None:
 
     @app.get("/api/alerts")
     def list_alerts() -> Response:
+        """List the alerts of one cohort for the teacher panel.
+
+        Query params: `cohort` (required), `unack=true` to keep only ACTIVE
+        alerts (ack_at IS NULL AND resolved_at IS NULL), `group=true` for
+        the per (student, kind, challenge) grouped view. Every non-grouped
+        entry carries `ack_at` and `resolved_at` (None while the alert is
+        open); resolved alerts stay visible in the full listing.
+        """
         ok, err = check_teacher_auth()
         if not ok and err is not None:
             return err
@@ -59,7 +70,7 @@ def register_alerts_routes(app: Flask, check_teacher_auth: Callable) -> None:
             names = student_display_names(conn, cohort)
         result = []
         for r in rows:
-            if unack_only and r["ack_at"] is not None:
+            if unack_only and (r["ack_at"] is not None or r["resolved_at"] is not None):
                 continue
             result.append({
                 "id": r["id"],
@@ -72,6 +83,7 @@ def register_alerts_routes(app: Flask, check_teacher_auth: Callable) -> None:
                 "challenge_key": r["challenge_key"],
                 "created_at": r["created_at"],
                 "ack_at": r["ack_at"],
+                "resolved_at": r["resolved_at"],
             })
         return jsonify({"alerts": result})
 

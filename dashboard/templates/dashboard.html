@@ -422,6 +422,7 @@
       bindTagSelects();
       bindNoteButtons();
       applyFilters();
+      if (alertsPanel) alertsPanel.syncMatrix();
     }
 
     function bindNameEdits() {
@@ -615,6 +616,9 @@
         const a = JSON.parse(e.data);
         if (alertsPanel) alertsPanel.add(a);
       } catch (_) { /* ignore parse */ }
+    });
+    es.addEventListener('alert_resolved', (e) => {
+      try { if (alertsPanel) alertsPanel.remove(JSON.parse(e.data)); } catch (_) { /* ignore parse */ }
     });
     es.addEventListener('notification', (e) => {
       try {

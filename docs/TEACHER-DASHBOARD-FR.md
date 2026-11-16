@@ -393,7 +393,7 @@ clair/sombre dans la topbar.
 ### 9.3 Panneau Alertes
 
 Sur `/dashboard`, le panneau **Alertes** liste les alertes non acquittées de la
-cohorte : Bloqué, Calé, Script suspect, Inactif.
+cohorte : Bloqué, Calé, Script suspect, Inactif, Absent.
 
 - **Une ligne par situation** : les alertes identiques (même élève, même type,
   même challenge) sont regroupées. Le compteur `×N` indique combien d'alertes
@@ -404,6 +404,21 @@ cohorte : Bloqué, Calé, Script suspect, Inactif.
   situation n'en crée pas de nouvelle. Une fois acquittée, elle peut être
   relevée à nouveau après 60 minutes si la situation dure encore.
 - L'élève est affiché par son nom du roster, sinon par le début de son token.
+- **Clôture automatique** : Bloqué, Calé, Inactif et Absent décrivent une
+  situation. Quand elle cesse (l'élève reprend, résout, arrive), l'alerte se
+  ferme seule et disparaît du panneau. « Script suspect » est un incident : seul
+  le prof le ferme.
+- **Séance** : un élève est « en séance » si son dernier event date de moins de
+  240 minutes (`DASHBOARD_MONITOR_SESSION_MIN`, ou clé `monitor.session_min` du fichier
+  `DASHBOARD_CONFIG_JSON`). Hors séance, plus d'alerte Bloqué / Calé / Inactif :
+  un élève parti la semaine dernière n'est pas « inactif ».
+- **Absent** : pendant qu'au moins un élève travaille (event depuis moins de
+  `idle_min`), tout élève validé du roster sans event dans la séance est
+  signalé Absent.
+- **Lien avec la matrice** : un clic sur le nom dans une alerte fait défiler
+  jusqu'à la ligne de l'élève. Les lignes en alerte portent un liseré coloré et
+  remontent en tête, la plus urgente d'abord (Bloqué, Calé, Script suspect,
+  Inactif, Absent).
 
 > Bases antérieures au 16/11/2026 : le moniteur recréait la même alerte chaque
 > heure. Ces doublons restent en base ; le panneau les regroupe et un clic sur

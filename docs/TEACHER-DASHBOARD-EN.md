@@ -370,7 +370,7 @@ Light/dark toggle in the topbar.
 ### 9.3 Alerts panel
 
 On `/dashboard`, the **Alerts** panel lists the cohort's unacknowledged alerts:
-Blocked, Stuck, Suspected script, Idle.
+Blocked, Stuck, Suspected script, Idle, Absent.
 
 - **One row per situation**: identical alerts (same student, same kind, same
   challenge) are grouped. The `×N` counter tells how many alerts the row
@@ -381,6 +381,20 @@ Blocked, Stuck, Suspected script, Idle.
   not create another one. Once acknowledged, it can be raised again after
   60 minutes if the situation still holds.
 - The student is shown by roster name, otherwise by the start of the token.
+- **Automatic closing**: Blocked, Stuck, Idle and Absent describe a situation.
+  When it ends (the student resumes, solves, shows up), the alert closes by
+  itself and leaves the panel. "Suspected script" is an incident: only the
+  teacher closes it.
+- **Session**: a student is "in session" when their last event is less than
+  240 minutes old (`DASHBOARD_MONITOR_SESSION_MIN`, or key `monitor.session_min` in the
+  `DASHBOARD_CONFIG_JSON` file). Out of session, no more Blocked / Stuck / Idle
+  alert: a student who left last week is not "idle".
+- **Absent**: while at least one student is working (an event newer than
+  `idle_min`), every validated roster student with no event in the session is
+  flagged Absent.
+- **Link with the matrix**: clicking the name in an alert scrolls to the
+  student's row. Rows with an alert carry a coloured edge and move to the top,
+  most urgent first (Blocked, Stuck, Suspected script, Idle, Absent).
 
 > Databases older than 2026-11-16: the monitor re-created the same alert every
 > hour. Those duplicates remain in the database; the panel groups them and one

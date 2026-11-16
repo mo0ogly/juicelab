@@ -156,11 +156,18 @@ def _migrate(conn: sqlite3.Connection) -> None:
     for stmt in [
         "CREATE TABLE IF NOT EXISTS student_tag (student_token TEXT NOT NULL, cohort_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'none', updated_at TEXT NOT NULL, PRIMARY KEY (cohort_id, student_token))",
         "CREATE TABLE IF NOT EXISTS student_note (student_token TEXT NOT NULL, cohort_id TEXT NOT NULL, body TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL, PRIMARY KEY (cohort_id, student_token))",
-        "CREATE TABLE IF NOT EXISTS alerts (id INTEGER PRIMARY KEY AUTOINCREMENT, cohort_id TEXT NOT NULL, student_token TEXT NOT NULL, kind TEXT NOT NULL, challenge_key TEXT, created_at TEXT NOT NULL, ack_at TEXT)",
+        "CREATE TABLE IF NOT EXISTS alerts (id INTEGER PRIMARY KEY AUTOINCREMENT, cohort_id TEXT NOT NULL, student_token TEXT NOT NULL, kind TEXT NOT NULL, challenge_key TEXT, created_at TEXT NOT NULL, ack_at TEXT, resolved_at TEXT)",
         "CREATE INDEX IF NOT EXISTS idx_alerts_cohort_unack ON alerts(cohort_id, ack_at)",
         "CREATE INDEX IF NOT EXISTS idx_alerts_recent ON alerts(cohort_id, created_at DESC)",
     ]:
         cur.execute(stmt)
+    # Phase 2 — alerts auto-resolution : stamp when a state alert closed.
+    # Guarded like the other ALTER TABLE steps; runs after the Phase 1 loop
+    # so the alerts table exists even on legacy databases.
+    alert_cols = {row[1] for row in cur.execute("PRAGMA table_info(alerts)").fetchall()}
+    if "resolved_at" not in alert_cols:
+        LOGGER.info("migrating alerts: ADD COLUMN resolved_at TEXT")
+        cur.execute("ALTER TABLE alerts ADD COLUMN resolved_at TEXT")
     conn.commit()
 
 
@@ -648,75 +655,16 @@ def get_note(conn: sqlite3.Connection, student_token: str, cohort_id: str) -> st
     return row[0] if row else ""
 
 
-def insert_alert(conn: sqlite3.Connection, cohort_id: str, student_token: str, kind: str, challenge_key: str | None, now: str) -> int:
-    cur = conn.execute(
-        "INSERT INTO alerts (cohort_id, student_token, kind, challenge_key, created_at) VALUES (?, ?, ?, ?, ?)",
-        (cohort_id, student_token, kind, challenge_key, now),
-    )
-    return cur.lastrowid or 0
-
-
-def recent_alerts(conn: sqlite3.Connection, cohort_id: str, limit: int = 100) -> list[sqlite3.Row]:
-    conn.row_factory = sqlite3.Row
-    return conn.execute(
-        "SELECT id, cohort_id, student_token, kind, challenge_key, created_at, ack_at "
-        "FROM alerts WHERE cohort_id=? ORDER BY id DESC LIMIT ?",
-        (cohort_id, limit),
-    ).fetchall()
-
-
-def unacked_alert_groups(conn: sqlite3.Connection, cohort_id: str) -> list[sqlite3.Row]:
-    """Unacknowledged alerts of `cohort_id`, one row per (student_token, kind,
-    challenge_key), most recently raised group first. Columns: id (latest
-    alert of the group, usable with ack_alert_group), student_token, kind,
-    challenge_key, n (alerts in the group), first_at, last_at."""
-    conn.row_factory = sqlite3.Row
-    return conn.execute(
-        "SELECT MAX(id) AS id, student_token, kind, challenge_key, COUNT(*) AS n, "
-        "MIN(created_at) AS first_at, MAX(created_at) AS last_at "
-        "FROM alerts WHERE cohort_id=? AND ack_at IS NULL "
-        "GROUP BY student_token, kind, challenge_key ORDER BY MAX(id) DESC",
-        (cohort_id,),
-    ).fetchall()
-
-
-def ack_alert(conn: sqlite3.Connection, alert_id: int, now: str) -> int:
-    """Stamp ack_at on a single alert if not already acked. Returns rowcount
-    (0 if alert missing or already acked, 1 on success). Caller commits."""
-    cur = conn.execute(
-        "UPDATE alerts SET ack_at=? WHERE id=? AND ack_at IS NULL",
-        (now, alert_id),
-    )
-    return cur.rowcount
-
-
-def ack_alert_group(conn: sqlite3.Connection, alert_id: int, now: str) -> int | None:
-    """Stamp ack_at on every unacked alert sharing (cohort_id, student_token,
-    kind, challenge_key) with alert `alert_id`, that alert included.
-
-    Returns the number of rows acknowledged (0 when the whole group was
-    already acked), or None when `alert_id` does not exist. `IS` compares
-    challenge_key so a NULL key matches NULL. Caller commits."""
-    ref = conn.execute(
-        "SELECT cohort_id, student_token, kind, challenge_key FROM alerts WHERE id=?",
-        (alert_id,),
-    ).fetchone()
-    if ref is None:
-        return None
-    cur = conn.execute(
-        "UPDATE alerts SET ack_at=? WHERE cohort_id=? AND student_token=? AND kind=? "
-        "AND challenge_key IS ? AND ack_at IS NULL",
-        (now, ref[0], ref[1], ref[2], ref[3]),
-    )
-    return cur.rowcount
-
-
-def student_display_names(conn: sqlite3.Connection, cohort_id: str) -> dict[str, str]:
-    """Map student_token -> display_name for the students of `cohort_id` that
-    have a non-empty name. Tokens without a roster row or a name are absent."""
-    rows = conn.execute(
-        "SELECT student_token, display_name FROM students "
-        "WHERE cohort_id=? AND display_name IS NOT NULL AND display_name != ''",
-        (cohort_id,),
-    ).fetchall()
-    return {r[0]: r[1] for r in rows}
+# ---- Alerts storage : moved to db_alerts.py (Phase 2) ----------------------
+# Re-exported so existing `db.insert_alert` / `db.recent_alerts` / ... call
+# sites and tests keep working unchanged.
+from db_alerts import (  # noqa: E402,F401
+    ack_alert,
+    ack_alert_group,
+    active_alert_keys,
+    insert_alert,
+    recent_alerts,
+    resolve_alert_group,
+    student_display_names,
+    unacked_alert_groups,
+)

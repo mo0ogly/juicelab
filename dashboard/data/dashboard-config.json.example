@@ -6,6 +6,7 @@
     "scripting_events": 30,
     "scripting_window_min": 2,
     "idle_min": 15,
+    "session_min": 240,
     "interval_sec": 30
   }
 }
