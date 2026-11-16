@@ -141,7 +141,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | securityPolicyChallenge | Miscellaneous | 2 | TODO |  |
 | weakPasswordChallenge | Broken Authentication | 2 | DONE (lot 13) | correct (non modifie) ; admin@/admin123 verifie live (login.ts:60) |
 | weirdCryptoChallenge | Cryptographic Issues | 2 | DONE (lot 12) | correct (non modifie) ; base64 via complaint verifie live (verify.ts:254) |
-| loginAdminChallenge | Injection | 2 | DONE (lot 5) | correct ; payload ' OR true-- verifie live (retourne admin), solve = id admin (login.ts:70) ; non modifie |
+| loginAdminChallenge | Injection | 2 | DONE (lot 5) | correct ; payload ' OR true-- verifie live (retourne admin), solve = id admin (login.ts:70) ; N3 precise (2026-11-16) : l'ecran n'affiche que [object Object] (comportement OWASP d'origine, verifie 19.2.1 et 20.4), l'erreur SQL se lit dans Reseau |
 | adminSectionChallenge | Broken Access Control | 2 | DONE (lot 2) | N2-N5 : garde AdminGuard cote client (jwtDecode sans signature), validation = image 19px.png (verify.ts:65), 3 familles de contournement ; voie deduite du code, non rejouee (Chrome) |
 | basketAccessChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; GET /rest/basket/<autre bid> verifie live (basket.ts:21) |
 | feedbackChallenge | Broken Access Control | 2 | DONE (lot 9) | correct (non modifie) ; supprimer tous les avis 5 etoiles (count rating=5 -> 0) ; non rejoue (destructif pour donnees seedees) |

@@ -39,14 +39,16 @@ hints:
       Sur le formulaire de login de Juice Shop, le champ email est probablement
       intégré dans la requête SQL qui cherche ton compte. Essaie de mettre des
       caractères qui forcent SQL à interpréter ta saisie comme du code et plus
-      seulement comme une chaîne. Si la requête se casse, le serveur va te le
-      faire savoir avec un message d'erreur révélateur.
+      seulement comme une chaîne. Si la requête se casse, le serveur répond
+      par une erreur révélatrice. À l'écran tu ne verras que « [object
+      Object] » : lis la réponse de la requête login dans l'onglet Réseau.
     text_en: |
       In the Juice Shop login form, the email field is likely embedded into
       the SQL query that looks up your account. Try inserting characters that
       force SQL to interpret your input as code and not just as a string. If
-      the query breaks, the server will let you know with a revealing error
-      message.
+      the query breaks, the server answers with a revealing error. The page
+      only shows "[object Object]": read the login request's response in the
+      Network tab.
     pedagogical_intent: |
       Localize the attack surface: the email field, with the goal of breaking the query.
 
