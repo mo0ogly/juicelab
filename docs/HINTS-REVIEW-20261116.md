@@ -127,11 +127,11 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | passwordHashLeakChallenge | Sensitive Data Exposure | 2 | DONE (lot 8) | correct (non modifie) ; /rest/user/whoami?fields=password via COOKIE verifie live (currentUser.ts:52) |
 | closeNotificationsChallenge | Miscellaneous | 1 | TODO |  |
 | errorHandlingChallenge | Security Misconfiguration | 1 | TODO |  |
-| exposedMetricsChallenge | Observability Failures | 1 | TODO |  |
+| exposedMetricsChallenge | Observability Failures | 1 | DONE (lot 18) | correct (non modifie) ; GET /metrics verifie live (metrics.ts:68) |
 | missingEncodingChallenge | Improper Input Validation | 1 | DONE (lot 3) | N2-N5 : glyphe unicode faux dans N2 (ᔚ -> ᓚ) ; # = separateur de fragment, %23 ; URL encodee verify.ts:71 ; teste |
 | passwordRepeatChallenge | Improper Input Validation | 1 | TODO |  |
 | redirectCryptoCurrencyChallenge | Unvalidated Redirects | 1 | DONE (lot 15) | correct (non modifie) ; /redirect?to=<adresse crypto exacte> verifie live (redirect.ts:17) |
-| web3SandboxChallenge | Broken Access Control | 1 | TODO |  |
+| web3SandboxChallenge | Broken Access Control | 1 | DONE (lot 18) | N5 : mecanisme precise (pixel 11px.png, verify.ts:64) ; GET verifie live |
 | zeroStarsChallenge | Improper Input Validation | 1 | DONE (lot 1) | N2-N5 reecrits : etoiles inventees -> mat-slider 1-5, bouton disabled par !rating ; API testee, voie UI deduite du code |
 | deprecatedInterfaceChallenge | Security Misconfiguration | 2 | TODO |  |
 | emptyUserRegistration | Improper Input Validation | 2 | DONE (lot 1) | N4,N5 reecrits : securityQuestion non requise (teste) ; N3 conserve (passwordRepeat verifie) |
@@ -182,7 +182,7 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | httpHeaderXssChallenge | XSS | 4 | DONE (lot 7) | correct (non modifie) ; header True-Client-IP = payload exact (saveLoginIp.ts:23) |
 | knownVulnerableComponentChallenge | Vulnerable Components | 4 | DONE (lot 11) | correct (non modifie) ; sanitize-html+1.4.2 / express-jwt+0.1.3 via complaint verifie live |
 | manipulateClockChallenge | Improper Input Validation | 4 | DONE (lot 3) | N4-N5 : endpoint faux (/api/Orders -> /rest/basket/:id/checkout), couponData dans le corps du checkout ; base64 WMNSDY2019 correct ; teste |
-| misplacedSignatureFileChallenge | Observability Failures | 4 | TODO |  |
+| misplacedSignatureFileChallenge | Observability Failures | 4 | DONE (lot 18) | N4-N5 : null-byte verifie %2500 (suspicious_errors.yml, fileServer.ts:44) ; verifie live |
 | noSqlCommandChallenge | Injection | 4 | DONE (lot 1) | N2,N4,N5 reecrits : endpoint et mecanisme faux (POST objet -> GET path, plafond 2000 ms, duree > 2000 ms) ; payload sleep(200) teste |
 | noSqlReviewsChallenge | Injection | 4 | DONE (lot 14) | correct (non modifie) ; PATCH id={$ne:-1} modifie plusieurs avis verifie live (updateProductReviews.ts:23) |
 | nullByteChallenge | Improper Input Validation | 4 | DONE (lot 10) | correct (non modifie) ; null-byte sur encrypt.pyc / auto-solve via les autres defis /ftp (fileServer.ts:46) |
@@ -223,8 +223,8 @@ gitignoré et le tracker comme `lint_juicelab_pedagogy.py` étaient absents le
 | jwtForgedChallenge | Vulnerable Components | 6 | DONE (lot 11) | N4-N5 : cle = jwt.pub servie de CETTE instance (octets exacts, token fige echoue), disabledEnv Windows ; HS256 key-confusion rsa_lord@ forge et verifie live |
 | loginSupportChallenge | Security Misconfiguration | 6 | DONE (lot 16) | N5 blinde ; source kdbx /ftp/incident-support.kdbx + crack, email support@ / mot de passe exact verifie live |
 | premiumPaywallChallenge | Cryptographic Issues | 6 | DONE (lot 12) | N4-N5 : AES invente (hints nient toute crypto) -> securite par obscurite, URL cachee en clair ; GET URL verifie live |
-| rceOccupyChallenge | Insecure Deserialization | 6 | TODO |  |
-| ssrfChallenge | Broken Access Control | 6 | TODO |  |
+| rceOccupyChallenge | Insecure Deserialization | 6 | DONE (lot 18) | N4-N5 : endpoint (/b2b/v2/orders) + payload FAUX (for borne = boucle detectee -> ReDoS) ; 503 timeout 2.0s verifie live |
+| ssrfChallenge | Broken Access Control | 6 | DONE (lot 18) | N4-N5 : flux simplifie/exact (image URL profil -> /solve/challenges/server-side interne, puis GET avec key) ; verifie live |
 | sstiChallenge | Injection | 6 | DONE (lot 14) | N4-N5 : vecteur FAUX (b2b -> eval des accolades diese dans le username du profil, userProfile.ts:54) + endpoint /solve/challenges/server-side ; vecteur code-confirme, chaine malware non rejouee |
 | timingAttackChallenge | Broken Anti Automation | 6 | TODO |  |
 | videoXssChallenge | XSS | 6 | DONE (lot 4) | N2-N5 : enabler faux (rceOccupy -> fileWriteChallenge/Arbitrary File Write), cible = sous-titres owasp_promo.vtt (pas la video), sink = bloc <script id=subtitle> (videoHandler.ts:58) ; chaine non rejouee |

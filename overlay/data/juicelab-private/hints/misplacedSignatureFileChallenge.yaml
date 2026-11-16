@@ -54,65 +54,45 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      Construction : `curl http://localhost:
-      3000/ftp/suspicious_errors.yml%00.md`.
-      Le serveur :
-      (a) endsWith(.md) = true (allowlist
-          pass)
-      (b) cutOffPoisonNullByte strip ->
-          "suspicious_errors.yml"
-      (c) sendFile + solveIf trigger.
+      Le fichier vise, suspicious_errors.yml, a une extension .yml qui
+      n'est pas dans l'allowlist (.md/.pdf) : il faut donc le meme
+      contournement par octet nul que pour les .bak. L'octet nul doit
+      souvent etre double-encode (%2500) selon le client : le filtre
+      voit l'extension .md finale et accepte, puis cutOffPoisonNullByte
+      tronque sur l'octet nul et ouvre le .yml.
     text_en: |
-      Construction: `curl http://localhost:
-      3000/ftp/suspicious_errors.yml%00.md`.
-      Server:
-      (a) endsWith(.md) = true (allowlist
-          passes)
-      (b) cutOffPoisonNullByte strips ->
-          "suspicious_errors.yml"
-      (c) sendFile + solveIf triggers.
+      The target file, suspicious_errors.yml, has a .yml extension not
+      in the allowlist (.md/.pdf): so it needs the same poison-null-byte
+      bypass as the .bak files. The null byte often has to be double-
+      encoded (%2500) depending on the client: the filter sees the
+      trailing .md extension and accepts, then cutOffPoisonNullByte
+      truncates on the null byte and opens the .yml.
     pedagogical_intent: |
-      Spell exact request.
+      Reuse the null-byte bypass for a .yml file, with the encoding note.
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow :
-      1. Pre-requis : directoryListing +
-         nullByte (Lot 7).
-      2. GET /ftp/suspicious_errors.yml%00.md
-         via curl ou browser.
-      3. Le serveur :
-         - allowlist endsWith(.md) pass
-         - strip null byte
-         - sendFile suspicious_errors.yml
-         - solveIf match -> challenge solve
-           auto
-      4. Tu vois le content du Sigma rule
-         (typically YAML detection logic).
-      Source : routes/fileServer.ts:44 +
-      nullByteChallenge bypass.
-      Defense : security artifacts hors web
-      root + null byte rejection EXPLICITE
-      avant allowlist check.
+      Solution (verifiee en recette sur Juice Shop 19.2.1) :
+        curl -s "http://127.0.0.1:3000/ftp/suspicious_errors.yml%2500.md"
+      Le serveur sert suspicious_errors.yml (une regle de detection type
+      Sigma) et resout le challenge (fileServer.ts:44). Dans un
+      navigateur, saisis l'octet nul sous la forme qui parvient encode
+      au serveur. Pre-requis : savoir lister /ftp/ (Confidential
+      Document) et le principe du null byte.
+      Defense : valider le type de fichier sur le chemin reellement
+      ouvert (apres decodage), jamais sur la chaine brute ; rejeter tout
+      octet nul dans un nom de fichier.
     text_en: |
-      Workflow:
-      1. Prerequisites: directoryListing +
-         nullByte (Lot 7).
-      2. GET /ftp/suspicious_errors.yml%00.md
-         via curl or browser.
-      3. Server:
-         - endsWith(.md) allowlist passes
-         - strip null byte
-         - sendFile suspicious_errors.yml
-         - solveIf match -> challenge auto
-           solves
-      4. You see Sigma rule content
-         (typically YAML detection logic).
-      Source: routes/fileServer.ts:44 +
-      nullByteChallenge bypass.
-      Defense: security artifacts outside
-      web root + EXPLICIT null byte rejection
-      before allowlist check.
+      Solution (verified during testing on Juice Shop 19.2.1):
+        curl -s "http://127.0.0.1:3000/ftp/suspicious_errors.yml%2500.md"
+      The server serves suspicious_errors.yml (a Sigma-style detection
+      rule) and solves the challenge (fileServer.ts:44). In a browser,
+      enter the null byte in the form that reaches the server encoded.
+      Prerequisites: being able to list /ftp/ (Confidential Document)
+      and the null-byte principle.
+      Defense: validate the file type on the path actually opened (after
+      decoding), never on the raw string; reject any null byte in a file
+      name.
     pedagogical_intent: |
-      Solution + defense.
+      Full verified solution: exact null-byte URL, encoding note, defense.

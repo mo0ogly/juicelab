@@ -76,26 +76,27 @@ hints:
   N5:
     cost_pct: 50
     text_fr: |
-      URL exacte qui resout le challenge :
-      http://127.0.0.1:3000/#/web3-sandbox
-      La page sandbox web3 s'affiche, le challenge se valide
-      automatiquement quand le router Angular detecte la
-      navigation. Note : c'est une code sandbox pour ecrire et
-      tester des smart contracts on-the-fly — l'interet
-      pedagogique est de demontrer que les features de DEV
-      peuvent leak en PROD si pas de feature flag / strip au
-      build. Source : codefixes/web3SandboxChallenge.info.yml
-      fix #1.
-      Defense : (1) supprimer toutes les routes de developpement du bundle Angular de production via un feature-flag (environment.production = true dans le routing). (2) Ajouter une gate CI qui echoue si une route contenant "sandbox", "debug" ou "admin" est presente dans le build de production sans auth guard. (3) Auditer tous les loadChildren pour le controle d'acces avant chaque release (codefixes/web3SandboxChallenge.info.yml fix #1).
+      Solution (verifiee en recette sur Juice Shop 19.2.1) : ouvre
+      http://127.0.0.1:3000/#/web3-sandbox et laisse la page se charger.
+      Comme pour Score Board, Admin Section et Privacy Policy, la
+      validation passe par une image technique chargee en bas de page,
+      assets/public/images/padding/11px.png : le serveur resout le
+      challenge sur la requete de cette image (verify.ts:64, url se
+      terminant par /11px.png). La route est simplement cachee du menu,
+      pas protegee.
+      Defense : ne pas compter sur l'obscurite d'une route cliente ;
+      les fonctionnalites de dev/sandbox doivent etre absentes ou
+      protegees en production.
     text_en: |
-      Exact URL solving the challenge:
-      http://127.0.0.1:3000/#/web3-sandbox
-      The web3 sandbox page renders, challenge auto-solves when
-      the Angular router detects the navigation. Note: it's a
-      code sandbox for writing and testing smart contracts
-      on-the-fly — pedagogical value is showing that DEV features
-      can leak into PROD without feature flag / build stripping.
-      Source: codefixes/web3SandboxChallenge.info.yml fix #1.
-      Defense: (1) strip all development/internal routes from the production Angular bundle using a feature-flag mechanism (environment.production = true gating in routing). (2) Add a CI gate that fails if any route containing "sandbox", "debug", or "admin" is present in the production build without auth guard. (3) Review all loadChildren routes for access control before each release (codefixes/web3SandboxChallenge.info.yml fix #1).
+      Solution (verified during testing on Juice Shop 19.2.1): open
+      http://127.0.0.1:3000/#/web3-sandbox and let the page load. As
+      with Score Board, Admin Section and Privacy Policy, validation
+      goes through a technical image loaded at the bottom of the page,
+      assets/public/images/padding/11px.png: the server solves the
+      challenge on that image request (verify.ts:64, url ending with
+      /11px.png). The route is simply hidden from the menu, not
+      protected.
+      Defense: do not rely on the obscurity of a client route;
+      dev/sandbox features must be absent or protected in production.
     pedagogical_intent: |
-      Quasi-solution : full URL + pedagogical takeaway.
+      Full solution with the exact tracking-pixel mechanism.

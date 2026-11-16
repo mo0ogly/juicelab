@@ -72,61 +72,54 @@ hints:
   N4:
     cost_pct: 35
     text_fr: |
-      L'endpoint vulnerable est typiquement /profile (la page
-      profil utilisateur) qui accepte un parametre URL pour
-      l'avatar (image profile). Le serveur fait alors un GET
-      cote serveur sur cette URL pour la copier en local. Si tu
-      passes l'URL interne du malware au lieu d'une URL
-      d'image, le serveur fait une requete HTTP a sa propre
-      ressource interne, ce qui resout le challenge.
-      Workflow : ouvre /profile, identifie le champ profileImage
-      ou similaire, change l'URL pour l'URL interne extraite du
-      malware.
+      Le point faible est le champ "Image URL" du profil : le serveur
+      fait lui-meme un GET sur l'URL que tu fournis
+      (routes/profileImageUrlUpload.ts) pour recuperer l'avatar. Si tu
+      pointes cette URL vers une ressource INTERNE du serveur, il la
+      requete pour toi. Si l'URL contient le chemin interne
+      /solve/challenges/server-side, un drapeau abused_ssrf_bug est
+      positionne.
     text_en: |
-      Vulnerable endpoint is typically /profile (user profile
-      page) accepting a URL parameter for the avatar (profile
-      image). Server then does a server-side GET on that URL to
-      copy it locally. If you pass the malware's internal URL
-      instead of an image URL, the server makes an HTTP request
-      to its own internal resource, solving the challenge.
-      Workflow: open /profile, identify the profileImage field
-      or similar, change the URL to the internal URL extracted
-      from the malware.
+      The weak point is the profile "Image URL" field: the server
+      itself does a GET on the URL you provide
+      (routes/profileImageUrlUpload.ts) to fetch the avatar. If you
+      point that URL at an INTERNAL server resource, it requests it for
+      you. If the URL contains the internal path
+      /solve/challenges/server-side, an abused_ssrf_bug flag is set.
     pedagogical_intent: |
-      Locate the SSRF endpoint and explain the workflow.
+      Reveal the SSRF sink (profile image URL fetched server-side).
 
   N5:
     cost_pct: 50
     text_fr: |
-      Workflow concret :
-      1. Place juicy.efb sur le serveur (resoudre sstiChallenge
-         avant)
-      2. Reverse : strings ./juicy.efb | grep http
-         -> trouve http://localhost:3000/solve/challenges/server-side
-      3. Va sur /profile
-      4. Edit le champ Profile Image URL avec :
-         http://localhost:3000/solve/challenges/server-side
-      5. Submit
-      Le serveur fait un GET cote serveur sur sa propre URL
-      interne, declenche le solver du challenge cote serveur, et
-      le challenge se valide automatiquement. Note : le path
-      exact peut varier selon la version Juice Shop, ajuste
-      selon ce que strings te donne.
-      Defense : (1) valider et allowlister les URLs acceptees par l'endpoint de fetch de l'image de profil — rejeter les adresses loopback (127.0.0.1, localhost, ::1) avec un filtre SSRF. (2) Executer les requetes HTTP serveur dans un namespace reseau isole sans acces aux services internes. (3) Desactiver la feature profile-image-URL si les URLs fournies par l'utilisateur ne sont pas necessaires.
+      Solution (verifiee en recette sur Juice Shop 19.2.1), deux etapes :
+      1. Mets l'Image URL du profil sur l'endpoint interne (POST
+         /profile/image/url, auth par cookie) :
+           curl -s -X POST http://127.0.0.1:3000/profile/image/url \\
+             -b "token=<ton_jwt>" \\
+             --data-urlencode "imageUrl=http://localhost:3000/solve/challenges/server-side"
+         (reponse 302). Le serveur a requete l'endpoint interne ->
+         abused_ssrf_bug = true.
+      2. Declenche la validation :
+           curl -s "http://127.0.0.1:3000/solve/challenges/server-side?key=tRy_H4rd3r_n0thIng_iS_Imp0ssibl3"
+         (reponse 204). Le challenge est resolu (verify.ts:100).
+      Defense : interdire les requetes sortantes vers des adresses
+      internes (allowlist de domaines, resolution DNS filtree) et ne pas
+      recuperer des URL fournies par l'utilisateur sans controle.
     text_en: |
-      Concrete workflow:
-      1. Place juicy.efb on the server (solve sstiChallenge
-         first)
-      2. Reverse: strings ./juicy.efb | grep http
-         -> finds http://localhost:3000/solve/challenges/server-side
-      3. Go to /profile
-      4. Edit Profile Image URL field with:
-         http://localhost:3000/solve/challenges/server-side
-      5. Submit
-      Server does server-side GET on its own internal URL,
-      triggers the server-side solver, challenge auto-solves.
-      Note: exact path may vary by Juice Shop version, adjust
-      based on strings output.
-      Defense: (1) validate and allowlist URLs accepted by the profile-image fetch endpoint — reject loopback addresses (127.0.0.1, localhost, ::1) with an SSRF filter. (2) Execute server-side HTTP fetches in an isolated network namespace with no access to internal services. (3) Disable or remove the profile-image-URL feature entirely if user-supplied URLs are not required.
+      Solution (verified during testing on Juice Shop 19.2.1), two steps:
+      1. Set the profile Image URL to the internal endpoint (POST
+         /profile/image/url, cookie auth):
+           curl -s -X POST http://127.0.0.1:3000/profile/image/url \\
+             -b "token=<your_jwt>" \\
+             --data-urlencode "imageUrl=http://localhost:3000/solve/challenges/server-side"
+         (response 302). The server requested the internal endpoint ->
+         abused_ssrf_bug = true.
+      2. Trigger validation:
+           curl -s "http://127.0.0.1:3000/solve/challenges/server-side?key=tRy_H4rd3r_n0thIng_iS_Imp0ssibl3"
+         (response 204). The challenge solves (verify.ts:100).
+      Defense: block outbound requests to internal addresses (domain
+      allowlist, filtered DNS resolution) and do not fetch user-supplied
+      URLs without validation.
     pedagogical_intent: |
-      Quasi-solution : full 5-step workflow from malware to SSRF.
+      Full verified solution: exact two-step SSRF flow, defense.
